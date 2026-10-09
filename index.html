@@ -209,7 +209,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
     </div>
     <div class="side">
       <button class="round" id="mute" type="button" aria-label="Sound on">♪</button>
-      <button class="round" id="birdsBtn" type="button" aria-label="Change bird">🐦</button>
+      <button class="round" id="birdsBtn" type="button" aria-label="Pause">⏸</button>
     </div>
   </div>
   <div id="bubbles"></div>
@@ -238,13 +238,13 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 
 <div class="screen" id="start">
   <div class="sheet">
-    <div class="kicker">An island, a village, and a nest to build</div>
+    <div class="kicker" id="kicker">An island, a village, and a nest to build</div>
     <h1>Wings for <span class="who">Rouge</span></h1>
     <p>Gather twigs for a nest in the big tree. Help the villagers find their tools. Grow from level 1 to 20.</p>
     <div class="files" id="files" role="group" aria-label="Save files"></div>
     <div class="birds" role="group" aria-label="Pick your bird" id="birdCards"></div>
     <button class="go" id="go" type="button">Fly</button>
-    <div class="pause-row" id="pauseRow" hidden><button class="ghost" id="saveBtn" type="button">💾 Save</button><button class="ghost" id="toTitle" type="button">🏠 Title</button></div>
+    <div class="pause-row" id="pauseRow" hidden><button class="ghost" id="saveBtn" type="button">💾 Save</button><button class="ghost" id="toTitle" type="button">🏠 Main menu</button></div>
     <p class="how" id="how"></p>
     <div class="title-links"><button class="linkish" id="rewatch" type="button" style="min-height:44px" hidden>Watch the story again</button><button class="linkish" id="newGame" type="button" style="min-height:44px">New game</button></div>
   </div>
@@ -1015,23 +1015,30 @@ const ACTS = {
   bench:  { need: 3, dur: 12, place: () => ({ x: builtAt[3].x, z: builtAt[3].z }), face: () => VILLAGE, pose: 'sit' },
   bath:   { need: 4, dur: 5, place: () => near(builtAt[4], 2.4, VILLAGE), face: () => builtAt[4], pose: 'look' },
   /* a visit: cross the village to a neighbour's door and stand there a while (Itachi: people in the streets) */
+  /* 559: a delivered tool is USED where it belongs (never chosen without the tool: chooseAct leaves out tool acts) */
+  fix:    { tool: true, dur: 8, place: (n) => toWorld(n.house, n.house.w / 2 - 0.9, n.house.d / 2 + 1.0), face: (n) => toWorld(n.house, n.house.w / 2 - 0.9, n.house.d / 2), pose: 'hammer' },
+  paint:  { tool: true, dur: 8, place: (n) => toWorld(n.house, -(n.house.w / 2 - 0.9), n.house.d / 2 + 1.0), face: (n) => toWorld(n.house, -(n.house.w / 2 - 0.9), n.house.d / 2), pose: 'paint' },
+  unlock: { tool: true, dur: 3, place: (n) => doorFront(n.house, 0.7), face: (n) => doorFront(n.house, 0), pose: 'turn', end: (n) => { n.house.openT = Math.max(n.house.openT, 8); } },
+  crank:  { tool: true, dur: 6, place: () => near(VILLAGE, 2.4), face: () => VILLAGE, pose: 'turn' },
   visit:  { dur: 6, place: (n) => { const others = houses.filter((h) => h !== n.house); n.visiting = others[Math.floor(Math.random() * others.length)]; return doorFront(n.visiting, 1.6); },
             face: (n) => doorFront(n.visiting, 0), pose: 'talk' },
 };
 function chooseAct(n) {
   n.walks = (n.walks || 0) + 1;
   if (n.walks % 5 === 0 || S.clock > 2040) { n.act = 'home'; n.phase = 'go'; const f = doorFront(n.house, 0.2); n.target = { x: f.x, z: f.z }; n.house.openT = Math.max(n.house.openT, 6); return; }   // every fifth walk - and every walk once evening comes (board 540)
-  const open = Object.keys(ACTS).filter((k) => ACTS[k].need === undefined || builtAt[ACTS[k].need]);
+  if (n.tool) { n.act = 'home'; n.phase = 'go'; const f = doorFront(n.house, 0.2); n.target = { x: f.x, z: f.z }; n.house.openT = Math.max(n.house.openT, 6); return; }   // work done: the tool goes home with them (559)
+  const open = Object.keys(ACTS).filter((k) => !ACTS[k].tool && (ACTS[k].need === undefined || builtAt[ACTS[k].need]));
   const pool = []; for (const k of open) { const w = k === n.fav ? 4 : k === 'stroll' ? 3 : 1; for (let j = 0; j < w; j++) pool.push(k); }
   n.act = pool[Math.floor(Math.random() * pool.length)]; n.phase = 'go'; n.target = ACTS[n.act].place(n); n.actT = ACTS[n.act].dur;
 }
 const ease = (o, k, v, r) => { o[k] += (v - o[k]) * r; };
 const PROP_OF = { kneel: 'can', shop: 'basket', sit: 'book', look: 'mug', talk: 'bread' };   // garden, market, bench, bath, a visit
-function pose(n, kind, dt, walkAmt) {
-  const r = Math.min(1, dt * (kind === 'kneel' || kind === 'sit' ? 5 : 8)), w = Math.sin(n.stride) * walkAmt, t = S.t + n.i;   // settling down is slower than standing up
+function pose(n, kind, dt, walkAmt, bt) {   // bt: the time into a beat sequence (the receive)
+  const r = Math.min(1, dt * (kind === 'receive' ? 14 : kind === 'kneel' || kind === 'sit' ? 5 : 8)), w = Math.sin(n.stride) * walkAmt, t = S.t + n.i;   // settling down is slower than standing up
   let lL = w * 0.6, lR = -w * 0.6, aL = -w * 0.45, aR = w * 0.45, aLz = 0, aRz = 0, by = Math.abs(Math.cos(n.stride)) * 0.04 * walkAmt, hx = 0, wx = 0, wz = 0;   // wx, wz: the waist (board 555, "bend better")
   n.broom.visible = kind === 'sweep';
   if (n.props) { const want = PROP_OF[kind]; for (const k in n.props) if (k !== 'broom') n.props[k].visible = k === want; }
+  if (n.tool) n.tool.g.visible = PROP_OF[kind] !== n.tool.type.id;   // the basket prop IS the basket: one, not two
   if (kind === 'talk') { aR = -0.6 + Math.sin(t * 5) * 0.35; aRz = -0.2; }
   else if (kind === 'stretch') { aL = aR = -2.9; hx = -0.4; wx = -0.15; }
   else if (kind === 'pull') { aL = -2.1 + Math.sin(t * 3) * 0.5; aR = -2.1 - Math.sin(t * 3) * 0.5; hx = 0.25; wx = 0.2 + Math.sin(t * 3) * 0.08; }
@@ -1044,6 +1051,15 @@ function pose(n, kind, dt, walkAmt) {
   else if (kind === 'listen' || kind === 'listenSit') {   // still, hands together, the head lifted to her and a slow nod and sway
     aL = aR = -0.55; aLz = 0.4; aRz = -0.4; hx = -Math.min(0.6, Math.max(0, n.lookUp || 0)) + Math.sin(t * 4.2) * 0.06; wz = Math.sin(t * 2) * 0.04;
     if (kind === 'listenSit') { lL = lR = -1.5; by = -0.5; } }
+  else if (kind === 'receive') {   // 555b, four beats over 3.2 s (Itachi): surprise, both hands, a hug, a bow
+    const b = bt || 0, hop = (u) => (u > 0 && u < 1 ? Math.sin(Math.PI * u) : 0);
+    if (b < 0.5) { aL = aR = -2.4; aLz = -0.5; aRz = 0.5; hx = -0.3; by = 0.25 * hop(b / 0.3); }   // oh! arms up and out, a little hop
+    else if (b < 1.6) { aL = aR = -1.3; aLz = 0.35; aRz = -0.35; wx = 0.25; hx = 0.2; }   // takes it in both hands, leaning to her
+    else if (b < 2.4) { aL = aR = -1.5; aLz = 0.7; aRz = -0.7; wz = Math.sin(t * 9) * 0.08; by = 0.12 * hop((b - 1.6) / 0.3); }   // hugs it
+    else { wx = 0.45; hx = 0.3; aL = aR = -0.2; } }   // a bow
+  else if (kind === 'hammer') { aR = -1.9 + Math.sin(t * 5.5) * 0.6; aL = -1.5; hx = 0.25; wx = 0.1; }   // 559: mending the wall
+  else if (kind === 'paint') { aR = -1.5 + Math.sin(t * 2.4) * 0.5; aRz = -0.15; hx = 0.1; }
+  else if (kind === 'turn') { aR = -1.25; aRz = Math.sin(t * 3.5) * 0.45; hx = 0.3; }   // a key in the door, a wrench on the pump
   ease(n.legL.rotation, 'x', lL, r); ease(n.legR.rotation, 'x', lR, r); ease(n.armL.rotation, 'x', aL, r); ease(n.armR.rotation, 'x', aR, r);
   ease(n.armL.rotation, 'z', aLz, r); ease(n.armR.rotation, 'z', aRz, r); ease(n.body.position, 'y', by, r); ease(n.head.rotation, 'x', hx, r);
   if (n.waist) { ease(n.waist.rotation, 'x', wx, r); ease(n.waist.rotation, 'z', wz, r); }   // the kit's waist; the fallback body has none
@@ -1056,13 +1072,26 @@ function turnTo(n, tx, tz, dt) {
    kept, so the target, the phase, the act's time and a talk's time all wait for them (Itachi: resume is one assignment) */
 function interrupt(n, state, dur) { if (n.state !== state) n.before = n.state; n.state = state; n.stateT = dur; }
 function listen(n) {   // Marth, Oct 9: "the humans need to actually stop and listen if that's being said and not keep walkin"
-  if (!n.g.visible || n.state === 'inside' || n.state === 'receive') return false;
+  if (!n.g.visible || n.state === 'inside' || n.state === 'receive') return false;   // receive outranks listen
   if (n.state === 'wave') { n.state = 'act'; n.target = ACTS[n.act] ? ACTS[n.act].place(n) : onGreen(); n.phase = 'go'; }   // the wave's own ending, then the song
   const A = ACTS[n.act]; n.seated = n.state === 'act' && n.phase === 'do' && !!A && A.pose === 'sit';   // a sitter listens sitting
   interrupt(n, 'listen', 3); n.smileT = 3; n.waveCd = Math.max(n.waveCd, 12);   // no wave straight after: a stop, then a stop, reads as a stutter
   if (n.before === 'talk' && n.partner && n.partner.state === 'talk') listen(n.partner);   // a pair stops together, and resumes together
   return true;
 }
+const TOOL_USE = { hammer: 'fix', brush: 'paint', key: 'unlock', wrench: 'crank', bucket: 'well', rope: 'well', scissors: 'garden', basket: 'market' };
+function receive(n, it) {   // the tool passes from her beak to their hand, and they thank her
+  if (n.tool) putAway(n);
+  if (n.partner) { const m = n.partner; m.partner = null; if (m.state === 'talk') { m.state = 'act'; chooseAct(m); } n.partner = null; }
+  n.tool = it; n.armR.add(it.g); it.g.userData.slot = undefined; it.g.position.set(0, -0.78, 0.12); it.g.scale.setScalar(0.5 / (1.6 * 1.35)); it.g.visible = true;
+  n.state = 'receive'; n.stateT = 3.2; n.before = null; n.waveCd = Math.max(n.waveCd, 12);
+}
+function useTool(n) {   // to where it belongs; if that is not built yet, home with it (559: "carry it home")
+  const act = n.tool && TOOL_USE[n.tool.type.id], A = act && ACTS[act];
+  if (!A || (A.need !== undefined && !builtAt[A.need])) { chooseAct(n); return; }
+  n.act = act; n.phase = 'go'; n.target = A.place(n); n.actT = A.dur;
+}
+function putAway(n) { if (!n.tool) return; const g = n.tool.g; if (g.parent) g.parent.remove(g); n.tool = null; }
 function updateNPC(n, dt) {
   n.t -= dt; n.talkCd -= dt; n.happyT -= dt; n.smileT -= dt; n.waveCd -= dt;
   const p = n.g.position;
@@ -1075,6 +1104,11 @@ function updateNPC(n, dt) {
   if (n.state === 'inside') {
     if (S.clock > 2040) return;   // nobody steps out until dawn
     if (n.t <= 0) { const f = doorFront(n.house, 1.4); p.set(f.x, H(f.x, f.z), f.z); n.g.visible = true; n.house.openT = Math.max(n.house.openT, 3); n.state = 'act'; chooseAct(n); }
+    return;
+  }
+  if (n.state === 'receive') {   // the thanks: stopped, facing her, four beats; then to work with it
+    n.stateT -= dt; turnTo(n, S.pos.x, S.pos.z, dt); pose(n, 'receive', dt, 0, 3.2 - n.stateT);
+    if (n.stateT <= 0) { n.state = 'act'; n.happyT = 3; useTool(n); }
     return;
   }
   if (n.state === 'listen') {   // standing still for her song: no step taken, nothing else counted down
@@ -1106,7 +1140,7 @@ function updateNPC(n, dt) {
   if (n.phase === 'go') {
     const dx = n.target.x - p.x, dz = n.target.z - p.z, d = Math.hypot(dx, dz);
     if (d < 0.5) {
-      if (n.act === 'home') { n.g.visible = false; n.state = 'inside'; n.t = 7 + Math.random() * 6; n.house.openT = Math.max(n.house.openT, 2.5); return; }
+      if (n.act === 'home') { putAway(n); n.g.visible = false; n.state = 'inside'; n.t = 7 + Math.random() * 6; n.house.openT = Math.max(n.house.openT, 2.5); return; }
       if (n.act === 'stroll') { chooseAct(n); return; }
       if (n.act === 'visit' && n.visiting) n.visiting.openT = Math.max(n.visiting.openT, 8);   // someone answers the door
       n.phase = 'do'; n.actT = ACTS[n.act].dur; return;
@@ -1120,7 +1154,7 @@ function updateNPC(n, dt) {
   if (A.face) { const f = A.face(n); turnTo(n, f.x, f.z, dt); }
   if (A.pose === 'sit') p.y = H(p.x, p.z) + 0.25;
   pose(n, A.pose || 'stand', dt, 0);
-  n.actT -= dt; if (n.actT <= 0) chooseAct(n);
+  n.actT -= dt; if (n.actT <= 0) { if (A.end) A.end(n); chooseAct(n); }
 }
 
 /* ---------- start screen: the birds you have earned ---------- */
@@ -1133,7 +1167,7 @@ function drawCards() {
     const open = true, btn = document.createElement('button');
     btn.className = 'bird'; btn.type = 'button'; btn.dataset.bird = k; btn.disabled = !open; btn.setAttribute('aria-pressed', String(k === kind));
     btn.innerHTML = '<i>' + b.icon + '</i><b>' + b.name + '</b>' + (open ? '<span>' + b.note + '</span>' : '<span>' + b.note + '</span><em>' + (b.unlock === 'hawk' ? 'After the hawk' : 'Level ' + b.unlock) + '</em>');
-    btn.addEventListener('click', () => { if (!open) return; kind = k; save(); drawCards(); audio(); chirp(); });
+    btn.addEventListener('click', () => { if (!open) return; if (S.mode === 'paused' && S.prevMode === 'swim' && k !== kind) { toast('Change birds on dry land.', 2200); return; } kind = k; save(); drawCards(); audio(); chirp(); });
     wrap.appendChild(btn);
   }
 }
@@ -1147,7 +1181,7 @@ $('go').addEventListener('click', () => {
   const from = bird ? bird.position.clone() : null;
   if (bird) { scene.remove(bird); }
   bird = buildBird(kind); scene.add(bird); if (from) S.pos.copy(from);
-  if (S.mode === 'menu' || S.mode === 'paused') S.mode = S.inside ? 'walk' : (S.prevMode === 'walk' ? 'walk' : 'fly');
+  if (S.mode === 'menu' || S.mode === 'paused') S.mode = S.inside ? 'walk' : (S.prevMode === 'walk' || S.prevMode === 'swim' ? S.prevMode : 'fly');   // back to exactly what she was doing - a swim stays a swim
   $('flap').textContent = S.mode === 'walk' ? 'Fly' : 'Flap';
   $('start').hidden = true; $('ui').hidden = false; $('pauseRow').hidden = true; $('files').hidden = false; $('newGame').hidden = false; save(); hud();
   music(null);   // the song fades out under gameplay
@@ -1331,8 +1365,8 @@ function cutscene(dt) {
   }
 }
 $('birdsBtn').addEventListener('click', () => {
-  if (S.mode === 'nest' || S.mode === 'hatch' || S.mode === 'card' || S.mode === 'event' || S.mode === 'swim' || S.mode === 'homing' || S.talking || S.tut !== 0) return;   // homing: the glide home hides Flap and the stick until it lands (the assay, Oct 9)
-  S.prevMode = S.mode; S.mode = 'paused'; music('home'); drawCards(); $('pauseRow').hidden = false; $('files').hidden = true; $('newGame').hidden = true; $('go').textContent = 'Back to the island'; $('start').hidden = false;
+  if (S.mode === 'nest' || S.mode === 'hatch' || S.mode === 'card' || S.mode === 'event' || S.mode === 'homing' || S.talking || S.tut !== 0) return;   // homing: the glide home hides Flap and the stick until it lands (the assay, Oct 9)
+  S.prevMode = S.mode; S.mode = 'paused'; music('home'); drawCards(); $('kicker').textContent = 'Paused'; $('pauseRow').hidden = false; $('files').hidden = true; $('newGame').hidden = true; $('go').textContent = 'Back to the island'; $('start').hidden = false;
 });
 
 /* ---------- controls ---------- */
@@ -1483,6 +1517,7 @@ function doFlutter() {
   S.flutT = 1.2; S.flutCd = 5; S.speed = Math.min(MOVES[kind].flutter, S.speed + 9); chirp(); setTimeout(chirp, 120); setTimeout(chirp, 240);
 }
 addEventListener('keydown', (e) => { if (e.key.toLowerCase() === 'f') doFlutter(); });
+addEventListener('keydown', (e) => { if (e.key !== 'Escape' && e.key.toLowerCase() !== 'p') return; if (S.mode === 'paused') $('go').click(); else if (!$('ui').hidden) $('birdsBtn').click(); });   // a keyboard's pause
 function doSing() {
   if (!BIRDS[kind].sings || !(S.mode === 'walk' || S.mode === 'fly')) return;
   if (!(window.WFR_SOUND && audio() && WFR_SOUND.call(kind, { vol: 0.7 }))) [0, 0.12, 0.24, 0.42].forEach((t, i) => tone(PENTA[(i * 2 + Math.floor(Math.random() * 2)) % 6] * 2, t, 0.14, 'triangle', 0.08));
@@ -2174,7 +2209,12 @@ try { if (localStorage.getItem('wfr.debug') === '1') window.__wfr = { eagle: () 
   landmarks: () => ({ VILLAGE, LAKE, MOUND, PEAKS, LIGHT, NEST: NEST.toArray(), peak: [peakPt.x, peakPt.y, peakPt.z], lightY, WATER, EDGE }),
   music: () => ({ has: !!window.WFR_MUSIC, ctx: !!ac, playing: !!(window.WFR_MUSIC && WFR_MUSIC.playing), variant: window.WFR_MUSIC ? WFR_MUSIC.variant : null, muteGain: window.WFR_MUSIC && WFR_MUSIC.muteLevel ? WFR_MUSIC.muteLevel() : null }),
   npcActs: () => npcs.map((n) => n.state === 'inside' ? 'inside' : n.act),
-  npcs: () => npcs.map((n) => ({ name: n.name, state: n.state, before: n.before || null, act: n.act, phase: n.phase, x: n.g.position.x, z: n.g.position.z, yaw: n.yaw, target: n.target ? [n.target.x, n.target.z] : null, actT: n.actT, bodyY: n.body.position.y, legL: n.legL.rotation.x, waistX: n.waist ? n.waist.rotation.x : null, visible: n.g.visible, seated: !!n.seated })),
+  npcs: () => npcs.map((n) => ({ name: n.name, state: n.state, before: n.before || null, act: n.act, phase: n.phase, x: n.g.position.x, z: n.g.position.z, yaw: n.yaw, target: n.target ? [n.target.x, n.target.z] : null, actT: n.actT, bodyY: n.body.position.y, legL: n.legL.rotation.x, waistX: n.waist ? n.waist.rotation.x : null, visible: n.g.visible, seated: !!n.seated, tool: n.tool ? n.tool.type.id : null, armRx: n.armR.rotation.x, stateT: n.stateT || 0 })),
+  giveTool: (i, id) => { const n = npcs[i], type = TOOLS.find((t) => t.id === id); if (!n || !type) return false;   // a named tool at her feet for a named villager (the bench's, not spawnTool's dice)
+    if (n.need) { const o = n.need; o.done = true; if (o.g.parent) o.g.parent.remove(o.g); }
+    const sp = emojiSprite(type.emoji, 1.6), halo = new THREE.Mesh(new THREE.SphereGeometry(1.2, 12, 8), new THREE.MeshBasicMaterial({ color: 0xffe08a, transparent: true, opacity: 0.3, depthWrite: false })), g = new THREE.Group(); g.add(sp); g.add(halo);
+    g.position.set(S.pos.x + 0.8, S.pos.y, S.pos.z); scene.add(g); const it = { type, spot: SPOTS[0], g, owner: n, held: false, done: false }; items.push(it); n.need = it; return true; },
+  toolsAbout: () => items.filter((it) => it.done && it.g.parent).length,
   sing: () => doSing(), t: () => S.t,
   npcDo: (i, act) => { const n = npcs[i], A = ACTS[act]; n.state = 'act'; n.act = act; n.target = A.place(n); n.g.visible = true; n.g.position.set(n.target.x, H(n.target.x, n.target.z), n.target.z); n.phase = 'do'; n.actT = 60; },
   treehouses: () => TREEHOUSES.map((t) => ({ j: t.j, x: t.x, z: t.z, ground: H(t.x, t.z), entry: t.entryW.toArray() })), thState: () => ({ offered: thOffered(), inside: S.insideTH ? S.insideTH.j : null, compass: (goalTarget() || { toArray: () => null }).toArray() }),
@@ -2265,7 +2305,7 @@ function pickups() {
   for (const it of S.carry.slice()) {
     const n = it.owner;
     if (n.g.visible && n.g.position.distanceTo(S.pos) < 4.5) {
-      S.carry.splice(S.carry.indexOf(it), 1); it.done = true; if (it.g.parent) it.g.parent.remove(it.g); n.need = null; n.happyT = 4; n.house.openT = 25;
+      S.carry.splice(S.carry.indexOf(it), 1); it.done = true; receive(n, it); n.need = null; n.house.openT = 25;
       ding(); gainXP(75);
       if (S.built < BUILDS.length) {
         S.toolIn = (S.toolIn || 0) + 1; save();
@@ -2313,7 +2353,8 @@ function bubbles() {
     let text = '', notes = false;
     const d = n.g.position.distanceTo(S.pos);
     if (n.g.visible && d < 90 && S.mode !== 'menu' && S.mode !== 'paused') {
-      if (n.happyT > 0) text = '❤️';
+      if (n.state === 'receive') text = n.stateT > 2.7 ? '😮' : n.stateT > 0.8 ? '❤️' : '🙏';   // a beat each (555b)
+      else if (n.happyT > 0) text = '❤️';
       else if (n.smileT > 0) text = '😊 ♪';
       else if (n.state === 'talk') {
         /* until the Crow teaches you, human talk is only music, near or far */
@@ -2607,7 +2648,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build 8a6d2ab93d2b): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build fd1108976f60): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>
