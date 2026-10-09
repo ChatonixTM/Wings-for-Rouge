@@ -329,6 +329,9 @@ window.WFR_HUMANS = (function () {
     const tx = (n) => (useTex ? n : null);
     const L = opts.look || LOOKS[((i % LOOKS.length) + LOOKS.length) % LOOKS.length];   // opts.look: a whole look of one's own (folk.js, board 552)
     const g = new T.Group(), body = new T.Group(); g.add(body);
+    /* the waist (Oct 9, board 555: "they should bend better"): a pivot at the hips' height. The upper body hangs in
+       `up`, set back down by the same height, so every body-local number below stays as it was and nothing re-bases */
+    const WAIST_Y = 0.98, waist = new T.Group(), up = new T.Group(); waist.position.y = WAIST_Y; up.position.y = -WAIST_Y; waist.add(up); body.add(waist);
     const add = (parent, geometry, material) => { const m = new T.Mesh(geometry, material); parent.add(m); return m; };
 
     const shirt = mat(pal.shirt, tx(L.shirtTex)), pants = mat(pal.pants, tx(L.dress ? 'knit' : 'denim'), { rep: [1, 2] });
@@ -342,16 +345,16 @@ window.WFR_HUMANS = (function () {
     /* arms: the game's shoulder pivots */
     const mkArm = (s) => { const sh = new T.Group(); sh.position.set(0.37 * s, 1.74, 0);
       add(sh, sleeveGeo(L.sleeves), shirt); add(sh, armSkinGeo(L.sleeves, s), skin);
-      body.add(sh); return sh; };
+      up.add(sh); return sh; };   // the shoulders ride the waist
     const legL = mkLeg(-1), legR = mkLeg(1), armL = mkArm(-1), armR = mkArm(1);
 
-    add(body, torsoGeo(L), shirt);
+    add(up, torsoGeo(L), shirt);
     if (!L.dress) { add(body, pelvisGeo(), pants); add(body, beltGeo(), mat(0x4a3322, tx('leather'), { rough: 0.6, rep: [4, 1] })); add(body, buckleGeo(), mat(0xc9a25a, null, { rough: 0.4 })); }
-    if (L.vest) add(body, vestGeo(), mat(L.vest, tx('leather'), { rough: 0.7, side: T.DoubleSide, rep: [5, 4] }));
-    if (L.apron) add(body, apronGeo(), mat(L.apron, tx('linen'), { side: T.DoubleSide, rep: [2, 2] }));
-    add(body, neckGeo(), skin);
+    if (L.vest) add(up, vestGeo(), mat(L.vest, tx('leather'), { rough: 0.7, side: T.DoubleSide, rep: [5, 4] }));
+    if (L.apron) add(up, apronGeo(), mat(L.apron, tx('linen'), { side: T.DoubleSide, rep: [2, 2] }));
+    add(up, neckGeo(), skin);
 
-    const head = new T.Group(); head.position.y = 2.1; body.add(head);
+    const head = new T.Group(); head.position.y = 2.1; up.add(head);
     add(head, headSkinGeo(), skin);
     add(head, eyeGeo('white'), mat(0xf4efe6, null, { rough: 0.35 }));
     add(head, eyeGeo('iris'), mat(L.iris, null, { rough: 0.3 }));
@@ -387,7 +390,7 @@ window.WFR_HUMANS = (function () {
       lantern: prop([['lanternMetal', mat(0x3a3530, null, { rough: 0.5 })], ['lanternGlass', glow()]]),
       mug: prop([['mug', mat(0xe9e2d4, null, { rough: 0.4, side: T.DoubleSide })], ['mugTea', mat(0x6b3f22, null, { rough: 0.2 })]]),
     };
-    return { g, body, legL, legR, armL, armR, head, broom, props };
+    return { g, body, waist, legL, legR, armL, armR, head, broom, props };
   }
   function glow() {    // the lantern's warm glass: lit from inside, so it reads at dusk
     const key = 'glow|' + (LIN ? 1 : 0);
