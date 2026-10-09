@@ -34,7 +34,11 @@
        dims         { PT, platR, cabR, doorW, doorH, wallH }
        variant      { name, roof, ... }
        stats        { meshes, triangles }
+       climb        { kind: 'ladder'|'steps'|'rope', foot: [x,y,z], rungs: [[x,y,z], …], top: [x,y,z] }   (board 553)
+                    LOCAL, like inside/entry (convert with g.localToWorld). Foot first; each rung is where her feet
+                    go (the TOP of the rung); top = the deck point the last hop lands on. Also on build()'s return.
      WFR_TREEHOUSES.VARIANTS, WFR_TREEHOUSES.names, WFR_TREEHOUSES.dims (wood, with tree)
+     WFR_TREEHOUSES.rungsOf(kind, PT, L), .climbOf(kind, PT, L, withTree)   (no THREE needed; see "the climb" below)
 
    Phone-light: ≤ 30 meshes, ≤ 6k triangles each; every geometry is built once and shared by
    all seven; materials are shared where the colour is shared.
@@ -132,12 +136,66 @@ window.WFR_TREEHOUSES = (function () {
   }
   const smooth = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
 
+  /* ═════════ the climb (board 553) ═════════
+     Marth, Oct 9: "jump should allow us to go up the stairs and enter tree house". The ladder's rungs, the branch-steps
+     and the rope's slats are ONE list: G.ladder / G.steps / G.rope draw FROM it and the game climbs it
+     (userData.climb), so the wood and the climb can never disagree. Bearing a: x = sin a, z = cos a (door at a = 0).
+     Pure arithmetic: no THREE, and nothing random (the island's random stream never moves). */
+  const CLIMB = {
+    a: 1.75,          // the ladder's, the rope's and the top step's bearing: the rail's gap (G.rail: open 1.45–2.05)
+    steps: 9,         // branch-steps up the trunk
+    stepsFoot: 3.4,   // the steps' foot: the bottom step's bearing pushed OUT past the deck disc (the game's groundAt
+                      //   treats r < 3.0 as the deck, so a foot at the trunk can never be walked to)
+    ropeFoot: 3.6,    // the rope's foot, just out from its slats
+    topIn: 0.6,       // the top: on the deck at bearing a, platR − topIn from the trunk (inside the rail, outside the wall)
+  };
+  const LADDER = { top: D.platR - 0.05, bot: D.platR + 0.9 };   // the ladder's sides: r bot on the ground → r top at PT + 0.5
+  const ROPE_R = D.platR + 0.05;                                 // the rope hangs just outside the deck's rim
+  const TRUNK = { top: 0.55, foot: 0.82 };                        // the trunk's radius under the deck and at the ground (G.wood)
+  const onBearing = (a, r, y) => [Math.sin(a) * r, y, Math.cos(a) * r];
+
+  /* rungsOf(kind, PT, L) → the rungs FOOT FIRST, in the geometry's own numbers, each with `at` = where her feet go
+     (the top of the rung) in the tree-house group's local space. L = the rope's length (rope only).
+       'ladder'  { a, r, y, half, rad }                     a rod across the ladder: centre r, y; half-length; radius
+       'steps'   { k, a, y, rIn, rOut, lift, rad0, rad1 }   a branch from rIn (inside the bark) out to rOut, rising lift,
+                                                            radius rad0 → rad1; k 0 = the top step. She stands halfway
+                                                            out along the part outside the bark.
+       'rope'    { a, r, y, w, h, d }                       a slat (a w × h × d box). y is the ROPE MESH's own (the mesh
+                                                            hangs at PT); at[1] = PT + y + h/2. */
+  function rungsOf(kind, PT, L) {
+    const out = [];
+    if (kind === 'ladder') {
+      const { top, bot } = LADDER;
+      for (let y = 0.45; y < PT; y += 0.5) { const r = bot + (top - bot) * (y / (PT + 0.5)); out.push({ a: CLIMB.a, r, y, half: 0.38, rad: 0.045, at: onBearing(CLIMB.a, r, y + 0.045) }); }
+    } else if (kind === 'steps') {
+      const th = PT - D.platH * 0.5;   // the trunk's height (G.wood)
+      for (let k = CLIMB.steps - 1; k >= 0; k--) {
+        const a = CLIMB.a - k * 0.8, y = PT - 0.55 - k * 0.48, r0 = 0.6 + k * 0.025, u = { k, a, y, rIn: 0.3, rOut: r0 + 0.75, lift: 0.04, rad0: 0.12, rad1: 0.09 };
+        const bark = TRUNK.foot + (TRUNK.top - TRUNK.foot) * Math.min(1, y / th), rho = (bark + u.rOut) / 2, f = (rho - u.rIn) / (u.rOut - u.rIn);
+        u.at = onBearing(a, rho, y + u.lift * f + u.rad0 + (u.rad1 - u.rad0) * f);
+        out.push(u);
+      }
+    } else if (kind === 'rope') {
+      for (let y = -L + 0.3; y < 0; y += 0.45) out.push({ a: CLIMB.a, r: ROPE_R, y, w: 0.7, h: 0.06, d: 0.12, at: onBearing(CLIMB.a, ROPE_R, PT + y + 0.06 / 2) });
+    }
+    return out;
+  }
+  /* climbOf(kind, PT, L, withTree) → { kind, foot, rungs: [[x,y,z]…], top }, local. foot: where she stands to start
+     (y 0 = the tree's foot; a rope with no tree under it starts at the rope's lower end, PT − L). */
+  function climbOf(kind, PT, L, withTree) {
+    const R = rungsOf(kind, PT, L);
+    const foot = kind === 'ladder' ? onBearing(CLIMB.a, LADDER.bot, 0)
+      : kind === 'steps' ? onBearing(R[0].a, CLIMB.stepsFoot, 0)
+      : onBearing(CLIMB.a, CLIMB.ropeFoot, withTree ? 0 : PT - L);
+    return { kind, foot, rungs: R.map((u) => u.at), top: onBearing(CLIMB.a, D.platR - CLIMB.topIn, PT) };
+  }
+
   /* ═════════ the shared geometries ═════════ */
   const G = {
     /* the tree: a trunk to the deck, three limbs forking up round the cabin, roots */
     wood: (PT) => once('wood' + PT, () => {
       const parts = [], up = (a, r, y) => [Math.sin(a) * r, y, Math.cos(a) * r];
-      const th = PT - D.platH * 0.5, tr = new T.CylinderGeometry(0.55, 0.82, th, 10, 3); tr.translate(0, th / 2, 0); parts.push({ g: tr, uv: [2, 2] });   // ends inside the deck: never pokes through the floor
+      const th = PT - D.platH * 0.5, tr = new T.CylinderGeometry(TRUNK.top, TRUNK.foot, th, 10, 3); tr.translate(0, th / 2, 0); parts.push({ g: tr, uv: [2, 2] });   // ends inside the deck: never pokes through the floor
       for (const a of [-1.15, 2.3, 3.9]) {
         const A = up(a, 0.25, PT - 1.6), B = up(a, 2.72, PT + 0.15), C = up(a, 2.9, PT + 3.0), E = up(a, 2.05, PT + 5.1);
         for (const [p, q, r0, r1] of [[A, B, 0.36, 0.27], [B, C, 0.27, 0.21], [C, E, 0.21, 0.13]]) { const R = rod(p, q, r0, r1, 6); parts.push({ g: R.g, m: R.m, uv: [1, 1.5] }); }
@@ -240,22 +298,23 @@ window.WFR_TREEHOUSES = (function () {
       const a = new T.CylinderGeometry(1.45, 2.65, 0.85, 12, 1), b = new T.ConeGeometry(1.75, 1.5, 12), c = new T.SphereGeometry(0.2, 6, 4);
       return merge([{ g: a, m: M(0, 0.42, 0), uv: [5, 0.6] }, { g: b, m: M(0, 0.85 + 0.75, 0), uv: [4, 1.2] }, { g: c, m: M(0, 2.45, 0) }]);
     }),
-    /* climbing: a ladder down the side, branch-steps up the trunk, or a rope ladder (no tree) */
+    /* climbing: a ladder down the side, branch-steps up the trunk, or a rope ladder (no tree). The rungs come from
+       rungsOf (the climb's own list, board 553); only the sides are drawn here. */
     ladder: (PT) => once('ladder' + PT, () => {
-      const parts = [], a = 1.75, ox = Math.sin(a), oz = Math.cos(a), tx = -oz, tz = ox, top = D.platR - 0.05, bot = D.platR + 0.9;
+      const parts = [], a = CLIMB.a, ox = Math.sin(a), oz = Math.cos(a), tx = -oz, tz = ox, top = LADDER.top, bot = LADDER.bot;
       for (const s of [-0.36, 0.36]) { const R = rod([ox * bot + tx * s, 0, oz * bot + tz * s], [ox * top + tx * s, PT + 0.5, oz * top + tz * s], 0.06, 0.06, 5); parts.push({ g: R.g, m: R.m }); }
-      for (let y = 0.45; y < PT; y += 0.5) { const r = bot + (top - bot) * (y / (PT + 0.5)); const R = rod([ox * r - tx * 0.38, y, oz * r - tz * 0.38], [ox * r + tx * 0.38, y, oz * r + tz * 0.38], 0.045, 0.045, 5); parts.push({ g: R.g, m: R.m }); }
+      for (const u of rungsOf('ladder', PT)) { const R = rod([ox * u.r - tx * u.half, u.y, oz * u.r - tz * u.half], [ox * u.r + tx * u.half, u.y, oz * u.r + tz * u.half], u.rad, u.rad, 5); parts.push({ g: R.g, m: R.m }); }
       return merge(parts);
     }),
     steps: (PT) => once('steps' + PT, () => {
       const parts = [];
-      for (let k = 0; k < 9; k++) { const a = 1.75 - k * 0.8, y = PT - 0.55 - k * 0.48, r0 = 0.6 + k * 0.025, R = rod([Math.sin(a) * 0.3, y, Math.cos(a) * 0.3], [Math.sin(a) * (r0 + 0.75), y + 0.04, Math.cos(a) * (r0 + 0.75)], 0.12, 0.09, 5); parts.push({ g: R.g, m: R.m }); }
+      for (const u of rungsOf('steps', PT).reverse()) { const sa = Math.sin(u.a), ca = Math.cos(u.a), R = rod([sa * u.rIn, u.y, ca * u.rIn], [sa * u.rOut, u.y + u.lift, ca * u.rOut], u.rad0, u.rad1, 5); parts.push({ g: R.g, m: R.m }); }   // drawn top step first, as always
       return merge(parts);
     }),
     rope: (L) => once('rope' + L, () => {
-      const parts = [], a = 1.75, ox = Math.sin(a), oz = Math.cos(a), tx = -oz, tz = ox, r = D.platR + 0.05;
+      const parts = [], a = CLIMB.a, ox = Math.sin(a), oz = Math.cos(a), tx = -oz, tz = ox, r = ROPE_R;
       for (const s of [-0.3, 0.3]) { const R = rod([ox * r + tx * s, -L, oz * r + tz * s], [ox * r + tx * s, 0.1, oz * r + tz * s], 0.03, 0.03, 4); parts.push({ g: R.g, m: R.m }); }
-      for (let y = -L + 0.3; y < 0; y += 0.45) parts.push({ g: new T.BoxGeometry(0.7, 0.06, 0.12), m: M(ox * r, y, oz * r, 0, a, 0) });
+      for (const u of rungsOf('rope', 0, L)) parts.push({ g: new T.BoxGeometry(u.w, u.h, u.d), m: M(ox * u.r, u.y, oz * u.r, 0, u.a, 0) });
       return merge(parts);
     }),
     /* a balcony rail round the deck, open at the front (landing) and at the ladder */
@@ -391,10 +450,13 @@ window.WFR_TREEHOUSES = (function () {
     const lampAt = new T.Vector3(-1.2, 0, -0.55), lb = add(G.lampBody(), mat('brass', 0xc9a24e, { roughness: 0.45, metalness: 0.5 }), cab); lb.position.copy(lampAt);
     const bulb = add(G.bulb(), lit.flame, cab, false); bulb.position.copy(lampAt);
 
-    /* climbing */
-    if (V.climb === 'ladder' && withTree) add(G.ladder(PT), mTrim);
-    else if (V.climb === 'steps' && withTree) add(G.steps(PT), mBark);
-    else if (V.climb === 'rope' || !withTree) { const rp = add(G.rope(withTree ? PT - 0.2 : 3.2), twig ? mBark : mTrim); rp.position.y = PT; }
+    /* climbing (one decision, drawn here and handed to the game as userData.climb) */
+    const ck = V.climb === 'ladder' && withTree ? 'ladder' : V.climb === 'steps' && withTree ? 'steps' : V.climb === 'rope' || !withTree ? 'rope' : null;
+    const ropeL = withTree ? PT - 0.2 : 3.2;
+    if (ck === 'ladder') add(G.ladder(PT), mTrim);
+    else if (ck === 'steps') add(G.steps(PT), mBark);
+    else if (ck === 'rope') { const rp = add(G.rope(ropeL), twig ? mBark : mTrim); rp.position.y = PT; }
+    const climb = ck ? climbOf(ck, PT, ropeL, withTree) : null;
     if (V.rail) { const rl = add(G.rail(), mTrim); rl.position.y = PT; }
 
     /* the lantern */
@@ -423,7 +485,7 @@ window.WFR_TREEHOUSES = (function () {
     const seed = built++ * 1.7 + (i | 0);
     let tris = 0; for (const o of meshes) tris += o.geometry.attributes.position.count / 3;
     g.userData = {
-      variant: V, dims: Object.assign({}, D, { PT }), inside, entry, platformTop: PT, door: pivot,
+      variant: V, dims: Object.assign({}, D, { PT }), inside, entry, platformTop: PT, door: pivot, climb,
       stats: { meshes: meshes.length, triangles: Math.round(tris) },
       setLit(k) { k = Math.max(0, Math.min(1, +k || 0)); lit.glass.emissiveIntensity = 1.5 * k; lit.flame.emissiveIntensity = 0.25 + 1.75 * k; },
       update(t) {
@@ -449,8 +511,8 @@ window.WFR_TREEHOUSES = (function () {
       },
     };
     g.userData.setLit(0);
-    return { g, door: pivot, inside, platformTop: PT, entry };
+    return { g, door: pivot, inside, platformTop: PT, entry, climb };
   }
 
-  return { build, VARIANTS, names: NAMES, dims: Object.assign({}, D) };
+  return { build, VARIANTS, names: NAMES, dims: Object.assign({}, D), rungsOf, climbOf };
 })();

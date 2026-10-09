@@ -7,7 +7,9 @@
    WFR_HUMANS.make(THREE, i, pal, opts) → { g, body, legL, legR, armL, armR, head, broom, props }
      props = { broom, basket, book, can, rod, bread, lantern, mug } — groups on armR's hand, hidden
      pal  = { shirt, pants, shoes, skin, hair }   (hex numbers, the game's palettes)
-     opts = { renderer, scale = 1.35, linear = auto, textures = true }
+     opts = { renderer, scale = 1.35, linear = auto, textures = true, look }
+       look (Oct 9, board 552, additive): a LOOKS-shaped object used instead of LOOKS[i] (folk.js: Hal is
+       Bo's look with a beard). Absent, every villager renders exactly as before.
 
    ⚠ THE RIG IS THE GAME'S, UNCHANGED. Hips pivot at (±0.15, 0.98, 0), shoulders
    at (±0.37, 1.74, 0), the head group sits at y 2.1, the broom hangs from armR at
@@ -325,7 +327,7 @@ window.WFR_HUMANS = (function () {
     LIN = opts.linear != null ? !!opts.linear : !!(R && THREE.sRGBEncoding && R.outputEncoding === THREE.sRGBEncoding);
     const useTex = opts.textures !== false;
     const tx = (n) => (useTex ? n : null);
-    const L = LOOKS[((i % LOOKS.length) + LOOKS.length) % LOOKS.length];
+    const L = opts.look || LOOKS[((i % LOOKS.length) + LOOKS.length) % LOOKS.length];   // opts.look: a whole look of one's own (folk.js, board 552)
     const g = new T.Group(), body = new T.Group(); g.add(body);
     const add = (parent, geometry, material) => { const m = new T.Mesh(geometry, material); parent.add(m); return m; };
 

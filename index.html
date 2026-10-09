@@ -47,6 +47,13 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 .sheet h1{font-family:var(--display);font-weight:700;font-size:clamp(30px,8vw,46px);margin:0;line-height:1.05;
   color:var(--rouge);text-wrap:balance;letter-spacing:.5px}
 .sheet p{margin:0;font-size:15px;line-height:1.5;color:var(--ink)}
+/* the save files (Oct 9): three, like a Nintendo game's - tap one to play it, an empty one to start a new game there */
+.files{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}
+.file{min-height:58px;border-radius:14px;background:#fff;border:2px solid #eadfcd;padding:6px 4px;font:inherit;color:var(--ink);display:grid;gap:2px;align-content:center;cursor:pointer}
+.file b{font-family:var(--display);font-size:15px}.file small{font-size:12px;color:var(--mute);line-height:1.25}
+.file.on{border-color:var(--rouge);background:#fdf0f0}.file.new{border-style:dashed}
+.title-links{display:flex;flex-wrap:wrap;gap:0 22px;justify-content:center}
+.pause-row{display:flex;gap:10px;justify-content:center}.pause-row button{min-height:44px;padding:0 16px}
 .kicker{font-family:var(--display);font-weight:600;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--mute)}
 .birds{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
 .bird{background:#fff;border:2px solid #e6dccb;border-radius:16px;padding:10px 6px;display:grid;gap:3px;align-content:start;
@@ -110,6 +117,8 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
   .sheet h1{font-size:22px!important}
   .bird{padding-top:6px!important;padding-bottom:6px!important}
   #how{font-size:12px}
+  #start .kicker,#start .sheet>p:not(.how){display:none}   /* the title on a phone on its side: the save files and the links must fit without scrolling */
+  .file{min-height:44px;padding:3px 4px}
 }   /* Ino: in portrait the action buttons sat over the stick's zone */
 .knob-base{position:absolute;width:120px;height:120px;border-radius:50%;border:3px solid rgba(255,248,236,.75);
   background:rgba(255,248,236,.18);transform:translate(-50%,-50%);pointer-events:none}
@@ -232,10 +241,12 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
     <div class="kicker">An island, a village, and a nest to build</div>
     <h1>Wings for <span class="who">Rouge</span></h1>
     <p>Gather twigs for a nest in the big tree. Help the villagers find their tools. Grow from level 1 to 20 and unlock every bird.</p>
+    <div class="files" id="files" role="group" aria-label="Save files"></div>
     <div class="birds" role="group" aria-label="Pick your bird" id="birdCards"></div>
     <button class="go" id="go" type="button">Fly</button>
+    <div class="pause-row" id="pauseRow" hidden><button class="ghost" id="saveBtn" type="button">💾 Save</button><button class="ghost" id="toTitle" type="button">🏠 Title</button></div>
     <p class="how" id="how"></p>
-    <button class="linkish" id="rewatch" type="button" style="min-height:44px" hidden>Watch the story again</button>
+    <div class="title-links"><button class="linkish" id="rewatch" type="button" style="min-height:44px" hidden>Watch the story again</button><button class="linkish" id="newGame" type="button" style="min-height:44px">New game</button></div>
   </div>
 </div>
 
@@ -278,6 +289,16 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 <script>
 (() => {
 'use strict';
+/* ---------- THE SAVE FILES (Oct 9). Three files ('wfr.file.N'); 'wfr.save' stays the live save of the ACTIVE file, so
+   everything that reads it is unchanged, and save() writes the file too. A save from before the files becomes File 1. ---------- */
+const FILES = 3, fileKey = (n) => 'wfr.file.' + n;
+let ACTIVE = 1;
+try {
+  ACTIVE = Math.min(FILES, Math.max(1, +(localStorage.getItem('wfr.active') || 1) || 1));
+  const file = localStorage.getItem(fileKey(ACTIVE)), live = localStorage.getItem('wfr.save');
+  if (file) localStorage.setItem('wfr.save', file);   // the file is the truth
+  else if (live && ACTIVE === 1) localStorage.setItem(fileKey(1), live);   // her game from before the files
+} catch (e) { /* no storage: one unsaved game, as before */ }
 /* ---------- her name: the link's #Name, else Rouge ---------- */
 const NAME = (() => { try { const h = decodeURIComponent(location.hash.slice(1)); return /^[A-Za-z][A-Za-z .'-]{0,23}$/.test(h) ? h : 'Rouge'; } catch (e) { return 'Rouge'; } })();
 document.querySelectorAll('.who').forEach((el) => { el.textContent = NAME; });
@@ -757,8 +778,8 @@ const input = { sx: 0, sy: 0 };
 S.inv = S.inv || {}; S.toolIn = S.toolIn || 0;   // a fresh save: an empty pouch
 if (typeof S.clock !== 'number') S.clock = 600;   // a new game starts mid-morning (Itachi: plenty of light for the first flight)
 for (const i of S.treatsTaken || []) if (houses[i]) { houses[i].treatTaken = true; if (houses[i].treat) houses[i].treat.visible = false; }   // a treat eaten stays eaten
-function save() { try { localStorage.setItem('wfr.save', JSON.stringify({ level: S.level, xp: S.xp, nestDone: S.nestDone, found: S.found, kind, storySeen: S.storySeen, tutDone: S.tutDone, built: S.built, lessons: S.lessons, nestTier: S.nestTier, mats: S.mats, eagleFound: S.eagleFound, treats: houses.filter((h) => h.treatTaken).map((h) => h.i), twigs: (() => { try { return twigs.map((t, i) => t.visible ? -1 : i).filter((i) => i >= 0); } catch (e) { return S.twigsTaken || []; } })(),   /* a save before the twigs exist must not lose the whole save */
-    fish: S.fishCaught || 0, clock: Math.round(S.clock || 0), beak: S.fruit ? S.fruit.type.id : null, cutQ: (() => { try { return cutQ.slice(); } catch (e) { return S.cutPending || []; } })(), read: S.read, seen: S.seen, inv: S.inv, toolIn: S.toolIn || 0, chick: Object.assign({}, S.chick, { at: Date.now() }) })); } catch (e) { /* private mode: it still plays */ } }
+function save() { try { const s_ = JSON.stringify({ savedAt: Date.now(), level: S.level, xp: S.xp, nestDone: S.nestDone, found: S.found, kind, storySeen: S.storySeen, tutDone: S.tutDone, built: S.built, lessons: S.lessons, nestTier: S.nestTier, mats: S.mats, eagleFound: S.eagleFound, treats: houses.filter((h) => h.treatTaken).map((h) => h.i), twigs: (() => { try { return twigs.map((t, i) => t.visible ? -1 : i).filter((i) => i >= 0); } catch (e) { return S.twigsTaken || []; } })(),   /* a save before the twigs exist must not lose the whole save */
+    fish: S.fishCaught || 0, clock: Math.round(S.clock || 0), beak: S.fruit ? S.fruit.type.id : null, cutQ: (() => { try { return cutQ.slice(); } catch (e) { return S.cutPending || []; } })(), read: S.read, seen: S.seen, inv: S.inv, toolIn: S.toolIn || 0, chick: Object.assign({}, S.chick, { at: Date.now() }) }); localStorage.setItem('wfr.save', s_); localStorage.setItem(fileKey(ACTIVE), s_); } catch (e) { /* private mode: it still plays */ } }
 const need = (lv) => 20 + lv * 12;
 const strength = () => 1 + (S.level >= 3 ? 1 : 0) + (S.level >= 12 ? 1 : 0);
 
@@ -1104,7 +1125,7 @@ $('go').addEventListener('click', () => {
   bird = buildBird(kind); scene.add(bird); if (from) S.pos.copy(from);
   if (S.mode === 'menu' || S.mode === 'paused') S.mode = S.inside ? 'walk' : (S.prevMode === 'walk' ? 'walk' : 'fly');
   $('flap').textContent = S.mode === 'walk' ? 'Fly' : 'Flap';
-  $('start').hidden = true; $('ui').hidden = false; save(); hud();
+  $('start').hidden = true; $('ui').hidden = false; $('pauseRow').hidden = true; $('files').hidden = false; $('newGame').hidden = false; save(); hud();
   music(null);   // the song fades out under gameplay
   if (!S.started) {
     S.started = true;
@@ -1114,6 +1135,38 @@ $('go').addEventListener('click', () => {
 });
 $('rewatch').addEventListener('click', () => { audio(); openStory(true); });
 /* any tap on the menu (a bird card, the background) starts the song; Fly and Watch-the-story choose their own music */
+/* the title's files: 'play' - tap a file to play it (an empty one starts a new game there); 'new' - tap a file to start a new
+   game in it (a full one asks twice: the first tap only arms it). Switching reloads, so the island rebuilds from that save. */
+let fileMode = 'play', fileArmed = 0;
+function readFile(n) { try { return JSON.parse(localStorage.getItem(fileKey(n)) || 'null'); } catch (e) { return null; } }
+function drawFiles() {
+  const wrap = $('files'); wrap.innerHTML = '';
+  for (let n = 1; n <= FILES; n++) {
+    const f = readFile(n), b = document.createElement('button'); b.type = 'button'; b.id = 'file' + n; b.className = 'file' + (n === ACTIVE ? ' on' : '') + (fileMode === 'new' ? ' new' : '');
+    const what = f ? (BIRDS[f.kind] ? BIRDS[f.kind].name : 'A bird') + ' \u00b7 Lv ' + (f.level || 1) + (f.nestDone ? ' \u00b7 nest' : '') : 'Empty';
+    const label = fileMode === 'new' ? (f ? (fileArmed === n ? 'Tap again to erase' : 'Erase, start here') : 'Start here') : what;
+    b.innerHTML = '<b></b><small></small>'; b.querySelector('b').textContent = 'File ' + n; b.querySelector('small').textContent = label;
+    b.addEventListener('click', () => pickFile(n)); wrap.appendChild(b);
+  }
+  $('newGame').textContent = fileMode === 'new' ? 'Cancel' : 'New game';
+}
+function pickFile(n) {
+  const f = readFile(n);
+  if (fileMode === 'new') {
+    if (f && fileArmed !== n) { fileArmed = n; drawFiles(); return; }   // a full file: only the second tap erases it
+    try { localStorage.removeItem(fileKey(n)); localStorage.removeItem('wfr.save'); localStorage.setItem('wfr.active', String(n)); } catch (e) {}
+    location.reload(); return;
+  }
+  if (n === ACTIVE) return;   // the one already loaded
+  if (!f) { fileMode = 'new'; pickFile(n); return; }   // an empty file: a new game there
+  save();   // the current file kept as it is
+  try { localStorage.setItem('wfr.active', String(n)); localStorage.setItem('wfr.save', JSON.stringify(f)); } catch (e) {}
+  location.reload();
+}
+$('newGame').addEventListener('click', () => { fileMode = fileMode === 'new' ? 'play' : 'new'; fileArmed = 0; drawFiles(); });
+$('saveBtn').addEventListener('click', () => { save(); toast('Saved to File ' + ACTIVE + '.', 2200); chirp(); });
+$('toTitle').addEventListener('click', () => { save(); location.reload(); });   // back out to the title: the island flight and the song
+drawFiles();
 $('start').addEventListener('click', (e) => { if (e.target.closest('#go, #rewatch')) return; if (S.mode === 'menu' || S.mode === 'paused') music('home'); });
 
 /* ---------- the story: six panels, drawn in the colours of the bird she chose ---------- */
@@ -1255,7 +1308,7 @@ function cutscene(dt) {
 }
 $('birdsBtn').addEventListener('click', () => {
   if (S.mode === 'nest' || S.mode === 'hatch' || S.mode === 'card' || S.mode === 'event' || S.mode === 'swim' || S.talking || S.tut !== 0) return;
-  S.prevMode = S.mode; S.mode = 'paused'; music('home'); drawCards(); $('go').textContent = 'Back to the island'; $('start').hidden = false;
+  S.prevMode = S.mode; S.mode = 'paused'; music('home'); drawCards(); $('pauseRow').hidden = false; $('files').hidden = true; $('newGame').hidden = true; $('go').textContent = 'Back to the island'; $('start').hidden = false;
 });
 
 /* ---------- controls ---------- */
@@ -2482,7 +2535,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build 695c0c5f3c8c): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build 33bf47aecf57): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>

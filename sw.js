@@ -1,5 +1,5 @@
 /* Wings for Rouge - offline worker. The cache name is the build's content hash: a new build replaces the old cache. */
-const CACHE = 'wings-695c0c5f3c8c';
+const CACHE = 'wings-33bf47aecf57';
 const SHELL = ["./","index.html","manifest.webmanifest","icon-180.png","icon-192.png","icon-512.png","textures.js","birds.js","humans.js","trees.js","treehouses.js","sounds.js","music.js","opening.js","https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
