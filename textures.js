@@ -620,11 +620,37 @@ window.WFR_TEX = (function () {
   /* ⚠ ONE TEXTURE PER (name, repeat), shared by every mesh that asks for it — Obito, Oct 8: a clone per mesh made
      three upload 540 textures where ~10 do (about 45 MB of a phone's graphics memory). */
   const shared = {};
+  /* board 578: THE MEADOW, richer. The island's own vertex colours (painted by the html from H) are deepened here, once,
+     when the grass is laid: greens a touch more saturated, hollows darker and cooler, crests warm and sunlit, slow
+     patches of spring and late-summer green. Only the grass band (sand, rock and snow are left alone); no rnd(). */
+  function dressGround(mesh) {
+    try {
+      const g = mesh.geometry, col = g && g.attributes.color, pos = g && g.attributes.position, W = 151;
+      if (!col || !pos || pos.count !== W * W || mesh.userData.groundDressed) return;
+      const c = new THREE.Color(), hsl = {};
+      for (let i = 0; i < pos.count; i++) {
+        const ix = i % W, iz = (i / W) | 0, x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+        if (y < 2.6 || y > 24) continue;   // the grass band only
+        c.fromArray(col.array, i * 3); c.getHSL(hsl);
+        if (hsl.h < 0.14 || hsl.h > 0.42 || hsl.s < 0.18) continue;   // greens only (the worn village green and rock stay)
+        const yn = (ix > 0 ? pos.getY(i - 1) : y) + (ix < W - 1 ? pos.getY(i + 1) : y) + (iz > 0 ? pos.getY(i - W) : y) + (iz < W - 1 ? pos.getY(i + W) : y);
+        const cav = Math.max(-1, Math.min(1, (yn / 4 - y) * 1.4));   // + in a hollow, - on a crest
+        const warm = 0.5 + 0.5 * Math.sin(x * 0.013 + 1.1) * Math.cos(z * 0.011 - 0.6), spring = 0.5 + 0.5 * Math.sin(x * 0.029 - z * 0.023 + 2.0);
+        const h = hsl.h - 0.022 * warm * (cav < 0 ? 1 : 0.4) + 0.012 * (spring - 0.5) + 0.01 * Math.max(0, cav);
+        const sat = Math.min(0.85, hsl.s * (1.12 + 0.1 * spring));
+        const l = hsl.l - 0.045 * cav + 0.02 * (warm - 0.5);
+        c.setHSL(h, sat, Math.max(0.12, Math.min(0.7, l)));
+        col.array[i * 3] = c.r; col.array[i * 3 + 1] = c.g; col.array[i * 3 + 2] = c.b;
+      }
+      col.needsUpdate = true; mesh.userData.groundDressed = true;
+    } catch (e) { api.groundDressed = { error: String(e && e.message || e) }; }
+  }
   api.apply = function (mesh, name, repeatX, repeatY, renderer, opts) {
     const rx = repeatX || 1, ry = repeatY == null ? rx : repeatY, key = name + ':' + rx + ':' + ry;
     let t = shared[key];
     if (!t) { t = get(name, renderer).clone(); t.needsUpdate = true; t.repeat.set(rx, ry); shared[key] = t; }
     const bump = opts && opts.bump ? get(name + 'Bump', renderer) : null;
+    if (name === 'grass' && mesh.userData && mesh.userData.ground && mesh.isMesh) dressGround(mesh);   // 578: the meadow, richer (the island only)
     (mesh.traverse ? mesh.traverse.bind(mesh) : function (f) { f(mesh); })(function (o) {
       const mats = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : [];
       mats.forEach(function (m) {
@@ -635,5 +661,42 @@ window.WFR_TEX = (function () {
     });
     return t;
   };
+  /* board 578 (Oct 10, "upgrade the texture pack to the best of your ability"): THE SEA, dressed. Deep teal far out,
+     bright turquoise over the shallows, a pale ring of foam where it meets the shore - coloured by the depth H() already
+     knows, at the sea's own vertices (no rnd(): every seed stays put). The ripples drift slowly and a fine bump catches
+     the sun as glints. One mesh, one draw, no new light: the drift rides onBeforeRender (only while the sea is drawn). */
+  api.dressSea = function (sea, H, water, renderer) {
+    try {
+      const T = THREE, N = 150, geo = new T.PlaneGeometry(1400, 1400, N, N);
+      const p = geo.attributes.position, col = new Float32Array(p.count * 3), c = new T.Color();
+      const FOAM = new T.Color(0xf2fbf7), SHAL = new T.Color(0x55d3cf), TURQ = new T.Color(0x38bfd0), MID = new T.Color(0x2596b8), DEEP = new T.Color(0x175f86);
+      const sm = function (a, b, x) { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+      for (let i = 0; i < p.count; i++) {
+        const x = p.getX(i), z = -p.getY(i), r = Math.hypot(x, z);   // the plane lies rotated -90 deg about x: world z = -local y
+        const d = r > 335 ? 5.2 : water - H(x, z);   // depth below the surface (beyond the island the bed is flat at -4)
+        c.copy(FOAM).lerp(SHAL, sm(-0.25, 0.45, d));
+        c.lerp(TURQ, sm(0.3, 1.8, d)); c.lerp(MID, sm(2.4, 6, d));
+        c.lerp(DEEP, Math.max(sm(330, 620, r), 0.55 * sm(6, 10, d)));   // the open sea and the lake's deep go dark teal
+        c.offsetHSL(0, 0, 0.025 * Math.sin(x * 0.045 + Math.cos(z * 0.031) * 1.7) * Math.cos(z * 0.04));   // soft swells of light
+        col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
+      }
+      geo.setAttribute('color', new T.BufferAttribute(col, 3));
+      if (sea.geometry) sea.geometry.dispose();
+      sea.geometry = geo;
+      const m = sea.material;
+      m.color.set(0xffffff); m.vertexColors = true;
+      if ('specular' in m) { m.specular.set(0xb4e2f2); m.shininess = 80; }
+      if ('bumpMap' in m) { m.bumpMap = get('waterBump', renderer); m.bumpScale = 0.025; }   // read through the map's uv transform (r128): it drifts with it
+      m.needsUpdate = true;
+      const t = m.map, t0 = now();
+      if (t) sea.onBeforeRender = function () {   // the drift: slow, two-way, never a jump
+        const s = (now() - t0) / 1000;
+        t.offset.set(s * 0.006 + Math.sin(s * 0.21) * 0.01, s * 0.004 + Math.cos(s * 0.17) * 0.01);
+      };
+      api.seaDressed = { verts: p.count };
+      return true;
+    } catch (e) { api.seaDressed = { error: String(e && e.message || e) }; return false; }
+  };
+
   return api;
 })();

@@ -372,21 +372,21 @@ body.rhythmOn .hud{visibility:hidden}   /* the song has the whole screen: the le
 <div id="fade" aria-hidden="true"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="textures.js?v=1ab23f4f8b14"></script>
-<script src="birds.js?v=1ab23f4f8b14"></script>
-<script src="humans.js?v=1ab23f4f8b14"></script>
-<script src="folk.js?v=1ab23f4f8b14"></script>
-<script src="trees.js?v=1ab23f4f8b14"></script>
-<script src="treehouses.js?v=1ab23f4f8b14"></script>
-<script src="cabins.js?v=1ab23f4f8b14"></script>
-<script src="cave.js?v=1ab23f4f8b14"></script>
-<script src="sounds.js?v=1ab23f4f8b14"></script>
-<script src="music.js?v=1ab23f4f8b14"></script>
-<script src="rhythm.js?v=1ab23f4f8b14"></script>
-<script src="pictograms.js?v=1ab23f4f8b14"></script>
-<script src="hedgehogs.js?v=1ab23f4f8b14"></script>
-<script src="opening.js?v=1ab23f4f8b14"></script>
-<script src="skypiea.js?v=1ab23f4f8b14"></script>
+<script src="textures.js?v=30385ae94cf0"></script>
+<script src="birds.js?v=30385ae94cf0"></script>
+<script src="humans.js?v=30385ae94cf0"></script>
+<script src="folk.js?v=30385ae94cf0"></script>
+<script src="trees.js?v=30385ae94cf0"></script>
+<script src="treehouses.js?v=30385ae94cf0"></script>
+<script src="cabins.js?v=30385ae94cf0"></script>
+<script src="cave.js?v=30385ae94cf0"></script>
+<script src="sounds.js?v=30385ae94cf0"></script>
+<script src="music.js?v=30385ae94cf0"></script>
+<script src="rhythm.js?v=30385ae94cf0"></script>
+<script src="pictograms.js?v=30385ae94cf0"></script>
+<script src="hedgehogs.js?v=30385ae94cf0"></script>
+<script src="opening.js?v=30385ae94cf0"></script>
+<script src="skypiea.js?v=30385ae94cf0"></script>
 <script>
 (() => {
 'use strict';
@@ -657,6 +657,7 @@ function emojiSprite(ch, size) {
   scene.add(ground);
   const sea = new THREE.Mesh(new THREE.PlaneGeometry(1400, 1400), new THREE.MeshPhongMaterial({ color: 0x3f9fd2, specular: 0x9fd3f0, shininess: 70, transparent: true, opacity: 0.88 }));
   if (window.WFR_TEX) WFR_TEX.apply(sea, 'water', 90, 90, renderer);
+  if (window.WFR_TEX && WFR_TEX.dressSea) WFR_TEX.dressSea(sea, H, WATER, renderer);   // 578: deep teal to turquoise by depth, foam at the shore, drifting ripples and glints (textures.js)
   sea.material.side = THREE.DoubleSide;   // from under the water the surface is a bright ceiling
   sea.rotation.x = -Math.PI / 2; sea.position.y = WATER; scene.add(sea); SEA = sea;
 }());
@@ -3378,7 +3379,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build 1ab23f4f8b14): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build 30385ae94cf0): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>
