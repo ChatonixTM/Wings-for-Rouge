@@ -15,7 +15,34 @@
 </head>
 <body>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" id="vp" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<script>/* 615: no zoom on a phone (Marth Oct 10: fast taps on Fly and in the song zoomed the game in) */
+(function () {
+  window.__noZoom = { last: 0, saved: 0, snaps: 0 };
+  var Z = window.__noZoom;
+  document.addEventListener("touchend", function (e) {
+    var now = Date.now(), t = e.target;
+    if (t && t.closest && t.closest("input,textarea,select")) { Z.last = now; return; }   /* typing her name: leave it alone */
+    if (now - Z.last < 350 && e.cancelable) {   /* a fast second tap: cancel the zoom, keep the tap */
+      var had = e.defaultPrevented;   /* a button that cancels its own touchend never wanted the click */
+      e.preventDefault(); Z.saved++;
+      var b = t && t.closest ? t.closest("button,a") : null;
+      /* the click the browser would have sent; detail 1 = a tap, so the keyboard-only handlers (detail 0) stay quiet */
+      if (b && !b.disabled && !had) b.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true, view: window, detail: 1 }));
+    }
+    Z.last = now;
+  }, { passive: false });
+  ["gesturestart", "gesturechange"].forEach(function (k) { document.addEventListener(k, function (e) { e.preventDefault(); }, { passive: false }); });
+  function snap() {   /* zoomed anyway: re-set the viewport, which puts the scale back to 1 */
+    var v = window.visualViewport; if (!v || v.scale <= 1.01) return;
+    var m = document.getElementById("vp"); if (!m) return;
+    m.setAttribute("content", "width=device-width,initial-scale=1,viewport-fit=cover");
+    setTimeout(function () { m.setAttribute("content", "width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover"); }, 60);
+    Z.snaps++;
+  }
+  if (window.visualViewport) window.visualViewport.addEventListener("resize", snap);
+})();
+</script>
 <title>Wings for Rouge</title>
 <script>/* board 606: the cinematic title - who skips it is decided here, before the first paint */
 (function () { try { var ss = sessionStorage, ls = localStorage, back = ss.getItem('wfr.toStart') === '1'; ss.removeItem('wfr.toStart');
@@ -399,21 +426,21 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 <div id="fade" aria-hidden="true"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="textures.js?v=85b9469e66b7"></script>
-<script src="birds.js?v=85b9469e66b7"></script>
-<script src="humans.js?v=85b9469e66b7"></script>
-<script src="folk.js?v=85b9469e66b7"></script>
-<script src="trees.js?v=85b9469e66b7"></script>
-<script src="treehouses.js?v=85b9469e66b7"></script>
-<script src="cabins.js?v=85b9469e66b7"></script>
-<script src="cave.js?v=85b9469e66b7"></script>
-<script src="sounds.js?v=85b9469e66b7"></script>
-<script src="music.js?v=85b9469e66b7"></script>
-<script src="rhythm.js?v=85b9469e66b7"></script>
-<script src="pictograms.js?v=85b9469e66b7"></script>
-<script src="hedgehogs.js?v=85b9469e66b7"></script>
-<script src="opening.js?v=85b9469e66b7"></script>
-<script src="skypiea.js?v=85b9469e66b7"></script>
+<script src="textures.js?v=bf677aafe91c"></script>
+<script src="birds.js?v=bf677aafe91c"></script>
+<script src="humans.js?v=bf677aafe91c"></script>
+<script src="folk.js?v=bf677aafe91c"></script>
+<script src="trees.js?v=bf677aafe91c"></script>
+<script src="treehouses.js?v=bf677aafe91c"></script>
+<script src="cabins.js?v=bf677aafe91c"></script>
+<script src="cave.js?v=bf677aafe91c"></script>
+<script src="sounds.js?v=bf677aafe91c"></script>
+<script src="music.js?v=bf677aafe91c"></script>
+<script src="rhythm.js?v=bf677aafe91c"></script>
+<script src="pictograms.js?v=bf677aafe91c"></script>
+<script src="hedgehogs.js?v=bf677aafe91c"></script>
+<script src="opening.js?v=bf677aafe91c"></script>
+<script src="skypiea.js?v=bf677aafe91c"></script>
 <script>
 (() => {
 'use strict';
@@ -3477,7 +3504,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build 85b9469e66b7): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build bf677aafe91c): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>
