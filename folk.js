@@ -18,6 +18,9 @@
    WFR_FOLK.trade(birdPos, beakEmpty)         → { who, say, give: 'perch' } ONCE per catch, or null
    WFR_FOLK.tug(birdPos)                      → { who, say } once a day when she pulls the bobber, or null
    WFR_FOLK.state()                           → for the bench (see state() below)
+   WFR_FOLK.createKids(THREE, scene, ctx)     the children, Pim and Tess, on the village green (THE CHILDREN, below);
+                                              tick() then runs them after Hal
+   WFR_FOLK.kids()                            → the children's state, for the bench
 
    ── THE CONTEXT (ctx) ─────────────────────────────────────────────────────
    required
@@ -81,6 +84,7 @@ window.WFR_FOLK = (function () {
   const arr = (v) => [+v.x.toFixed(4), +v.y.toFixed(4), +v.z.toFixed(4)];
 
   let T = null, C = null, hal = null;
+  let K = null, kid = null;          // the children's context and state (createKids, below)
 
   /* ── small geometry helpers: parts painted with a vertex colour and merged, so each thing is ONE draw ── */
   function part(geo, hex, px, py, pz, rx, ry, rz, sx, sy, sz) {
@@ -246,7 +250,7 @@ window.WFR_FOLK = (function () {
     const c0 = C.getClock ? C.getClock() : 600;
     hal.lastClock = c0;
     if (c0 > HOME_AT) goHome(true); else { hal.act = 'tin'; hal.actT = TIN * 0.6; }
-    tick(0);
+    halTick(0);
     return hal;
   }
   function dispose() {
@@ -293,7 +297,8 @@ window.WFR_FOLK = (function () {
   }
 
   /* ── the clock: his acts run in clock units, so timeScale(8) runs his day eight times as fast ── */
-  function tick(dt, ctx) {
+  function tick(dt, ctx) { halTick(dt, ctx); if (kid) kidsTick(dt, ctx); }   // Hal first, exactly as before; then the children
+  function halTick(dt, ctx) {
     if (!hal) return;
     const h = hal, getClock = (ctx && ctx.getClock) || C.getClock, getBird = (ctx && ctx.birdPos) || C.birdPos;
     dt = dt || 0;
@@ -515,5 +520,378 @@ window.WFR_FOLK = (function () {
     };
   }
 
-  return { create, tick, trade, tug, state, get hal() { return hal; }, SAY: { trade: SAY_TRADE, tug: SAY_TUG } };
+  /* ═══════════════════════════════════════════════════════════════════════════
+     THE CHILDREN — PIM AND TESS (board 552 §2–3). Marth, Oct 9: "I think there should be humans around the island."
+
+     They play TAG on the village green: one runs, the other chases along the runner's own trail, and at the touch
+     the two swap (the tagged one stops to laugh, then spins and chases; the tagger dashes off the way they came,
+     looking back over a shoulder). After ~10 s of it one KNEELS AND DIGS for 9 s while the other bends over to
+     watch, and a worm turns up: ctx.onDig(at) hands it to the game's treat pipeline. At most 2 dug worms lie on the
+     green (ctx.dugLive()); while there are 2, the dig waits and they play on. Then tag again. Pim digs first, then
+     Tess, in turn. At clock > 2040 they walk home into house 0; they come out after the dawn (clock 150).
+
+     ⚠ No random draw anywhere: every waypoint, hole, speed and length is frac(salt + k·α) on a counter. Every motion is a
+     closed-form function of the time into its phase (a spline run at a known speed, a straight walk), and every
+     phase's end is known when the phase starts, so a big clock step (timeScale 8, ~11 fps headless) lands exactly
+     where small steps would. A clock JUMP (> 30: sleep, setClock) snaps them: on the field by day, inside by night.
+     ⚠ Nothing of Hal's is shared but THREE: his tick runs first and is the same code as before.
+     ⚠ PHONE-LIGHT: each child is built by WFR_HUMANS (the villagers' rig and parts, KIDS looks, a 1.15 head) and then
+     each rig node's visible parts are FOLDED into one mesh (each part's colour written into its vertices, the node's
+     first texture kept): 7 meshes a child (6 in a dress) instead of ~22. Hidden past 120 m from the bird.
+
+     WFR_FOLK.createKids(THREE, scene, ctx) → kids   once; WFR_FOLK.tick(dt) then runs them after Hal
+     WFR_FOLK.kids()                                  → their state, for the bench (see kidsState)
+     ctx required: H, VILLAGE {x,z}, getClock(), birdPos(), door {x,z} (house 0's threshold), doorOut {x,z} (where
+       they step out)
+     ctx optional: humans, renderer, emojiSprite, openDoor(sec) (hold house 0's door open that long),
+       onDig(at) → false when no worm could be placed (at = [x, y, z], on the ground at the hole),
+       dugLive() → how many dug worms still lie on the green (called every tick), onLaugh(at, who),
+       field {x, z} (the middle of their ground; default VILLAGE + 12.5 m at −0.35 rad: clear of the well, the
+       green sign, the dawn worms, every build site and the lantern ring), shadows (default true), cull (120),
+       fold (default true)
+     ═══════════════════════════════════════════════════════════════════════════ */
+  const K_SCALE = 0.72 * 1.35, K_HEAD = 1.15;               // 72% of a villager (humans.js's opts.scale is absolute: theirs is 1.35)
+  const K_FIELD_D = 12.5, K_FIELD_A = -0.35, K_WAY_R = 3.4, K_DIG_R = 2.6;
+  const K_CATCH = 0.6, K_PAUSE = 0.8, K_RISE = 1.0, K_TAG = 6, K_TAG_SPAN = 3, K_DIG = 9, K_FIND = 1.8, K_LAG = 0.8;
+  const K_WALK = 1.5, K_JOG = 2.1, OUT_AT = 150, MAX_DUG = 2, RAMP_R = 0.35, RAMP_C = 0.3;
+  const K_STEP_RUN = 3.6 * 1.35 / K_SCALE * 0.85, K_STEP_WALK = 3.6 * 1.35 / K_SCALE;   // stride phase per metre: short legs take more steps
+  const R2A = 0.7548776662466927, R2B = 0.5698402909980532;   // the plastic number's 2-D low-discrepancy pair
+  const ramp = (u, a) => (u <= 0 ? 0 : u < a ? u * u / (2 * a) : u - a / 2);   // distance run by time u, starting from still
+  const KID_PAL = [
+    { name: 'Pim', alt: 4, pal: { shirt: 0xe3a23b, pants: 0x3e5f86, shoes: 0xb8322e, skin: 0xf0c3a0, hair: 0x9a4f22 } },
+    { name: 'Tess', alt: 3, pal: { shirt: 0xd9667f, pants: 0xf0e8d6, shoes: 0x4a2c1e, skin: 0xa86a44, hair: 0x231610 } },
+  ];
+
+  /* the fold: one mesh per rig node, the parts' colours in the vertices (the shared geometries are copied, never touched) */
+  const FOLDMAT = {};
+  function fold(m, shadows) {
+    const hiddenUp = (o) => { for (let p = o.parent; p && p !== m.g; p = p.parent) if (!p.visible) return true; return false; };
+    const groups = new Map();
+    m.g.traverse((o) => { if (o.isMesh && o.visible && !hiddenUp(o)) { if (!groups.has(o.parent)) groups.set(o.parent, []); groups.get(o.parent).push(o); } });
+    const v = new T.Vector3(), nm = new T.Matrix3();
+    for (const [node, list] of groups) {
+      let nv = 0, ni = 0;
+      for (const o of list) { const g = o.geometry; nv += g.attributes.position.count; ni += g.index ? g.index.count : g.attributes.position.count; }
+      const pos = new Float32Array(nv * 3), nor = new Float32Array(nv * 3), uv = new Float32Array(nv * 2), col = new Float32Array(nv * 3), idx = new (nv > 65535 ? Uint32Array : Uint16Array)(ni);
+      let vo = 0, io = 0;
+      for (const o of list) {
+        o.updateMatrix(); nm.getNormalMatrix(o.matrix);
+        const g = o.geometry, P = g.attributes.position, N = g.attributes.normal, U = g.attributes.uv, c = o.material.color || new T.Color(1, 1, 1), n = P.count;
+        for (let i = 0; i < n; i++) {
+          const q = (vo + i) * 3;
+          v.fromBufferAttribute(P, i).applyMatrix4(o.matrix); pos[q] = v.x; pos[q + 1] = v.y; pos[q + 2] = v.z;
+          if (N) { v.fromBufferAttribute(N, i).applyMatrix3(nm).normalize(); nor[q] = v.x; nor[q + 1] = v.y; nor[q + 2] = v.z; }
+          if (U) { uv[(vo + i) * 2] = U.getX(i); uv[(vo + i) * 2 + 1] = U.getY(i); }
+          col[q] = c.r; col[q + 1] = c.g; col[q + 2] = c.b;
+        }
+        if (g.index) { const a = g.index.array; for (let k = 0; k < a.length; k++) idx[io + k] = a[k] + vo; io += a.length; }
+        else { for (let k = 0; k < n; k++) idx[io + k] = vo + k; io += n; }
+        vo += n;
+      }
+      const geo = new T.BufferGeometry();
+      geo.setAttribute('position', new T.BufferAttribute(pos, 3)); geo.setAttribute('normal', new T.BufferAttribute(nor, 3));
+      geo.setAttribute('uv', new T.BufferAttribute(uv, 2)); geo.setAttribute('color', new T.BufferAttribute(col, 3));
+      geo.setIndex(new T.BufferAttribute(idx, 1)); geo.computeBoundingSphere();
+      const base = list[0].material, rough = base.roughness == null ? 0.8 : base.roughness, key = [base.map ? base.map.uuid : '-', rough, base.side].join('|');
+      const mat = FOLDMAT[key] || (FOLDMAT[key] = new T.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: rough, metalness: 0, side: base.side, map: base.map || null }));
+      for (const o of list) node.remove(o);
+      const mesh = new T.Mesh(geo, mat); mesh.name = 'fold'; mesh.castShadow = !!shadows; mesh.receiveShadow = true; node.add(mesh);
+    }
+  }
+  function dirtMesh() {             // the hole they dig: a dark scoop and the soil heaped round it (one draw for both holes)
+    const P = [part(new T.CircleGeometry(0.2, 12), 0x2e2016, 0, 0.025, 0, -Math.PI / 2)];
+    for (const [a, r, s] of [[0.4, 0.3, 0.16], [1.5, 0.32, 0.13], [2.6, 0.29, 0.15], [3.9, 0.31, 0.12], [5.0, 0.3, 0.14]]) P.push(part(new T.SphereGeometry(1, 8, 5, 0, Math.PI * 2, 0, Math.PI / 2), 0x6b4a2e, Math.cos(a) * r, 0, Math.sin(a) * r, 0, a, 0, s * 1.25, s * 0.8, s));
+    const im = new T.InstancedMesh(merged(P), vmat({ roughness: 1 }), 2); im.frustumCulled = false; im.receiveShadow = true; im.name = 'folk:holes';
+    const z = new T.Matrix4().makeScale(0, 0, 0); im.setMatrixAt(0, z); im.setMatrixAt(1, z); im.instanceMatrix.needsUpdate = true;
+    return im;
+  }
+
+  function createKids(THREE, scene, ctx) {
+    T = THREE; K = Object.assign({}, ctx || {});
+    if (kid) disposeKids();
+    const HUM = K.humans || window.WFR_HUMANS, V = K.VILLAGE;
+    if (!HUM || typeof K.H !== 'function' || !V || !K.door) throw new Error('WFR_FOLK.createKids: ctx needs H, VILLAGE, door and WFR_HUMANS');
+    const shadows = K.shadows !== false, F = K.field || { x: V.x + Math.cos(K_FIELD_A) * K_FIELD_D, z: V.z + Math.sin(K_FIELD_A) * K_FIELD_D };
+    const list = KID_PAL.map((p, j) => {
+      const look = HUM.KIDS ? HUM.KIDS[j] : null;
+      const m = HUM.make(T, p.alt, p.pal, { renderer: K.renderer, look, scale: K_SCALE, headScale: look ? K_HEAD : 1, shadows });
+      m.g.name = 'folk:' + p.name.toLowerCase();
+      for (const k in m.props) if (m.props[k]) m.props[k].visible = false;
+      if (K.fold !== false) fold(m, shadows); else m.g.traverse((o) => { if (o.isMesh) o.receiveShadow = true; });
+      scene.add(m.g);
+      const laugh = K.emojiSprite ? K.emojiSprite('\u{1F606}', 0.6) : sprite('\u{1F606}', 0.6); laugh.visible = false; laugh.name = 'folk:laugh'; scene.add(laugh);
+      return Object.assign(m, { name: p.name, j, pos: new T.Vector3(), last: new T.Vector3(), yaw: 0, stride: j * 1.3, in: false, culled: false, laughT: 0, laugh, kind: 'stand', want: 0, lookAt: null, snap: true });
+    });
+    const holes = dirtMesh(); scene.add(holes);
+    const ud = { x: K.door.x - F.x, z: K.door.z - F.z }, ul = Math.hypot(ud.x, ud.z) || 1;
+    kid = { list, scene, F, U: { x: ud.x / ul, z: ud.z / ul }, holesMesh: holes, holes: [], slots: [null, null], cull: K.cull || 120,
+      ph: { k: 'inside', end: Infinity }, pt: 0, lt: 0, day: 0, lastClock: 0, wp: 0, dk: 0, rounds: 0, tags: 0, tagPhases: 0, tagT: 0, tagLen: K_TAG,
+      digs: 0, found: 0, dugLive: 0, culled: false };
+    const c0 = K.getClock ? K.getClock() : 600;
+    kid.lastClock = c0;
+    if (c0 > HOME_AT || c0 < OUT_AT) toInside(); else snapField();
+    kidsTick(0);
+    return kid;
+  }
+  function disposeKids() {
+    for (const k of kid.list) { if (k.g.parent) k.g.parent.remove(k.g); if (k.laugh.parent) k.laugh.parent.remove(k.laugh); }
+    if (kid.holesMesh.parent) kid.holesMesh.parent.remove(kid.holesMesh);
+    kid = null;
+  }
+
+  /* ── where they go ── */
+  function kField(n, rMax, salt) {  // the n-th point of a low-discrepancy fill of the disc of radius rMax round the field's middle
+    const u = frac(salt + n * R2A), w = frac(salt * 1.7 + n * R2B), r = rMax * Math.sqrt(u), a = 2 * Math.PI * w;
+    return { x: kid.F.x + r * Math.cos(a), z: kid.F.z + r * Math.sin(a) };
+  }
+  function spline(P, per) {         // a centripetal Catmull-Rom through P, sampled, with its running length
+    const n = P.length, E = [{ x: 2 * P[0].x - P[1].x, z: 2 * P[0].z - P[1].z }].concat(P, [{ x: 2 * P[n - 1].x - P[n - 2].x, z: 2 * P[n - 1].z - P[n - 2].z }]);
+    const xs = [], zs = [], at = [0], L = (a, b) => Math.max(1e-4, Math.sqrt(Math.hypot(b.x - a.x, b.z - a.z)));
+    for (let i = 0; i < n - 1; i++) {
+      const p0 = E[i], p1 = E[i + 1], p2 = E[i + 2], p3 = E[i + 3], t0 = 0, t1 = L(p0, p1), t2 = t1 + L(p1, p2), t3 = t2 + L(p2, p3);
+      for (let k = i ? 1 : 0; k <= per; k++) {
+        const t = t1 + (t2 - t1) * k / per, l = (a, b, ta, tb) => { const w = (t - ta) / (tb - ta); return { x: a.x + (b.x - a.x) * w, z: a.z + (b.z - a.z) * w }; };
+        const A1 = l(p0, p1, t0, t1), A2 = l(p1, p2, t1, t2), A3 = l(p2, p3, t2, t3), q = l(l(A1, A2, t0, t2), l(A2, A3, t1, t3), t1, t2);
+        xs.push(q.x); zs.push(q.z);
+      }
+      at.push(xs.length - 1);
+    }
+    const cum = [0]; for (let i = 1; i < xs.length; i++) cum.push(cum[i - 1] + Math.hypot(xs[i] - xs[i - 1], zs[i] - zs[i - 1]));
+    return { xs, zs, cum, at, len: cum[cum.length - 1] };
+  }
+  function trailAt(tr, s) {         // the point s metres along, and the way it runs there
+    const c = tr.cum, n = c.length, X = tr.xs, Z = tr.zs;
+    if (s <= 0) return { x: X[0], z: Z[0], dx: X[1] - X[0], dz: Z[1] - Z[0] };
+    if (s >= tr.len) { const dx = X[n - 1] - X[n - 2], dz = Z[n - 1] - Z[n - 2], d = Math.hypot(dx, dz) || 1, e = s - tr.len; return { x: X[n - 1] + dx / d * e, z: Z[n - 1] + dz / d * e, dx, dz }; }
+    let lo = 0, hi = n - 1; while (hi - lo > 1) { const mid = (lo + hi) >> 1; if (c[mid] <= s) lo = mid; else hi = mid; }
+    const w = (s - c[lo]) / ((c[hi] - c[lo]) || 1);
+    return { x: X[lo] + (X[hi] - X[lo]) * w, z: Z[lo] + (Z[hi] - Z[lo]) * w, dx: X[hi] - X[lo], dz: Z[hi] - Z[lo] };
+  }
+  function addWaypoint(P) {         // the next point of the field's sequence that makes a good leg: ≥ 2.4 m on, never back through the one behind
+    const a = P[P.length - 2], b = P[P.length - 1], ll = Math.hypot(b.x - a.x, b.z - a.z) || 1, lx = (b.x - a.x) / ll, lz = (b.z - a.z) / ll;
+    for (let k = 0; k < 40; k++) {
+      const w = kField(kid.wp++, K_WAY_R, 0.5), dx = w.x - b.x, dz = w.z - b.z, d = Math.hypot(dx, dz);
+      if (d < 2.4 || (dx * lx + dz * lz) / d < (P.length === 2 ? -0.2 : -0.35)) continue;
+      P.push(w); return;
+    }
+    P.push(kField(kid.wp++, K_WAY_R, 0.5));
+  }
+
+  /* ── the phases: each knows its end when it starts ── */
+  function startTag(runner, chaser, pause) {
+    const L = kid.list, R = L[runner].pos, Cp = L[chaser].pos, j = kid.rounds++;
+    const vR = 2.4 + 0.4 * seq(j, 0.13, SILVER), vC = vR + 0.45 + 0.35 * seq(j, 0.61, E1);
+    const P = [{ x: Cp.x, z: Cp.z }, { x: R.x, z: R.z }];
+    if (Math.hypot(R.x - Cp.x, R.z - Cp.z) < 0.3) P[1] = { x: R.x + kid.U.z * 0.3, z: R.z - kid.U.x * 0.3 };
+    let tr = null, s0 = 0, u = 0;
+    for (let tries = 0; tries < 16; tries++) {
+      addWaypoint(P); if (P.length < 4) continue;
+      tr = spline(P, 14); s0 = tr.cum[tr.at[1]];
+      u = Math.max(pause + RAMP_C + 0.2, (s0 - K_CATCH + vC * (pause + RAMP_C / 2) - vR * RAMP_R / 2) / (vC - vR));   // when the chaser closes to arm's length
+      if (tr.len >= s0 + vR * ramp(u, RAMP_R) + 1.5) break;
+    }
+    kid.ph = { k: 'tag', end: u, runner, chaser, trail: tr, s0, vR, vC, pause };
+  }
+  function newTagSpell() { kid.tagT = 0; kid.tagLen = K_TAG + K_TAG_SPAN * seq(kid.tagPhases++, 0.19, PHI); }
+  function startDig() {
+    const L = kid.list, dg = kid.digs % 2, wt = 1 - dg; kid.digs++;
+    let D = null;
+    for (let k = 0; k < 40 && !D; k++) { const q = kField(kid.dk++, K_DIG_R, 0.27); if (kid.holes.every((h) => Math.hypot(h.x - q.x, h.z - q.z) >= 1.8)) D = q; }
+    if (!D) D = kField(kid.dk++, K_DIG_R, 0.27);
+    const A = L[dg].pos, B = L[wt].pos;
+    let ax = A.x - D.x, az = A.z - D.z; const al = Math.hypot(ax, az); if (al < 1e-3) { ax = kid.U.x; az = kid.U.z; } else { ax /= al; az /= al; }
+    const c = Math.cos(1.9), s = Math.sin(1.9);
+    const to = []; to[dg] = { x: D.x + ax * 0.55, z: D.z + az * 0.55 }; to[wt] = { x: D.x + (ax * c - az * s) * 1.15, z: D.z + (ax * s + az * c) * 1.15 };   // she kneels on the side she came from; the other a step round
+    const from = [{ x: L[0].pos.x, z: L[0].pos.z }, { x: L[1].pos.x, z: L[1].pos.z }], dur = [0, 1].map((i) => Math.hypot(to[i].x - from[i].x, to[i].z - from[i].z) / K_JOG);
+    kid.holes.unshift(D); if (kid.holes.length > 2) kid.holes.length = 2;
+    kid.slots[(kid.digs - 1) % 2] = { x: D.x, z: D.z, grow: 0 };
+    kid.ph = { k: 'goDig', end: Math.max(0.4, dur[0], dur[1]), digger: dg, watcher: wt, D, from, to, dur };
+  }
+  function startHome() {
+    const L = kid.list, d = K.door, from = L.map((k) => ({ x: k.pos.x, z: k.pos.z })), dur = L.map((k) => (k.in ? 0 : Math.hypot(d.x - k.pos.x, d.z - k.pos.z) / K_WALK));
+    kid.ph = { k: 'home', end: Math.max(dur[0], dur[1]), from, dur, opened: [false, false] };
+  }
+  function toInside() { kid.ph = { k: 'inside', end: Infinity }; kid.pt = 0; for (const k of kid.list) { k.in = true; k.snap = true; } }
+  function startOut() {
+    const o = K.doorOut || K.door, to = [{ x: kid.F.x - kid.U.x * 0.9, z: kid.F.z - kid.U.z * 0.9 }, { x: kid.F.x + kid.U.x * 0.9, z: kid.F.z + kid.U.z * 0.9 }];
+    const delay = [0, K_LAG], dur = [0, 1].map((i) => delay[i] + Math.hypot(to[i].x - o.x, to[i].z - o.z) / K_JOG);
+    kid.ph = { k: 'out', end: Math.max(dur[0], dur[1]), from: { x: o.x, z: o.z }, to, delay, dur };
+    if (K.openDoor) K.openDoor(K_LAG + 3);
+  }
+  function snapField() {
+    const L = kid.list, F = kid.F, U = kid.U;
+    setXZ(L[0], F.x - U.x * 1.0, F.z - U.z * 1.0); setXZ(L[1], F.x + U.x * 1.0, F.z + U.z * 1.0);
+    for (const k of L) { k.in = false; k.snap = true; k.yaw = Math.atan2(-U.x, -U.z); }
+    newTagSpell(); startTag(0, 1, K_PAUSE); kid.pt = 0;
+  }
+  function setXZ(k, x, z) { k.pos.set(x, K.H(x, z), z); }
+  function laughAt(k, t) { k.laughT = Math.max(k.laughT, t); if (typeof K.onLaugh === 'function') { try { K.onLaugh(arr(k.pos), k.name); } catch (e) { /* the game's side */ } } }
+  function kNext() {
+    const ph = kid.ph, L = kid.list;
+    kPlace();                                   // where everyone is at the end of the phase
+    kid.pt = 0;
+    if (ph.k === 'tag') {
+      kid.tags++; kid.tagT += ph.end;
+      laughAt(L[ph.runner], K_PAUSE + 0.5); laughAt(L[ph.chaser], 0.8);
+      if (kid.tagT >= kid.tagLen && kid.dugLive < MAX_DUG) startDig(); else startTag(ph.chaser, ph.runner, K_PAUSE);   // the tagged one is it now
+    } else if (ph.k === 'goDig') kid.ph = { k: 'dig', end: K_DIG, digger: ph.digger, watcher: ph.watcher, D: ph.D, to: ph.to };
+    else if (ph.k === 'dig') {
+      const D = ph.D, at = [+D.x.toFixed(4), +K.H(D.x, D.z).toFixed(4), +D.z.toFixed(4)];
+      let r = true; if (typeof K.onDig === 'function') { try { r = K.onDig(at); } catch (e) { r = false; } }
+      const found = r !== false; if (found) { kid.found++; kid.dugLive++; }
+      if (found) { laughAt(L[ph.digger], K_FIND); laughAt(L[ph.watcher], K_FIND - 0.4); }
+      kid.ph = { k: 'find', end: K_FIND, digger: ph.digger, watcher: ph.watcher, D, to: ph.to, found };
+    } else if (ph.k === 'find') { newTagSpell(); startTag(ph.watcher, ph.digger, K_RISE); }   // the watcher tags the finder and runs
+    else if (ph.k === 'home') toInside();
+    else if (ph.k === 'out') { newTagSpell(); startTag(0, 1, K_PAUSE); }
+  }
+  function kAdvance(step) {
+    for (let guard = 0; step > 1e-9 && guard < 64; guard++) {
+      const left = kid.ph.end - kid.pt;
+      if (step < left) { kid.pt += step; return; }
+      step -= Math.max(0, left); kid.pt = kid.ph.end; kNext();
+    }
+  }
+  /* everyone's place, heading and act at (phase, time into it): a pure function of the two */
+  function kPlace() {
+    const ph = kid.ph, t = kid.pt, L = kid.list, toward = (k, p) => Math.atan2(p.x - k.pos.x, p.z - k.pos.z);
+    for (const k of L) k.lookAt = null;
+    if (ph.k === 'tag') {
+      const R = L[ph.runner], Cc = L[ph.chaser], a = trailAt(ph.trail, ph.s0 + ph.vR * ramp(t, RAMP_R)), b = trailAt(ph.trail, t < ph.pause ? 0 : ph.vC * ramp(t - ph.pause, RAMP_C));
+      setXZ(R, a.x, a.z); setXZ(Cc, b.x, b.z); R.in = Cc.in = false;
+      R.kind = 'run'; R.want = Math.atan2(a.dx, a.dz); if (t < 1.1) R.lookAt = Cc;   // a look back over the shoulder as she dashes off
+      if (t < ph.pause) { Cc.kind = 'laugh'; Cc.want = toward(Cc, R.pos); }
+      else { Cc.kind = ph.end - t < 0.4 ? 'reach' : 'run'; Cc.want = Math.atan2(b.dx, b.dz); }
+    } else if (ph.k === 'goDig' || ph.k === 'dig' || ph.k === 'find') {
+      for (let i = 0; i < 2; i++) {
+        const k = L[i], dig = i === ph.digger;
+        if (ph.k === 'goDig') {
+          const u = ph.dur[i] > 1e-6 ? Math.min(1, t / ph.dur[i]) : 1, f = ph.from[i], g = ph.to[i];
+          setXZ(k, f.x + (g.x - f.x) * u, f.z + (g.z - f.z) * u);
+          if (u < 1) { k.kind = 'jog'; k.want = Math.atan2(g.x - f.x, g.z - f.z); } else { k.kind = 'stand'; k.want = toward(k, ph.D); }
+        } else {
+          setXZ(k, ph.to[i].x, ph.to[i].z); k.want = toward(k, ph.D);
+          k.kind = ph.k === 'dig' ? (dig ? 'dig' : 'watch') : ph.found ? 'cheer' : dig ? 'shrug' : 'stand';
+        }
+        k.in = false;
+      }
+    } else if (ph.k === 'home') {
+      const d = K.door;
+      for (let i = 0; i < 2; i++) {
+        const k = L[i], f = ph.from[i], u = ph.dur[i] > 1e-6 ? Math.min(1, t / ph.dur[i]) : 1;
+        if (!ph.opened[i] && t >= ph.dur[i] - 2.5 / K_WALK) { ph.opened[i] = true; if (K.openDoor) K.openDoor(3); }
+        if (u >= 1) { k.in = true; setXZ(k, d.x, d.z); continue; }
+        setXZ(k, f.x + (d.x - f.x) * u, f.z + (d.z - f.z) * u); k.kind = 'walk'; k.want = Math.atan2(d.x - f.x, d.z - f.z);
+      }
+    } else if (ph.k === 'out') {
+      const o = ph.from;
+      for (let i = 0; i < 2; i++) {
+        const k = L[i], g = ph.to[i];
+        if (t < ph.delay[i]) { k.in = true; setXZ(k, o.x, o.z); k.snap = true; continue; }
+        if (k.in) { k.in = false; k.snap = true; k.yaw = Math.atan2(g.x - o.x, g.z - o.z); }
+        const u = Math.min(1, (t - ph.delay[i]) / Math.max(1e-6, ph.dur[i] - ph.delay[i]));
+        setXZ(k, o.x + (g.x - o.x) * u, o.z + (g.z - o.z) * u);
+        if (u < 1) { k.kind = 'jog'; k.want = Math.atan2(g.x - o.x, g.z - o.z); } else { k.kind = 'stand'; k.want = toward(k, L[1 - i].pos); }
+      }
+    } else for (const k of L) { k.in = true; setXZ(k, K.door.x, K.door.z); }   // indoors: kept at the threshold, not drawn
+  }
+
+  /* ── their bodies: the villagers' rig (legL/legR/armL/armR .x/.z, body.y, waist .x/.z, head .x/.y) ── */
+  function kPose(k, r, rf, t) {
+    const m = k, w = Math.sin(k.stride), kind = k.kind;
+    let lL = 0, lR = 0, aL = 0, aR = 0, aLz = 0, aRz = 0, by = 0, hx = 0, wx = 0, wz = 0, fast = false;
+    if (kind === 'run' || kind === 'reach') {
+      lL = w * 0.95; lR = -lL; aL = -w * 0.9 - 0.3; aR = w * 0.9 - 0.3; aLz = -0.14; aRz = 0.14; by = Math.abs(Math.cos(k.stride)) * 0.12 - 0.02; wx = 0.22; hx = -0.08; fast = true;
+      if (kind === 'reach') { aR = -1.55; aRz = 0.05; wx = 0.32; }       // the arm out for the touch
+    } else if (kind === 'jog') { lL = w * 0.7; lR = -lL; aL = -w * 0.6 - 0.2; aR = w * 0.6 - 0.2; aLz = -0.08; aRz = 0.08; by = Math.abs(Math.cos(k.stride)) * 0.07; wx = 0.1; fast = true; }
+    else if (kind === 'walk') { lL = w * 0.55; lR = -lL; aL = -w * 0.4; aR = w * 0.4; by = Math.abs(Math.cos(k.stride)) * 0.04; fast = true; }
+    else if (kind === 'laugh') { const s = Math.sin(t * 17); aL = aR = -0.5; aLz = 0.5; aRz = -0.5; hx = -0.32 + s * 0.06; wx = -0.12 + s * 0.05; by = Math.abs(Math.sin(t * 8.5)) * 0.06; }   // hands to the belly, head back, shaking with it
+    else if (kind === 'dig') { const s = Math.sin(t * 7.5); lL = -1.4; lR = 0.2; by = -0.42; wx = 0.6; aL = -1.15 + s * 0.38; aR = -1.15 - s * 0.38; aLz = 0.16; aRz = -0.16; hx = 0.4; wz = s * 0.05; }   // on one knee, scooping, hand over hand
+    else if (kind === 'watch') { lL = -0.12; lR = 0.12; wx = 0.55; aL = aR = -0.32; aLz = 0.3; aRz = -0.3; by = -0.04; hx = -0.15 + Math.sin(t * 1.3) * 0.05; }   // bent over, hands on the knees
+    else if (kind === 'cheer') { const hop = Math.abs(Math.sin(t * 6.5)); aL = aR = -2.75 + Math.sin(t * 13) * 0.12; aLz = -0.3; aRz = 0.3; by = hop * 0.28; lL = -hop * 0.25; lR = -hop * 0.15; hx = -0.3; }
+    else if (kind === 'shrug') { aL = aR = -0.3; aLz = -0.55; aRz = 0.55; hx = 0.12; wz = 0.08; }
+    else { aL = Math.sin(t * 1.6 + k.j) * 0.04; aR = -aL; }
+    const q = fast ? rf : r;
+    ease(m.legL.rotation, 'x', lL, q); ease(m.legR.rotation, 'x', lR, q); ease(m.armL.rotation, 'x', aL, q); ease(m.armR.rotation, 'x', aR, q);
+    ease(m.armL.rotation, 'z', aLz, r); ease(m.armR.rotation, 'z', aRz, r); ease(m.body.position, 'y', by, q); ease(m.head.rotation, 'x', hx, r);
+    if (m.waist) { ease(m.waist.rotation, 'x', wx, r); ease(m.waist.rotation, 'z', wz, r); }
+  }
+
+  function kidsTick(dt, ctx) {
+    if (!kid) return;
+    const getClock = (ctx && ctx.getClock) || K.getClock, getBird = (ctx && ctx.birdPos) || K.birdPos;
+    dt = dt || 0;
+    const clock = getClock ? getClock() : 600;
+    const prev = kid.lastClock;
+    let dc = clock - prev; const wrapped = clock < prev; if (wrapped) { dc += CYCLE; kid.day++; }
+    kid.lastClock = clock;
+    const night = clock > HOME_AT || clock < OUT_AT;
+    kid.dugLive = typeof K.dugLive === 'function' ? K.dugLive() | 0 : 0;
+    let step = 0, pre = 0, go = null;
+    if (dc > JUMP) {                                          // slept, or the bench set the clock: where the new hour has them
+      if (night) toInside(); else if (kid.ph.k === 'inside' || kid.ph.k === 'home' || kid.ph.k === 'out') snapField();
+    } else {
+      step = dc > 1e-6 ? dc : dt;                              // a frozen clock (the tutorial's 1799): play goes on in real time
+      /* the hour turns INSIDE this step: the old phase runs to the boundary, the new one from it (so any frame rate lands alike) */
+      if (night && kid.ph.k !== 'home' && kid.ph.k !== 'inside') { go = startHome; if (dc > 1e-6 && !wrapped && prev <= HOME_AT) pre = Math.min(step, HOME_AT - prev); }
+      else if (!night && kid.ph.k === 'inside') { go = startOut; if (dc > 1e-6 && !wrapped && prev < OUT_AT) pre = Math.min(step, OUT_AT - prev); }
+    }
+    kid.lt += dt;
+    for (const k of kid.list) k.laughT = Math.max(0, k.laughT - step);
+    if (go) { kAdvance(pre); kPlace(); kid.pt = 0; go(); step -= pre; }
+    kAdvance(step);
+    kPlace();
+
+    const bp = getBird ? xyz(getBird()) : null, F = kid.F, e = Math.max(step, dt), r = Math.min(1, e * 10), rf = Math.min(1, e * 25);
+    kid.culled = bp ? Math.hypot(bp.x - F.x, bp.z - F.z) > kid.cull + 30 : false;   // the holes (the children carry their own cull)
+    for (const k of kid.list) {
+      k.culled = bp ? Math.hypot(bp.x - k.pos.x, bp.z - k.pos.z) > kid.cull : false;
+      const show = !k.in && !k.culled;
+      if (k.snap) { k.last.copy(k.pos); k.snap = false; }
+      const moved = Math.hypot(k.pos.x - k.last.x, k.pos.z - k.last.z); k.last.copy(k.pos);
+      if (moved < 4) k.stride += moved * (k.kind === 'walk' ? K_STEP_WALK : K_STEP_RUN);
+      k.g.visible = show; k.g.position.copy(k.pos);
+      if (!show) { k.laugh.visible = false; continue; }
+      const d = Math.atan2(Math.sin(k.want - k.yaw), Math.cos(k.want - k.yaw)); k.yaw += d * r; k.g.rotation.y = k.yaw;
+      kPose(k, r, rf, kid.lt);
+      let look = 0, lim = 0.8;                                 // the head: back at the chaser, or on the little bird when she is near and they are still
+      if (k.lookAt) { const b = Math.atan2(k.lookAt.pos.x - k.pos.x, k.lookAt.pos.z - k.pos.z) - k.yaw; look = Math.atan2(Math.sin(b), Math.cos(b)); lim = 1.2; }
+      else if (bp && k.kind !== 'run' && k.kind !== 'jog' && k.kind !== 'walk' && Math.hypot(bp.x - k.pos.x, bp.z - k.pos.z) < 9) { const b = Math.atan2(bp.x - k.pos.x, bp.z - k.pos.z) - k.yaw; look = Math.atan2(Math.sin(b), Math.cos(b)); }
+      look = Math.max(-lim, Math.min(lim, look)); k.head.rotation.y += (look - k.head.rotation.y) * Math.min(1, e * 6);
+      k.laugh.visible = k.laughT > 0;
+      if (k.laugh.visible) k.laugh.position.set(k.pos.x, k.pos.y + K_SCALE * 2.75 + 0.45 + Math.sin(kid.lt * 9) * 0.04, k.pos.z);
+    }
+    /* the holes: the one being dug grows with the digging; the last two stay */
+    const ph = kid.ph, im = kid.holesMesh, mx = kid.mx || (kid.mx = new T.Matrix4());
+    let any = false;
+    for (let i = 0; i < 2; i++) {
+      const s = kid.slots[i]; if (!s) continue; any = true;
+      const cur = (ph.k === 'goDig' || ph.k === 'dig') && (kid.digs - 1) % 2 === i;
+      const g = cur ? (ph.k === 'dig' ? 0.3 + 0.7 * Math.min(1, kid.pt / K_DIG) : 0) : 1;
+      if (g !== s.grow || !s.set) { s.grow = g; s.set = true; mx.makeScale(g, g, g).setPosition(s.x, K.H(s.x, s.z), s.z); im.setMatrixAt(i, mx); im.instanceMatrix.needsUpdate = true; }
+    }
+    im.visible = any && !kid.culled;
+  }
+  function kidsCost() {
+    let n = 0; const shown = (o) => { for (let p = o; p; p = p.parent) if (!p.visible) return false; return true; };
+    for (const k of kid.list) { k.g.traverse((o) => { if (o.isMesh && shown(o)) n++; }); if (shown(k.laugh)) n++; }
+    if (shown(kid.holesMesh)) n++;
+    return n;
+  }
+  function kidsState() {
+    if (!kid) return null;
+    const ph = kid.ph, V = K.VILLAGE, L = kid.list, nm = (i) => (i == null ? null : L[i].name);
+    return {
+      phase: ph.k, t: +kid.pt.toFixed(4), end: ph.end === Infinity ? null : +ph.end.toFixed(4),
+      it: ph.k === 'tag' ? nm(ph.chaser) : null, runner: ph.k === 'tag' ? nm(ph.runner) : null, digger: ph.digger != null ? nm(ph.digger) : null,
+      tags: kid.tags, rounds: kid.rounds, digs: kid.digs, found: kid.found, dugLive: kid.dugLive, day: kid.day,
+      holes: kid.holes.map((h) => [+h.x.toFixed(4), +K.H(h.x, h.z).toFixed(4), +h.z.toFixed(4)]),
+      field: [+kid.F.x.toFixed(4), +kid.F.z.toFixed(4)], door: [K.door.x, K.door.z],
+      kids: L.map((k) => ({ name: k.name, at: arr(k.pos), yaw: +k.yaw.toFixed(4), pose: k.kind, inside: k.in, visible: k.g.visible, laughing: k.laughT > 0,
+        fromVillage: +Math.hypot(k.pos.x - V.x, k.pos.z - V.z).toFixed(3), pk: +Math.hypot((k.pos.x - 70) * 0.8, k.pos.z - 230).toFixed(3) })),
+      draws: kidsCost(),
+    };
+  }
+
+  return { create, tick, trade, tug, state, createKids, kids: kidsState, get hal() { return hal; }, get children() { return kid; }, SAY: { trade: SAY_TRADE, tug: SAY_TUG } };
 })();

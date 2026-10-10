@@ -248,7 +248,7 @@
       var out = s.strips[e.k];
       switch (e.k) {
         case 'harp': harpLike(e, t, out, s.spb, false); break;
-        case 'mel': harpLike(e, t, out, s.spb, true); break;
+        case 'mel': if (s.muteMel && s.muteMel[e.b]) break; harpLike(e, t, out, s.spb, true); break;   /* 562: her taps play these */
         case 'bass': bass(e, t, out); break;
         case 'pad': pad(e, t, out, s.spb); break;
         case 'bell': bell(e, t, out); break;
@@ -273,15 +273,22 @@
     if (!ctx || !bus) return false;
     var variant = o.variant === 'legend' ? 'legend' : 'home', fadeIn = o.fadeIn != null ? o.fadeIn : 1.5;
     if (isMuted) setMuted(!!isMuted());
-    if (sess && sess.variant === variant && !sess.stopping) return true;
-    if (sess && sess.variant === variant && sess.stopping) {   /* came back while fading out: fade back up, keep the place */
+    if (!o.restart && sess && sess.variant === variant && !sess.stopping) return true;   /* restart: from startBar, even if already playing (562) */
+    if (!o.restart && sess && sess.variant === variant && sess.stopping) {   /* came back while fading out: fade back up, keep the place */
       ramp(sess.gain.gain, 1, Math.max(0.05, fadeIn)); sess.stopping = false; startTimer(); return true;
     }
     if (sess) { retire(sess, 0.6); stopTimer(); }
     sess = newSession(variant, ctx.currentTime + 0.06, o.startBar, fadeIn);
+    if (o.muteMel) { sess.muteMel = {}; o.muteMel.forEach(function (b) { sess.muteMel[b] = true; }); }   /* 562: the charted notes are hers to play */
     startTimer();
     return true;
   }
+  /* 562: one melody note NOW, through the session's melody strip (so Mute still reaches it) */
+  function note(m, beats) { if (!sess || !ctx) return false; harpLike({ b: 0, k: 'mel', m: m, d: beats || 1, v: 1 }, ctx.currentTime + 0.005, sess.strips.mel, sess.spb, true); return true; }
+  function clearMute() { if (sess) sess.muteMel = null; }
+  /* 562: the melody's events, bars from..to inclusive, in beats from bar 1 (the game must not reach into _test) */
+  function melody(from, to) { return build('home').filter(function (e) { return e.k === 'mel' && e.b >= (from - 1) * BEATS && e.b < to * BEATS; }).map(function (e) { return { b: e.b, m: e.m, d: e.d }; }); }
+  function latency() { return ctx ? (ctx.outputLatency || 0) + (ctx.baseLatency || 0) : 0; }
   function stop(o) {
     if (!sess || !ctx) return;
     var fade = (o && o.fade != null) ? o.fade : 1.2, s = sess;
@@ -297,6 +304,41 @@
     });
   }
 
+  /* ---------- 544: "The Open Spot" (working title), the MISSION COMPLETE. sting - ORIGINAL (BRIEF_544_546 section 6) ----------
+     G major, quarter = 140: a D5 triplet pickup, G5 dotted quarter, B5 eighth, D6 held; underneath IV -> V -> I (C, D, G) - not
+     the Mario cadence, no melody from any game. A soft brass (two saws +-5 ct, a lowpass opening 900 -> 2400 Hz in 30 ms); the
+     thump once on the downbeat; a bell on the last chord; then the two dots HEARD as bells (D6 at +1.2 s, G6 at +2.4 s).
+     One pass on the audio clock through the music bus (mute and volume hold). Muted: nothing is scheduled at all. */
+  var cueN = 0;
+  function brass(m, t, dur, peak, out) {
+    var end = t + dur + 0.26, v = voice(t, end, 'brass'); if (!v) return 0;
+    var lp = keep(v, ctx.createBiquadFilter()); lp.type = 'lowpass'; lp.Q.value = 0.7;
+    lp.frequency.setValueAtTime(900, t); lp.frequency.linearRampToValueAtTime(2400, t + 0.03); lp.frequency.linearRampToValueAtTime(1500, t + dur);
+    var g = keep(v, ctx.createGain()); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(peak, t + 0.03);
+    g.gain.setValueAtTime(peak * 0.8, t + dur); g.gain.linearRampToValueAtTime(0, t + dur + 0.22);
+    for (var s = -1; s <= 1; s += 2) { var o = keep(v, ctx.createOscillator()); o.type = 'sawtooth'; o.frequency.value = hz(m); o.detune.value = 5 * s;
+      var og = keep(v, ctx.createGain()); og.gain.value = 0.5; o.connect(og); og.connect(lp); run(v, o, t, end); }
+    lp.connect(g); g.connect(out); return 1;
+  }
+  function cue(name) {
+    if (name !== 'mission' || !ctx || !bus) return 0;
+    if (isMuted && isMuted()) return 0;                                     /* muted: schedule nothing (bench check 10) */
+    var t0 = ctx.currentTime + 0.05, q = 60 / 140, n = 0, i, B = REF * db(-8) * 2.2, out = ctx.createGain();
+    out.connect(bus); setTimeout(function () { try { out.disconnect(); } catch (e) { /* gone */ } }, 6000);
+    for (i = 0; i < 3; i++) n += brass(midi('D5'), t0 + i * q / 3, q / 3 * 0.85, B * 0.8, out);
+    n += brass(midi('G5'), t0 + q, q * 1.45, B, out);
+    n += brass(midi('B5'), t0 + q * 2.5, q * 0.45, B, out);
+    n += brass(midi('D6'), t0 + q * 3, q * 1.5 + 0.5, B, out);
+    [['C4', 'E4', 'G4'], ['D4', 'F#4', 'A4'], ['G3', 'B3', 'D4']].forEach(function (ch, j) {
+      var at = [0, q, q * 3][j], dur = [q * 0.9, q * 1.9, 1.6][j];
+      ch.forEach(function (nm) { n += brass(midi(nm), t0 + at, dur, B * 0.32, out); }); });
+    [['C3', 0], ['D3', q], ['G2', q * 3], ['G3', q * 3]].forEach(function (b) { bass({ m: midi(b[0]), v: 1 }, t0 + b[1], out); n++; });
+    thump(null, t0 + q, out); n++;
+    bell({ m: midi('G5') }, t0 + q * 3, out); n++;
+    bell({ m: midi('D6') }, t0 + 1.2, out); n++;                               /* the second dot */
+    bell({ m: midi('G6') }, t0 + 2.4, out); n++;                               /* the third dot */
+    cueN += n; return n;
+  }
   /* offline bench: schedule a whole render up front on an OfflineAudioContext (no timers, no fades) */
   function render(o) {
     stats = { scheduled: 0, dropped: 0, maxActive: 0 }; active = [];
@@ -308,7 +350,8 @@
   }
 
   window.WFR_MUSIC = {
-    init: init, play: play, stop: stop, setMuted: setMuted, setVolume: setVolume,
+    cue: cue, cueCount: function () { return cueN; },
+    init: init, play: play, stop: stop, setMuted: setMuted, setVolume: setVolume, note: note, clearMute: clearMute, melody: melody, latency: latency,
     get playing() { return !!(sess && !sess.stopping); },
     get variant() { return sess ? sess.variant : null; },
     position: function () { if (!sess || !ctx) return null; var p = (ctx.currentTime - sess.loopStart) % sess.loopLen; return p < 0 ? p + sess.loopLen : p; },

@@ -10,6 +10,9 @@
      opts = { renderer, scale = 1.35, linear = auto, textures = true, look }
        look (Oct 9, board 552, additive): a LOOKS-shaped object used instead of LOOKS[i] (folk.js: Hal is
        Bo's look with a beard). Absent, every villager renders exactly as before.
+       headScale (board 552, additive): the head group scaled about its middle and lifted 0.2·(s − 1) so the
+       chin stays on the neck; the children's is 1.15. Absent (or 1), nothing changes.
+     WFR_HUMANS.KIDS: the children's looks (Pim, Tess), with two hair styles of their own ('mop', 'bunches').
 
    ⚠ THE RIG IS THE GAME'S, UNCHANGED. Hips pivot at (±0.15, 0.98, 0), shoulders
    at (±0.37, 1.74, 0), the head group sits at y 2.1, the broom hangs from armR at
@@ -47,6 +50,14 @@ window.WFR_HUMANS = (function () {
     { torso: 'm', sleeves: 'short', hair: 'curls', iris: 0x2b1a10, h: 1.02, w: 1.0, shirtTex: 'knit' },
     // Faye — a dress, a white apron, a headscarf over fair hair
     { torso: 'f', dress: true, sleeves: 'long', hair: 'scarf', scarf: 0xc8574b, apron: 0xf3ead8, iris: 0x4f6f8f, h: 0.95, w: 0.94, shirtTex: 'linen' },
+  ];
+  /* the village's children (Oct 9, board 552 §2: Pim and Tess, who play tag on the green). Handed in as opts.look with
+     opts.scale and opts.headScale by folk.js; LOOKS above is untouched, so no villager's look or index moves */
+  const KIDS = [
+    // Pim — a knit jumper with short sleeves, and a mop of hair with a fringe
+    { torso: 'm', sleeves: 'short', hair: 'mop', iris: 0x3d5f80, h: 0.97, w: 0.93, shirtTex: 'knit' },
+    // Tess — a short-sleeved dress over tights, and two bunches
+    { torso: 'f', dress: true, sleeves: 'short', hair: 'bunches', iris: 0x4a2e1c, h: 0.96, w: 0.91, shirtTex: 'linen' },
   ];
 
   let T = null;                 // THREE, from the first call
@@ -229,6 +240,20 @@ window.WFR_HUMANS = (function () {
       } else if (style === 'scarf') {
         p.push([sph(0.04, 8, 6), M(0.145, 0.04, 0.11, 0, 0, 0.3, 0.6, 1.3, 0.7)]);
         p.push([sph(0.04, 8, 6), M(-0.145, 0.04, 0.11, 0, 0, -0.3, 0.6, 1.3, 0.7)]);
+      } else if (style === 'mop') {          // a child's bowl cut (board 552): full all round, a thick fringe to the brows
+        p.push(capPart(0.22, 0.6, -0.3));
+        p.push([sph(0.19, 12, 8), M(0, 0.01, -0.05, 0, 0, 0, 1.04, 1.0, 0.92)]);                  // the back, full
+        p.push([sph(0.1, 12, 6), M(0, 0.135, 0.13, 0.15, 0, 0, 1.75, 0.5, 0.72)]);                // the fringe
+        for (const s of [-1, 1]) p.push([sph(0.06, 8, 6), M(0.168 * s, 0.035, 0.03, 0, 0, 0, 0.55, 1.25, 1.0)]);   // over the ears
+      } else if (style === 'bunches') {      // two bunches high at the sides, a parting fringe (board 552)
+        p.push(capPart(0.213, 0.58, -0.5));
+        p.push([sph(0.17, 12, 8), M(0, 0.04, -0.07, 0, 0, 0, 1.0, 1.0, 0.85)]);
+        p.push([sph(0.08, 10, 6), M(0, 0.165, 0.11, 0.2, 0, 0, 1.6, 0.42, 0.65)]);
+        const tail = [[0, -0.2], [0.03, -0.17], [0.05, -0.1], [0.055, -0.03], [0.035, 0.02], [0, 0.03]];
+        for (const s of [-1, 1]) {
+          p.push([sph(0.034, 8, 6), M(0.19 * s, 0.1, -0.06)]);                                       // the knot
+          p.push([lathe(tail, 10), M(0.205 * s, 0.09, -0.065, 0.25, 0, 0.75 * s)]);                  // the bunch, out and down
+        }
       }
       return merge(p);
     });
@@ -355,6 +380,7 @@ window.WFR_HUMANS = (function () {
     add(up, neckGeo(), skin);
 
     const head = new T.Group(); head.position.y = 2.1; up.add(head);
+    if (opts.headScale != null && opts.headScale !== 1) { head.scale.setScalar(opts.headScale); head.position.y = 2.1 + 0.2 * (opts.headScale - 1); }   // a child's bigger head, its chin kept on the neck (board 552)
     add(head, headSkinGeo(), skin);
     add(head, eyeGeo('white'), mat(0xf4efe6, null, { rough: 0.35 }));
     add(head, eyeGeo('iris'), mat(L.iris, null, { rough: 0.3 }));
@@ -407,5 +433,5 @@ window.WFR_HUMANS = (function () {
     return { meshes, tris, shownTris: shown };
   }
 
-  return { make, count, LOOKS };
+  return { make, count, LOOKS, KIDS };
 })();

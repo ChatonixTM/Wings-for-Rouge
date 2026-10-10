@@ -73,6 +73,13 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 /* HUD */
 .hud{position:fixed;left:0;right:0;top:0;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;
   padding:calc(env(safe-area-inset-top,0px) + 12px) 16px 0;pointer-events:none}
+#lvPill{pointer-events:auto;cursor:pointer}#quest::after{content:'  \203A';color:var(--rouge);font-weight:800}   /* 569: the level card opens What to do */
+.missions{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 96px);width:min(360px,calc(100% - 32px));max-height:calc(100% - 210px);overflow:auto;
+  background:var(--paper);border-radius:18px;padding:12px 16px 14px;box-shadow:0 10px 26px rgba(34,49,74,.28);z-index:6;pointer-events:auto}
+.missions .top{display:flex;justify-content:space-between;align-items:center;font-family:var(--display);font-weight:700;font-size:18px}
+.missions .top button{min-width:44px;min-height:44px;border-radius:999px;background:#eef6ff;color:#2f5fb0;font-size:16px}
+.missions h3{margin:8px 0 2px;font-family:var(--display);font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
+.missions ul{margin:0;padding-left:18px}.missions li{font-size:14px;line-height:1.45;color:var(--ink)}
 .pill{background:var(--paper);border-radius:16px;padding:8px 12px;font-family:var(--display);font-weight:600;font-size:16px;
   box-shadow:0 6px 16px rgba(34,49,74,.18);font-variant-numeric:tabular-nums;min-width:0;display:grid;gap:4px}
 .pill .top{display:flex;align-items:center;gap:8px;white-space:nowrap}
@@ -153,10 +160,12 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 .talk p strong{font-weight:800;color:var(--ink)}
 /* the chick's care card: when you stand beside it */
 .care{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 128px);   /* below the round buttons (Obito) */width:min(330px,calc(100% - 32px));
-  background:var(--paper);border-radius:18px;padding:12px 14px;box-shadow:0 10px 26px rgba(34,49,74,.28);display:grid;gap:8px;pointer-events:auto}
+  background:var(--paper);border-radius:18px;padding:9px 14px 10px;box-shadow:0 10px 26px rgba(34,49,74,.28);display:grid;gap:6px;pointer-events:auto}   /* compact (Oct 9): with the Bond row it reached the stick zone in portrait */
 .care .top{display:flex;justify-content:space-between;align-items:baseline;font-family:var(--display);font-weight:600}
 .care .top span{font-family:var(--body);font-size:12px;font-weight:700;color:var(--mute)}
-.stats{display:grid;grid-template-columns:auto 1fr;gap:4px 8px;align-items:center;font-size:12px;font-weight:700;color:#5a6780}
+.stats{display:grid;grid-template-columns:auto 1fr auto;gap:2px 8px;line-height:1.25;align-items:center;font-size:12px;font-weight:700;color:#5a6780}
+.stats .lv{font-size:11px;font-weight:800;color:var(--rouge);min-width:30px;text-align:right}   /* 563: a skill's level, beside its bar */
+.stats .hearts{font-size:12px;letter-spacing:2px;color:var(--rouge)}   /* 564: the bond */
 .stats .b{height:7px;border-radius:9px;background:#eadfcd;overflow:hidden}.stats .b i{display:block;height:100%;border-radius:9px}
 .care .row button{border-radius:999px;padding:9px 16px;min-height:44px;min-width:64px;font-size:15px;font-weight:600;background:var(--rouge);color:#fff}
 .care .row button.alt{background:#eef6ff;color:#2f5fb0}
@@ -188,6 +197,19 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
   background:var(--rouge);color:#fff;font-size:19px;font-weight:600;border-radius:999px;padding:15px 26px;
   box-shadow:0 8px 20px rgba(200,49,74,.35)}
 .warm small{display:block;font-family:var(--body);font-size:12px;font-weight:700;opacity:.85}
+#singEgg{bottom:calc(env(safe-area-inset-bottom,0px) + 118px);background:#2f5fb0;box-shadow:0 8px 20px rgba(47,95,176,.35)}   /* 562: the other way to keep it warm */
+.rhythm{position:fixed;inset:0;z-index:7;display:grid;grid-template-columns:repeat(3,1fr);touch-action:none;user-select:none;-webkit-user-select:none}
+.rhythm .lane{position:relative;overflow:hidden;border-left:1px solid rgba(255,255,255,.22);background:linear-gradient(to bottom,rgba(20,30,50,0) 0%,rgba(20,30,50,.28) 100%)}
+.rhythm .lane:first-child{border-left:0}
+.rhythm .ring{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 104px);width:66px;height:66px;margin-left:-33px;border-radius:50%;border:4px solid var(--c);box-shadow:0 0 14px var(--c);pointer-events:none;transition:transform .08s}
+.rhythm .ring.on{transform:scale(1.18);background:color-mix(in srgb,var(--c) 35%,transparent)}
+.rhythm .note{position:absolute;left:50%;top:0;width:46px;height:46px;margin-left:-23px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,var(--c) 60%);box-shadow:0 0 12px var(--c);pointer-events:none;will-change:transform}
+.rhythm .note.hit{opacity:0;transition:opacity .15s}.rhythm .note.miss{opacity:.25}
+.rhythm .rtop{position:absolute;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 14px);display:flex;justify-content:center;gap:16px;font-family:var(--display);font-weight:700;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.45);font-size:18px;pointer-events:none}
+.rhythm .rstop{position:absolute;right:14px;top:calc(env(safe-area-inset-top,0px) + 8px);min-height:44px;min-width:64px;border-radius:999px;background:rgba(255,255,255,.85);color:var(--ink);font-weight:700}
+.rhythm .grade{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 182px);transform:translateX(-50%);font-family:var(--display);font-weight:700;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.5);pointer-events:none;opacity:0;transition:opacity .25s}
+.rhythm .grade.on{opacity:1;transition:none}
+body.rhythmOn .hud{visibility:hidden}   /* the song has the whole screen: the level card and the round buttons step away */
 
 /* the card */
 .card h1{font-size:clamp(34px,9vw,52px)}
@@ -226,6 +248,7 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
   <button class="act" id="sing" type="button" hidden>Sing ♪</button>
   <button class="act" id="flutter" type="button" hidden>Flutter</button>
   <button class="act" id="jump" type="button" hidden>Jump</button>
+  <div class="missions" id="missions" hidden role="dialog" aria-label="What to do"><div class="top"><span>What to do</span><button type="button" id="missionsClose" aria-label="Close">✕</button></div><div id="missionsBody"></div></div>
   <div class="care" id="care" hidden>
     <div class="top">Your chick <span id="careStage">Chick</span></div>
     <div class="stats" id="careStats"></div>
@@ -234,6 +257,8 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
   <div class="talk" id="talk" hidden><b id="talkWho"></b><p id="talkText"></p><button type="button" id="talkNext">Next</button></div>
   <div class="tut" id="tut" hidden><b id="tutStep">Step 1 of 5</b><span id="tutText"></span></div>
   <button class="warm" id="warm" type="button" hidden>Keep it warm<small id="warmLeft">5 more</small></button>
+  <button class="warm" id="singEgg" type="button" hidden>♪ Sing to it<small>a song for the egg</small></button>
+  <div class="rhythm" id="rhythm" hidden><div class="lane" data-lane="0" style="--c:#7ec8f0"><i class="ring"></i><b class="grade"></b></div><div class="lane" data-lane="1" style="--c:#f2b134"><i class="ring"></i><b class="grade"></b></div><div class="lane" data-lane="2" style="--c:#ff8fa3"><i class="ring"></i><b class="grade"></b></div><div class="rtop"><span id="rScore">0</span><span id="rStreak">streak 0</span><span id="rMult">x1</span></div><button class="rstop" id="rStop" type="button">Stop</button></div>
 </div>
 
 <div class="screen" id="start">
@@ -278,15 +303,21 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 <div id="fade" aria-hidden="true"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="textures.js"></script>
-<script src="birds.js"></script>
-<script src="humans.js"></script>
-<script src="folk.js"></script>
-<script src="trees.js"></script>
-<script src="treehouses.js"></script>
-<script src="sounds.js"></script>
-<script src="music.js"></script>
-<script src="opening.js"></script>
+<script src="textures.js?v=ec93955e5345"></script>
+<script src="birds.js?v=ec93955e5345"></script>
+<script src="humans.js?v=ec93955e5345"></script>
+<script src="folk.js?v=ec93955e5345"></script>
+<script src="trees.js?v=ec93955e5345"></script>
+<script src="treehouses.js?v=ec93955e5345"></script>
+<script src="cabins.js?v=ec93955e5345"></script>
+<script src="cave.js?v=ec93955e5345"></script>
+<script src="sounds.js?v=ec93955e5345"></script>
+<script src="music.js?v=ec93955e5345"></script>
+<script src="rhythm.js?v=ec93955e5345"></script>
+<script src="pictograms.js?v=ec93955e5345"></script>
+<script src="hedgehogs.js?v=ec93955e5345"></script>
+<script src="opening.js?v=ec93955e5345"></script>
+<script src="skypiea.js?v=ec93955e5345"></script>
 <script>
 (() => {
 'use strict';
@@ -323,9 +354,11 @@ function H(x, z) {
   const vd = Math.hypot(x - VILLAGE.x, z - VILLAGE.z);
   h += (4.5 - h) * (1 - smooth(46, 70, vd));
   h = h * (1 - smooth(240, 300, d)) - 4 * smooth(270, 320, d);
+  if (DUNES) h = DUNES.H(x, z, h);   // 529: the dunes (zero outside their 45 m; never carries a height across WATER + 1.5 or 24)
   return h;
 }
 const WATER = 1.2;
+const DUNES = window.WFR_HOGS ? WFR_HOGS.makeDunes(THREE) : null;   // before the first H() call (the terrain pass)
 let seed = 1010;
 const rnd = () => { seed |= 0; seed = seed + 0x6D2B79F5 | 0; let t = Math.imul(seed ^ seed >>> 15, 1 | seed); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
 
@@ -452,7 +485,7 @@ function nightRule() {
 const NIGHT_OUT = 180, NIGHT_WARN = 120;
 function fadeFromDark() { const el = $('fade'); if (!el) return; el.style.transition = 'none'; el.style.opacity = '1'; void el.offsetWidth; el.style.transition = 'opacity 1.4s ease'; el.style.opacity = '0'; }
 function nightOut(g) {
-  const out = S.clock >= 2100 && S.tut === 0 && beginner() && !S.insideTH && (S.mode === 'fly' || S.mode === 'walk') && !S.talking;
+  const out = S.clock >= 2100 && S.tut === 0 && beginner() && !S.insideTH && !onNest() && (S.mode === 'fly' || S.mode === 'walk') && !S.talking;   // her own nest is home, not the cold (568)
   if (!out) { if (S.clock < 2100) { S.nightOut = 0; S.nightWarned = false; } return; }
   S.nightOut = (S.nightOut || 0) + g;
   if (S.nightOut >= NIGHT_WARN && !S.nightWarned) { S.nightWarned = true; toast('You are getting cold and sleepy out here in the dark\u2026', 4500); }
@@ -543,6 +576,7 @@ function emojiSprite(ch, size) {
     }
     if (slope > 0.45 && y > WATER + 1) c.lerp(ROCK, Math.min(0.85, (slope - 0.45) * 2.2));   // steep ground shows its rock
     c.offsetHSL(0, -0.06 * slope, -0.05 * slope + Math.sin(x * 0.37) * Math.cos(z * 0.31) * 0.02);
+    if (DUNES) DUNES.paint(x, z, y, c);   // 529: sand 0xe3cf9a and rock 0x8a8f78
     col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
   }
   for (let i = 0; i < 45000; i++) rnd();   // the old faceted pass drew one number per face: keep every later seed where it was
@@ -627,6 +661,17 @@ const toWorld = (h, lx, lz) => { const c = Math.cos(h.rot), s = Math.sin(h.rot);
   const well = new THREE.Mesh(new THREE.CylinderGeometry(1.2, 1.2, 1, 10), lam(0x9a948a, { flatShading: true }));
   tex(well, 'stone', 3, 1); well.position.set(VILLAGE.x, H(VILLAGE.x, VILLAGE.z) + 0.5, VILLAGE.z); scene.add(well);
 }());
+/* THE CABINS (board 552 section 4; Marth, Oct 9: "We still don't have any cabins.") - cabins.js. Four old log cabins at
+   fixed sites (no rnd()), APPENDED to houses[] at 12..15: npcs and TREEHOUSES read houses[0..10], so never insert.
+   Each carries a keepsake as its treat (552 F4), its door always open (openT Infinity), its own gable roof (roofAt). */
+const CABINS = window.WFR_CABINS ? WFR_CABINS.place(THREE, { H, HS, renderer, first: houses.length }) : [];
+for (const c of CABINS) { scene.add(c.g); for (const m of c.windowMats) WINDOW_MATS.push(m); houses.push(c); }   // the shore cabin is empty: its windows stay dark
+/* THE CAVE (board 528; Marth, Oct 8: "make there a cave on the other side of the mountain") - cave.js. A rock room under a dome
+   in a crag at the mountain's north-east foot, its mouth up the flank toward the peak; APPENDED to houses[] at 16 (after the
+   cabins, never inserted). cabin: true carries it through the cabins' wiring: no visits, the keepsake treat test (a grey
+   feather in an old nest), 'Inside the cave'. H() is untouched: the crag stands on the hill. */
+const CAVE = window.WFR_CAVE ? WFR_CAVE.place(THREE, { H, HS, renderer, first: houses.length, day: () => 1 - nightAmt(S.clock) }) : null;
+if (CAVE) { scene.add(CAVE.g); houses.push(CAVE); }
 /* THE VILLAGERS' TREE HOUSES (board 540; Marth: "every villager will have a slightly differently designed variant of the
    same tree house - wood"). One behind each villager's house, door toward the green; the young bird sleeps in one. */
 const TREEHOUSES = [];
@@ -639,6 +684,8 @@ if (window.WFR_TREEHOUSES) for (let j = 0; j < 6; j++) {
   TREEHOUSES.push({ j, th, g: th.g, x, z, y: y - 0.1, entryW: th.g.localToWorld(th.entry.clone()), insideW: th.g.localToWorld(th.inside.clone()), camW: th.g.localToWorld(new THREE.Vector3(0.35, th.platformTop + 2.15, 1.6)), lookW: th.g.localToWorld(new THREE.Vector3(0, th.platformTop + 0.35, -0.7)), openT: 0 });   // the camera high by the door, looking across the room to the straw bed
 }
 
+TREEHOUSES.forEach((t) => { const c = t.th.climb; if (!c || c.kind === 'steps') return;   // 553: the ladder's rungs in the world (the steps wait for their hatch)
+  const W = (p) => t.g.localToWorld(new THREE.Vector3(p[0], p[1], p[2])); t.climb = { kind: c.kind, footW: W(c.foot), rungsW: c.rungs.map(W), topW: W(c.top) }; });
 /* the lighthouse on the east shore */
 const lightY = Math.max(H(LIGHT.x, LIGHT.z), WATER);
 (function lighthouse() {
@@ -651,6 +698,10 @@ const lightY = Math.max(H(LIGHT.x, LIGHT.z), WATER);
   const cap = new THREE.Mesh(new THREE.ConeGeometry(1.6, 1.6, 12), lam(0x22314a)); cap.position.y = 17.8; g.add(cap);
   g.position.set(LIGHT.x, lightY, LIGHT.z); scene.add(g);
 }());
+/* THE OLD NESTS outdoors (528): one on the far dead tree's broken top (a red thread), one on the lighthouse's cap (white down,
+   there once the Eagle has come). Reached by landing: both perches are already landing spots. Taken = S.seen['nest:' + id]. */
+const OLDNESTS = window.WFR_CAVE ? WFR_CAVE.nests(THREE, { trees, lightTop: { x: LIGHT.x, y: lightY + 18.6, z: LIGHT.z }, renderer, HS, eagle: () => !!S.eagleFound }) : [];
+for (const n of OLDNESTS) scene.add(n.g);
 
 /* the big tree, and the place for the nest */
 const bigY = H(MOUND.x, MOUND.z), BIG = 1.7;
@@ -698,9 +749,10 @@ function groundAt(x, z) {
     const L = toLocal(h, x, z);
     if (Math.abs(L.x) < h.w / 2 + 0.1 && Math.abs(L.z) < h.d / 2 + 0.1) {
       const wallTop = h.y + h.ht * HS, rr = Math.max(h.w, h.d) * 0.78 / Math.SQRT2;
-      g = Math.max(g, wallTop + 2.6 * HS * Math.max(0, 1 - Math.max(Math.abs(L.x), Math.abs(L.z)) / rr));
+      g = Math.max(g, h.roofAt ? h.y + h.roofAt(L.x, L.z) * HS : wallTop + 2.6 * HS * Math.max(0, 1 - Math.max(Math.abs(L.x), Math.abs(L.z)) / rr));   // a cabin: its gable (cabins.js)
     }
   }
+  if (CAVE) g = Math.max(g, CAVE.ledgeAt(x, z));   // the cave's stone ledge (cave.js)
   for (const t of trees) if (Math.abs(x - t.x) < t.r && Math.abs(z - t.z) < t.r) g = Math.max(g, t.top);
   if (Math.hypot(x - LIGHT.x, z - LIGHT.z) < 2.4) g = Math.max(g, lightY + 18.6);
   if (Math.hypot(x - VILLAGE.x, z - VILLAGE.z) < 1.3) g = Math.max(g, WELL_TOP);
@@ -721,7 +773,7 @@ let kind = 'cardinal', bird = null, wingL = null, wingR = null, birdRig = null;
 function buildBird(k, mentor) {   // mentor: a teacher bird in the world, which must not take over the player's wings
   if (window.WFR_BIRDS) {   // the builder's birds (board 531): feathered wings, real heads and beaks, a landing each (535)
     const r = WFR_BIRDS.build(THREE, k, BIRDS[k], { renderer, folded: !!mentor }); shadowsOn(r.g, false);
-    if (!mentor) { wingL = r.wingL; wingR = r.wingR; birdRig = { wingL: r.wingL, wingR: r.wingR, tail: r.tail, legs: r.legs, body: r.g, head: r.head }; }
+    if (!mentor) { r.g.userData.player = true; r.g.userData.kind = k; wingL = r.wingL; wingR = r.wingR; birdRig = { wingL: r.wingL, wingR: r.wingR, tail: r.tail, legs: r.legs, body: r.g, head: r.head }; }
     return r.g;
   }
   const b = BIRDS[k], g = new THREE.Group();
@@ -773,15 +825,17 @@ const S = { mode: 'menu', pos: new THREE.Vector3(-110, 30, -60), yaw: 0.6, pitch
   lessons: {}, hopV: 0, hopY: 0, landT: 0, bonkCd: 0, nestTier: 1, mats: {}, eagleFound: false, evFocus: 'peak',
   chick: { stats: { fly: 0, run: 0, str: 0, sta: 0, swim: 0 }, happy: 60, food: 70, stage: 0, pets: 0, at: Date.now() }, fruit: null, chickFeel: 2, chickFeelT: 0, petCd: 0 };
 const input = { sx: 0, sy: 0 };
-(function load() { try { const s = JSON.parse(localStorage.getItem('wfr.save') || 'null'); if (s && s.level) { S.level = Math.min(20, s.level); S.xp = s.xp || 0; S.nestDone = !!s.nestDone; S.found = s.found || {}; S.storySeen = !!s.storySeen; S.tutDone = !!s.tutDone; S.built = s.built || 0; S.lessons = s.lessons || {}; S.nestTier = s.nestTier || 1; S.mats = s.mats || {}; S.eagleFound = !!s.eagleFound; S.treatsTaken = s.treats || []; S.fishCaught = s.fish || 0; S.clock = typeof s.clock === 'number' ? s.clock % 2700 : 600; S.beakWas = s.beak || null; S.cutPending = s.cutQ || []; S.twigsTaken = s.twigs || []; S.read = s.read || {}; S.seen = s.seen || {}; S.inv = s.inv || {}; S.toolIn = s.toolIn || 0;
+(function load() { try { const s = JSON.parse(localStorage.getItem('wfr.save') || 'null'); if (s && s.level) { S.level = Math.min(20, s.level); S.xp = s.xp || 0; S.nestDone = !!s.nestDone; S.found = s.found || {}; S.storySeen = !!s.storySeen; S.tutDone = !!s.tutDone; S.built = s.built || 0; S.lessons = s.lessons || {}; S.nestTier = s.nestTier || 1; S.mats = s.mats || {}; S.eagleFound = !!s.eagleFound; S.treatsTaken = s.treats || []; S.fishCaught = s.fish || 0; S.clock = typeof s.clock === 'number' ? s.clock % 2700 : 600; S.beakWas = s.beak || null; S.cutPending = s.cutQ || []; S.twigsTaken = s.twigs || []; S.read = s.read || {}; S.seen = s.seen || {}; S.inv = s.inv || {}; S.toolIn = s.toolIn || 0; S.sky = s.sky && typeof s.sky === 'object' ? { seen: !!s.sky.seen, ended: !!s.sky.ended } : null;
   if (s.chick && s.chick.stats) { S.chick = Object.assign(S.chick, s.chick);   // time away: a little hungrier, never harmed (floors at 10)
     const mins = Math.max(0, (Date.now() - (s.chick.at || Date.now())) / 60000); S.chick.food = Math.max(10, S.chick.food - mins / 3); S.chick.happy = Math.max(10, S.chick.happy - mins / 5); }
   if (s.kind && BIRDS[s.kind] && isOpen(BIRDS[s.kind])) kind = s.kind; } } catch (e) { /* a fresh start */ } }());
 S.inv = S.inv || {}; S.toolIn = S.toolIn || 0;   // a fresh save: an empty pouch
+S.sky = S.sky || { seen: false, ended: false };   // 544: the ending, once per save file (seen: Grandma has faded; ended: the card was shown)
 if (typeof S.clock !== 'number') S.clock = 600;   // a new game starts mid-morning (Itachi: plenty of light for the first flight)
 for (const i of S.treatsTaken || []) if (houses[i]) { houses[i].treatTaken = true; if (houses[i].treat) houses[i].treat.visible = false; }   // a treat eaten stays eaten
+for (const n of OLDNESTS) if (S.seen && S.seen['nest:' + n.id]) { n.taken = true; n.treat.visible = false; }   // and a keepsake taken from an old nest (528)
 function save() { try { const s_ = JSON.stringify({ savedAt: Date.now(), level: S.level, xp: S.xp, nestDone: S.nestDone, found: S.found, kind, storySeen: S.storySeen, tutDone: S.tutDone, built: S.built, lessons: S.lessons, nestTier: S.nestTier, mats: S.mats, eagleFound: S.eagleFound, treats: houses.filter((h) => h.treatTaken).map((h) => h.i), twigs: (() => { try { return twigs.map((t, i) => t.visible ? -1 : i).filter((i) => i >= 0); } catch (e) { return S.twigsTaken || []; } })(),   /* a save before the twigs exist must not lose the whole save */
-    fish: S.fishCaught || 0, clock: Math.round(S.clock || 0), beak: S.fruit ? S.fruit.type.id : null, cutQ: (() => { try { return cutQ.slice(); } catch (e) { return S.cutPending || []; } })(), read: S.read, seen: S.seen, inv: S.inv, toolIn: S.toolIn || 0, chick: Object.assign({}, S.chick, { at: Date.now() }) }); localStorage.setItem('wfr.save', s_); localStorage.setItem(fileKey(ACTIVE), s_); } catch (e) { /* private mode: it still plays */ } }
+    fish: S.fishCaught || 0, clock: Math.round(S.clock || 0), beak: S.fruit ? S.fruit.type.id : null, cutQ: (() => { try { return cutQ.slice(); } catch (e) { return S.cutPending || []; } })(), read: S.read, seen: S.seen, inv: S.inv, toolIn: S.toolIn || 0, sky: S.sky || { seen: false, ended: false }, chick: Object.assign({}, S.chick, { at: Date.now() }) }); localStorage.setItem('wfr.save', s_); localStorage.setItem(fileKey(ACTIVE), s_); } catch (e) { /* private mode: it still plays */ } }
 const need = (lv) => 20 + lv * 12;
 const strength = () => 1 + (S.level >= 3 ? 1 : 0) + (S.level >= 12 ? 1 : 0);
 
@@ -817,11 +871,28 @@ function hint(t) { $('hint').textContent = t; $('hint').style.opacity = '1'; cle
 function warn(t) { if (S.warnCd > 0) return; S.warnCd = 3.5; toast(t); }
 
 /* ---------- levels ---------- */
+/* 569: WHAT TO DO - every line read off the game itself, so it can never fall behind what is really going on */
+function missionsHtml() {
+  const L = [], m = typeof mentorWaiting === 'function' ? mentorWaiting() : null;
+  const now = [$('quest').textContent]; if (m) now.push(m.hint); L.push(['Right now', now]);
+  const needs = items.filter((it) => !it.done).map((it) => it.held ? 'You carry the ' + it.type.name + ' ' + it.type.emoji + ': take it to ' + it.owner.name + '.'
+    : it.owner.name + ' needs the ' + it.type.name + ' ' + it.type.emoji + (S.lessons.crow ? ' (look ' + it.spot.zone + ')' : '') + (it.type.metal && strength() < 2 ? ' - too heavy for you yet.' : '.'));
+  if (needs.length) L.push(['The villagers', needs]);
+  if (S.built < BUILDS.length) { const r = recipe(); L.push(['The village', ['Next build: ' + BUILDS[S.built].name + (r ? (Object.keys(r).length ? ' - needs ' + recipeText() : ' - bring a villager their tool') : '') + '.']]); }
+  if (S.nestDone && chick) { const h = Math.round((S.chick.bond || 0) / 20); L.push(['Your chick', [S.chick.food < 30 ? 'Hungry: pick fruit from a fruit tree and bring it home.' : 'Fed and happy.', 'Bond ' + '\u2764\ufe0f'.repeat(h) + '\u2661'.repeat(5 - h) + ' - pet it to grow closer.']]); }
+  if (isEvening()) L.push(['Tonight', ['Sleep in a tree house or in your own nest.']]);
+  const tips = ['Hold Flap to fly fast and level. Hold Flap and push up or down to hover.', 'Read the signposts.', 'Rest or sleep in your nest.'];
+  if (BIRDS[kind].sings) tips.unshift('Sing near villagers: they stop to listen.');
+  if (typeof FOLK !== 'undefined' && FOLK) tips.push('Hal fishes at the lake. Land beside him after a catch.');
+  L.push(['Things to try', tips]);
+  return L.map(([h, lines]) => '<h3>' + esc(h) + '</h3><ul>' + lines.map((x) => '<li>' + esc(x) + '</li>').join('') + '</ul>').join('');
+}
+function openMissions(on) { if (on) $('missionsBody').innerHTML = missionsHtml(); $('missions').hidden = !on; }
 function hud() {
   $('lvText').textContent = 'Lv ' + S.level;
   $('xpBar').style.width = (S.level >= 20 ? 100 : Math.round(S.xp / need(S.level) * 100)) + '%';
   let q;
-  if (S.inside) q = 'Inside a villager\'s home';
+  if (S.inside) q = S.inside.cabin ? 'Inside ' + S.inside.name : 'Inside a villager\'s home';
   else if (S.carry.length) q = 'Carrying ' + S.carry.map((c) => c.type.emoji).join(' ');
   else if (!S.nestDone) q = 'Twigs ' + S.got + ' / 5 for the nest';
   else if (typeof mentorWaiting === 'function' && mentorWaiting()) q = 'Someone is waiting for you';
@@ -1020,7 +1091,7 @@ const ACTS = {
   paint:  { tool: true, dur: 8, place: (n) => toWorld(n.house, -(n.house.w / 2 - 0.9), n.house.d / 2 + 1.0), face: (n) => toWorld(n.house, -(n.house.w / 2 - 0.9), n.house.d / 2), pose: 'paint' },
   unlock: { tool: true, dur: 3, place: (n) => doorFront(n.house, 0.7), face: (n) => doorFront(n.house, 0), pose: 'turn', end: (n) => { n.house.openT = Math.max(n.house.openT, 8); } },
   crank:  { tool: true, dur: 6, place: () => near(VILLAGE, 2.4), face: () => VILLAGE, pose: 'turn' },
-  visit:  { dur: 6, place: (n) => { const others = houses.filter((h) => h !== n.house); n.visiting = others[Math.floor(Math.random() * others.length)]; return doorFront(n.visiting, 1.6); },
+  visit:  { dur: 6, place: (n) => { const others = houses.filter((h) => h !== n.house && !h.cabin); n.visiting = others[Math.floor(Math.random() * others.length)]; return doorFront(n.visiting, 1.6); },
             face: (n) => doorFront(n.visiting, 0), pose: 'talk' },
 };
 function chooseAct(n) {
@@ -1167,7 +1238,9 @@ function drawCards() {
     const open = true, btn = document.createElement('button');
     btn.className = 'bird'; btn.type = 'button'; btn.dataset.bird = k; btn.disabled = !open; btn.setAttribute('aria-pressed', String(k === kind));
     btn.innerHTML = '<i>' + b.icon + '</i><b>' + b.name + '</b>' + (open ? '<span>' + b.note + '</span>' : '<span>' + b.note + '</span><em>' + (b.unlock === 'hawk' ? 'After the hawk' : 'Level ' + b.unlock) + '</em>');
-    btn.addEventListener('click', () => { if (!open) return; if (S.mode === 'paused' && S.prevMode === 'swim' && k !== kind) { toast('Change birds on dry land.', 2200); return; } kind = k; save(); drawCards(); audio(); chirp(); });
+    btn.addEventListener('click', () => { if (!open) return; if (S.mode === 'paused' && S.prevMode === 'swim' && k !== kind) { toast('Change birds on dry land.', 2200); return; } const old = S.mode === 'paused' && k !== kind && bird ? bird : null;   // 560: a different bird, from the pause: a transformation
+      kind = k; save(); drawCards(); audio(); chirp();
+      if (old) { $('go').click(); morphStart(old); } });
     wrap.appendChild(btn);
   }
 }
@@ -1301,6 +1374,7 @@ function showPanel() {
   if (storyWood) { const st = $('panel').querySelector('.strip'); if (st) st.style.transform = 'translateX(' + (-storyAt * 100 / 6) + '%)'; $('panel').setAttribute('aria-label', p.cap); }
   else $('panel').innerHTML = '<svg viewBox="0 0 400 260" role="img" aria-label="' + p.cap.replace(/"/g, '') + '">' + p.svg + '</svg>';
   $('caption').textContent = p.cap;
+  if (p.word) { const b = document.createElement('strong'); b.textContent = p.word; $('caption').append(' ', b, ' (' + p.ref + ')'); }   // Scripture in a caption: bold, its reference beside it
   [...$('dots').children].forEach((d, i) => d.classList.toggle('on', i === storyAt));
   $('next').textContent = storyAt === storyPanels.length - 1 ? (panelsDone ? 'Continue' : storyReplay ? 'Back' : 'Fly') : 'Next';
   if (p.sound) p.sound(); else if (!panelsDone && storyAt === 2) { tone(110, 0, 0.6, 'sawtooth', 0.04); if (window.WFR_SOUND) WFR_SOUND.call('hawk', { vol: 0.8 }); }   // thunder, and the hawk's scream
@@ -1372,11 +1446,12 @@ $('birdsBtn').addEventListener('click', () => {
 /* ---------- controls ---------- */
 const keys = {};
 const flapBtn = $('flap');
-addEventListener('keydown', (e) => { const k = e.key.toLowerCase(); keys[k] = true; if (e.key === ' ') { e.preventDefault(); doFlap(); } if (k === 'e') doLand(); if (k === 'q') doSing(); if (k === 'j' && !e.repeat) doJump(); });
-addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; });
+addEventListener('keydown', (e) => { const k = e.key.toLowerCase(); keys[k] = true; if (e.key === ' ') { e.preventDefault(); if (!e.repeat) { doFlap(); holdStart(); } } if (k === 'e') doLand(); if (k === 'q') doSing(); if (k === 'j' && !e.repeat) doJump(); });
+addEventListener('keyup', (e) => { keys[e.key.toLowerCase()] = false; if (e.key === ' ') holdEnd(); });
 const airborne = () => S.hopY > 0.15;
 /* Jump: a hop, a few frantic wingbeats, and back down. Before the flock it is all the little one can do. */
 function doJump() {
+  if (S.climb) { climbNext(); return; }   // 553: Jump is the next rung
   if (S.mode !== 'walk' || airborne() || S.talking) return;
   S.hopV = 5.2; chirp();
   if (S.tut === -1) { const lines = ['You hop… and flap… and fall back down.', 'Almost! …No.', 'Your wings are too small. Or are they?']; S.hops = (S.hops || 0) + 1; toast(lines[(S.hops - 1) % 3], 1800); }
@@ -1424,6 +1499,48 @@ function underLook(under) {
   else { scene.fog = FOG_AIR; scene.background = BG_AIR; sun.intensity = SKY.sunI; if (SEA) SEA.material.opacity = 0.88; }   // the air the sky has been painting all along (Itachi: no stale day after a night dive)
   $('under').classList.toggle('on', under); skyDome.visible = !under;
 }
+/* ---------- 560: THE TRANSFORMATION (Zelda/Sheik in Smash Bros. Brawl, by his words) ---------- */
+const MORPH = { glow: null, column: null, feathers: [] };
+function morphParts() {
+  if (MORPH.glow) return;
+  const cv = document.createElement('canvas'); cv.width = cv.height = 64; const g = cv.getContext('2d'), gr = g.createRadialGradient(32, 32, 0, 32, 32, 32);
+  gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.45, 'rgba(255,248,220,0.75)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, 0, 64, 64);
+  MORPH.glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), blending: THREE.AdditiveBlending, depthWrite: false, transparent: true })); MORPH.glow.visible = false; scene.add(MORPH.glow);
+  MORPH.column = new THREE.Mesh(new THREE.CylinderGeometry(0.9, 0.9, 9, 20, 1, true), new THREE.MeshBasicMaterial({ color: 0xfff6d8, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, side: THREE.DoubleSide })); MORPH.column.visible = false; scene.add(MORPH.column);
+  for (let i = 0; i < 10; i++) { const f = new THREE.Mesh(new THREE.PlaneGeometry(0.18, 0.42), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, side: THREE.DoubleSide, depthWrite: false })); f.visible = false; scene.add(f); MORPH.feathers.push(f); }
+}
+function morphStart(old) {
+  if (!bird) return; morphParts();
+  if (old) { old.position.copy(bird.position); old.rotation.copy(bird.rotation); scene.add(old); }   // the old bird stays a moment, to be transformed
+  bird.visible = false; S.morph = { t: 0, old, swapped: false, called: false };
+  try { if (window.WFR_SOUND && old && old.userData.kind) WFR_SOUND.call(old.userData.kind, { notes: 1, vol: 0.6 }); } catch (e) { /* a call never stops the flash */ }
+}
+function morphTick(dt) {
+  const M = S.morph; if (!M || !bird) return; M.t += dt; const t = M.t, size = BIRDS[kind].size, at = bird.position;
+  MORPH.glow.visible = true; MORPH.glow.position.copy(at); MORPH.glow.scale.setScalar(Math.max(0.01, t < 0.3 ? 0.5 + t * 8 : 2.9 - (t - 0.3) * 4) * size * 3);
+  if (!M.swapped && M.old) { M.old.rotation.y += dt * 18; const q = 1 - Math.min(1, t / 0.3) * 0.95; M.old.scale.set(size * q, size, size * q); }   // spin up, squeeze into the light
+  if (t >= 0.3 && !M.swapped) {
+    M.swapped = true; if (M.old) { scene.remove(M.old); M.old = null; } bird.visible = true; bird.scale.set(size * 0.05, size, size * 0.05);
+    MORPH.column.visible = true; MORPH.column.position.copy(at).add(v3.set(0, 3.5, 0)); MORPH.column.material.opacity = 0.55;
+    const wc = BIRDS[kind].wing || 0xffffff; MORPH.feathers.forEach((f, i) => { const a = i / 10 * Math.PI * 2; f.visible = true; f.material.color.setHex(wc); f.material.opacity = 1; f.position.copy(at); f.userData.v = new THREE.Vector3(Math.cos(a) * 2.6, 1.5 + (i % 3) * 0.4, Math.sin(a) * 2.6); f.userData.r = 3 + (i % 4); });
+    [523, 784, 1047].forEach((hz, i) => tone(hz, i * 0.09, 0.22, 'triangle', 0.06));   // a rising three-tone
+  }
+  if (M.swapped) {
+    const u = Math.min(1, (t - 0.3) / 0.7), e = 1 - Math.pow(1 - u, 3), over = u < 1 ? 1 + Math.sin(u * Math.PI) * 0.12 : 1;
+    bird.scale.set(size * (0.05 + 0.95 * e) * over, size * over, size * (0.05 + 0.95 * e) * over); bird.rotation.y += (1 - e) * Math.PI * 4;   // spin out, settle with a small overshoot
+    MORPH.column.material.opacity = 0.55 * (1 - u);
+    MORPH.feathers.forEach((f) => { f.userData.v.y -= 3 * dt; f.position.addScaledVector(f.userData.v, dt); f.rotation.x += f.userData.r * dt; f.rotation.y += f.userData.r * 0.7 * dt; f.material.opacity = Math.max(0, 1 - (t - 0.3)); });
+    if (t > 1.0 && !M.called) { M.called = true; try { if (window.WFR_SOUND) WFR_SOUND.call(kind, { notes: 1, vol: 0.6 }); } catch (e2) { /* fine */ } }
+  }
+  if (t >= 1.3) morphEnd();
+}
+function morphEnd() {
+  const M = S.morph; if (!M) return; if (M.old) scene.remove(M.old);
+  if (bird) { bird.visible = true; bird.scale.setScalar(BIRDS[kind].size); }   // the residue law: nothing of the flash outlives it
+  if (MORPH.glow) { MORPH.glow.visible = false; MORPH.column.visible = false; MORPH.feathers.forEach((f) => { f.visible = false; }); }
+  S.morph = null;
+}
+addEventListener('pointerdown', () => { if (S.morph && S.morph.t > 0.15) morphEnd(); }, true);   // any tap skips to the end
 function doFlap() {
   if (S.insideTH) { warn(isEvening() ? "Not now - it is dark out. Sleep, or Go out." : "Go out first."); return; }   // no flying through the roof
   if (S.mode === 'walk') {
@@ -1431,6 +1548,7 @@ function doFlap() {
     if (S.inside) { warn('Not indoors! Walk out through the door first.'); return; }
     if (S.tut === 2 && !airborne()) { warn(touchy ? 'Jump first, then Flap while you are in the air.' : 'Press J first, then Space in the air.'); return; }
     if (S.tut === 1) { warn(touchy ? 'Tap Jump first.' : 'Press J first.'); return; }
+    S.resting = false; if (bird) bird.scale.y = BIRDS[kind].size; if (S.climb) climbCancel();   // Flap lets go of the ladder
     S.mode = 'fly'; S.pitch = 0.45; S.speed = 11; S.flapT = 0.5; S.hopY = 0; S.hopV = 0; flapBtn.textContent = 'Flap'; chirp(); if (window.WFR_SOUND) WFR_SOUND.call(kind === 'cardinal' ? 'cardinal:chip' : kind, { notes: 1, vol: 0.35 });
     if (S.tut === 2) { tutNext(); toast('You\'re flying!', 2200); }
     return;
@@ -1443,10 +1561,11 @@ function doFlap() {
 function landSpots() {
   const out = [];
   if (S.nestDone) out.push({ x: NEST.x + 1.6, z: NEST.z, name: 'nest' });
-  for (const t of trees) out.push({ x: t.x, z: t.z, name: 'tree' });
+  for (const t of trees) if (!t.hidden) out.push({ x: t.x, z: t.z, name: 'tree' });
   for (const h of houses) out.push({ x: h.x, z: h.z, name: 'roof' });
   for (const t of TREEHOUSES) out.push({ x: t.entryW.x, z: t.entryW.z, name: 'treehouse' });
   out.push({ x: LIGHT.x, z: LIGHT.z, name: 'lighthouse' }, { x: peakPt.x, z: peakPt.z, name: 'peak' });
+  if (CAVE) out.push(CAVE.spot);   // the cave's ledge (528)
   return out;
 }
 let SPOTS_CACHE = null;
@@ -1464,6 +1583,7 @@ function landTarget() {
 }
 /* GO INSIDE NEST (board 536) */
 const perchAt = () => new THREE.Vector3(NEST.x + 1.6, groundAt(NEST.x + 1.6, NEST.z) + standOf(kind), NEST.z);
+const onNest = () => S.mode === 'walk' && S.nestDone && !S.inside && !S.insideTH && S.pos.distanceTo(perchAt()) < 1.6;   // 568: home
 function homeOffered() {
   if (!S.nestDone || S.talking || S.tut !== 0 || S.inside || !(S.mode === 'walk' || S.mode === 'fly')) return false;
   const d = Math.hypot(S.pos.x - NEST.x, S.pos.z - NEST.z);
@@ -1476,11 +1596,32 @@ function goHome() {
   S.mode = 'homing'; $('home').hidden = true; $('land').hidden = true; flapBtn.hidden = true; stick.hidden = true; chirp();
 }
 /* in and out of a tree house; sleeping there at night skips to dawn (Itachi's brief §3) */
-const nearTH = () => TREEHOUSES.find((t) => Math.hypot(S.pos.x - t.entryW.x, S.pos.z - t.entryW.z) < 2.4 && Math.abs(S.pos.y - standOf(kind) - (t.y + t.th.platformTop)) < 1.2);
+/* 553: CLIMBING - one hop a rung, on an arc (lift, over, settle): her feet never teleport */
+const nearLadder = () => S.climb ? null : TREEHOUSES.find((t) => t.climb && Math.hypot(S.pos.x - t.climb.footW.x, S.pos.z - t.climb.footW.z) < 1.8 && S.pos.y - standOf(kind) - groundAt(t.climb.footW.x, t.climb.footW.z) < 1.0);
+function climbStart(t) { S.climb = { t, k: 0, n: t.climb.rungsW.length, queued: false }; S.noWalk = true; S.hopY = 0; S.hopV = 0; climbNext(); }
+function climbNext() {
+  const C = S.climb; if (!C) return; if (S.mantle) { C.queued = true; return; }   // a tap mid-hop is the next hop
+  const p = C.k < C.n ? C.t.climb.rungsW[C.k] : C.t.climb.topW, to = new THREE.Vector3(p.x, p.y + standOf(kind), p.z), rise = Math.max(0, to.y - S.pos.y);
+  S.mantle = { t: 0, from: S.pos.clone(), to, dur: 0.24 + 0.14 * rise, arc: 0.2 + 0.25 * rise }; C.k++;
+  try { if (window.WFR_SOUND) WFR_SOUND.call(kind === 'cardinal' ? 'cardinal:chip' : kind, { notes: 1, vol: 0.25 }); } catch (e) { /* fine */ }
+}
+function climbTick(dt) {
+  const C = S.climb, M = S.mantle; if (!C) return;
+  if (M) { M.t += dt; const u = Math.min(1, M.t / M.dur), e = u * u * (3 - 2 * u);
+    S.pos.set(M.from.x + (M.to.x - M.from.x) * e, M.from.y + (M.to.y - M.from.y) * e + M.arc * Math.sin(Math.PI * u), M.from.z + (M.to.z - M.from.z) * e);
+    if (u >= 1) { S.mantle = null; if (C.k > C.n) climbDone(); else if (C.queued) { C.queued = false; climbNext(); } } }
+  S.yaw = Math.atan2(C.t.x - S.pos.x, C.t.z - S.pos.z);   // facing the tree as she climbs
+}
+function climbDone() { S.climb = null; S.mantle = null; S.noWalk = false; if (!(S.seen && S.seen.climbed)) { S.seen = S.seen || {}; S.seen.climbed = true; toast('You climbed up! Go in, or fly off from the deck.', 3200); save(); } }
+function climbCancel() { S.climb = null; S.mantle = null; S.noWalk = false; }
+const nearTH = () => TREEHOUSES.find((t) => (Math.hypot(S.pos.x - t.entryW.x, S.pos.z - t.entryW.z) < 2.4 || Math.hypot(S.pos.x - t.x, S.pos.z - t.z) < 3.0) && Math.abs(S.pos.y - standOf(kind) - (t.y + t.th.platformTop)) < 1.2);
 const isEvening = () => S.clock > 1800 || S.clock < 150;
 function thOffered() {
   if (S.insideTH) return isEvening() ? 'Sleep' : 'Go out';
   if (S.mode !== 'walk' || S.talking || S.tut !== 0 || S.inside) return null;
+  if (S.climb) return 'Up';   // 553: each tap, the next rung
+  if (nearLadder()) return 'Climb';
+  if (onNest()) return isEvening() ? 'Nest sleep' : S.resting ? 'Get up' : 'Rest';   // 568: her own nest is home
   return nearTH() ? 'Go in' : null;
 }
 function thAct() {
@@ -1494,7 +1635,15 @@ function thAct() {
     S.clock = 0; SKY.lastPaint = -9; S.insideTH = null; S.noWalk = false;
     S.pos.copy(t.entryW); S.pos.y += standOf(kind); if (bird) bird.position.copy(S.pos);
     if (!S.sleptTonight) { S.sleptTonight = true; gainXP(10); }
-    toast('Morning. The villagers left you something.', 3600); save();
+    toast('Morning. You slept safe and warm.', 3600); save();   // (it said the villagers left her something; nothing was left - Stark)
+  } else if (what === 'Climb') { climbStart(nearLadder());
+  } else if (what === 'Up') { climbNext();
+  } else if (what === 'Rest') { S.resting = true; chirp(); toast('You settle into your nest. Stay as long as you like.', 3000);
+  } else if (what === 'Get up') { S.resting = false;
+  } else if (what === 'Nest sleep') {   // 568: sleep at home, until morning
+    fadeFromDark(); S.clock = 0; SKY.lastPaint = -9; S.resting = false;
+    if (!S.sleptTonight) { S.sleptTonight = true; gainXP(10); }
+    toast('Morning. You slept in your own nest.', 3600); save();
   } else {
     const t = S.insideTH; S.insideTH = null; S.noWalk = false; t.openT = 3;
     S.pos.copy(t.entryW); S.pos.y += standOf(kind); if (bird) bird.position.copy(S.pos);
@@ -1514,7 +1663,7 @@ function touchDown() {
 /* Quick Flutter (level 4): a burst of beats and speed, then a short rest */
 function doFlutter() {
   if (S.mode !== 'fly' || !canFlutter() || S.flutCd > 0) return;
-  S.flutT = 1.2; S.flutCd = 5; S.speed = Math.min(MOVES[kind].flutter, S.speed + 9); chirp(); setTimeout(chirp, 120); setTimeout(chirp, 240);
+  S.flutT = 1.2; S.flutCd = 4; S.speed = Math.min(MOVES[kind].flutter, S.speed + 9); chirp(); setTimeout(chirp, 120); setTimeout(chirp, 240);
 }
 addEventListener('keydown', (e) => { if (e.key.toLowerCase() === 'f') doFlutter(); });
 addEventListener('keydown', (e) => { if (e.key !== 'Escape' && e.key.toLowerCase() !== 'p') return; if (S.mode === 'paused') $('go').click(); else if (!$('ui').hidden) $('birdsBtn').click(); });   // a keyboard's pause
@@ -1523,6 +1672,7 @@ function doSing() {
   if (!(window.WFR_SOUND && audio() && WFR_SOUND.call(kind, { vol: 0.7 }))) [0, 0.12, 0.24, 0.42].forEach((t, i) => tone(PENTA[(i * 2 + Math.floor(Math.random() * 2)) % 6] * 2, t, 0.14, 'triangle', 0.08));
   let heard = 0; const fresh = S.singCd <= 0;   // the words and the bodies share one gate: when the toast says they stop, they stop
   for (const n of npcs) if (n.g.visible && n.g.position.distanceTo(S.pos) < 16) { n.smileT = Math.max(n.smileT, 2.5); heard++; if (fresh) listen(n); }
+  if (fresh && chick && S.nestDone && (S.chick.bond || 0) >= 60 && chick.position.distanceTo(S.pos) < 16) setTimeout(() => { if (window.WFR_SOUND && audio()) WFR_SOUND.call(kind, { vol: 0.35, notes: 1 }); else tone(1568, 0, 0.12, 'triangle', 0.05); S.chickHop = 1; chickFeel(0, 2); }, 650);   // 564: at 60 the chick answers her song
   if (heard && fresh) { gainXP(5); S.singCd = 8; toast(heard > 1 ? 'The villagers stop to listen.' : 'A villager stops to listen.'); }
 }
 /* Jump had NO listener from v5 to v8: only the keyboard's J worked, so on a phone step 1 could never be passed
@@ -1533,9 +1683,14 @@ $('home').addEventListener('pointerdown', (e) => { e.preventDefault(); goHome();
 $('land').addEventListener('pointerdown', (e) => { e.preventDefault(); doLand(); });
 $('sing').addEventListener('pointerdown', (e) => { e.preventDefault(); doSing(); });
 $('flutter').addEventListener('pointerdown', (e) => { e.preventDefault(); doFlutter(); });
-flapBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); flapBtn.classList.add('on'); doFlap(); });
-flapBtn.addEventListener('pointerup', () => flapBtn.classList.remove('on'));
-flapBtn.addEventListener('pointercancel', () => flapBtn.classList.remove('on'));
+/* 565/566: a HELD Flap. The tap still flaps the instant the finger lands; held 0.25 s it becomes long flight, or a hover with the stick */
+function holdStart() { S.flapHeld = true; S.holdT = 0; S.holdEver = false; }
+function holdEnd() { S.flapHeld = false; S.hold = false; S.holdT = 0; }
+flapBtn.addEventListener('pointerdown', (e) => { e.preventDefault(); flapBtn.classList.add('on'); doFlap(); holdStart(); try { flapBtn.setPointerCapture(e.pointerId); } catch (_) { /* fine */ } });
+flapBtn.addEventListener('pointerup', () => { flapBtn.classList.remove('on'); holdEnd(); });
+flapBtn.addEventListener('pointercancel', () => { flapBtn.classList.remove('on'); holdEnd(); });
+flapBtn.addEventListener('lostpointercapture', () => { flapBtn.classList.remove('on'); holdEnd(); });
+addEventListener('blur', holdEnd); document.addEventListener('visibilitychange', () => { if (document.hidden) holdEnd(); });
 const stick = $('stick'), base = $('base'), knob = $('knob');
 let sid = null, ox = 0, oy = 0;
 stick.addEventListener('pointerdown', (e) => {
@@ -1598,6 +1753,7 @@ function panTick(dt) {
 }
 const orbit = () => { if (S.camOff) tmp.applyAxisAngle(UPV, S.camOff); };   // tmp is each mode's "behind her" direction
 function steer() {
+  if (S.morph) return { sx: 0, sy: 0 };   // mid-transformation: she holds her course
   let sx = input.sx, sy = input.sy;
   if (keys.arrowleft || keys.a) sx = -1; if (keys.arrowright || keys.d) sx = 1;
   if (keys.arrowup || keys.w) sy = 1; if (keys.arrowdown || keys.s) sy = -1;
@@ -1623,10 +1779,19 @@ let egg = null, chick = null, shellA = null, shellB = null;
    two battle"). Five stats it grows by what it eats - Flight, Run, Strength, Stamina, Swim - a mood and a belly, a
    floating emotion orb over its head, and it grows: chick, fledgling, young bird, coloured by what it ate most. ---------- */
 const CSTATS = [['fly', 'Flight', 0x7ec8f0], ['run', 'Run', 0xf5a623], ['str', 'Strength', 0xe0533c], ['sta', 'Stamina', 0x6cc26a], ['swim', 'Swim', 0x3fbfb0]];
+const WORM = { id: 'worm', emoji: '\u{1FAB1}', name: 'a worm', gives: { str: 2, sta: 1 }, food: 30 };   // 550: a treat from the ground
 const FRUITS = [{ id: 'blueberry', emoji: '🫐', stat: 'fly', name: 'blueberries' }, { id: 'apple', emoji: '🍎', stat: 'run', name: 'an apple' },
   { id: 'cherry', emoji: '🍒', stat: 'str', name: 'cherries' }, { id: 'strawberry', emoji: '🍓', stat: 'sta', name: 'a strawberry' }, { id: 'grapes', emoji: '🍇', stat: 'swim', name: 'sea grapes' }];
 const STAGES = [{ name: 'Chick', scale: 1 }, { name: 'Fledgling', scale: 1.5, at: 15 }, { name: 'Young bird', scale: 2.1, at: 45 }];
 const ORB = ['❤️', '❗', '❓', '🌀'];
+const STAT_STEP = 50, STAT_MAX = 1000;   // 563: a full bar is a level and the bar starts again; level 20 is the top
+const statLevel = (v) => Math.floor(Math.min(STAT_MAX, v || 0) / STAT_STEP);
+function addStat(k, n) {   // every way the chick trains goes through here (Feed today; his Chao list later)
+  const before = S.chick.stats[k] || 0, after = Math.min(STAT_MAX, Math.max(0, before + n)); S.chick.stats[k] = after;
+  const l0 = statLevel(before), l1 = statLevel(after);
+  if (l1 > l0) { fanfare(); const c = CSTATS.find((x) => x[0] === k); return (c ? c[1] : k) + ' reached level ' + l1 + '!'; }   // the caller says it (one message, not two that overwrite)
+  return '';
+}
 function chickTotal() { return CSTATS.reduce((s, [k]) => s + (S.chick.stats[k] || 0), 0); }
 function chickTint() {
   if (S.chick.stage === 0) return new THREE.Color(0xffd94a);
@@ -1654,6 +1819,17 @@ function makeChick(p) {
   chick.position.copy(p); scene.add(chick);
 }
 function chickLook() { if (!chick) return; chick.userData.mat.color.copy(chickTint()); chick.userData.body.scale.setScalar(STAGES[S.chick.stage].scale); }
+/* 564 - the bond: what raises it (one row each; his Chao Garden list adds rows here, negatives allowed) */
+const BOND = { pet: { add: 1, perDay: 15 } };
+const today = () => { const d = new Date(); return d.getFullYear() + '-' + (d.getMonth() + 1) + '-' + d.getDate(); };
+function bondSeed() { if (S.chick.bond == null) S.chick.bond = Math.min(30, S.chick.pets || 0); }   // an old save: what she already did counts
+function bond(what) {
+  const B = BOND[what]; if (!B) return 0; bondSeed();
+  const day = today(); if (S.chick.bondDay !== day) { S.chick.bondDay = day; S.chick.bondToday = {}; }
+  const n = (S.chick.bondToday[what] || 0) + 1; S.chick.bondToday[what] = n;
+  if (B.perDay && n > B.perDay) return 0;   // past today's few: still a chirp and hearts, the number just rests
+  S.chick.bond = Math.min(100, Math.max(0, S.chick.bond + B.add)); return B.add;
+}
 function chickFeel(i, secs) { if (!chick) return; S.chickFeelT = secs || 2.5; S.chickFeel = i; }
 if (S.nestDone) {   // remembered: the nest is built and the little one is home
   nest.children.forEach((c) => { c.visible = true; }); ring.visible = false; twigs.forEach((t) => { t.visible = false; }); S.got = 5;
@@ -1664,15 +1840,55 @@ function arriveAtNest() {
   nest.children.forEach((c) => { c.visible = true; }); ding();
   egg = new THREE.Mesh(new THREE.SphereGeometry(0.5, 16, 12), lam(0xbfe6ef)); egg.scale.set(1, 1.3, 1); egg.position.copy(NEST).add(new THREE.Vector3(0, 0.45, 0)); scene.add(egg);
   for (let k = 0; k < 9; k++) { const sp = new THREE.Mesh(new THREE.SphereGeometry(0.06, 6, 4), lam(0x6f8e95)); const a = k * 0.7, y = (k % 3 - 1) * 0.25; sp.position.set(Math.cos(a) * 0.49, y, Math.sin(a) * 0.49); egg.add(sp); }
-  $('warm').hidden = false; $('warmLeft').textContent = '5 more';
+  $('warm').hidden = false; $('warmLeft').textContent = '5 more'; $('singEgg').hidden = !window.WFR_RHYTHM;
   toast('The nest is finished. There is an egg!', 3000);
 }
 $('warm').addEventListener('click', () => {
   if (S.mode !== 'nest') return;
   S.warmth++; egg.userData.wob = 0.6; chirp();
   const left = 5 - S.warmth; $('warmLeft').textContent = left > 0 ? left + ' more' : 'here it comes…';
-  if (S.warmth >= 5) { $('warm').hidden = true; setTimeout(hatch, 900); }
+  if (S.warmth >= 5) { $('warm').hidden = true; $('singEgg').hidden = true; setTimeout(hatch, 900); }
 });
+/* ---------- 562: KEEP IT WARM AS A SONG ---------- */
+const RH = { on: false, out: 0 }, FALL = 2.0;   // notes fall for 2 s before their ring
+function rhT() {   // the round's clock: the song's own (audio) when it runs, else the page's (a bench may set it by hand)
+  if (RH.clock === 'manual') return RH.manualT || 0;
+  if (RH.clock === 'audio') { const pz = WFR_MUSIC.position(); if (pz == null) return RH.lastT || 0; const t = pz - 18 * WFR_RHYTHM.SPB - (WFR_MUSIC.latency ? WFR_MUSIC.latency() : 0);
+    if (RH.lastPerf && performance.now() - RH.lastPerf > 600 && Math.abs(t - (RH.lastT || 0)) < 1e-4) RH.clock = 'perf';   // the audio clock is not moving (a sleeping context): fall back
+    if (t !== RH.lastT) { RH.lastT = t; RH.lastPerf = performance.now(); } RH.perf0 = performance.now() - t * 1000; return t; }
+  return (performance.now() - RH.perf0) / 1000;
+}
+function rhythmStart() {
+  if (S.mode !== 'nest' || !egg || RH.on || !window.WFR_RHYTHM) return;
+  audio(); const mel = window.WFR_MUSIC && WFR_MUSIC.melody ? WFR_MUSIC.melody(9, 24) : [];
+  const notes = WFR_RHYTHM.chart(mel, { startBar: 7 }); if (!notes.length) return;
+  RH.st = WFR_RHYTHM.round(notes); RH.on = true; RH.pose = null; RH.lastT = null; RH.lastPerf = 0; RH.perf0 = performance.now(); RH.endAt = notes[notes.length - 1].t + 1.4;
+  RH.clock = window.WFR_MUSIC && ac && WFR_MUSIC.play({ variant: 'home', restart: true, startBar: 7, fadeIn: 0.25, muteMel: notes.map((n) => n.b) }) ? 'audio' : 'perf';
+  RH.els = notes.map((n) => { const e = document.createElement('i'); e.className = 'note'; $('rhythm').children[n.lane].appendChild(e); return e; });
+  $('warm').hidden = true; $('singEgg').hidden = true; $('rhythm').hidden = false; document.body.classList.add('rhythmOn'); rhythmHud();
+}
+function rhythmHud() { $('rScore').textContent = RH.st.score; $('rStreak').textContent = 'streak ' + RH.st.streak; $('rMult').textContent = 'x' + RH.st.mult; }
+function rhythmTap(lane) {
+  if (!RH.on) return null; const r = WFR_RHYTHM.tap(RH.st, lane, rhT()); const L = $('rhythm').children[lane];
+  L.querySelector('.ring').classList.add('on'); setTimeout(() => L.querySelector('.ring').classList.remove('on'), 110);
+  if (!r) return null;
+  RH.els[r.note.i].classList.add('hit'); if (RH.clock === 'audio') WFR_MUSIC.note(r.note.m, r.note.d); else tone(440 * Math.pow(2, (r.note.m - 69) / 12), 0, 0.25, 'triangle', 0.06);
+  egg.userData.wob = 0.6; RH.pose = { lane: lane, at: S.t };
+  const g = L.querySelector('.grade'); g.textContent = r.grade === 'perfect' ? 'Perfect!' : 'Good'; g.classList.add('on'); setTimeout(() => g.classList.remove('on'), 60);
+  rhythmHud(); return r.grade;
+}
+function rhythmEnd(stopped) {
+  if (!RH.on) return; RH.on = false; $('rhythm').hidden = true; document.body.classList.remove('rhythmOn'); (RH.els || []).forEach((e) => e.remove()); RH.els = [];
+  if (window.WFR_MUSIC) { if (WFR_MUSIC.clearMute) WFR_MUSIC.clearMute(); WFR_MUSIC.stop({ fade: 2.5 }); }
+  if (stopped) { if (S.mode === 'nest' && egg) { $('warm').hidden = false; $('singEgg').hidden = false; } return; }
+  const st = WFR_RHYTHM.stars(RH.st); RH.stars = st; RH.out = 1.2;   // three wide beats, then back to the rim
+  toast('\u2b50'.repeat(st) + '  The egg is warm. ' + (st === 3 ? 'What a song!' : st === 2 ? 'A lovely song.' : 'It heard every note you sang.'), 3600);
+  S.warmth = 5; setTimeout(hatch, 1500);   // a miss never blocks the egg: it always hatches
+}
+$('singEgg').addEventListener('click', rhythmStart);
+[...document.querySelectorAll('#rhythm .lane')].forEach((L) => L.addEventListener('pointerdown', (e) => { e.preventDefault(); rhythmTap(+L.dataset.lane); }));
+$('rStop').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); rhythmEnd(true); });
+document.addEventListener('visibilitychange', () => { if (document.hidden && RH.on) rhythmEnd(true); });
 function hatch() {
   S.mode = 'hatch';
   const p = egg.position.clone(); scene.remove(egg);
@@ -1715,7 +1931,7 @@ function nextLine() {
     /* SCRIPTURE, by the house's laws: exactly the ASV engine's words, its reference beside it, the Lord's words in
        bold (never quotation marks), Jehovah in purple, the ASV's supplied words [in brackets] set in italics */
     let h = esc(line.text).replace(/\[([^\]]+)\]/g, '<i>$1</i>').replace(/Jehovah/g, '<span style="color:#7a3fb0;font-weight:700">Jehovah</span>');
-    if (line.lord) h = '<strong>' + h + '</strong>';
+    h = '<strong' + (line.lord ? ' style="color:#ff2d55"' : '') + '>' + h + '</strong>';   // ALL Scripture bold (Aug 11, Sept 15); Jesus's words in RED (Sept 15: "and Jesus in RED")
     $('talkWho').textContent = line.who;
     $('talkText').innerHTML = h + '<br><small style="color:#6b7a93;font-weight:700">' + esc(line.ref) + ' (ASV)</small>';
   }
@@ -1723,6 +1939,8 @@ function nextLine() {
   $('talkNext').textContent = talkQ.length ? 'Next' : 'OK'; chirp();
 }
 $('talkNext').addEventListener('click', nextLine);
+$('lvPill').addEventListener('pointerdown', (e) => { e.preventDefault(); openMissions($('missions').hidden); });   // 569
+$('missionsClose').addEventListener('pointerdown', (e) => { e.preventDefault(); openMissions(false); });
 
 /* ---------- the mentors: specific birds, in specific places, at specific points in the story (Oct 8) ---------- */
 const crowRoof = houses[6], crowSpot = new THREE.Vector3(crowRoof.x, crowRoof.y + crowRoof.ht * HS + 2.6 * HS + 0.2, crowRoof.z);
@@ -1747,7 +1965,13 @@ for (const m of MENTORS) {
   m.mark = emojiSprite('❗', 1.4); m.mark.position.copy(m.g.position).add(new THREE.Vector3(0, 1.6, 0)); m.mark.visible = false; scene.add(m.mark);
 }
 const mentorWaiting = () => MENTORS.find((m) => !S.lessons[m.id] && m.ready());
+function startMentor(m) {   // 567: one way in, from the walk-up or the Talk button
+  if (S.talking) return;
+  try { if (window.WFR_SOUND) WFR_SOUND.call(m.kind, { vol: 0.7 }); } catch (e) { /* a call that fails must never stop the lesson */ }
+  say(m.lines, () => { S.lessons[m.id] = true; save(); ding(); gainXP(30); hud(); });
+}
 function mentors(dt) {
+  S.nearMentor = null;
   for (const m of MENTORS) {
     const show = !S.lessons[m.id] && m.ready();
     m.g.visible = show; m.mark.visible = show && !S.talking;
@@ -1755,10 +1979,9 @@ function mentors(dt) {
     m.g.rotation.y = Math.atan2(S.pos.x - m.g.position.x, S.pos.z - m.g.position.z);
     m.mark.position.y = m.g.position.y + 1.6 + Math.sin(S.t * 3) * 0.15;
     if (!m.announced) { m.announced = true; setTimeout(() => toast(m.hint, 3600), 1200); }
-    if (!S.talking && (S.mode === 'walk' || S.mode === 'fly') && m.g.position.distanceTo(S.pos) < 7) {
-      if (window.WFR_SOUND) WFR_SOUND.call(m.kind, { vol: 0.7 });
-      say(m.lines, () => { S.lessons[m.id] = true; save(); ding(); gainXP(30); hud(); });
-    }
+    const md = m.g.position.distanceTo(S.pos), here = (S.mode === 'walk' || S.mode === 'fly') && !S.talking;
+    if (here && md < 14) S.nearMentor = m;   // close enough to call out to: the Talk button (14 m: the Crow sits 10.6 m above the green)
+    if (here && md < 7) startMentor(m);
   }
 }
 
@@ -1861,11 +2084,13 @@ const fruitTrees = [];
   if (!fruitTrees.some((f) => f.type.id === 'grapes')) fruitTrees[fruitTrees.length - 1].type = FRUITS[4];   // always one source of each
 }());
 function careStats() {
-  const c = S.chick, row = (label, v, col) => '<span>' + label + '</span><span class="b"><i style="width:' + Math.min(100, Math.round(v)) + '%;background:' + col + '"></i></span>';
+  const c = S.chick, row = (label, v, col, lv) => '<span>' + label + '</span><span class="b"><i style="width:' + Math.min(100, Math.round(v)) + '%;background:' + col + '"></i></span><span class="lv">' + (lv ? 'Lv ' + lv : '') + '</span>';
   $('careStats').innerHTML = row('Mood', c.happy, '#c8314a') + row('Belly', c.food, '#f2b134') +
-    CSTATS.map(([k, label, col]) => row(label, (c.stats[k] || 0) * 2, '#' + col.toString(16).padStart(6, '0'))).join('');
+    '<span>Bond</span><span class="hearts">' + (() => { bondSeed(); const h = Math.round((c.bond || 0) / 20); return '\u2764\ufe0f'.repeat(h) + '\u2661'.repeat(5 - h); })() + '</span><span class="lv"></span>' +
+    CSTATS.map(([k, label, col]) => { const v = Math.min(STAT_MAX, c.stats[k] || 0); return row(label, v >= STAT_MAX ? 100 : (v % STAT_STEP) * (100 / STAT_STEP), '#' + col.toString(16).padStart(6, '0'), statLevel(v)); }).join('') +
+    (() => { const n = Object.keys(c.marks || {}).length; return n ? '<span>Keepsakes</span><span class="hearts">' + n + '/' + (window.WFR_CABINS ? WFR_CABINS.TOTAL : 7) + '</span><span class="lv"></span>' : ''; })();   // 552 section 4
   $('careStage').textContent = STAGES[c.stage].name;
-  $('feedBtn').textContent = S.fruit ? 'Feed ' + S.fruit.type.emoji : 'Feed';
+  $('feedBtn').textContent = S.fruit ? (S.fruit.type.keepsake ? 'Give ' : 'Feed ') + S.fruit.type.emoji : 'Feed';
   $('feedBtn').disabled = !S.fruit;
 }
 function growCheck() {
@@ -1874,13 +2099,13 @@ function growCheck() {
 }
 $('feedBtn').addEventListener('click', () => {
   if (!S.fruit) return; const f = S.fruit.type, gives = f.gives || { [f.stat]: 3 };
-  for (const k in gives) S.chick.stats[k] = Math.min(50, Math.max(0, (S.chick.stats[k] || 0) + gives[k])); S.chick.food = Math.min(100, S.chick.food + (f.food || 25)); S.chick.happy = Math.min(100, S.chick.happy + 8);
+  const ups = []; for (const k in gives) { const u = addStat(k, gives[k]); if (u) ups.push(u); } S.chick.food = Math.min(100, S.chick.food + (f.keepsake ? 0 : f.food || 25)); if (f.keepsake) (S.chick.marks = S.chick.marks || {})[f.id] = true; S.chick.happy = Math.min(100, S.chick.happy + 8 + (f.happy || 0));
   if (S.fruit.g.parent) S.fruit.g.parent.remove(S.fruit.g); S.fruit = null; ding(); chirp(); chickFeel(0, 3); S.chickHop = 1; gainXP(5); growCheck(); save(); careStats(); hud();
-  toast('Yum! ' + Object.keys(gives).map((k) => CSTATS.find((c) => c[0] === k)[1] + ' +' + gives[k]).join(', '), 2400);
+  toast((f.keepsake ? 'Your chick keeps ' + f.name + '! ' + (f.happy ? 'Mood +' + f.happy + (Object.keys(gives).length ? ', ' : '') : '') : 'Yum! ') + Object.keys(gives).map((k) => CSTATS.find((c) => c[0] === k)[1] + ' +' + gives[k]).join(', ') + (ups.length ? ' \u2014 ' + ups.join(' ') : ''), ups.length ? 3600 : 2400);
 });
 $('petBtn').addEventListener('click', () => {
   if (S.petCd > 0) return; S.petCd = 1.2;
-  S.chick.happy = Math.min(100, S.chick.happy + 6); S.chick.pets++; chirp(); chickFeel(0, 2.5); S.chickHop = 0.6;
+  S.chick.happy = Math.min(100, S.chick.happy + 6); S.chick.pets++; bond('pet'); chirp(); chickFeel(0, 2.5); S.chickHop = 0.6;
   if (S.chick.pets % 5 === 0) gainXP(2); save(); careStats();
 });
 /* ---------- FISH (board 525) ----------
@@ -1894,7 +2119,7 @@ const FISH = {
 };
 (function restoreBeak() {   // a fish or a fruit in her beak survives a reload (Obito)
   if (!S.beakWas || !S.nestDone) return;
-  const type = FRUITS.find((x) => x.id === S.beakWas) || Object.values(FISH).find((x) => x.id === S.beakWas); if (!type) return;
+  const type = FRUITS.find((x) => x.id === S.beakWas) || Object.values(FISH).find((x) => x.id === S.beakWas) || (S.beakWas === WORM.id ? WORM : null) || (window.WFR_CABINS ? WFR_CABINS.keepsake(S.beakWas) : null) || (window.WFR_CAVE ? WFR_CAVE.keepsake(S.beakWas) : null); if (!type) return;
   const g = emojiSprite(type.emoji, 0.9); scene.add(g); S.fruit = { type, g };
 }());
 const fishGeo = { body: new THREE.ConeGeometry(0.16, 0.62, 6), tail: new THREE.ConeGeometry(0.13, 0.26, 3) };
@@ -1916,9 +2141,21 @@ function school(type, cx, cz, n, spread) {
   if (groundAt(LAKE.x, LAKE.z) < WATER - 1.6) school(FISH.perch, LAKE.x, LAKE.z, 6, 6);
 }());
 /* ---------- FOLK (board 552): Hal fishes the lake's south-west shore (folk.js) ---------- */
-const FOLK = window.WFR_FOLK ? WFR_FOLK.create(THREE, scene, { H, WATER, LAKE, humans: window.WFR_HUMANS, renderer, landNear, ground: groundAt, emojiSprite,
+const FOLK = window.WFR_FOLK ? WFR_FOLK.create(THREE, scene, { H, WATER, LAKE, humans: window.WFR_HUMANS, renderer, landNear, ground: groundAt, emojiSprite, home: (() => { const c = CABINS.find((x) => x.who === 'Hal'); return c ? doorFront(c, 0.6) : undefined; })(),
   getClock: () => S.clock, birdPos: () => S.pos,
   onCatch: () => { const sc = schools.find((s) => s.type === FISH.perch), f = sc && sc.fish.find((x) => x.back === 0); if (f) { f.back = 60; f.g.visible = false; } } }) : null;   // his catch thins the shoal, as hers does
+/* 550: WORMS - three on the green at dawn (fixed bare spots, never the island's dice), one by Hal's bait tin while he is out */
+(function plantWorms() {
+  for (const [dx, dz] of [[7, 4], [-9, 6], [3, -10]]) { const x = VILLAGE.x + dx, z = VILLAGE.z + dz, s = emojiSprite(WORM.emoji, 0.8); s.position.set(x, H(x, z) + 0.45, z); scene.add(s); fruitTrees.push({ t: null, type: WORM, s, back: 0, src: 'green', when: () => S.clock < 300 }); }
+  if (FOLK) { const w = WFR_FOLK.state().wormAt, s = emojiSprite(WORM.emoji, 0.8); s.position.set(w[0], w[1] + 0.45, w[2]); scene.add(s); fruitTrees.push({ t: null, type: WORM, s, back: 0, src: 'tin', r: 1.2, when:   /* close by only: landing to talk to Hal must not fill her beak with his bait (the combined control, Oct 9) */ () => !!(WFR_FOLK.hal && WFR_FOLK.hal.g.visible) }); }
+}());
+/* 552 §2-3: THE CHILDREN, Pim and Tess (folk.js): tag on the green, a dig that turns up a worm, home into house 0 at dusk.
+   A dug worm is a treat like any other (fruitTrees); two at most lie on the green, and a picked one never grows back. */
+const DUG = [0, 1].map(() => { const s = emojiSprite(WORM.emoji, 0.8); s.visible = false; scene.add(s); const f = { t: null, type: WORM, s, back: 0, src: 'dig', live: false }; f.when = () => f.live; fruitTrees.push(f); return f; });
+const KIDS = window.WFR_FOLK && WFR_FOLK.createKids ? WFR_FOLK.createKids(THREE, scene, { H, VILLAGE, humans: window.WFR_HUMANS, renderer, emojiSprite,
+  getClock: () => S.clock, birdPos: () => S.pos, door: doorFront(houses[0], 0.2), doorOut: doorFront(houses[0], 1.4), openDoor: (t) => { houses[0].openT = Math.max(houses[0].openT, t); },
+  onDig: (at) => { const f = DUG.find((x) => !x.live); if (!f) return false; f.live = true; f.back = 0; f.s.position.set(at[0], at[1] + 0.45, at[2]); return true; },
+  dugLive: () => { let n = 0; for (const f of DUG) { if (f.live && f.back > 0) f.live = false; if (f.live) n++; } return n; } }) : null;   // picked (back > 0): gone for good
 function folkTick(dt) {
   if (!FOLK) return;
   WFR_FOLK.tick(dt);
@@ -1970,8 +2207,8 @@ function chickTick(dt) {
   c.food = Math.max(10, c.food - dt / 180); c.happy = Math.max(10, c.happy - dt / 300); S.petCd = Math.max(0, S.petCd - dt);
   /* the fruit trees: fly or walk close and pick one (one at a time, in your beak) */
   for (const f of fruitTrees) {
-    f.back = Math.max(0, f.back - dt); f.s.visible = f.back === 0;
-    if (f.s.visible && !S.fruit && (S.mode === 'fly' || S.mode === 'walk') && f.s.position.distanceTo(S.pos) < 3.2) {
+    f.back = Math.max(0, f.back - dt); f.s.visible = f.back === 0 && (!f.when || f.when());   // a worm keeps its own hours (550)
+    if (f.s.visible && !S.fruit && (S.mode === 'fly' || S.mode === 'walk') && f.s.position.distanceTo(S.pos) < (f.r || 3.2))   /* a treat's own reach (the tin worm is picked from close by) */ {
       f.back = 90; const g = emojiSprite(f.type.emoji, 0.9); scene.add(g); S.fruit = { type: f.type, g }; chirp(); save();
       toast('You picked ' + f.type.name + '. Take it to your chick!', 2600); hud();
     }
@@ -1979,7 +2216,15 @@ function chickTick(dt) {
   if (S.fruit) carryFollow();   // held in her beak (554)
   /* close to it: the card, its eyes on you, the orb */
   const d = chick.position.distanceTo(S.pos), close = d < 4.5 && (S.mode === 'walk') && !S.talking;
-  if ($('care').hidden === close) { $('care').hidden = !close; if (close) { careStats(); chickFeel(1, 1.8); } }
+  bondSeed(); const bd = c.bond || 0; if (!U.home) U.home = chick.position.clone();
+  const card = close && !S.resting;   // resting: the card folds away so she can just be there (568)
+  if ($('care').hidden === card) { $('care').hidden = !card; if (card) { careStats(); chickFeel(1, 1.8); if (bd >= 10) { S.chickHop = 1; chickFeel(0, 2.4); chirp(); } } }   // 564: at 10, a hop and a heart when she arrives
+  /* 564: at 30 it hops across the nest to meet her; at 60, when she stands still, it snuggles up beside her */
+  const moved = U.lastBird ? S.pos.distanceTo(U.lastBird) : 1; U.lastBird = (U.lastBird || new THREE.Vector3()).copy(S.pos); U.stillT = moved < 0.01 ? (U.stillT || 0) + dt : 0;
+  let goal = U.home;
+  if (close && (bd >= 30 || S.resting)) { const to = new THREE.Vector3(S.pos.x - U.home.x, 0, S.pos.z - U.home.z), dd = to.length(), reach = (bd >= 60 && U.stillT > 1) || S.resting ? dd - 0.45 : Math.min(0.9, dd - 0.7);
+    if (dd > 0.01 && reach > 0) goal = U.home.clone().add(to.multiplyScalar(reach / dd)); }
+  const was = chick.position.clone(); chick.position.lerp(goal, Math.min(1, dt * 2.2)); if (was.distanceTo(chick.position) > 0.004) S.chickHop = Math.max(S.chickHop || 0, 0.35);   // it hops as it goes
   if (close && $('feedBtn').disabled === !!S.fruit) careStats();   // fruit picked while the card is open: Feed wakes up (found by the chick bench)
   if (d < 12) { const want = Math.atan2(S.pos.x - chick.position.x, S.pos.z - chick.position.z); chick.rotation.y += (Math.atan2(Math.sin(want - chick.rotation.y), Math.cos(want - chick.rotation.y))) * Math.min(1, dt * 3); }
   else chick.rotation.y = Math.sin(S.t * 0.6) * 0.8;
@@ -1993,6 +2238,12 @@ function chickTick(dt) {
   U.wings[0].rotation.z = flap; U.wings[1].rotation.z = -flap;
 }
 
+/* ---------- THE HEDGEHOGS (boards 529 + 542): the dunes, Bramble, Moss and Pip, Pip's lost book, the Zoom lesson, the
+   book's pages behind BOOK_PAGES_OK (hedgehogs.js). Everything it needs is handed over here; it keeps no other hook. ---------- */
+const HOGS = window.WFR_HOGS && DUNES ? WFR_HOGS.init(THREE, { scene, camera, renderer, H, ground: groundAt, S, input, items, trees, fruitTrees, dunes: DUNES, touchy,
+  standOf: () => standOf(kind), bird: () => bird, rig: () => birdRig, say, save, hud, ding, chirp, gainXP, emojiSprite, steer, walkStep, doLand,
+  ui: (on) => { $('ui').hidden = !on; },
+  panels: { play: playPanels, at: () => storyAt, count: () => storyPanels.length, go: (k) => { storyAt = k; showPanel(); } } }) : null;
 /* ---------- the Eagle: hidden on the highest peak, reachable only once you can fly high ---------- */
 /* ---------- SIGNPOSTS (board 525) ---------- */
 function landNear(x, z) {   // walk in toward the island's middle until the ground is dry
@@ -2020,9 +2271,12 @@ function signTick() {
   if (S.mode === 'walk' && !S.talking && !S.inside && S.tut === 0) for (const sg of SIGNS)   /* not during the tutorial: the green's sign stands where she starts (Marth's video) */
     if (Math.hypot(S.pos.x - sg.x, S.pos.z - sg.z) < 2.8) { near = sg; break; }
   S.nearSign = near;
-  if ($('read').hidden === !!near) $('read').hidden = !near;
+  const teach = !near && S.nearMentor && !S.talking && !S.inside ? S.nearMentor : null, label = near ? '📜 Read' : '💬 Talk';   // 567: a teacher nearby gets a Talk button
+  if ($('read').textContent !== label) $('read').textContent = label;
+  if ($('read').hidden === !!(near || teach)) $('read').hidden = !(near || teach);
 }
 $('read').addEventListener('pointerdown', (e) => { e.preventDefault();
+  if (!S.nearSign && S.nearMentor && !S.talking) { startMentor(S.nearMentor); return; }   // 567: Talk
   const sg = S.nearSign; if (!sg || S.talking) return;
   const text = sg.later && !S.eagleFound ? 'The writing has worn away. Maybe it will make sense later.' : (sg.later || sg.text);
   say([['📜 A sign', text]]);
@@ -2066,7 +2320,7 @@ function eaglePanels() {
       svg: manga('#eaf0f4', sBird(150, 170, 2.8, '#5d6b78', { wing: '#4b5763' }) + '<circle cx="186" cy="136" r="8" fill="#fff" stroke="#111" stroke-width="2"/><circle cx="186" cy="131" r="3.5" fill="#111"/>', 'Heh. I\'m still the fastest.', 250, 60) },
     { cap: 'In the dark of the forest, the Owl bows low.',
       svg: manga('#2a2f3e', sBird(160, 180, 2.8, '#9a7a55', { wing: '#86683f', rot: 18 }) + '<circle cx="190" cy="140" r="10" fill="#ffe08a"/><circle cx="190" cy="140" r="4" fill="#111"/>', 'The revered Eagle has returned!', 250, 56) },
-    { cap: 'Then the clouds part, and a white dove comes down. "…the Spirit of God descending as a dove…" (Matthew 3:16, ASV)',
+    { cap: 'Then the clouds part, and a white dove comes down.', word: '…' + SCRIPT.mat316.match(/the Spirit of God descending as a dove/)[0] + '…', ref: 'Matthew 3:16, ASV',   // the Word in bold, never in quotation marks (Tobirama, Oct 9)
       svg: '<defs><radialGradient id="lite" cx=".5" cy="0" r="1"><stop offset="0" stop-color="#fffbe8"/><stop offset="1" stop-color="#9fd3f0"/></radialGradient></defs><rect width="400" height="260" fill="url(#lite)"/>' +
         Array.from({ length: 9 }, (_, i) => '<polygon points="200,0 ' + (120 + i * 20) + ',260 ' + (132 + i * 20) + ',260" fill="#fff8d6" opacity=".35"/>').join('') +
         sCloud(20, 30, 1.2, '#ffffff') + sCloud(270, 26, 1.1, '#ffffff') + sBird(200, 120, 2.2, '#ffffff', { up: true, wing: '#f4f1ea' }) + '<rect x="2" y="2" width="396" height="256" fill="none" stroke="#111" stroke-width="5"/>' },
@@ -2183,9 +2437,11 @@ function startEagle() {
 /* a bench's door only: exists when this device carries localStorage wfr.debug = '1' (never set by the game itself) */
 try { if (localStorage.getItem('wfr.debug') === '1') window.__wfr = { eagle: () => startEagle(), state: () => ({ mode: S.mode, tier: S.nestTier, eagle: S.eagleFound, talking: !!S.talking }),
   view: (x, y, z, tx, ty, tz) => { S.mode = 'debugcam'; camera.position.set(x, y, z); camera.lookAt(tx, ty, tz); }, village: () => [VILLAGE.x, H(VILLAGE.x, VILLAGE.z), VILLAGE.z], nest: () => [NEST.x, NEST.y, NEST.z],
-  folk: () => (FOLK ? WFR_FOLK.state() : null),
+  folk: () => (FOLK ? WFR_FOLK.state() : null), kids: () => (KIDS ? WFR_FOLK.kids() : null),
   gpu: () => ({ textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries, calls: renderer.info.render.calls }),
   toNest: () => { S.pos.set(NEST.x + 1.6, NEST.y - 0.2 + standOf(kind), NEST.z); S.mode = 'walk'; },
+  careStats: () => careStats(), pet: () => { S.petCd = 0; $('petBtn').click(); }, bondDayBack: () => { S.chick.bondDay = 'yesterday'; },
+  chickAt: () => (chick ? chick.position.toArray() : null), setStat: (k, v) => { S.chick.stats[k] = v; },
   giveFruit: (i) => { const g = emojiSprite(FRUITS[i].emoji, 0.9); scene.add(g); S.fruit = { type: FRUITS[i], g }; save(); }, chick: () => JSON.parse(JSON.stringify(S.chick)),
   fly: (x, y, z, pitch, yaw) => { S.mode = 'fly'; S.pos.set(x, y, z); S.pitch = pitch; S.speed = 14; S.yaw = yaw == null ? Math.atan2(-x, -z) : yaw; S.camYaw = S.yaw; },
   fish: () => schools.map((sc) => ({ type: sc.type.id, home: [sc.home.x, sc.home.z], live: sc.fish.filter((f) => f.back === 0).length, at: sc.fish.map((f) => f.g.position.toArray()) })),
@@ -2210,12 +2466,23 @@ try { if (localStorage.getItem('wfr.debug') === '1') window.__wfr = { eagle: () 
   music: () => ({ has: !!window.WFR_MUSIC, ctx: !!ac, playing: !!(window.WFR_MUSIC && WFR_MUSIC.playing), variant: window.WFR_MUSIC ? WFR_MUSIC.variant : null, muteGain: window.WFR_MUSIC && WFR_MUSIC.muteLevel ? WFR_MUSIC.muteLevel() : null }),
   npcActs: () => npcs.map((n) => n.state === 'inside' ? 'inside' : n.act),
   npcs: () => npcs.map((n) => ({ name: n.name, state: n.state, before: n.before || null, act: n.act, phase: n.phase, x: n.g.position.x, z: n.g.position.z, yaw: n.yaw, target: n.target ? [n.target.x, n.target.z] : null, actT: n.actT, bodyY: n.body.position.y, legL: n.legL.rotation.x, waistX: n.waist ? n.waist.rotation.x : null, visible: n.g.visible, seated: !!n.seated, tool: n.tool ? n.tool.type.id : null, armRx: n.armR.rotation.x, stateT: n.stateT || 0 })),
+  groundAt: (x, z) => groundAt(x, z), climb: () => ({ active: !!S.climb, k: S.climb ? S.climb.k : null, n: S.climb ? S.climb.n : null, hopping: !!S.mantle, y: S.pos.y, mode: S.mode, offered: thOffered() }), ladder: (j) => { const t = TREEHOUSES[j]; return t && t.climb ? { foot: t.climb.footW.toArray(), top: t.climb.topW.toArray(), n: t.climb.rungsW.length, deck: t.y + t.th.platformTop, kind: t.climb.kind } : null; }, morph: () => ({ active: !!S.morph, t: S.morph ? S.morph.t : null, players: scene.children.filter((o) => o.userData && o.userData.player).length, scale: bird ? bird.scale.x : null, kind: bird ? bird.userData.kind : null, size: BIRDS[kind].size, pos: S.pos.toArray(), mode: S.mode }), worms: () => fruitTrees.filter((f) => f.type.id === 'worm').map((f) => ({ src: f.src, at: f.s.position.toArray(), visible: f.s.visible })),
+  toEgg: () => { S.got = 5; arriveAtNest(); }, rhythmStart: () => rhythmStart(), rhythmClock: (t) => { RH.clockWas = RH.clockWas || RH.clock; RH.clock = 'manual'; RH.manualT = t; },
+  rhythm: () => (RH.st ? { on: RH.on, clock: RH.clockWas || RH.clock, t: RH.on ? rhT() : null, notes: RH.st.notes.map((n) => [n.t, n.lane, n.b]), score: RH.st.score, hits: RH.st.hits, misses: RH.st.misses, stars: RH.stars || null, mode: S.mode } : { on: false, mode: S.mode }),
+  wings: () => { const v = new THREE.Vector3(), w = (o) => { o.updateWorldMatrix(true, false); v.set(0, 0, 0).applyMatrix4(o.matrixWorld); const q = v.clone().project(camera); return q.x; }; bird.updateWorldMatrix(true, true); return { bird: w(bird), l: w(wingL), r: w(wingR), lz: wingL.rotation.z, rz: wingR.rotation.z }; },   // where each wing's root is on the screen
+  nestHome: () => ({ on: onNest(), resting: !!S.resting, btn: $('thBtn').hidden ? null : $('thBtn').textContent, clock: S.clock }),
+  flight: () => ({ mode: S.mode, y: S.pos.y, speed: S.speed, hold: !!S.hold, holdEver: !!S.holdEver, hoverK: S.hoverK || 0, longK: S.longK || 0, flapT: S.flapT || 0, floor: Math.max(groundAt(S.pos.x, S.pos.z), WATER) + 1.2 }),
+  mentorsAt: () => MENTORS.map((m) => ({ id: m.id, at: m.g.position.toArray(), show: m.g.visible, lesson: !!S.lessons[m.id] })), talking: () => !!S.talking,
   giveTool: (i, id) => { const n = npcs[i], type = TOOLS.find((t) => t.id === id); if (!n || !type) return false;   // a named tool at her feet for a named villager (the bench's, not spawnTool's dice)
     if (n.need) { const o = n.need; o.done = true; if (o.g.parent) o.g.parent.remove(o.g); }
     const sp = emojiSprite(type.emoji, 1.6), halo = new THREE.Mesh(new THREE.SphereGeometry(1.2, 12, 8), new THREE.MeshBasicMaterial({ color: 0xffe08a, transparent: true, opacity: 0.3, depthWrite: false })), g = new THREE.Group(); g.add(sp); g.add(halo);
     g.position.set(S.pos.x + 0.8, S.pos.y, S.pos.z); scene.add(g); const it = { type, spot: SPOTS[0], g, owner: n, held: false, done: false }; items.push(it); n.need = it; return true; },
   toolsAbout: () => items.filter((it) => it.done && it.g.parent).length,
   sing: () => doSing(), t: () => S.t,
+  sky: () => (SKYEND ? SKYEND.state() : null), skyOpen: () => (SKYEND ? SKYEND.open() : null), skyBeat: (b) => (SKYEND ? SKYEND.beat(b) : null), skySpeed: (k) => (SKYEND ? SKYEND.speed(k) : null),
+  skyTap: (what) => { if (!SKYEND) return; if (what === 'sing') SKYEND.duetTap(); else if (what === 'yes') SKYEND.answer(true); else if (what === 'notyet') SKYEND.answer(false); else if (what === 'ok') SKYEND.freezeOk(); else if (what === 'wake') SKYEND.wake(); else if (what === 'skip') SKYEND.skip(); },
+  skyCensus: () => { let lights = 0, point = 0, casters = 0; scene.traverse((o) => { if (o.isLight) lights++; if (o.isPointLight) point++; if (o.castShadow && (o.isMesh || o.isPoints)) casters++; }); return { lights, point, casters, sky: SKYEND ? SKYEND.census() : 0, skyCasters: SKYEND ? SKYEND.casters() : 0 }; },
+  skyRig: () => { const w = window.__skyRig || (window.__skyRig = { l: wingL, r: wingR, b: birdRig }); return { same: w.l === wingL && w.r === wingR && w.b === birdRig }; },
   npcDo: (i, act) => { const n = npcs[i], A = ACTS[act]; n.state = 'act'; n.act = act; n.target = A.place(n); n.g.visible = true; n.g.position.set(n.target.x, H(n.target.x, n.target.z), n.target.z); n.phase = 'do'; n.actT = 60; },
   treehouses: () => TREEHOUSES.map((t) => ({ j: t.j, x: t.x, z: t.z, ground: H(t.x, t.z), entry: t.entryW.toArray() })), thState: () => ({ offered: thOffered(), inside: S.insideTH ? S.insideTH.j : null, compass: (goalTarget() || { toArray: () => null }).toArray() }),
   cam: () => ({ d: camera.position.distanceTo(S.pos), mode: S.mode, off: S.camOff || 0, lift: S.camLift || 0, yaw: S.yaw, view: (S.camYaw === undefined ? S.yaw : S.camYaw) + (S.camOff || 0) }),
@@ -2224,6 +2491,11 @@ try { if (localStorage.getItem('wfr.debug') === '1') window.__wfr = { eagle: () 
   carried: () => { const w = new THREE.Vector3(); return S.carry.map((it) => ({ id: it.type.id, g: it.g })).concat(S.fruit ? [{ id: S.fruit.type.id || S.fruit.type.emoji, g: S.fruit.g }] : []).map(({ id, g }) => { g.getWorldPosition(w); const sc = new THREE.Vector3(); g.getWorldScale(sc); const size = sc.x * (g.isSprite ? 1 : 1.6); let fwd = null;
     if (birdRig && birdRig.head && g.parent === birdRig.head) { const hp = new THREE.Vector3(), q = new THREE.Quaternion(); birdRig.head.getWorldPosition(hp); birdRig.head.getWorldQuaternion(q); fwd = w.clone().sub(hp).dot(new THREE.Vector3(0, 0, 1).applyQuaternion(q)); }
     return { size, fwd, id, parent: birdRig && g.parent === birdRig.head ? 'beak' : g.parent === bird ? 'back' : g.parent === scene ? 'scene' : 'other', worldY: w.y, groundY: groundAt(w.x, w.z), d: w.distanceTo(S.pos) }; }); },
+  cabins: () => CABINS.map((c) => { const f = doorFront(c, 0), e = doorFront(c, 1.3); return { i: c.i, index: houses.indexOf(c), id: c.id, name: c.name, who: c.who, x: c.x, z: c.z, y: c.y, rot: c.rot, H: H(c.x, c.z), door: [f.x, H(f.x, f.z), f.z], entry: [e.x, H(e.x, e.z), e.z], pk: Math.hypot((c.x - 70) * 0.8, c.z - 230), open: c.pivot.rotation.y, openT: c.openT, taken: c.treatTaken, keepsake: c.keepsake.id, lit: c.windowMats.length > 0, reach: toWorld(c, c.reach.x, c.reach.z) }; }),
+  cave: () => CAVE ? (() => { const f = doorFront(CAVE, 0), e = doorFront(CAVE, 1.3), r = toWorld(CAVE, CAVE.reach.x, CAVE.reach.z), cm = toWorld(CAVE, CAVE.cam.x, CAVE.cam.z), n = toWorld(CAVE, CAVE.nestAt.x, CAVE.nestAt.z);
+    return { index: houses.indexOf(CAVE), i: CAVE.i, x: CAVE.x, z: CAVE.z, y: CAVE.y, rot: CAVE.rot, ledgeTop: CAVE.ledgeTop, mouth: [f.x, f.z], entry: [e.x, e.z], spot: [CAVE.spot.x, CAVE.spot.z], reach: [r.x, r.z], cam: [cm.x, CAVE.y + CAVE.cam.y * HS, cm.z], nest: [n.x, CAVE.y + CAVE.nestAt.y * HS, n.z], top: groundAt(CAVE.x, CAVE.z), taken: CAVE.treatTaken, keepsake: CAVE.keepsake.id, openT: CAVE.openT, stats: CAVE.stats, lo: CAVE.lo, hi: CAVE.hi }; })() : null,
+  oldNests: () => OLDNESTS.map((n) => ({ id: n.id, x: n.x, y: n.y, z: n.z, keepsake: n.keepsake.id, taken: n.taken, after: n.after, tree: n.tree, treeOff: n.treeOff, gate: n.gate.visible, shown: n.treat.visible, ground: groundAt(n.x, n.z) })),
+  marks: () => Object.assign({}, S.chick.marks || {}),
   inside: () => S.inside ? houses.indexOf(S.inside) : null, goInside: (i) => { const h = houses[i], p = toWorld(h, 0, h.d / 2 - 0.9); S.mode = 'walk'; S.pos.set(p.x, groundAt(p.x, p.z) + standOf(kind), p.z); S.inside = h; },
   heldLeft: () => { let n = 0; if (bird) bird.traverse((o) => { if (o !== bird && o.userData && o.userData.slot !== undefined) n++; }); return n; },
   carrying: () => S.fruit ? S.fruit.type.id || S.fruit.type.emoji : null, caught: () => S.fishCaught || 0,
@@ -2236,8 +2508,12 @@ const PLACES = [
   { id: 'well', name: 'the village well', x: VILLAGE.x, z: VILLAGE.z, r: 2.5, minY: 0 },
   { id: 'big', name: 'the big tree', x: MOUND.x, z: MOUND.z, r: 4, minY: NEST.y - 2 },
   { id: 'lake', name: 'the lake shore', x: LAKE.x - 20, z: LAKE.z + 14, r: 12, minY: 0 },
-];
+].concat(CAVE ? [{ id: 'cave', name: 'the cave', x: CAVE.spot.x, z: CAVE.spot.z, r: 3.5, minY: CAVE.y - 1 }] : []);   // 528
 
+/* ---------- THE ENDING (board 544, Marth's design; the 546 temple placeholder): skypiea.js. Gated after the Eagle, at dawn,
+   above the highest peak; once per save file (S.sky). Everything she says is in skypiea.js's one line table. ---------- */
+const SKYEND = window.WFR_SKY ? WFR_SKY.create(THREE, scene, { S, camera, renderer, canvas, BIRDS, NAME, $, flapBtn, stick, peak: peakPt,
+  kind: () => kind, bird: () => bird, wings: () => [wingL, wingR], perchAt, standOf, say, toast, hint, save, tone, audio, music }) : null;
 /* ---------- the loop ---------- */
 const fwd = new THREE.Vector3(), camPos = new THREE.Vector3(), look = new THREE.Vector3(), tmp = new THREE.Vector3(), v3 = new THREE.Vector3();
 function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
@@ -2304,6 +2580,7 @@ function pickups() {
   }
   for (const it of S.carry.slice()) {
     const n = it.owner;
+    if (n.hog) { if (HOGS) HOGS.deliver(it); continue; }   // 529
     if (n.g.visible && n.g.position.distanceTo(S.pos) < 4.5) {
       S.carry.splice(S.carry.indexOf(it), 1); it.done = true; receive(n, it); n.need = null; n.house.openT = 25;
       ding(); gainXP(75);
@@ -2313,6 +2590,14 @@ function pickups() {
       } else toast(n.name + ' thanks you for the ' + it.type.name + '! Their door is open.', 3600);
       setTimeout(() => spawnTool(n), 40000);
     }
+  }
+  for (const n of OLDNESTS) {   // 528: an old nest on a high perch - she lands in it
+    if (n.taken || S.mode !== 'walk' || S.inside || Math.hypot(S.pos.x - n.x, S.pos.z - n.z) > 1.4 || Math.abs(S.pos.y - standOf(kind) - n.y) > 0.9) continue;
+    if (n.after === 'eagle' && !S.eagleFound) { warn('An old nest, empty. Something may come to it one day.'); continue; }
+    if (!S.nestDone || !chick) { warn('Something small glints in the old nest.'); continue; }
+    if (S.fruit) { warn('Your beak is full. Take that to your chick first.'); continue; }
+    n.taken = true; n.treat.visible = false; (S.seen = S.seen || {})['nest:' + n.id] = true;
+    const g = emojiSprite(n.keepsake.emoji, 0.9); scene.add(g); S.fruit = { type: n.keepsake, g }; chirp(); ding(); gainXP(10); save(); hud(); toast('You found ' + n.keepsake.name + ' in ' + n.name + '! A keepsake for your chick.', 3400);
   }
   for (const pl of PLACES) {
     if (S.found[pl.id] || S.mode !== 'walk') continue;
@@ -2376,7 +2661,7 @@ function doors(dt) {
     h.openT = Math.max(0, h.openT - dt);
     const want = h.openT > 0 || S.inside === h ? 1.4 : 0;
     h.pivot.rotation.y += (want - h.pivot.rotation.y) * Math.min(1, dt * 4);
-    if (!h.treatTaken && h.treat) h.treat.position.y = 0.7 + Math.sin(S.t * 2 + h.i) * 0.08;
+    if (!h.treatTaken && h.treat && !h.cabin) h.treat.position.y = 0.7 + Math.sin(S.t * 2 + h.i) * 0.08;
   }
 }
 const houseAt = (x, z) => houses.find((h) => { const L = toLocal(h, x, z); return Math.abs(L.x) < h.w / 2 + 0.1 && Math.abs(L.z) < h.d / 2 + 0.1; });
@@ -2392,8 +2677,12 @@ function walkStep(sx, sy, dt) {
     if (L.z > h.d / 2 - 0.5 && Math.abs(L.x) < 0.6 && step > 0) {   // out through the door
       const f = doorFront(h, 1.3); S.pos.x = f.x; S.pos.z = f.z; S.inside = null; h.openT = Math.max(h.openT, 2); hud(); return;
     }
-    if (Math.abs(L.x) < h.w / 2 - 0.45 && Math.abs(L.z) < h.d / 2 - 0.45) { S.pos.x = nx; S.pos.z = nz; }
-    if (!h.treatTaken && Math.hypot(L.x, L.z - (-h.d / 4)) < 0.9) { h.treatTaken = true; h.treat.visible = false; ding(); gainXP(10); toast('A treat inside! +10'); }
+    if (Math.abs(L.x) < h.w / 2 - 0.45 && Math.abs(L.z) < h.d / 2 - 0.45 && !(h.solid && h.solid(L.x, L.z))) { S.pos.x = nx; S.pos.z = nz; }
+    if (h.cabin) { if (!h.treatTaken && Math.hypot(L.x - h.reach.x, L.z - h.reach.z) < 0.9) {   // 552 section 4: in the drawer's gap (or the cupboard's crack)
+        if (!S.nestDone || !chick) warn('Something small glints in there.');
+        else if (S.fruit) warn('Your beak is full. Take that to your chick first.');
+        else { h.treatTaken = true; h.treat.visible = false; const g = emojiSprite(h.keepsake.emoji, 0.9); scene.add(g); S.fruit = { type: h.keepsake, g }; chirp(); ding(); gainXP(10); save(); hud(); toast('You found ' + h.keepsake.name + '! A keepsake for your chick.', 3200); } } }
+    else if (!h.treatTaken && Math.hypot(L.x, L.z - (-h.d / 4)) < 0.9) { h.treatTaken = true; h.treat.visible = false; ding(); gainXP(10); toast('A treat inside! +10'); }
     return;
   }
   const g0 = groundAt(S.pos.x, S.pos.z), g1 = groundAt(nx, nz);
@@ -2404,7 +2693,7 @@ function walkStep(sx, sy, dt) {
       if (h.openT > 0 && L.z > h.d / 2 && Math.abs(L.x) < 0.6) {   // in through the open front door
         const p = toWorld(h, 0, h.d / 2 - 0.9); S.pos.x = p.x; S.pos.z = p.z; S.inside = h; hud(); toast('You hop inside.'); return;
       }
-      warn(h.openT > 0 ? 'Go in through the front door.' : 'The door is shut. Wait for someone to open it.');
+      warn(h.cave ? 'Solid rock. The way in is the cave mouth.' : h.openT > 0 ? 'Go in through the front door.' : 'The door is shut. Wait for someone to open it.');
     }
     return;
   }
@@ -2414,6 +2703,7 @@ function walkStep(sx, sy, dt) {
 }
 function frame(now) {
   const dt = Math.min(0.05, (now - last) / 1000); last = now; S.t += dt; if (window.WFR_TREES) WFR_TREES.update(S.t);
+  if (S.mode !== 'fly' && S.hold) { S.hold = false; S.holdT = 0; }   // a hold belongs to flight
   S.warnCd = Math.max(0, S.warnCd - dt); S.singCd = Math.max(0, S.singCd - dt); S.turnBack = Math.max(0, S.turnBack - dt); S.bonkCd = Math.max(0, S.bonkCd - dt);
   waterTick(dt); panTick(dt); clockTick(dt);
   if (window.WFR_SOUND && ac && !muted && S.mode !== 'menu' && S.mode !== 'event' && S.mode !== 'swim') birdHomes(dt);   // calls come from where each bird lives (board 541)
@@ -2431,24 +2721,28 @@ function frame(now) {
   for (let i = growing.length - 1; i >= 0; i--) { const g = growing[i]; g.userData.grow = Math.min(1, g.userData.grow + dt * 0.8); const e = 1 - Math.pow(1 - g.userData.grow, 3); g.scale.setScalar(Math.max(0.01, e)); if (g.userData.grow >= 1) growing.splice(i, 1); }
   doors(dt);
   const B = BIRDS[kind];
+  if (HOGS) HOGS.pre(dt);   // 529: Zoom
 
   if (S.mode === 'walk' && bird) {
     const { sx, sy } = steer();
+    if (S.resting && (Math.abs(sx) > 0.3 || Math.abs(sy) > 0.3 || airborne() || !onNest())) S.resting = false;   // a nudge of the stick and she is up
     S.camYaw = S.yaw; S.yawV = 0;   // on foot the camera sits straight behind; the flight's trailing starts fresh
     if (S.tut === -1) cutscene(dt);
-    if (!S.talking) walkStep(sx, sy, dt);
+    if (!S.talking && !S.climb) walkStep(sx, sy, dt);
     const moving = Math.abs(sy) > 0.05;
     const floorY = S.inside ? S.inside.y + 0.1 : groundAt(S.pos.x, S.pos.z);
     S.hopV -= 14 * dt; S.hopY = Math.max(0, S.hopY + S.hopV * dt); if (S.hopY === 0) S.hopV = Math.max(0, S.hopV);   // the hop
-    S.pos.y = floorY + standOf(kind) + S.hopY + (moving && !airborne() ? Math.abs(Math.sin(S.t * 11)) * 0.12 * B.size : 0);
+    if (S.climb) climbTick(dt); else S.pos.y = floorY + standOf(kind) + S.hopY + (moving && !airborne() ? Math.abs(Math.sin(S.t * 11)) * 0.12 * B.size : 0);
     bird.position.copy(S.pos); bird.rotation.y = S.yaw; bird.rotation.x = 0; bird.rotation.z = moving ? Math.sin(S.t * 11) * 0.12 : 0;
-    const fr = airborne() ? Math.sin(S.t * 30) * 0.8 : 0.35; wingL.rotation.z = fr; wingR.rotation.z = -fr;   // frantic little beats mid-hop
+    const fr = airborne() ? Math.sin(S.t * 30) * 0.8 : S.resting ? 0.04 : 0.35; wingL.rotation.z = fr; wingR.rotation.z = -fr;
+    if (S.resting) { bird.position.y -= 0.22 * B.size; bird.scale.y = B.size * (1 + Math.sin(S.t * 1.6) * 0.03); if (window.WFR_BIRDS && birdRig) WFR_BIRDS.tuck(birdRig, 1); }   // settled in, slow breaths
+    else if (bird.scale.y !== B.size) bird.scale.y = B.size;   // (the residue law: a breath never outlives the rest)   // frantic little beats mid-hop
     pickups(); pointCompass(); carryFollow();
     tmp.set(Math.sin(S.yaw), 0, Math.cos(S.yaw)); orbit();
     if (S.insideTH) { camera.position.lerp(S.insideTH.camW, Math.min(1, dt * 4)); camera.lookAt(S.insideTH.lookW); }
     else if (S.inside) {   // a corner of the room, up by the ceiling
-      const h = S.inside, c = toWorld(h, -h.w / 2 + 0.6, -h.d / 2 + 0.6);
-      camera.position.lerp(v3.set(c.x, h.y + h.ht * HS - 0.4, c.z), Math.min(1, dt * 4)); camera.lookAt(S.pos);
+      const h = S.inside, c = h.cam ? toWorld(h, h.cam.x, h.cam.z) : toWorld(h, -h.w / 2 + 0.6, -h.d / 2 + 0.6);   // the cave: its own corner (cave.js cam)
+      camera.position.lerp(v3.set(c.x, h.cam ? h.y + h.cam.y * HS : h.y + h.ht * HS - 0.4, c.z), Math.min(1, dt * 4)); camera.lookAt(h.lookUp ? look.copy(S.pos).setY(S.pos.y + h.lookUp) : S.pos);
     } else {
       const back = 4 + 6 * B.size;
       camPos.copy(S.pos).addScaledVector(tmp, -back).add(v3.set(0, 1.5 + 2 * B.size + (S.camLift || 0), 0));
@@ -2486,32 +2780,39 @@ function frame(now) {
   } else if (S.mode === 'fly' && bird) {
     if (window.WFR_BIRDS && birdRig) WFR_BIRDS.tuck(birdRig, 1);   // legs folded back in flight (the landing starts tucked)
     let { sx, sy } = steer();
+    if (S.flapHeld) { S.holdT = (S.holdT || 0) + dt; if (S.holdT >= 0.25) { S.hold = true; S.holdEver = true; } }
+    const hov = !!S.hold && Math.abs(sy) > 0.5, lng = !!S.hold && !hov;   // held: stick up/down hovers, neutral flies long and level
+    S.hoverK = (S.hoverK || 0) + ((hov ? 1 : 0) - (S.hoverK || 0)) * Math.min(1, dt * 3.3); S.longK = (S.longK || 0) + ((lng ? 1 : 0) - (S.longK || 0)) * Math.min(1, dt * 2);
+    if (S.tut === 0 && !(S.seen && S.seen.hold)) { S.seen = S.seen || {}; S.seen.hold = true; setTimeout(function tip() { if (!$('toast').hidden) return setTimeout(tip, 1500); toast('Hold Flap to fly fast and level. Hold Flap and push up or down to hover.', 5200); }, 2500); save(); }   // a tip waits its turn: it never covers the dusk line (control-46)
+    if (S.hoverK > 0.5 && sy < -0.5 && window.WFR_BIRDS && birdRig) WFR_BIRDS.tuck(birdRig, 0.5);   // legs half down, coming in like a hovercraft
     const dc = Math.hypot(S.pos.x, S.pos.z);
     if (dc > EDGE) {   // the wind turns you back toward the island
       const home = Math.atan2(-S.pos.x, -S.pos.z); let rel = home - S.yaw; rel = Math.atan2(Math.sin(rel), Math.cos(rel));
       sx = rel > 0 ? -0.8 : 0.8; if (S.turnBack <= 0) { toast('The wind turns you back toward the island.'); S.turnBack = 4; }
     }
     /* the feel players loved in Fly Like a Bird 3 (Itachi, board 524): a turn that BUILDS, a slight delay, never a snap */
-    S.yawV = (S.yawV || 0) + (sx * B.turn - (S.yawV || 0)) * Math.min(1, dt * 3);
+    S.yawV = (S.yawV || 0) + (sx * B.turn * (1 - 0.4 * (S.hoverK || 0)) - (S.yawV || 0)) * Math.min(1, dt * 3);   // a hover turns on the spot, gently
     S.yaw -= S.yawV * dt;
-    const want = sy * 0.6; S.pitch += (want - S.pitch) * Math.min(1, dt * 2.2);
+    const want = S.hold ? 0 : sy * 0.6; S.pitch += (want - S.pitch) * Math.min(1, dt * 2.2);   // held: level
     if (S.tut === 3) { S.tutAcc += Math.abs(sx) * dt; if (S.tutAcc > 1.0) tutNext(); }
     else if (S.tut === 4) { if (sy > 0.4) S.tutUp += dt; if (sy < -0.4) S.tutDown += dt; if (S.tutUp > 0.5 && S.tutDown > 0.5) tutNext(); }
     const M = MOVES[kind], diving = canDive() && S.pitch < -0.35;
     S.flutT = Math.max(0, S.flutT - dt); S.flutCd = Math.max(0, S.flutCd - dt);
     const top = S.flutT > 0 ? M.flutter : diving ? M.dive : 30;
-    S.speed += -Math.sin(S.pitch) * (diving ? 16 : 11) * dt; if (S.flutT <= 0) S.speed += (15 * B.speed - S.speed) * dt * 0.35;
-    S.speed = Math.max(7, Math.min(top, S.speed));
+    S.speed += -Math.sin(S.pitch) * (diving ? 16 : 11) * dt; if (S.flutT <= 0) S.speed += (15 * B.speed - S.speed) * dt * 0.35 * (1 - (S.hoverK || 0));   // a hover is not pulled back to cruising
+    if (S.longK > 0.01) S.speed += (18 * B.speed - S.speed) * dt * 0.7 * S.longK;   // 565: a little faster than cruising
+    if (S.hoverK > 0.01) S.speed += (0 - S.speed) * dt * 2.5 * S.hoverK;   // 566: the hover sheds its speed
+    S.speed = Math.max(7 * (1 - (S.hoverK || 0)), Math.min(top, S.speed));   // the floor of 7 fades out in a hover and back in after
     fwd.set(Math.sin(S.yaw) * Math.cos(S.pitch), Math.sin(S.pitch), Math.cos(S.yaw) * Math.cos(S.pitch));
     /* lift comes from speed: a fast glide holds its height, a slow bird mushes down and lowers its nose (no falling backwards) */
-    const sink = S.flapT > 0 ? -2.5 : 2.6 * (1 - Math.min(1, Math.max(0, (S.speed - 7) / 16))) + 0.4;
-    if (S.speed < 9 && S.pitch > 0.2 && S.flapT <= 0) S.pitch += (-0.15 - S.pitch) * Math.min(1, dt * 1.2);
+    const sink = S.hold ? (S.hoverK > 0.01 ? -(sy > 0 ? 1.2 : -1.5) * S.hoverK : 0) : S.flapT > 0 ? -2.5 : 2.6 * (1 - Math.min(1, Math.max(0, (S.speed - 7) / 16))) + 0.4;
+    if (S.speed < 9 && S.pitch > 0.2 && S.flapT <= 0 && (S.hoverK || 0) < 0.01) S.pitch += (-0.15 - S.pitch) * Math.min(1, dt * 1.2);
     S.pos.addScaledVector(fwd, S.speed * dt); S.pos.y -= sink * dt;
     S.flapT = Math.max(0, S.flapT - dt);
     S.distAcc += S.speed * dt; if (S.distAcc > 160) { S.distAcc = 0; gainXP(1); }
     const ground = groundAt(S.pos.x, S.pos.z), floor = Math.max(ground, WATER) + 1.2;
     const deep = ground < WATER - 2;
-    if (S.pos.y < floor && deep && (diving || sy < -0.4) && canSwim() && S.surfCd <= 0) enterSwim();   // (Ino: skimming low, a held-down stick never reached the dive angle)
+    if (S.pos.y < floor && deep && (diving || (sy < -0.4 && !S.hold)) && canSwim() && S.surfCd <= 0) enterSwim();   // a hover-down stops above the sea (Itachi: it would plunge in)   // (Ino: skimming low, a held-down stick never reached the dive angle)
     else if (S.pos.y < floor) { S.pos.y = floor; S.pitch = Math.max(S.pitch, 0.12);
       if (deep && S.pitch < -0.2) warn(canSwim() ? (S.surfCd > 0 ? 'Catch your breath first.' : 'Point down hard to dive in.') : 'The water is cold and deep. Someone could teach you to swim…'); }
     const cap = S.bonkCd > 0 ? Math.min(altCap(), CEILING - 8) : altCap();
@@ -2521,8 +2822,8 @@ function frame(now) {
     const canLand = ((ground > WATER + 0.25 && S.pos.y - ground < 9) || !!S.aim) && !(S.tut >= 1 && S.tut <= 4);   // Stark: Land at step 3-4 froze the stick
     if ($('land').hidden === canLand) $('land').hidden = !canLand;
     bird.position.copy(S.pos);
-    bird.rotation.y = S.yaw; bird.rotation.x = -S.pitch * 0.8; bird.rotation.z += ((S.yawV - (S.panTurnV || 0)) / B.turn * 0.6 - bird.rotation.z) * Math.min(1, dt * 4);   // the bank follows the real turn
-    const fl = S.flutT > 0 ? Math.sin(S.t * 44) * 1.0 : S.flapT > 0 ? Math.sin(S.t * 26) * 0.9 : (diving ? 0.55 : Math.sin(S.t * 2.2) * 0.08);
+    bird.rotation.y = S.yaw; bird.rotation.x = -S.pitch * 0.8 - 0.5 * (S.hoverK || 0); bird.rotation.z += ((S.yawV - (S.panTurnV || 0)) / B.turn * 0.6 - bird.rotation.z) * Math.min(1, dt * 4);   // the bank follows the real turn
+    const fl = (S.hoverK || 0) > 0.5 ? Math.sin(S.t * 24) * 0.75 : (S.longK || 0) > 0.5 ? Math.sin(S.t * 9) * 0.6 : S.flutT > 0 ? Math.sin(S.t * 44) * 1.0 : S.flapT > 0 ? Math.sin(S.t * 26) * 0.9 : (diving ? 0.55 : Math.sin(S.t * 2.2) * 0.08);
     wingL.rotation.z = fl; wingR.rotation.z = -fl;
     pickups(); carryFollow();
     if (!S.nestDone && S.got >= 5 && S.pos.distanceTo(NEST) < 6) arriveAtNest();
@@ -2531,7 +2832,7 @@ function frame(now) {
     if (S.camYaw === undefined) S.camYaw = S.yaw;
     S.camYaw += Math.atan2(Math.sin(S.yaw - S.camYaw), Math.cos(S.yaw - S.camYaw)) * Math.min(1, dt * 2);
     tmp.set(Math.sin(S.camYaw), 0, Math.cos(S.camYaw)); orbit();
-    camPos.copy(S.pos).addScaledVector(tmp, -(6 + 8 * B.size)).add(v3.set(0, 2 + 3 * B.size + (S.camLift || 0), 0));
+    camPos.copy(S.pos).addScaledVector(tmp, -(6 + 8 * B.size)).add(v3.set(0, 2 + 3 * B.size + (S.camLift || 0) + ((S.hoverK || 0) > 0.5 && sy < -0.5 ? 1.5 : 0), 0));   // see below while coming down
     camPos.y = Math.max(camPos.y, Math.max(groundAt(camPos.x, camPos.z), WATER) + 2);
     camera.position.lerp(camPos, Math.min(1, dt * 3.5));
     look.copy(S.pos).addScaledVector(tmp, 6).add(v3.set(0, 1, 0)); camera.lookAt(look);
@@ -2596,11 +2897,21 @@ function frame(now) {
     const m = MENTORS.find((x) => x.g.visible); const focus = m ? m.g.position : S.pos;
     camera.lookAt(focus);
   } else if (S.mode === 'nest' || S.mode === 'hatch' || S.mode === 'card') {
-    if (bird) {
+    if (bird && RH.on) {   // 562: the dance - hovering over the egg, swaying to the beat; a hit strikes a wing pose by lane
+      const T = rhT(), beat = T / WFR_RHYTHM.SPB; WFR_RHYTHM.tick(RH.st, T).forEach((n) => { RH.els[n.i].classList.add('miss'); rhythmHud(); });
+      const ringY = innerHeight - 104 - 33, top = -50;
+      RH.st.notes.forEach((n, i) => { const y = ringY - (n.t - T) / FALL * (ringY - top) - 23; RH.els[i].style.transform = 'translateY(' + y.toFixed(1) + 'px)'; RH.els[i].style.display = y < -60 || y > innerHeight + 20 ? 'none' : ''; });
+      bird.position.lerp(tmp.copy(NEST).add(v3.set(0, 1.5 + Math.sin(S.t * 4.4) * 0.1, 0)), Math.min(1, dt * 3));
+      bird.rotation.set(0, Math.atan2(camera.position.x - bird.position.x, camera.position.z - bird.position.z), Math.sin(beat * Math.PI) * 0.25);
+      let wl = Math.sin(S.t * 24) * 0.5, wr = -wl; const P = RH.pose && S.t - RH.pose.at < 0.35 ? RH.pose.lane : -1;
+      if (P === 0) wr = -1.4; else if (P === 2) wl = 1.4; else if (P === 1) { wl = 1.2; wr = -1.2; }   // facing her, the bird's RIGHT wing is on the screen's LEFT (Itachi's mirror trap)
+      wingL.rotation.z = wl; wingR.rotation.z = wr;
+      if (T > RH.endAt) rhythmEnd(false);
+    } else if (bird) {
       bird.position.lerp(tmp.copy(NEST).add(v3.set(0, standOf(kind), -1.5)), Math.min(1, dt * 2));
-      bird.rotation.set(0, 0, 0); wingL.rotation.z = 0.25; wingR.rotation.z = -0.25;
+      bird.rotation.set(0, 0, 0); const o = RH.out > 0 ? Math.sin(S.t * 14) * 1.1 : 0.25; wingL.rotation.z = o; wingR.rotation.z = -o; RH.out = Math.max(0, RH.out - dt);   // three wide beats, back to the rim
     }
-    const a = S.t * 0.25; camera.position.lerp(tmp.set(NEST.x + Math.sin(a) * 7, NEST.y + 3.4, NEST.z + Math.cos(a) * 7), Math.min(1, dt * 2));
+    const a = RH.on ? 0 : S.t * 0.25; camera.position.lerp(tmp.set(NEST.x + Math.sin(a) * 7, NEST.y + (RH.on ? 2.6 : 3.4), NEST.z + Math.cos(a) * 7), Math.min(1, dt * 2));   // the song: a still camera in front of the nest
     camera.lookAt(NEST.x, NEST.y + 0.4, NEST.z);
     if (egg && egg.parent) { const w = egg.userData.wob || 0; egg.rotation.z = Math.sin(S.t * 30) * w * 0.4; egg.userData.wob = Math.max(0, w - dt * 1.5); }
     if (S.mode === 'hatch') {
@@ -2615,7 +2926,7 @@ function frame(now) {
   }
   underLook(camera.position.y < WATER - 0.05);
   if ($('breath').hidden === (S.mode === 'swim')) $('breath').hidden = S.mode !== 'swim';
-  { const w = thOffered(); if ($('thBtn').hidden === !!w) $('thBtn').hidden = !w; if (w) { const lbl = w === 'Sleep' ? '🌙 Sleep' : w === 'Go out' ? '🚪 Go out' : '🏡 Go in'; if ($('thBtn').textContent !== lbl) $('thBtn').textContent = lbl; } }
+  { const w = thOffered(); if ($('thBtn').hidden === !!w) $('thBtn').hidden = !w; if (w) { const lbl = w === 'Sleep' || w === 'Nest sleep' ? '🌙 Sleep' : w === 'Go out' ? '🚪 Go out' : w === 'Climb' ? '🪜 Climb' : w === 'Up' ? '🪜 Up' : w === 'Rest' ? '🪺 Rest' : w === 'Get up' ? '🐦 Get up' : '🏡 Go in'; if ($('thBtn').textContent !== lbl) $('thBtn').textContent = lbl; } }
   for (const t of TREEHOUSES) { t.openT = Math.max(0, t.openT - dt); const want = t.openT > 0 || S.insideTH === t ? 1.4 : 0; t.th.door.rotation.y += (want - t.th.door.rotation.y) * Math.min(1, dt * 4); t.g.userData.update(S.t); }
   nightRule(); muteTopTick();
   const homeOn = !S.insideTH && homeOffered(); if ($('home').hidden === homeOn) $('home').hidden = !homeOn;
@@ -2627,18 +2938,21 @@ function frame(now) {
   if ((S.mode === 'walk' || S.mode === 'swim') && !$('land').hidden) $('land').hidden = true;
   /* wings fold back along the body on the ground (Oct 8: a bird standing with its wings out flat looked like a plane) */
   if (bird && wingL) {
-    const folded = (S.mode === 'walk' && !airborne()) || S.mode === 'nest' || S.mode === 'hatch' || S.mode === 'card' || S.mode === 'event' || S.mode === 'debugcam';
+    const folded = (S.mode === 'walk' && !airborne()) || (S.mode === 'nest' && !RH.on && !(RH.out > 0)) || S.mode === 'hatch' || S.mode === 'card' || S.mode === 'event' || S.mode === 'debugcam';
     S.fold = (S.fold || 0) + ((folded ? 1 : 0) - (S.fold || 0)) * Math.min(1, dt * 6);
     wingL.rotation.y = 1.3 * S.fold; wingR.rotation.y = -1.3 * S.fold;
     wingL.rotation.z = wingL.rotation.z * (1 - S.fold) - 0.18 * S.fold; wingR.rotation.z = wingR.rotation.z * (1 - S.fold) + 0.18 * S.fold;   // folded wings lie down along the body
   }
   const jumpOn = S.mode === 'walk' && !S.talking && !$('ui').hidden;
   if ($('jump').hidden === jumpOn) $('jump').hidden = !jumpOn;
+  if (HOGS) HOGS.tick(dt);   // 529
   bubbles();
   for (let i = sparks.length - 1; i >= 0; i--) {
     const m = sparks[i]; m.userData.v.y -= 9 * dt; m.position.addScaledVector(m.userData.v, dt); m.rotation.x += m.userData.r * dt; m.rotation.y += m.userData.r * dt;
     if (m.position.y < NEST.y - 14) { scene.remove(m); sparks.splice(i, 1); }
   }
+  if (SKYEND) SKYEND.tick(dt);   // 544: the ending (a no-op until the gate opens)
+  morphTick(dt);   // after the mode block: it writes the bird's turn and size last, and puts them back at the end
   sunFollow();
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
@@ -2648,7 +2962,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build fd1108976f60): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build ec93955e5345): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>
