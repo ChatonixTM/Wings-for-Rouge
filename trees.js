@@ -65,6 +65,7 @@ window.WFR_TREES = (function () {
   const sstep = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); };
 
   const wind = { value: 0 };   // ONE clock for every canopy material this file makes
+  const sunXZ = { value: null };   // 578: the sun's side of every crown is lit warm (a Vector2 made when the first materials are)
 
   /* ═════════ geometry builder: non-indexed position / normal / uv / colour ═════════ */
   function Builder(T) { this.T = T; this.p = []; this.n = []; this.uv = []; this.c = []; }
@@ -150,13 +151,14 @@ window.WFR_TREES = (function () {
     return function (x, y, z) {
       const t = clamp01((y - y0) / (y1 - y0));
       const out = clamp01(Math.hypot(x - (cx || 0), z - (cz || 0)) / (rIn || 2));
-      let s = 0.42 + 0.58 * Math.pow(t, 0.75);        // dark beneath, bright crown
-      s *= 0.72 + 0.28 * out;                          // dark inside, lit at the rim
-      const warm = 0.06 * t;                           // sunlit tops lean warm-yellow
-      return [s * (1 + warm), s * (1 + warm * 0.6), s * (1 - warm * 0.8)];
+      let s = 0.4 + 0.64 * Math.pow(t, 0.8);          // dark beneath, bright crown
+      s *= 0.7 + 0.3 * out;                            // dark inside, lit at the rim
+      s *= 0.93 + 0.14 * hash(x * 2.3, z * 2.3 + y * 1.7, 578);   // 578: a soft dapple of leaf clusters (same point, same value: no seams)
+      const warm = 0.11 * sstep(0.45, 1, t) * (0.6 + 0.4 * out), cool = 0.09 * (1 - sstep(0, 0.5, t));   // gold where the sun lands, blue-green in the shade
+      return [s * (1 + warm - cool * 0.6), s * (1 + warm * 0.55), s * (1 - warm * 0.9 + cool)];
     };
   }
-  const woodShade = (h) => (x, y) => { const s = 0.62 + 0.38 * sstep(-0.6, h * 0.5, y); return [s, s, s]; };
+  const woodShade = (h) => (x, y) => { const s = 0.62 + 0.38 * sstep(-0.6, h * 0.5, y), m = 1 - sstep(-0.6, h * 0.3, y); return [s * (1 - 0.3 * m), s * (1 - 0.06 * m), s * (1 - 0.46 * m)]; };   // 578: a green-moss foot
 
   /* one drooping conifer tier: N star tips, a convex upper skirt, a concave underside (hand-built) */
   function tier(T, B, y, r, h, N, rot, shade, opt) {
@@ -298,23 +300,40 @@ window.WFR_TREES = (function () {
   const own = {};
   function paintTex(T, kind, renderer) {
     if (own[kind]) return own[kind];
-    const S = 128, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d'), R = rng(kind === 'leaf' ? 91 : 92);
-    g.fillStyle = '#e6e6e6'; g.fillRect(0, 0, S, S);
-    const wrap = (x, y, fn) => { for (let ox = -S; ox <= S; ox += S) for (let oy = -S; oy <= S; oy += S) fn(x + ox, y + oy); };
+    /* board 578: 256 px and painted in colour (a storybook leaf, not a grey stamp). Near-white leaves over cool dark
+       gaps, each leaf with a warm sunlit face, a cooler shaded half and a pale midrib; the crown's vertex colour and
+       the tree's instance colour still give the green, the texture gives the light inside it. */
+    const S = 256, c = document.createElement('canvas'); c.width = c.height = S; const g = c.getContext('2d'), R = rng(kind === 'leaf' ? 91 : 92);
+    const wrap = (x, y, r, fn) => { for (let ox = -S; ox <= S; ox += S) for (let oy = -S; oy <= S; oy += S) { const px = x + ox, py = y + oy; if (px + r < 0 || px - r > S || py + r < 0 || py - r > S) continue; fn(px, py); } };
+    const rgb = (r, gg, b) => 'rgb(' + Math.max(0, Math.min(255, r | 0)) + ',' + Math.max(0, Math.min(255, gg | 0)) + ',' + Math.max(0, Math.min(255, b | 0)) + ')';
     if (kind === 'leaf') {
-      for (let i = 0; i < 420; i++) {   // overlapping leaves: dark gaps between, a lit edge on each
-        const x = R() * S, y = R() * S, rr = 3 + R() * 4, a = R() * Math.PI, l = 200 + R() * 55;
-        wrap(x, y, (px, py) => {
+      g.fillStyle = rgb(118, 128, 124); g.fillRect(0, 0, S, S);   // the deep, cool gaps between leaves
+      for (let i = 0; i < 260; i++) {   // soft dark depth first: shadowed leaves further in
+        const x = R() * S, y = R() * S, rr = 8 + R() * 10, a = R() * Math.PI, l = 140 + R() * 40;
+        wrap(x, y, rr, (px, py) => { g.save(); g.translate(px, py); g.rotate(a); g.fillStyle = rgb(l * 0.92, l, l * 0.96); g.beginPath(); g.ellipse(0, 0, rr, rr * 0.5, 0, 0, Math.PI * 2); g.fill(); g.restore(); });
+      }
+      for (let i = 0; i < 1250; i++) {   // the lit leaves: a shadow under each, a cool half, a warm half, a midrib
+        const x = R() * S, y = R() * S, rr = 6 + R() * 8, a = R() * Math.PI, l = 205 + R() * 50, warm = R(), sz = rr * 0.52;
+        const wr = 1 + 0.06 * warm, wg = 1 + 0.02 * warm, wb = 1 - 0.12 * warm;   // some leaves lean sun-yellow, some cool
+        wrap(x, y, rr + 2, (px, py) => {
           g.save(); g.translate(px, py); g.rotate(a);
-          g.fillStyle = 'rgb(' + (l * 0.55 | 0) + ',' + (l * 0.55 | 0) + ',' + (l * 0.55 | 0) + ')'; g.beginPath(); g.ellipse(0.8, 0.8, rr, rr * 0.55, 0, 0, Math.PI * 2); g.fill();
-          g.fillStyle = 'rgb(' + (l | 0) + ',' + (l | 0) + ',' + (l | 0) + ')'; g.beginPath(); g.ellipse(0, 0, rr, rr * 0.55, 0, 0, Math.PI * 2); g.fill();
+          g.fillStyle = rgb(l * 0.5, l * 0.56, l * 0.55); g.beginPath(); g.ellipse(1.4, 1.6, rr, sz, 0, 0, Math.PI * 2); g.fill();
+          g.fillStyle = rgb(l * 0.86 * wr, l * 0.9 * wg, l * 0.88 * wb); g.beginPath(); g.ellipse(0, 0, rr, sz, 0, 0, Math.PI * 2); g.fill();
+          g.fillStyle = rgb(l * wr, l * wg, l * wb); g.beginPath(); g.ellipse(0, -sz * 0.18, rr * 0.92, sz * 0.62, 0, Math.PI, Math.PI * 2); g.fill();
+          g.strokeStyle = rgb(l * 1.08, l * 1.1, l * 0.98); g.lineWidth = 0.9; g.beginPath(); g.moveTo(-rr * 0.85, 0); g.lineTo(rr * 0.8, 0); g.stroke();
           g.restore();
         });
       }
+      for (let i = 0; i < 90; i++) {   // a few glints where the sun strikes a leaf edge
+        const x = R() * S, y = R() * S, rr = 2 + R() * 2.5;
+        wrap(x, y, rr, (px, py) => { g.fillStyle = 'rgba(255,255,236,0.55)'; g.beginPath(); g.ellipse(px, py, rr, rr * 0.55, R() * Math.PI, 0, Math.PI * 2); g.fill(); });
+      }
     } else {
-      for (let i = 0; i < 700; i++) {   // needles: short dark/light strokes, mostly running down the branch
-        const x = R() * S, y = R() * S, len = 4 + R() * 7, a = Math.PI / 2 + (R() - 0.5) * 1.2, l = R() < 0.5 ? 120 + R() * 50 : 225 + R() * 30;
-        wrap(x, y, (px, py) => { g.strokeStyle = 'rgb(' + (l | 0) + ',' + (l | 0) + ',' + (l | 0) + ')'; g.lineWidth = 1.2; g.beginPath(); g.moveTo(px, py); g.lineTo(px + Math.cos(a) * len, py + Math.sin(a) * len); g.stroke(); });
+      g.fillStyle = rgb(150, 160, 156); g.fillRect(0, 0, S, S);
+      for (let i = 0; i < 2600; i++) {   // needles: short strokes mostly running down the branch, dark under, lit over
+        const x = R() * S, y = R() * S, len = 8 + R() * 14, a = Math.PI / 2 + (R() - 0.5) * 1.2, dark = R() < 0.45, l = dark ? 105 + R() * 45 : 215 + R() * 40;
+        const tint = dark ? [0.9, 1, 1.02] : (R() < 0.3 ? [1.04, 1.03, 0.9] : [1, 1, 0.97]);
+        wrap(x, y, len + 2, (px, py) => { g.strokeStyle = rgb(l * tint[0], l * tint[1], l * tint[2]); g.lineWidth = dark ? 2.2 : 1.6; g.lineCap = 'round'; g.beginPath(); g.moveTo(px, py); g.lineTo(px + Math.cos(a) * len, py + Math.sin(a) * len); g.stroke(); });
       }
     }
     const t = new T.CanvasTexture(c);
@@ -325,7 +344,7 @@ window.WFR_TREES = (function () {
   }
   function texFor(T, kind, renderer) {
     const X = window.WFR_TEX, names = X && X.names ? X.names : [];
-    const want = kind === 'leaf' ? ['leaves', 'leaf', 'foliage'] : kind === 'needle' ? ['needles', 'needle'] : ['bark'];
+    const want = kind === 'leaf' ? ['leaves', 'leaf', 'foliage'] : kind === 'needle' ? ['needles', 'needle'] : ['barkTree', 'bark'];   // 578: the forest's own colour bark first
     for (const n of want) if (names.indexOf(n) >= 0) { try { return X.get(n, renderer); } catch (e) { /* fall through */ } }
     return kind === 'bark' ? null : paintTex(T, kind, renderer);
   }
@@ -341,39 +360,48 @@ window.WFR_TREES = (function () {
   }
 
   /* ═════════ materials: MeshStandard, vertex colours × instance colours, wind on the leaves ═════════ */
-  function swayable(mat, amp) {
+  function swayable(mat, amp, flut) {
     mat.onBeforeCompile = function (shader) {
-      shader.uniforms.uWindT = wind; shader.uniforms.uWindA = { value: amp };
-      shader.vertexShader = 'uniform float uWindT;\nuniform float uWindA;\n' + shader.vertexShader.replace('#include <begin_vertex>',
+      shader.uniforms.uWindT = wind; shader.uniforms.uWindA = { value: amp }; shader.uniforms.uFlut = { value: flut || 0 }; shader.uniforms.uSunXZ = sunXZ;
+      shader.vertexShader = 'uniform float uWindT;\nuniform float uWindA;\nuniform float uFlut;\nuniform vec2 uSunXZ;\n' + shader.vertexShader.replace('#include <begin_vertex>',
         '#include <begin_vertex>\n' +
         '#ifdef USE_INSTANCING\n  float wPh = instanceMatrix[3][0] * 0.13 + instanceMatrix[3][2] * 0.09;\n#else\n  float wPh = 0.0;\n#endif\n' +
-        '  float wK = max(transformed.y - 1.0, 0.0) * uWindA;\n' +
+        '  float wUp = max(transformed.y - 1.0, 0.0);\n' +
+        '  float wK = wUp * uWindA * (1.0 + 0.3 * sin(uWindT * 0.41 + wPh * 0.5) * sin(uWindT * 0.23 + 1.7));\n' +
         '  transformed.x += (sin(uWindT * 1.35 + wPh) + 0.35 * sin(uWindT * 3.1 + wPh * 2.0 + transformed.y)) * wK;\n' +
-        '  transformed.z += cos(uWindT * 1.05 + wPh * 1.4) * wK * 0.6;\n');
+        '  transformed.z += cos(uWindT * 1.05 + wPh * 1.4) * wK * 0.6;\n' +
+        '  float wF = uWindT * 4.3 + dot(position, vec3(2.9, 3.7, 2.3)) + wPh * 3.0;\n' +
+        '  transformed += vec3(sin(wF), 0.5 * sin(wF * 1.3 + 1.1), cos(wF * 0.9 + 0.4)) * uFlut * min(wUp, 3.0);\n' +
+        '#if defined( USE_COLOR ) || defined( USE_INSTANCING_COLOR )\n' +
+        '#ifdef USE_INSTANCING\n  vec3 wR = mat3(instanceMatrix) * position; float wRk = 2.6;\n#else\n  vec3 wR = position; float wRk = 7.0;\n#endif\n' +
+        '  float wSun = dot(normalize(wR.xz + vec2(1e-4)), uSunXZ) * smoothstep(0.0, wRk, length(wR.xz));\n' +
+        '  vColor.xyz *= vec3(1.0 + 0.16 * wSun, 1.0 + 0.11 * wSun, 1.0 + 0.02 * wSun);\n' +
+        '#endif\n');
     };
     return mat;
   }
-  function materials(T, renderer, amp) {
-    const bark = texFor(T, 'bark', renderer), barkBump = bark && window.WFR_TEX ? (function () { try { return WFR_TEX.get('barkBump', renderer); } catch (e) { return null; } }()) : null;
+  function materials(T, renderer, amp, sunDir) {
+    if (!sunXZ.value) { const sd = sunDir || { x: 60, y: 90, z: 30 }; sunXZ.value = new T.Vector2(sd.x, sd.z).normalize(); }   // the game's sun (60, 90, 30)
+    const bark = texFor(T, 'bark', renderer), barkBump = bark && window.WFR_TEX ? (function () { try { return WFR_TEX.get((WFR_TEX.names.indexOf('barkTree') >= 0 ? 'barkTree' : 'bark') + 'Bump', renderer); } catch (e) { return null; } }()) : null;
     const wood = new T.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.95, metalness: 0, map: bark || null });
     if (barkBump) { wood.bumpMap = barkBump; wood.bumpScale = 0.04; }
-    const leaf = swayable(new T.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.9, metalness: 0, map: texFor(T, 'leaf', renderer) }), 0.014 * amp);
-    const needle = swayable(new T.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.92, metalness: 0, map: texFor(T, 'needle', renderer) }), 0.009 * amp);
-    const fern = swayable(new T.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.85, metalness: 0, side: T.DoubleSide, map: texFor(T, 'needle', renderer) }), 0.05 * amp);
+    const leaf = swayable(new T.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.9, metalness: 0, map: texFor(T, 'leaf', renderer) }), 0.014 * amp, 0.012 * amp);
+    const needle = swayable(new T.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.92, metalness: 0, map: texFor(T, 'needle', renderer) }), 0.009 * amp, 0.005 * amp);
+    const fern = swayable(new T.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.85, metalness: 0, side: T.DoubleSide, map: texFor(T, 'needle', renderer) }), 0.05 * amp, 0.01 * amp);
     return { wood, leaf, needle, fern };
   }
 
   /* ═════════ palettes (sRGB hex; converted to linear when the renderer outputs sRGB) ═════════ */
   const PAL = {
-    pine: [0x2f6235, 0x2a5a31, 0x376c39, 0x3d733b, 0x2d5d3a],
-    fir: [0x2c5e45, 0x285a40, 0x32684c, 0x2a5847],
-    krumm: [0x3b5f3c, 0x45683e, 0x36583a],
-    oak: [0x4f9142, 0x5a9b45, 0x68a84a, 0x478640, 0x5fa040],
-    autumn: [0xd8892c, 0xd0642e, 0xe3b63a, 0xc4552c, 0xd9a02f],
-    birch: [0x8dbb4c, 0x9cc657, 0x82b148, 0xa3c95e],
-    birchGold: [0xe6c444, 0xd9b23a],
-    bush: [0x58a044, 0x4f953f, 0x63aa48, 0x5a9a4c],
-    fern: [0x6aaa40, 0x78b648, 0x5e9e3c],
+    pine: [0x2f6235, 0x2a5a31, 0x376c39, 0x3d733b, 0x2d5d3a, 0x44793c, 0x27543a],   // 578: from sunny pine to deep blue-green
+    fir: [0x2c5e45, 0x285a40, 0x32684c, 0x2a5847, 0x234f40, 0x3a7052],
+    krumm: [0x3b5f3c, 0x45683e, 0x36583a, 0x4a6e40],
+    oak: [0x4f9142, 0x5a9b45, 0x68a84a, 0x478640, 0x5fa040, 0x7ab84c, 0x3e7a3a, 0x86c052],   // fresh spring lime to deep summer
+    autumn: [0xd8892c, 0xd0642e, 0xe3b63a, 0xc4552c, 0xd9a02f, 0xb8452e, 0xe8c04a],   // amber, copper, russet, gold
+    birch: [0x8dbb4c, 0x9cc657, 0x82b148, 0xa3c95e, 0xb3d066, 0x79a846],
+    birchGold: [0xe6c444, 0xd9b23a, 0xf0d15a],
+    bush: [0x58a044, 0x4f953f, 0x63aa48, 0x5a9a4c, 0x70b450, 0x47883e],
+    fern: [0x6aaa40, 0x78b648, 0x5e9e3c, 0x86c050],
     bark: { pine: 0x7a5638, oak: 0x6f4c32, birch: 0xffffff, snag: 0xa79e92, krumm: 0x6a5442, stump: 0x8a6646 },
   };
 
@@ -397,8 +425,10 @@ window.WFR_TREES = (function () {
       lake: opts.lake || { x: 48, z: -38 }, peaks: opts.peaks || { x: 70, z: 230 }, water: opts.water != null ? opts.water : 1.2,
       fruitEvery: opts.fruitEvery != null ? opts.fruitEvery : 9, fruitMax: opts.fruitMax != null ? opts.fruitMax : 16,
     };
-    const S = buildSpecies(T), M = materials(T, R, opts.wind != null ? opts.wind : 1);
-    const col = new T.Color(), C = (hex, mul) => { col.setHex(hex); if (mul) col.multiplyScalar(mul); if (lin) col.convertSRGBToLinear(); return col; };
+    const S = buildSpecies(T), M = materials(T, R, opts.wind != null ? opts.wind : 1, opts.sunDir);
+    const col = new T.Color(), C = (hex, mul, jx, jz) => { col.setHex(hex);
+      if (jx !== undefined) col.offsetHSL((hash(jx, jz, 51) - 0.5) * 0.024, (hash(jx, jz, 52) - 0.4) * 0.14, (hash(jx, jz, 53) - 0.5) * 0.05);   // 578: each crown its own shade
+      if (mul) col.multiplyScalar(mul); if (lin) col.convertSRGBToLinear(); return col; };
     const pick = (arr, u) => arr[Math.min(arr.length - 1, Math.floor(u * arr.length))];
     const Hf = opts.H || null;
 
@@ -424,28 +454,28 @@ window.WFR_TREES = (function () {
       let top, rad = 0.9 * s, crownR = 2.0 * s, crownY = 0;
       if (kind === 'pine') {
         push('woodStraight', sp.x, y, sp.z, yaw, lx, lz, s * ws, s * hs, s * ws, C(PAL.bark.pine, 0.95 + h3 * 0.1));
-        push('pine', sp.x, y, sp.z, yaw, lx, lz, s * ws, s * hs, s * ws, C(pick(PAL.pine, h2), 0.92 + h4 * 0.16));
+        push('pine', sp.x, y, sp.z, yaw, lx, lz, s * ws, s * hs, s * ws, C(pick(PAL.pine, h2), 0.92 + h4 * 0.16, sp.x, sp.z));
         top = S.pine.top * s * hs; crownR = 2.2 * s * ws; crownY = 3.4 * s * hs;
       } else if (kind === 'fir') {
         const w = ws * 0.92;
         push('woodStraight', sp.x, y, sp.z, yaw, lx * 0.5, lz * 0.5, s * w, s * hs, s * w, C(PAL.bark.pine, 0.8));
-        push('fir', sp.x, y, sp.z, yaw, lx * 0.5, lz * 0.5, s * w, s * hs, s * w, C(pick(PAL.fir, h2), 0.9 + h4 * 0.15));
+        push('fir', sp.x, y, sp.z, yaw, lx * 0.5, lz * 0.5, s * w, s * hs, s * w, C(pick(PAL.fir, h2), 0.9 + h4 * 0.15, sp.x, sp.z));
         top = S.fir.top * s * hs; crownR = 1.9 * s * w; crownY = 3.2 * s * hs;
       } else if (kind === 'krumm') {
         const k = 0.78 + h4 * 0.2, kyaw = windYaw + (h1 - 0.5) * 0.5;   // smaller, and all bent by the same wind
         push('woodBent', sp.x, y, sp.z, kyaw, 0, -0.08, s * k, s * k, s * k, C(PAL.bark.krumm, 0.9 + h3 * 0.2));
-        push('krumm', sp.x, y, sp.z, kyaw, 0, -0.08, s * k, s * k, s * k, C(pick(PAL.krumm, h2), 0.9 + h3 * 0.2));
+        push('krumm', sp.x, y, sp.z, kyaw, 0, -0.08, s * k, s * k, s * k, C(pick(PAL.krumm, h2), 0.9 + h3 * 0.2, sp.x, sp.z));
         top = S.krumm.top * s * k; rad = 0.8 * s * k; crownR = 1.8 * s * k; crownY = 2.2 * s * k;
       } else if (kind === 'oak') {
         const autumn = hash(sp.x, sp.z, 6) < 0.16 && !(o.fruitEvery > 0 && i % o.fruitEvery === 0 && i / o.fruitEvery < o.fruitMax);
         const w = ws * 1.05, ho = 0.9 + h4 * 0.14;
         push('woodOak', sp.x, y, sp.z, yaw, lx, lz, s * w, s * ho, s * w, C(PAL.bark.oak, 0.9 + h3 * 0.2));
-        push('oak', sp.x, y, sp.z, yaw, lx, lz, s * w, s * ho, s * w, C(autumn ? pick(PAL.autumn, h3) : pick(PAL.oak, h2), 0.9 + h4 * 0.18));
+        push('oak', sp.x, y, sp.z, yaw, lx, lz, s * w, s * ho, s * w, C(autumn ? pick(PAL.autumn, h3) : pick(PAL.oak, hash(sp.x, sp.z, 54)), 0.9 + h4 * 0.18, sp.x, sp.z));
         top = S.oak.top * s * ho; rad = 0.95 * s; crownR = 2.9 * s * w; crownY = 5.0 * s * ho;
       } else if (kind === 'birch') {
         const w = 0.85 + h2 * 0.2, gold = hash(sp.x, sp.z, 7) < 0.12;
         push('woodBirch', sp.x, y, sp.z, yaw, lx * 1.4, lz * 1.4, s * w, s * hs, s * w, C(PAL.bark.birch, 0.95 + h3 * 0.05));
-        push('birch', sp.x, y, sp.z, yaw, lx * 1.4, lz * 1.4, s * w, s * hs, s * w, C(gold ? pick(PAL.birchGold, h3) : pick(PAL.birch, h3), 0.92 + h4 * 0.14));
+        push('birch', sp.x, y, sp.z, yaw, lx * 1.4, lz * 1.4, s * w, s * hs, s * w, C(gold ? pick(PAL.birchGold, h3) : pick(PAL.birch, h3), 0.92 + h4 * 0.14, sp.x, sp.z));
         top = S.birch.top * s * hs; rad = 0.75 * s; crownR = 1.5 * s * w; crownY = 5.0 * s * hs;
       } else {   // snag
         push('woodSnag', sp.x, y, sp.z, yaw, lx * 1.5, lz * 1.5, s, s * hs, s, C(PAL.bark.snag, 0.85 + h3 * 0.2));
@@ -465,8 +495,8 @@ window.WFR_TREES = (function () {
         const roll = hash(ux, uz, 40), us = 1.0 + hash(ux, uz, 41) * 1.0, uy = hash(ux, uz, 42) * Math.PI * 2;
         const shady = kind === 'pine' || kind === 'fir' || kind === 'birch';
         if (roll < 0.05 && kind !== 'krumm') push('woodStraight', ux, gy - 0.25, uz, uy, 0, 0, 1.5 * us, 0.12 * us, 1.5 * us, C(PAL.bark.stump, 0.9));   // a stump
-        else if (shady ? roll < 0.6 : roll < 0.25) push('fern', ux, gy - 0.05, uz, uy, 0, 0, us * 1.6, us * 1.5, us * 1.6, C(pick(PAL.fern, hash(ux, uz, 43)), 0.9 + hash(ux, uz, 44) * 0.2));
-        else push('bush', ux, gy - 0.15, uz, uy, 0, 0, us * 1.9, us * 1.6, us * 1.9, C(kind === 'krumm' ? PAL.krumm[0] : pick(PAL.bush, hash(ux, uz, 45)), 0.9 + hash(ux, uz, 46) * 0.2));
+        else if (shady ? roll < 0.6 : roll < 0.25) push('fern', ux, gy - 0.05, uz, uy, 0, 0, us * 1.6, us * 1.5, us * 1.6, C(pick(PAL.fern, hash(ux, uz, 43)), 0.9 + hash(ux, uz, 44) * 0.2, ux, uz));
+        else push('bush', ux, gy - 0.15, uz, uy, 0, 0, us * 1.9, us * 1.6, us * 1.9, C(kind === 'krumm' ? PAL.krumm[0] : pick(PAL.bush, hash(ux, uz, 45)), 0.9 + hash(ux, uz, 46) * 0.2, ux, uz));
       }
     });
 

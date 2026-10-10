@@ -178,6 +178,31 @@ window.WFR_TEX = (function () {
       }).c;
     },
 
+    /* barkTree (board 578, the forest's own bark; cabins and treehouses keep 'bark'): the same braided ridges, painted
+       in colour - warm sunlit plates, cool deep fissures, pale grey-green lichen on the plates, soft moss in the cracks.
+       Near-white overall: the tree's instance colour (brown / white birch / silver snag) still leads. 256 px. */
+    barkTree: function () {
+      const S = 256, r = rng(578101), N = 6;
+      const w1 = fbm(S, r, 2, 3, 2), w2 = fbm(S, r, 2, 3, 2), width = fbm(S, r, 6, 4, 1), fiber = fbm(S, r, 48, 4, 1),
+        crack = stretch(fbm(S, r, 8, 24, 1)), tone = stretch(fbm(S, r, 3, 3, 2)), plate = stretch(fbm(S, r, N, 5, 1)),
+        lich = stretch(fbm(S, r, 4, 4, 3, 0.55)), moss = stretch(fbm(S, r, 3, 5, 2));
+      return pixels(S, function (x, y, i, o) {
+        const u = x / S, v = y / S;
+        const d1 = Math.abs(fract(u * N + v + (w1[i] - 0.5) * 1.6) - 0.5) * 2, d2 = Math.abs(fract(u * N - v + 0.5 + (w2[i] - 0.5) * 1.6) - 0.5) * 2;
+        const w = 0.72 + (width[i] - 0.5) * 0.3, fis = Math.max(smooth(w, w + 0.18, d1), smooth(w + 0.04, w + 0.2, d2));
+        const dd = Math.max(d1, d2), edge = smooth(0.35, 0.7, dd) * (1 - fis);   // the rounded shoulder of each plate
+        let L = 232 - 30 * dd * dd + (plate[i] - 0.5) * 36 + (fiber[i] - 0.5) * 38 + (tone[i] - 0.5) * 24 - fis * 90 - 42 * smooth(0.82, 0.94, crack[i]) * (1 - fis);
+        L += 10 * (1 - edge) * (1 - fis);   // plate tops catch the light
+        let R = L * 1.03, G = L * 0.99, B = L * 0.92;   // warm wood
+        const dk = fis * 0.6; R -= dk * 18; B += dk * 8;   // fissures fall cool
+        const li = smooth(0.62, 0.8, lich[i]) * (1 - fis) * (0.6 + 0.4 * plate[i]);   // lichen: pale, grey-green, on the plates
+        R += (238 - R) * li * 0.55; G += (246 - G) * li * 0.6; B += (222 - B) * li * 0.5;
+        const mo = smooth(0.5, 0.8, moss[i]) * Math.max(fis, 0.45 * edge);   // moss: in the cracks and on the shoulders
+        R *= 1 - mo * 0.4; G *= 1 - mo * 0.08; B *= 1 - mo * 0.55;
+        o[0] = Math.max(0, Math.min(255, R)); o[1] = Math.max(0, Math.min(255, G)); o[2] = Math.max(0, Math.min(255, B));
+      }).c;
+    },
+
     /* planks: 8 horizontal siding boards, two joints per row, each board its
        own tone, flowing grain + ring lines, seam shadow, nail holes at joints. */
     planks: function () {
