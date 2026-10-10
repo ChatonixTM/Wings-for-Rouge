@@ -78,6 +78,30 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
 html.cine #cine{display:block}
 html.cine #start{display:none!important}
 #cine.out{opacity:0;pointer-events:none}
+/* 606 (second step): the black loading screen, shown from the first paint wherever the cinematic plays; it becomes Tap to begin */
+#boot{display:none;position:fixed;inset:0;z-index:31;background:#05070d;color:#fff8ec;place-items:center;touch-action:none;cursor:pointer;
+  -webkit-tap-highlight-color:transparent;transition:opacity .9s ease}
+html.cine #boot{display:grid}
+#boot.gone{opacity:0;pointer-events:none}
+#boot .bootIn{display:grid;justify-items:center;gap:16px;pointer-events:none;padding:0 24px}
+#boot .bootBird{width:66px;height:44px;fill:#fff8ec;overflow:visible;animation:bootBob 1.7s ease-in-out infinite}
+#boot .wl,#boot .wr{transform-box:fill-box;animation:bootFlapL .42s ease-in-out infinite alternate}
+#boot .wl{transform-origin:100% 90%}
+#boot .wr{transform-origin:0% 90%;animation-name:bootFlapR}
+@keyframes bootFlapL{from{transform:rotate(22deg)}to{transform:rotate(-26deg)}}
+@keyframes bootFlapR{from{transform:rotate(-22deg)}to{transform:rotate(26deg)}}
+@keyframes bootBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+#boot .bootLoad{margin:0;font-family:var(--display);font-weight:500;font-size:15px;letter-spacing:.32em;color:rgba(255,248,236,.72)}
+#boot .bootLoad i{font-style:normal;animation:bootDot 1.2s infinite both}
+#boot .bootLoad i:nth-child(2){animation-delay:.2s}
+#boot .bootLoad i:nth-child(3){animation-delay:.4s}
+@keyframes bootDot{0%,100%{opacity:.15}40%{opacity:1}}
+#boot .bootTap{display:none;margin:0;font-family:var(--display);font-weight:600;font-size:19px;letter-spacing:.12em;color:#fff8ec;
+  text-shadow:0 0 16px rgba(255,214,120,.55);animation:bootPulse 1.9s ease-in-out infinite}
+#boot.ready .bootLoad{display:none}
+#boot.ready .bootTap{display:block}
+@keyframes bootPulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.5;transform:scale(.97)}}
+@media (prefers-reduced-motion:reduce){#boot .wl,#boot .wr,#boot .bootBird{animation:none}}
 #cine .vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 120% 90% at 50% 45%,rgba(8,12,32,0) 52%,rgba(8,12,32,.5) 100%)}
 #cine .dim{position:absolute;inset:0;pointer-events:none;background:rgba(10,16,40,0);transition:background 1.4s ease}
 #cine.logo .dim,#cine.flash .dim{background:rgba(10,16,40,.3)}
@@ -278,6 +302,8 @@ html.cine #start{display:none!important}
 .rhythm .grade{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 182px);transform:translateX(-50%);font-family:var(--display);font-weight:700;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.5);pointer-events:none;opacity:0;transition:opacity .25s}
 .rhythm .grade.on{opacity:1;transition:none}
 body.rhythmOn .hud{visibility:hidden}   /* the song has the whole screen: the level card and the round buttons step away */
+body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{visibility:hidden}   /* 598: sung to the chick on foot - the stick, Fly, the round act buttons and the card step away too (at the egg they are hidden already) */
+.care .row button.sing{background:#2f5fb0;color:#fff}   /* 598: the egg's own song blue */
 
 /* the card */
 .card h1{font-size:clamp(34px,9vw,52px)}
@@ -320,7 +346,7 @@ body.rhythmOn .hud{visibility:hidden}   /* the song has the whole screen: the le
   <div class="care" id="care" hidden>
     <div class="top">Your chick <span id="careStage">Chick</span><button type="button" class="tuck" id="careTuck" aria-label="Tuck the card away" aria-expanded="true">&#9660;</button></div>
     <div class="stats" id="careStats"></div>
-    <div class="row"><button type="button" id="feedBtn">Feed</button><button type="button" class="alt" id="petBtn">Pet</button></div>
+    <div class="row"><button type="button" id="feedBtn">Feed</button><button type="button" class="alt" id="petBtn">Pet</button><button type="button" class="sing" id="singChick" aria-label="Sing to your chick">Sing ♪</button></div>
   </div>
   <div class="talk" id="talk" hidden><b id="talkWho"></b><p id="talkText"></p><button type="button" id="talkNext">Next</button></div>
   <div class="tut" id="tut" hidden><b id="tutStep">Step 1 of 5</b><span id="tutText"></span></div>
@@ -367,26 +393,27 @@ body.rhythmOn .hud{visibility:hidden}   /* the song has the whole screen: the le
   </div>
 </div>
 
+<div id="boot" aria-live="polite"><div class="bootIn"><svg class="bootBird" viewBox="-32 -22 64 40" aria-hidden="true"><path class="wl" d="M-2 1 C-9 -13 -21 -16 -30 -9 C-20 -9 -11 -5 -2 4 Z"/><path class="wr" d="M2 1 C9 -13 21 -16 30 -9 C20 -9 11 -5 2 4 Z"/><ellipse cx="0" cy="3" rx="4.2" ry="6.5"/><circle cx="0" cy="-5" r="3.4"/></svg><p class="bootLoad">loading<i>.</i><i>.</i><i>.</i></p><p class="bootTap">🎵 Tap to begin</p></div></div>
 <div id="cine" hidden data-phase="off"><div class="vig"></div><div class="dim"></div><div class="mark"><canvas id="wfrLogo" width="50" height="15" role="img" aria-label="WFR"></canvas></div><div class="streak"></div><button type="button" id="tapStart">Tap to start</button><div class="flashW"></div></div>
 <button class="round" id="muteTop" type="button" aria-label="Sound on">♪</button>
 <div id="fade" aria-hidden="true"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="textures.js?v=3bd3ec098f16"></script>
-<script src="birds.js?v=3bd3ec098f16"></script>
-<script src="humans.js?v=3bd3ec098f16"></script>
-<script src="folk.js?v=3bd3ec098f16"></script>
-<script src="trees.js?v=3bd3ec098f16"></script>
-<script src="treehouses.js?v=3bd3ec098f16"></script>
-<script src="cabins.js?v=3bd3ec098f16"></script>
-<script src="cave.js?v=3bd3ec098f16"></script>
-<script src="sounds.js?v=3bd3ec098f16"></script>
-<script src="music.js?v=3bd3ec098f16"></script>
-<script src="rhythm.js?v=3bd3ec098f16"></script>
-<script src="pictograms.js?v=3bd3ec098f16"></script>
-<script src="hedgehogs.js?v=3bd3ec098f16"></script>
-<script src="opening.js?v=3bd3ec098f16"></script>
-<script src="skypiea.js?v=3bd3ec098f16"></script>
+<script src="textures.js?v=85b9469e66b7"></script>
+<script src="birds.js?v=85b9469e66b7"></script>
+<script src="humans.js?v=85b9469e66b7"></script>
+<script src="folk.js?v=85b9469e66b7"></script>
+<script src="trees.js?v=85b9469e66b7"></script>
+<script src="treehouses.js?v=85b9469e66b7"></script>
+<script src="cabins.js?v=85b9469e66b7"></script>
+<script src="cave.js?v=85b9469e66b7"></script>
+<script src="sounds.js?v=85b9469e66b7"></script>
+<script src="music.js?v=85b9469e66b7"></script>
+<script src="rhythm.js?v=85b9469e66b7"></script>
+<script src="pictograms.js?v=85b9469e66b7"></script>
+<script src="hedgehogs.js?v=85b9469e66b7"></script>
+<script src="opening.js?v=85b9469e66b7"></script>
+<script src="skypiea.js?v=85b9469e66b7"></script>
 <script>
 (() => {
 'use strict';
@@ -2047,8 +2074,10 @@ function rhT() {   // the round's clock: the song's own (audio) when it runs, el
     if (t !== RH.lastT) { RH.lastT = t; RH.lastPerf = performance.now(); } RH.perf0 = performance.now() - t * 1000; return t; }
   return (performance.now() - RH.perf0) / 1000;
 }
-function rhythmStart() {
-  if (S.mode !== 'nest' || !egg || RH.on || !window.WFR_RHYTHM) return;
+function rhythmStart(forChick) {
+  const kid = forChick === true;   // 598: only chickSing passes true (the egg's button passes its click event, the bench nothing)
+  if ((!kid && (S.mode !== 'nest' || !egg)) || RH.on || !window.WFR_RHYTHM) return;
+  RH.chick = kid;
   audio(); const mel = window.WFR_MUSIC && WFR_MUSIC.melody ? WFR_MUSIC.melody(9, 24) : [];
   const notes = WFR_RHYTHM.chart(mel, { startBar: 7 }); if (!notes.length) return;
   RH.st = WFR_RHYTHM.round(notes); RH.on = true; RH.pose = null; RH.lastT = null; RH.lastPerf = 0; RH.perf0 = performance.now(); RH.endAt = notes[notes.length - 1].t + 1.4;
@@ -2062,13 +2091,15 @@ function rhythmTap(lane) {
   L.querySelector('.ring').classList.add('on'); setTimeout(() => L.querySelector('.ring').classList.remove('on'), 110);
   if (!r) return null;
   RH.els[r.note.i].classList.add('hit'); if (RH.clock === 'audio') WFR_MUSIC.note(r.note.m, r.note.d); else tone(440 * Math.pow(2, (r.note.m - 69) / 12), 0, 0.25, 'triangle', 0.06);
-  egg.userData.wob = 0.6; RH.pose = { lane: lane, at: S.t };
+  if (RH.chick) { S.chickHop = Math.max(S.chickHop || 0, 0.55); chickFeel(0, 0.6); } else egg.userData.wob = 0.6;   // 598: the chick hops, a heart in its bubble (after a reload there is no egg at all)
+  RH.pose = { lane: lane, at: S.t };
   const g = L.querySelector('.grade'); g.textContent = r.grade === 'perfect' ? 'Perfect!' : 'Good'; g.classList.add('on'); setTimeout(() => g.classList.remove('on'), 60);
   rhythmHud(); return r.grade;
 }
 function rhythmEnd(stopped) {
   if (!RH.on) return; RH.on = false; $('rhythm').hidden = true; document.body.classList.remove('rhythmOn'); (RH.els || []).forEach((e) => e.remove()); RH.els = [];
   if (window.WFR_MUSIC) { if (WFR_MUSIC.clearMute) WFR_MUSIC.clearMute(); WFR_MUSIC.stop({ fade: 2.5 }); }
+  if (RH.chick) { chickSongEnd(stopped); return; }   // 598: sung to the hatched chick - never the egg's warmth, never a hatch
   if (stopped) { if (S.mode === 'nest' && egg) { $('warm').hidden = false; $('singEgg').hidden = false; } return; }
   const st = WFR_RHYTHM.stars(RH.st); RH.stars = st; RH.out = 1.2;   // three wide beats, then back to the rim
   toast('\u2b50'.repeat(st) + '  The egg is warm. ' + (st === 3 ? 'What a song!' : st === 2 ? 'A lovely song.' : 'It heard every note you sang.') + ' ' + songGains(RH.st), 4400);   // 588
@@ -2079,9 +2110,9 @@ function rhythmEnd(stopped) {
    notes she hit; a round with no hits still gives a little. Today the tap-tap song runs only at the egg (rhythmStart needs the
    egg), so that is where it counts; the gain waits in the chick's stats and is there when it hatches. */
 const SONG_GAIN = { cre: [2, 6], sta: [1, 3] };   // [the least, what a perfect song adds on top]
-function songGains(st) {
+function songGains(st, w) {   // 598: w (0..1) scales the gift; the egg passes none and gets the same numbers as before
   const f = st && st.notes && st.notes.length ? st.hits / st.notes.length : 0, got = [], ups = [];
-  for (const k in SONG_GAIN) { const n = SONG_GAIN[k][0] + Math.round(f * SONG_GAIN[k][1]), u = addStat(k, n); if (u) ups.push(u); got.push((CSTATS.find((c) => c[0] === k) || [k, k])[1] + ' +' + n); }
+  for (const k in SONG_GAIN) { const n = w == null ? SONG_GAIN[k][0] + Math.round(f * SONG_GAIN[k][1]) : Math.max(1, Math.round((SONG_GAIN[k][0] + f * SONG_GAIN[k][1]) * w)), u = addStat(k, n); if (u) ups.push(u); got.push((CSTATS.find((c) => c[0] === k) || [k, k])[1] + ' +' + n); }
   save(); return got.join(', ') + (ups.length ? ' — ' + ups.join(' ') : '');
 }
 $('singEgg').addEventListener('click', rhythmStart);
@@ -2403,6 +2434,59 @@ careTuck(!!S.chick.tucked);
 $('careTuck').addEventListener('pointerdown', (e) => { e.preventDefault(); careTuck(!S.chick.tucked); chirp(); save(); });
 $('careTuck').addEventListener('touchend', (e) => { e.preventDefault(); });   // no click after the thumb lifts: the tab has moved, and that click would land on Pet or Feed (found by the chick bench in landscape)
 $('careTuck').addEventListener('click', (e) => { if (e.detail === 0) { careTuck(!S.chick.tucked); save(); } });   // a keyboard's Enter (a thumb already toggled it on pointerdown)
+/* 598/600 - SING TO THE HATCHED CHICK (Marth: "we should also be able to sing to your chick. to boost whtever corresponding
+   attribute"; "playing music (singing) with the tap tap styled song, allow for the chic to upgrade its 'creativity' and 'stamina'").
+   The egg's own tap-tap round - the same song, the same lanes - sung on foot beside its nest. It listens: a bob and a sway on
+   every beat, a hop and a heart on each note she hits, a note in its bubble between. The end gives songGains() (Creativity and
+   Stamina) in the toast. Full gains once per in-game hour, counted on THE game clock (a night's sleep passes it too); sung again
+   sooner, a smaller gift. The egg keeps its wing-dance; the chick's song has none. */
+const CHICK_SONG = { rest: CYCLE / 24, after: 0.25 };   // rest: one in-game hour (112.5 s of the 2700 s day); after: the share given while it still hums the last
+ORB[4] = '\u{1F3B5}';   // its thought while she sings (a hit shows ORB[0], the heart)
+function chickSingable() { return !!chick && !!S.nestDone && !RH.on && S.mode === 'walk' && !S.talking && !S.resting && !$('care').hidden && !!window.WFR_RHYTHM; }
+function chickSing() {
+  if (!chickSingable()) return false;
+  RH.noWalkWas = !!S.noWalk; S.noWalk = true; RH.camSide = 0; RH.cam = null;   // she stands still for the song
+  S.yaw = Math.atan2(chick.position.x - S.pos.x, chick.position.z - S.pos.z);   // she turns to it
+  rhythmStart(true);
+  if (!RH.on) { S.noWalk = RH.noWalkWas; RH.chick = false; return false; }
+  chickFeel(4, 1); chirp(); return true;
+}
+function chickSong(dt, U) {   // from chickTick, every frame there is a chick
+  const c = S.chick, c0 = U.songClock; U.songClock = S.clock;
+  if (c0 != null && c.songRest > 0 && S.clock !== c0) c.songRest = Math.max(0, c.songRest - (S.clock - c0 + (S.clock < c0 ? CYCLE : 0)));   // the game clock's own advance (it wraps at dawn)
+  if (!(RH.on && RH.chick)) return;
+  const T = rhT(), beat = T / WFR_RHYTHM.SPB, sc = STAGES[c.stage].scale;
+  WFR_RHYTHM.tick(RH.st, T).forEach((n) => { RH.els[n.i].classList.add('miss'); rhythmHud(); });
+  const ringY = innerHeight - 104 - 33, top = -50;   // the notes fall exactly as at the egg
+  RH.st.notes.forEach((n, i) => { const y = ringY - (n.t - T) / FALL * (ringY - top) - 23; RH.els[i].style.transform = 'translateY(' + y.toFixed(1) + 'px)'; RH.els[i].style.display = y < -60 || y > innerHeight + 20 ? 'none' : ''; });
+  U.body.position.y += Math.abs(Math.cos(beat * Math.PI)) * 0.07 * sc; U.body.rotation.z = Math.sin(beat * Math.PI) * 0.16;   // up on each beat, leaning side to side
+  if (S.chickFeel !== 0 || S.chickFeelT < 0.1) chickFeel(4, 0.4);   // a note in its bubble (a hit's heart shows for 0.6 s)
+  if (T > RH.endAt) rhythmEnd(false);
+}
+function chickSongEnd(stopped) {   // from rhythmEnd: the lanes, the notes and the music are already put away
+  S.noWalk = !!RH.noWalkWas; RH.chick = false; RH.camSide = 0; RH.cam = null; if (chick) chick.userData.body.rotation.z = 0;   // the sway never outlives the song
+  if (stopped) return;
+  const c = S.chick, st = WFR_RHYTHM.stars(RH.st), full = !(c.songRest > 0); RH.stars = st;
+  if (full) c.songRest = CHICK_SONG.rest;
+  c.songs = (c.songs || 0) + 1; c.happy = Math.min(100, c.happy + (full ? 6 : 2)); chickFeel(0, 3); S.chickHop = 1; chirp();
+  const got = songGains(RH.st, full ? null : CHICK_SONG.after); careStats();
+  toast('⭐'.repeat(st) + '  ' + (st === 3 ? 'What a song! ' : st === 2 ? 'A lovely song. ' : '') + 'Your chick loved it. ' + got + (full ? '' : ' (it is still humming your last song)'), 4400);
+  setTimeout(() => { if (chick) growCheck(); }, 4600);   // a growth fanfare after the song's toast, not over it
+}
+function chickSongCam(dt) {   // after the mode block: a still camera to one side, the two of them in profile, the chick turned a little toward it
+  if (!chick || !bird) return; const B = BIRDS[kind];
+  const mx = (S.pos.x + chick.position.x) / 2, mz = (S.pos.z + chick.position.z) / 2;
+  let dx = chick.position.x - S.pos.x, dz = chick.position.z - S.pos.z; const L = Math.hypot(dx, dz) || 1; dx /= L; dz /= L;
+  if (!RH.camSide) RH.camSide = (camera.position.x - mx) * -dz + (camera.position.z - mz) * dx >= 0 ? 1 : -1;   // the side the camera was already on
+  const s = RH.camSide, side = 5.2 + 4 * B.size, x = mx - dz * s * side - dx * 1.6, z = mz + dx * s * side - dz * 1.6;   // back far enough for both birds and the chick's bubble
+  const y = Math.max(Math.max(S.pos.y, chick.position.y) + 1.6 + 1.6 * B.size, groundAt(x, z) + 1.2);
+  if (!RH.cam) RH.cam = camera.position.clone(); RH.cam.lerp(tmp.set(x, y, z), Math.min(1, dt * 2.5)); camera.position.copy(RH.cam);
+  camera.lookAt(mx, chick.position.y + 0.6, mz);
+  const beat = rhT() / WFR_RHYTHM.SPB; bird.rotation.z = Math.sin(beat * Math.PI) * 0.1;   // she sways to her own song (the walk block resets it every frame)
+}
+$('singChick').addEventListener('pointerdown', (e) => { e.preventDefault(); chickSing(); });
+$('singChick').addEventListener('touchend', (e) => { e.preventDefault(); });   // no click after the thumb lifts: the lanes are there now
+$('singChick').addEventListener('click', (e) => { if (e.detail === 0) chickSing(); });   // a keyboard's Enter (a thumb or a mouse already started it on pointerdown)
 /* ---------- FISH (board 525) ----------
    Silverlings school in the sea round the island; gold Perch keep to the deep of the lake. They school by Reynolds'
    three rules - keep apart, swim alike, stay together (red3d.com/cwr/boids, Izumi verified) - plus a pull home and a
@@ -2529,6 +2613,7 @@ function chickTick(dt) {
   U.body.position.y = Math.abs(Math.sin(S.t * 9)) * 0.25 * S.chickHop + Math.sin(S.t * 2.4) * 0.02;
   const flap = S.chickHop > 0 ? Math.sin(S.t * 30) * 0.9 : Math.sin(S.t * 1.7) * 0.08;
   U.wings[0].rotation.z = flap; U.wings[1].rotation.z = -flap;
+  chickSong(dt, U);   // 598: after its own bob is set, so the beat's bob rides on top
 }
 
 /* ---------- THE HEDGEHOGS (boards 529 + 542): the dunes, Bramble, Moss and Pip, Pip's lost book, the Zoom lesson, the
@@ -2739,6 +2824,7 @@ try { if (localStorage.getItem('wfr.debug') === '1') window.__wfr = { eagle: () 
     const c = v.clone().addScaledVector(r, (140 - 42) / 256 * sz).addScaledVector(u, (248 - 108) / 256 * sz), edge = c.clone().addScaledVector(r, 92 / 256 * sz), P = (q) => { q.project(camera); return [(q.x + 1) / 2 * innerWidth, (1 - q.y) / 2 * innerHeight]; }, cs = P(c.clone()), es = P(edge);
     return { up: M.up, shown: M.s.visible, k: M.k, e: M.e, want: M.want && M.want.e, why: M.want && M.want.why, need: !!(M.want && M.want.need), moment: !!(M.want && M.want.moment), screen: cs, rpx: Math.hypot(es[0] - cs[0], es[1] - cs[1]) }; },
   chickYaw: () => (chick ? chick.rotation.y : null), chickSet: (o) => { Object.assign(S.chick, o); }, tucked: () => !!S.chick.tucked,
+  chickSing: () => chickSing(), chickSong: () => ({ on: !!(RH.on && RH.chick), kid: !!RH.chick, rest: S.chick.songRest || 0, songs: S.chick.songs || 0, noWalk: !!S.noWalk, feel: S.chickFeelT > 0 ? ORB[S.chickFeel] : null, bodyY: chick ? chick.userData.body.position.y : null, sway: chick ? chick.userData.body.rotation.z : null, stats: Object.assign({}, S.chick.stats), happy: S.chick.happy, mode: S.mode, restMax: CHICK_SONG.rest }),
   standAt: (dx, dz) => { S.pos.set(NEST.x + dx, NEST.y - 0.2 + standOf(kind), NEST.z + dz); S.mode = 'walk'; }, faceChick: () => { if (chick) S.yaw = Math.atan2(chick.position.x - S.pos.x, chick.position.z - S.pos.z); },
   chickScreen: () => { if (!chick) return null; const v = chick.position.clone(); v.y += 0.45 * STAGES[S.chick.stage].scale; v.project(camera); return [(v.x + 1) / 2 * innerWidth, (1 - v.y) / 2 * innerHeight, v.z]; },
   giveFruit: (i) => { const g = emojiSprite(FRUITS[i].emoji, 0.9); scene.add(g); S.fruit = { type: FRUITS[i], g }; save(); }, chick: () => JSON.parse(JSON.stringify(S.chick)),
@@ -3292,9 +3378,10 @@ function frame(now) {
     }
     if (chick && S.mode === 'card') chick.rotation.y = Math.sin(S.t * 1.5) * 0.6;
   } else if (S.mode === 'menu') {   // the home screen's flight over the island (board 543)
-    homeFly(dt);
+    homeFly(CINE.phase === 'load' || CINE.phase === 'wait' ? 0 : dt);   // 606: the flight waits on its first frame for her tap, so it and the song start together
     if (CINE.phase === 'pan') cineTick(dt);   // 606: ten seconds of the flight, then the WFR mark
   }
+  if (RH.on && RH.chick) chickSongCam(dt);   // 598: the chick's song has its own still camera
   underLook(camera.position.y < WATER - 0.05);
   if ($('breath').hidden === (S.mode === 'swim')) $('breath').hidden = S.mode !== 'swim';
   { const w = thOffered(); if ($('thBtn').hidden === !!w) $('thBtn').hidden = !w; if (w) { const lbl = w === 'Sleep' || w === 'Nest sleep' ? '🌙 Sleep' : w === 'Go out' ? '🚪 Go out' : w === 'Climb' ? '🪜 Climb' : w === 'Up' ? '🪜 Up' : w === 'Rest' ? '🪺 Rest' : w === 'Get up' ? '🐦 Get up' : '🏡 Go in'; if ($('thBtn').textContent !== lbl) $('thBtn').textContent = lbl; } }
@@ -3335,7 +3422,7 @@ function frame(now) {
    and the start screen arrives. Who skips it is decided in <head> (html.cine). The mark is drawn here, cell by cell, in an
    original chunky pixel face with two small wings: no web font is fetched for it. */
 const CINE_SECONDS = 10;
-const CINE = { phase: document.documentElement.classList.contains('cine') ? 'pan' : 'off', t: 0 };
+const CINE = { phase: document.documentElement.classList.contains('cine') ? 'load' : 'off', t: 0 };   // load -> wait (Tap to begin) -> pan -> logo -> flash -> done
 function cineSkipNext() { try { sessionStorage.setItem('wfr.toStart', '1'); } catch (e) {} }
 function drawWFR(cv) {
   if (!cv || !cv.getContext) return;
@@ -3354,7 +3441,7 @@ function drawWFR(cv) {
   g.fillStyle = '#ffffff'; for (const [x, y] of [[11, 4], [22, 4], [31, 4]]) g.fillRect(x, y, 1, 1);   // a glint on each letter
 }
 drawWFR($('wfrLogo')); drawWFR($('wfrMini'));
-function cinePhase(p) { CINE.phase = p; const c = $('cine'); c.dataset.phase = p; c.classList.toggle('logo', p === 'logo'); c.classList.toggle('flash', p === 'flash'); }
+function cinePhase(p) { CINE.phase = p; const c = $('cine'); c.dataset.phase = p; c.classList.toggle('logo', p === 'logo'); c.classList.toggle('flash', p === 'flash'); if (p === 'wait') $('boot').classList.add('ready'); }
 function cineTick(dt) { CINE.t += Math.max(0, dt); if (CINE.t >= CINE_SECONDS) cinePhase('logo'); }
 function cineChime() { tone(784, 0, 0.08, 'square', 0.03); tone(1175, 0.04, 0.08, 'square', 0.03); tone(1568, 0.08, 0.34, 'triangle', 0.09); tone(2093, 0.12, 0.5, 'sine', 0.05); tone(3136, 0.15, 0.36, 'sine', 0.02); }   // an original "shing": up a fifth, then a bell
 function cineReveal() {
@@ -3363,23 +3450,34 @@ function cineReveal() {
   document.documentElement.classList.remove('cine'); $('start').hidden = false; $('start').classList.add('arrive');
   setTimeout(() => { c.hidden = true; c.style.display = ''; c.classList.remove('out', 'flash'); }, 450);
 }
+function cineBegin() {   // her first tap, on the black screen: the song starts IN the gesture, then the black fades into the flight
+  audio(); if (CINE.phase !== 'wait') return;
+  music('home'); cinePhase('pan');
+  const b = $('boot'); b.classList.add('gone'); setTimeout(() => { b.hidden = true; }, 950);
+}
 function cineTap() {
   audio();   // a thumb's pointerdown is not a gesture iOS unlocks audio on; its pointerup/touchend/click (below) resume it, and what was scheduled plays
+  if (CINE.phase === 'wait') { cineBegin(); return; }
   if (CINE.phase !== 'pan' && CINE.phase !== 'logo') return;
-  cinePhase('flash'); cineChime(); music('home');
+  cinePhase('flash'); cineChime(); music('home');   // the song is already playing: play() of the same variant is a no-op, so the flash never restarts it
   setTimeout(cineReveal, 650);
 }
+for (const ev of ['pointerup', 'touchend', 'click']) $('boot').addEventListener(ev, () => { if (CINE.phase === 'wait') cineBegin(); else audio(); });   // the gesture iOS accepts: it resumes the song the pointerdown scheduled
+$('boot').addEventListener('pointerdown', () => cineTap());   // the whole black screen is the button
 for (const ev of ['pointerup', 'touchend', 'click']) $('cine').addEventListener(ev, () => audio());   // the gesture that unlocks the sound on a phone
 $('cine').addEventListener('pointerdown', () => cineTap());   // the whole screen is the button
 $('tapStart').addEventListener('click', () => cineTap());   // a keyboard's Enter on the focused prompt
-addEventListener('keydown', (e) => { if ((CINE.phase === 'pan' || CINE.phase === 'logo') && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); cineTap(); } });
-if (CINE.phase === 'pan') { $('start').hidden = true; $('cine').hidden = false; cinePhase('pan'); }
+addEventListener('keydown', (e) => { if ((CINE.phase === 'wait' || CINE.phase === 'pan' || CINE.phase === 'logo') && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); cineTap(); } });
+if (CINE.phase === 'load') { $('start').hidden = true; $('cine').hidden = false; cinePhase('load');
+  requestAnimationFrame(() => requestAnimationFrame(() => { audio(); cinePhase('wait'); }));   // the island has drawn: the sound engine made ready (suspended until her tap), and Tap to begin
+}
+if (CINE.phase === 'off') $('boot').hidden = true;   // a bench, the Main menu's way back, a file switch: no loading screen
 hud();
 requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build 3bd3ec098f16): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build 85b9469e66b7): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>
