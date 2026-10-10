@@ -1,6 +1,6 @@
 /* Wings for Rouge - offline worker. The cache name is the build's content hash: a new build replaces the old cache. */
-const CACHE = 'wings-9e6e378119ad';
-const SHELL = ["./","index.html","manifest.webmanifest","icon-180.png","icon-192.png","icon-512.png","textures.js?v=9e6e378119ad","birds.js?v=9e6e378119ad","humans.js?v=9e6e378119ad","folk.js?v=9e6e378119ad","trees.js?v=9e6e378119ad","treehouses.js?v=9e6e378119ad","cabins.js?v=9e6e378119ad","cave.js?v=9e6e378119ad","sounds.js?v=9e6e378119ad","music.js?v=9e6e378119ad","rhythm.js?v=9e6e378119ad","pictograms.js?v=9e6e378119ad","hedgehogs.js?v=9e6e378119ad","opening.js?v=9e6e378119ad","skypiea.js?v=9e6e378119ad","https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"];
+const CACHE = 'wings-b379349ea090';
+const SHELL = ["./","index.html","manifest.webmanifest","icon-180.png","icon-192.png","icon-512.png","textures.js?v=b379349ea090","birds.js?v=b379349ea090","humans.js?v=b379349ea090","folk.js?v=b379349ea090","trees.js?v=b379349ea090","treehouses.js?v=b379349ea090","cabins.js?v=b379349ea090","cave.js?v=b379349ea090","sounds.js?v=b379349ea090","music.js?v=b379349ea090","rhythm.js?v=b379349ea090","pictograms.js?v=b379349ea090","hedgehogs.js?v=b379349ea090","opening.js?v=b379349ea090","skypiea.js?v=b379349ea090","https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"];
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', (e) => {

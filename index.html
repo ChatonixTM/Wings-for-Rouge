@@ -17,6 +17,11 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Wings for Rouge</title>
+<script>/* board 606: the cinematic title - who skips it is decided here, before the first paint */
+(function () { try { var ss = sessionStorage, ls = localStorage, back = ss.getItem('wfr.toStart') === '1'; ss.removeItem('wfr.toStart');
+  var bench = ls.getItem('wfr.debug') === '1' || navigator.webdriver === true, force = ls.getItem('wfr.cine') === '1';
+  if (!back && (!bench || force)) document.documentElement.classList.add('cine'); } catch (e) {} })();
+</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@500;700&display=swap">
@@ -68,6 +73,44 @@ button:focus-visible{outline:3px solid var(--gold);outline-offset:3px}
   box-shadow:0 8px 20px rgba(200,49,74,.35)}
 .go:active{transform:translateY(1px)}
 .how{font-size:13px;color:#5a6780}
+/* board 606: the cinematic title. The island flies under a vignette; then the WFR mark and Tap to start; a tap flashes */
+#cine{position:fixed;inset:0;z-index:30;display:none;touch-action:none;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:opacity .4s}
+html.cine #cine{display:block}
+html.cine #start{display:none!important}
+#cine.out{opacity:0;pointer-events:none}
+#cine .vig{position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 120% 90% at 50% 45%,rgba(8,12,32,0) 52%,rgba(8,12,32,.5) 100%)}
+#cine .dim{position:absolute;inset:0;pointer-events:none;background:rgba(10,16,40,0);transition:background 1.4s ease}
+#cine.logo .dim,#cine.flash .dim{background:rgba(10,16,40,.3)}
+#cine .mark{position:absolute;left:0;right:0;top:40%;display:flex;justify-content:center;transform:translateY(-50%) scale(.84);opacity:0;pointer-events:none;
+  transition:opacity 1s ease,transform 1.1s cubic-bezier(.2,.8,.2,1)}
+#cine.logo .mark,#cine.flash .mark{opacity:1;transform:translateY(-50%) scale(1)}
+#wfrLogo{display:block;position:static;inset:auto;width:min(330px,80vw);height:auto;image-rendering:crisp-edges;image-rendering:pixelated;
+  filter:drop-shadow(0 0 14px rgba(255,214,120,.7)) drop-shadow(0 5px 10px rgba(10,16,40,.4));animation:wfrFloat 3.4s ease-in-out infinite}
+@keyframes wfrFloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-4px)}}
+#tapStart{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 16%);transform:translateX(-50%);background:none;color:#fff;
+  font-family:var(--display);font-weight:600;font-size:17px;letter-spacing:.24em;text-transform:uppercase;white-space:nowrap;
+  text-shadow:0 2px 10px rgba(10,16,40,.75);padding:12px 24px;min-height:44px;opacity:0;pointer-events:none}
+#cine.logo #tapStart{animation:tapIn .7s ease .8s both,tapPulse 1.8s ease-in-out 1.5s infinite}
+@keyframes tapIn{from{opacity:0;transform:translate(-50%,6px)}to{opacity:1;transform:translateX(-50%)}}
+@keyframes tapPulse{0%,100%{opacity:1}50%{opacity:.38}}
+#cine .flashW{position:absolute;inset:0;background:#fff;opacity:0;pointer-events:none}
+#cine .streak{position:absolute;left:-70%;top:40%;width:70%;height:30px;margin-top:-15px;pointer-events:none;opacity:0;transform:skewX(-32deg);
+  background:linear-gradient(90deg,rgba(255,255,255,0),rgba(255,255,255,.95) 46%,#fff4c4 54%,rgba(255,255,255,0))}
+#cine.flash .flashW{animation:cineFlash .75s ease-out both}
+#cine.flash .streak{animation:cineStreak .5s cubic-bezier(.3,.7,.4,1) .04s both}
+#cine.flash #wfrLogo{animation:wfrPunch .75s cubic-bezier(.2,1.5,.4,1) both}
+#cine.flash #tapStart{opacity:0;animation:none}
+@keyframes cineFlash{0%{opacity:0}7%{opacity:1}24%{opacity:.8}100%{opacity:0}}
+@keyframes cineStreak{0%{left:-70%;opacity:1}100%{left:110%;opacity:1}}
+@keyframes wfrPunch{0%{transform:scale(1);filter:brightness(2.6) drop-shadow(0 0 26px #fff)}35%{transform:scale(1.2)}100%{transform:scale(1);filter:brightness(1) drop-shadow(0 0 14px rgba(255,214,120,.7))}}
+@media (prefers-reduced-motion:reduce){#wfrLogo{animation:none}#cine.flash .streak{animation:none}}
+/* the start sheet, revised (606): a small mark and a small heading instead of the big title block */
+#start .brand{display:flex;align-items:center;justify-content:center;gap:10px;min-width:0}
+#wfrMini{display:block;position:static;inset:auto;flex:none;height:32px;width:auto;image-rendering:crisp-edges;image-rendering:pixelated;filter:drop-shadow(0 2px 3px rgba(34,49,74,.25))}
+#start .brand h1{font-size:19px!important;letter-spacing:.04em;line-height:1.1;white-space:nowrap}
+#start .sheet{background:rgba(255,248,236,.95)}
+#start.arrive .sheet{animation:sheetIn .5s cubic-bezier(.2,.8,.2,1) both}
+@keyframes sheetIn{from{opacity:0;transform:translateY(16px) scale(.97)}}
 @media (max-width:440px){ .bird span{display:none} .sheet{padding:20px 14px 16px} }
 
 /* HUD */
@@ -288,8 +331,8 @@ body.rhythmOn .hud{visibility:hidden}   /* the song has the whole screen: the le
 
 <div class="screen" id="start">
   <div class="sheet">
+    <div class="brand"><canvas id="wfrMini" width="50" height="15" role="img" aria-label="WFR"></canvas><h1>Wings for <span class="who">Rouge</span></h1></div>
     <div class="kicker" id="kicker">An island, a village, and a nest to build</div>
-    <h1>Wings for <span class="who">Rouge</span></h1>
     <p>Gather twigs for a nest in the big tree. Help the villagers find their tools. Grow from level 1 to 20.</p>
     <div class="files" id="files" role="group" aria-label="Save files"></div>
     <div class="birds" role="group" aria-label="Pick your bird" id="birdCards"></div>
@@ -324,25 +367,26 @@ body.rhythmOn .hud{visibility:hidden}   /* the song has the whole screen: the le
   </div>
 </div>
 
+<div id="cine" hidden data-phase="off"><div class="vig"></div><div class="dim"></div><div class="mark"><canvas id="wfrLogo" width="50" height="15" role="img" aria-label="WFR"></canvas></div><div class="streak"></div><button type="button" id="tapStart">Tap to start</button><div class="flashW"></div></div>
 <button class="round" id="muteTop" type="button" aria-label="Sound on">♪</button>
 <div id="fade" aria-hidden="true"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="textures.js?v=9e6e378119ad"></script>
-<script src="birds.js?v=9e6e378119ad"></script>
-<script src="humans.js?v=9e6e378119ad"></script>
-<script src="folk.js?v=9e6e378119ad"></script>
-<script src="trees.js?v=9e6e378119ad"></script>
-<script src="treehouses.js?v=9e6e378119ad"></script>
-<script src="cabins.js?v=9e6e378119ad"></script>
-<script src="cave.js?v=9e6e378119ad"></script>
-<script src="sounds.js?v=9e6e378119ad"></script>
-<script src="music.js?v=9e6e378119ad"></script>
-<script src="rhythm.js?v=9e6e378119ad"></script>
-<script src="pictograms.js?v=9e6e378119ad"></script>
-<script src="hedgehogs.js?v=9e6e378119ad"></script>
-<script src="opening.js?v=9e6e378119ad"></script>
-<script src="skypiea.js?v=9e6e378119ad"></script>
+<script src="textures.js?v=b379349ea090"></script>
+<script src="birds.js?v=b379349ea090"></script>
+<script src="humans.js?v=b379349ea090"></script>
+<script src="folk.js?v=b379349ea090"></script>
+<script src="trees.js?v=b379349ea090"></script>
+<script src="treehouses.js?v=b379349ea090"></script>
+<script src="cabins.js?v=b379349ea090"></script>
+<script src="cave.js?v=b379349ea090"></script>
+<script src="sounds.js?v=b379349ea090"></script>
+<script src="music.js?v=b379349ea090"></script>
+<script src="rhythm.js?v=b379349ea090"></script>
+<script src="pictograms.js?v=b379349ea090"></script>
+<script src="hedgehogs.js?v=b379349ea090"></script>
+<script src="opening.js?v=b379349ea090"></script>
+<script src="skypiea.js?v=b379349ea090"></script>
 <script>
 (() => {
 'use strict';
@@ -1379,17 +1423,17 @@ function pickFile(n) {
   if (fileMode === 'new') {
     if (f && fileArmed !== n) { fileArmed = n; drawFiles(); return; }   // a full file: only the second tap erases it
     try { localStorage.removeItem(fileKey(n)); localStorage.removeItem('wfr.save'); localStorage.setItem('wfr.active', String(n)); } catch (e) {}
-    location.reload(); return;
+    cineSkipNext(); location.reload(); return;
   }
   if (n === ACTIVE) return;   // the one already loaded
   if (!f) { fileMode = 'new'; pickFile(n); return; }   // an empty file: a new game there
   save();   // the current file kept as it is
   try { localStorage.setItem('wfr.active', String(n)); localStorage.setItem('wfr.save', JSON.stringify(f)); } catch (e) {}
-  location.reload();
+  cineSkipNext(); location.reload();
 }
 $('newGame').addEventListener('click', () => { fileMode = fileMode === 'new' ? 'play' : 'new'; fileArmed = 0; drawFiles(); });
 $('saveBtn').addEventListener('click', () => { save(); toast('Saved to File ' + ACTIVE + '.', 2200); chirp(); });
-$('toTitle').addEventListener('click', () => { save(); location.reload(); });   // back out to the title: the island flight and the song
+$('toTitle').addEventListener('click', () => { save(); cineSkipNext(); location.reload(); });   // back out to the title: the island flight and the song
 drawFiles();
 $('start').addEventListener('click', (e) => { if (e.target.closest('#go, #rewatch')) return; if (S.mode === 'menu' || S.mode === 'paused') music('home'); });
 
@@ -3242,6 +3286,7 @@ function frame(now) {
     if (chick && S.mode === 'card') chick.rotation.y = Math.sin(S.t * 1.5) * 0.6;
   } else if (S.mode === 'menu') {   // the home screen's flight over the island (board 543)
     homeFly(dt);
+    if (CINE.phase === 'pan') cineTick(dt);   // 606: ten seconds of the flight, then the WFR mark
   }
   underLook(camera.position.y < WATER - 0.05);
   if ($('breath').hidden === (S.mode === 'swim')) $('breath').hidden = S.mode !== 'swim';
@@ -3277,12 +3322,57 @@ function frame(now) {
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
 }
+/* ---------- THE CINEMATIC TITLE (board 606) ---------- */
+/* The page opens on the home flight with no title card, only a vignette; after CINE_SECONDS of GAME time the WFR mark (spelt
+   WFR, his ruling) and Tap to start, the screen dimmed a little; a tap, at any time, flashes like an old fighting game's title
+   and the start screen arrives. Who skips it is decided in <head> (html.cine). The mark is drawn here, cell by cell, in an
+   original chunky pixel face with two small wings: no web font is fetched for it. */
+const CINE_SECONDS = 10;
+const CINE = { phase: document.documentElement.classList.contains('cine') ? 'pan' : 'off', t: 0 };
+function cineSkipNext() { try { sessionStorage.setItem('wfr.toStart', '1'); } catch (e) {} }
+function drawWFR(cv) {
+  if (!cv || !cv.getContext) return;
+  const W = ['XX.....XX', 'XX.....XX', 'XX..X..XX', 'XX.XXX.XX', 'XXXXXXXXX', 'XXXX.XXXX', 'XXX...XXX', 'XX.....XX'];
+  const F = ['XXXXXXX', 'XXXXXXX', 'XX.....', 'XXXXXX.', 'XXXXXX.', 'XX.....', 'XX.....', 'XX.....'];
+  const Rr = ['XXXXXXX.', 'XXXXXXXX', 'XX....XX', 'XXXXXXXX', 'XXXXXXX.', 'XX..XXX.', 'XX...XXX', 'XX....XX'];
+  const WING = ['......XX', '....XXXX', '..XXXXXX', 'XXXXXXX.', '.XXXX...', '..XX....'];
+  const cells = [];
+  const put = (rows, ox, oy, k, flip) => rows.forEach((r, y) => { for (let x = 0; x < r.length; x++) if (r[x] === 'X') cells.push([ox + (flip ? r.length - 1 - x : x), oy + y, k]); });
+  put(WING, 2, 2, 1, true); put(W, 11, 4, 0); put(F, 22, 4, 0); put(Rr, 31, 4, 0); put(WING, 40, 2, 1, false);
+  cv.width = 50; cv.height = 15; const g = cv.getContext('2d'); g.clearRect(0, 0, 50, 15);
+  const LET = ['#fff6c2', '#ffe58a', '#ffd25e', '#fbb846', '#f59a3c', '#ea7a3e', '#da5640', '#c8314a'];   // gold at the top to Rouge's red at the foot
+  g.fillStyle = 'rgba(28,14,40,.45)'; for (const [x, y] of cells) g.fillRect(x + 1, y + 2, 1, 1);   // the drop shadow
+  for (const [x, y, k] of cells) { g.fillStyle = k ? '#24345a' : '#2b1430'; g.fillRect(x - 1, y - 1, 3, 3); }   // the outline
+  for (const [x, y, k] of cells) { g.fillStyle = k ? (y >= 6 ? '#bfe0ff' : '#ffffff') : LET[y - 4]; g.fillRect(x, y, 1, 1); }
+  g.fillStyle = '#ffffff'; for (const [x, y] of [[11, 4], [22, 4], [31, 4]]) g.fillRect(x, y, 1, 1);   // a glint on each letter
+}
+drawWFR($('wfrLogo')); drawWFR($('wfrMini'));
+function cinePhase(p) { CINE.phase = p; const c = $('cine'); c.dataset.phase = p; c.classList.toggle('logo', p === 'logo'); c.classList.toggle('flash', p === 'flash'); }
+function cineTick(dt) { CINE.t += Math.max(0, dt); if (CINE.t >= CINE_SECONDS) cinePhase('logo'); }
+function cineChime() { tone(784, 0, 0.08, 'square', 0.03); tone(1175, 0.04, 0.08, 'square', 0.03); tone(1568, 0.08, 0.34, 'triangle', 0.09); tone(2093, 0.12, 0.5, 'sine', 0.05); tone(3136, 0.15, 0.36, 'sine', 0.02); }   // an original "shing": up a fifth, then a bell
+function cineReveal() {
+  if (CINE.phase !== 'flash') return;
+  cinePhase('done'); const c = $('cine'); c.style.display = 'block'; c.classList.add('out');
+  document.documentElement.classList.remove('cine'); $('start').hidden = false; $('start').classList.add('arrive');
+  setTimeout(() => { c.hidden = true; c.style.display = ''; c.classList.remove('out', 'flash'); }, 450);
+}
+function cineTap() {
+  audio();   // a thumb's pointerdown is not a gesture iOS unlocks audio on; its pointerup/touchend/click (below) resume it, and what was scheduled plays
+  if (CINE.phase !== 'pan' && CINE.phase !== 'logo') return;
+  cinePhase('flash'); cineChime(); music('home');
+  setTimeout(cineReveal, 650);
+}
+for (const ev of ['pointerup', 'touchend', 'click']) $('cine').addEventListener(ev, () => audio());   // the gesture that unlocks the sound on a phone
+$('cine').addEventListener('pointerdown', () => cineTap());   // the whole screen is the button
+$('tapStart').addEventListener('click', () => cineTap());   // a keyboard's Enter on the focused prompt
+addEventListener('keydown', (e) => { if ((CINE.phase === 'pan' || CINE.phase === 'logo') && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); cineTap(); } });
+if (CINE.phase === 'pan') { $('start').hidden = true; $('cine').hidden = false; cinePhase('pan'); }
 hud();
 requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build 9e6e378119ad): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build b379349ea090): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>
