@@ -426,21 +426,22 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 <div id="fade" aria-hidden="true"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="textures.js?v=bf677aafe91c"></script>
-<script src="birds.js?v=bf677aafe91c"></script>
-<script src="humans.js?v=bf677aafe91c"></script>
-<script src="folk.js?v=bf677aafe91c"></script>
-<script src="trees.js?v=bf677aafe91c"></script>
-<script src="treehouses.js?v=bf677aafe91c"></script>
-<script src="cabins.js?v=bf677aafe91c"></script>
-<script src="cave.js?v=bf677aafe91c"></script>
-<script src="sounds.js?v=bf677aafe91c"></script>
-<script src="music.js?v=bf677aafe91c"></script>
-<script src="rhythm.js?v=bf677aafe91c"></script>
-<script src="pictograms.js?v=bf677aafe91c"></script>
-<script src="hedgehogs.js?v=bf677aafe91c"></script>
-<script src="opening.js?v=bf677aafe91c"></script>
-<script src="skypiea.js?v=bf677aafe91c"></script>
+<script src="textures.js?v=755ac0e8b3ba"></script>
+<script src="birds.js?v=755ac0e8b3ba"></script>
+<script src="humans.js?v=755ac0e8b3ba"></script>
+<script src="folk.js?v=755ac0e8b3ba"></script>
+<script src="trees.js?v=755ac0e8b3ba"></script>
+<script src="treehouses.js?v=755ac0e8b3ba"></script>
+<script src="cabins.js?v=755ac0e8b3ba"></script>
+<script src="cave.js?v=755ac0e8b3ba"></script>
+<script src="sounds.js?v=755ac0e8b3ba"></script>
+<script src="music.js?v=755ac0e8b3ba"></script>
+<script src="rhythm.js?v=755ac0e8b3ba"></script>
+<script src="pictograms.js?v=755ac0e8b3ba"></script>
+<script src="hedgehogs.js?v=755ac0e8b3ba"></script>
+<script src="opening.js?v=755ac0e8b3ba"></script>
+<script src="skypiea.js?v=755ac0e8b3ba"></script>
+<script src="atmo.js?v=755ac0e8b3ba"></script>
 <script>
 (() => {
 'use strict';
@@ -494,6 +495,7 @@ scene.background = new THREE.Color(0x9fd3f0);
 scene.fog = new THREE.Fog(0xcfe8f4, 90, 360);   // the fog is the sky's horizon colour, so the island fades INTO the sky
 /* SHADOWS (Itachi, board 538): one sun shadow that follows the bird - a small sharp box round her, not the whole island */
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+if (window.WFR_ATMO) WFR_ATMO.grade(renderer, THREE);   // 613: a gentle filmic tone curve inside every material (no post pass); exposure follows the clock (atmo.js)
 /* THE SKY: a painted dome - deep blue overhead, pale at the horizon, a warm line where it meets the sea, soft clouds */
 const skyDome = (() => {
   const c = document.createElement('canvas'); c.width = 64; c.height = 512; const g = c.getContext('2d');
@@ -514,6 +516,7 @@ const skyDome = (() => {
   const ct = new THREE.CanvasTexture(cc); ct.wrapS = THREE.RepeatWrapping;
   const ring = new THREE.Mesh(new THREE.CylinderGeometry(780, 780, 150, 48, 1, true), new THREE.MeshBasicMaterial({ color: 0xffffff, alphaMap: ct, transparent: true, side: THREE.BackSide, fog: false, depthWrite: false }));
   ring.position.y = 95; ring.renderOrder = -9; m.add(ring);
+  if (window.WFR_TEX && WFR_TEX.dressSky) WFR_TEX.dressSky(ring, cc, ct);   // 578 pass 2: fluffy cumulus and high wisps on the ring, soft blue-grey undersides (textures.js; the alphaMap stays opaque)
   m.userData = { g, t, ring };
   return m;
 })();
@@ -572,7 +575,7 @@ function skyTick() {
     SKY.lastPaint = c;
     const [ka, kb, fk] = skyMix(c), A = SKYKEYS[ka], B = SKYKEYS[kb], col = A.map((h, i) => '#' + SKY.ca.set(h).lerp(SKY.cb.set(B[i]), fk).getHexString());
     const { g, t, ring } = skyDome.userData, gr = g.createLinearGradient(0, 0, 0, 512);
-    gr.addColorStop(0, col[0]); gr.addColorStop(0.32, col[1]); gr.addColorStop(0.47, col[2]); gr.addColorStop(0.5, col[3]); gr.addColorStop(0.53, col[4]); gr.addColorStop(1, col[4]);
+    if (window.WFR_TEX && WFR_TEX.skyStops) WFR_TEX.skyStops(gr, col); else { gr.addColorStop(0, col[0]); gr.addColorStop(0.32, col[1]); gr.addColorStop(0.47, col[2]); gr.addColorStop(0.5, col[3]); gr.addColorStop(0.53, col[4]); gr.addColorStop(1, col[4]); }   // 578 pass 2: the same stops, eased (textures.js)
     g.fillStyle = gr; g.fillRect(0, 0, 64, 512); t.needsUpdate = true;
     FOG_AIR.color.set(col[4]); BG_AIR.set(col[2]);
     FOG_AIR.near = 90 - 20 * na; FOG_AIR.far = 360 - 60 * na;
@@ -708,6 +711,7 @@ function emojiSprite(ch, size) {
   g.setAttribute('color', new THREE.BufferAttribute(col, 3)); g.computeVertexNormals();
   const ground = new THREE.Mesh(g, lam(0xffffff, { vertexColors: true })); ground.receiveShadow = true; ground.userData.ground = true;   // the island takes every shadow
   if (window.WFR_TEX) WFR_TEX.apply(ground, 'grass', 110, 110, renderer);
+  if (window.WFR_TEX && WFR_TEX.dressTerrain) WFR_TEX.dressTerrain(ground, { H, water: WATER, village: VILLAGE, renderer });   // 578 pass 2: warm sand and wet sand at the water line, rock with strata and moss, snow with blue shade, worn paths on the green (textures.js; colours and a shader only, no height)
   scene.add(ground);
   const sea = new THREE.Mesh(new THREE.PlaneGeometry(1400, 1400), new THREE.MeshPhongMaterial({ color: 0x3f9fd2, specular: 0x9fd3f0, shininess: 70, transparent: true, opacity: 0.88 }));
   if (window.WFR_TEX) WFR_TEX.apply(sea, 'water', 90, 90, renderer);
@@ -781,6 +785,7 @@ const toWorld = (h, lx, lz) => { const c = Math.cos(h.rot), s = Math.sin(h.rot);
     /* surfaces: plaster walls, tiled roof, wooden door, plank floor */
     g.traverse((o) => { if (!o.isMesh || !o.material.color) return; const hx = o.material.color.getHex();
       if (o === roof) tex(o, 'roofTiles', 3, 3); else if (hx === wall) tex(o, 'plaster', 2, 2); else if (hx === 0x6e4529) tex(o, 'wood', 1, 2); else if (hx === 0xb08a5e) tex(o, 'planks', 2, 2); });
+    if (window.WFR_TEX && WFR_TEX.dressHouse) WFR_TEX.dressHouse(g, { i, w, d, ht, wall, roof, roofHex: roofs[i % 4], door, glow: WINDOW_MATS, renderer });   // 578 pass 2: timber, brick or stone walls, tiles or slates in the roof's colour, framed windows, painted doors whose glass glows at night (textures.js)
     g.scale.setScalar(HS); g.position.set(x, H(x, z), z); g.rotation.y = rot; scene.add(g);
     houses.push({ i, g, x, z, y: H(x, z), rot, w, d, ht, pivot, openT: 0, treat, treatTaken: false });
   }
@@ -865,6 +870,7 @@ for (let i = 0; i < 16; i++) {
   for (let k = 0; k < 4; k++) { const b = new THREE.Mesh(new THREE.IcosahedronGeometry(3 + rnd() * 3, 0), m); b.position.set(k * 3.6 - 5, rnd() * 1.5, rnd() * 2); b.renderOrder = 1; b.castShadow = true; c.add(b); }   // after the sea (Obito: a faded cloud must not punch the water out); shadows while whole
   c.position.set((rnd() - 0.5) * 600, 70 + rnd() * 26, (rnd() - 0.5) * 600); scene.add(c); clouds.push(c);
 }
+if (window.WFR_TEX && WFR_TEX.dressClouds) WFR_TEX.dressClouds(clouds);   // 578 pass 2: round soft puffs, flatter undersides, white tops and blue-grey bellies (textures.js; same radii, same places)
 
 /* ---------- where you can stand: the ground, or anything built on it ---------- */
 const WELL_TOP = H(VILLAGE.x, VILLAGE.z) + 1;
@@ -1762,7 +1768,7 @@ function landSpots() {
   for (const t of trees) if (!t.hidden) out.push({ x: t.x, z: t.z, name: 'tree' });
   for (const h of houses) out.push({ x: h.x, z: h.z, name: 'roof' });
   for (const t of TREEHOUSES) out.push({ x: t.entryW.x, z: t.entryW.z, name: 'treehouse' });
-  out.push({ x: LIGHT.x, z: LIGHT.z, name: 'lighthouse' }, { x: peakPt.x, z: peakPt.z, name: 'peak' });
+  out.push({ x: LIGHT.x, z: LIGHT.z, name: 'lighthouse' }, { get x() { return peakPt.x - (S.eagleFound ? 0 : 3); }, get z() { return peakPt.z + (S.eagleFound ? 0 : 3); }, name: 'peak' });   // 602: while the Eagle perches on the summit, Land sets her down beside him (the spot his event puts her), never inside him; read when she lands, so it follows S.eagleFound
   if (CAVE) out.push(CAVE.spot);   // the cave's ledge (528)
   if (S.built > 4 && builtAt[4]) out.push({ x: builtAt[4].x, z: builtAt[4].z, name: 'bath' });   // 591: Land homes onto the bird bath
   return out;
@@ -2212,11 +2218,22 @@ const owlTree = (() => { let best = null;   // the tallest tree within 40 m of t
   return best; })();
 const owlPerch = owlTree ? new THREE.Vector3(owlTree.x, owlTree.top, owlTree.z) : new THREE.Vector3(MOUND.x, NEST.y + 4, MOUND.z);   // (no tree there: above her own nest)
 function owlCalling() { try { const m = MENTORS.find((x) => x.id === 'owl'); return m && !S.lessons.owl && m.ready() ? m : null; } catch (e) { return null; } }
+/* 602 (Marth, Oct 10: "allow the eagle to remain on the top of the mountain but have him instruct us (if not level 15+ that
+   we need more training) or if you find the owl maybe you'll see what you need"): the Eagle waits on the peak from the start,
+   and meets her only at EAGLE_LEVEL with the Owl's lesson. Nothing about it is saved. */
+const EAGLE_LEVEL = 15;
+const eagleReady = () => S.level >= EAGLE_LEVEL && !!(S.lessons && S.lessons.owl);
+function eagleGoalLine() {   // What to do keeps the Eagle in sight until she meets him (DRAFT for Marth)
+  const head = 'Meet the Eagle on the mountain top: level ' + EAGLE_LEVEL + ' and the Owl\'s lesson';
+  if (eagleReady()) return '🦅 ' + head + '. You are ready: he is waiting for you.';
+  const have = ['you are level ' + S.level]; if (S.lessons.owl) have.push('the Owl has taught you');
+  return '🦅 ' + head + ' (' + have.join(', and ') + ').';
+}
 function storyTarget() {   // the compass between the teachers: a villager's tool before the Crow (non-metal: metal shines only after her); the peak after the Owl
   if (S.nestDone && !S.lessons.crow && givenN() < 1) { let best = null, bd = Infinity;
     for (const it of items) { if (it.held || it.done || !it.g.visible || !it.owner || it.owner.hog) continue; const d = it.g.position.distanceTo(S.pos); if (d < bd) { bd = d; best = it.g.position; } }
     if (best) return best; }
-  if (S.lessons.owl && !S.eagleFound) return eagleSpot;
+  if (eagleReady() && !S.eagleFound) return eagleSpot;   // 602: the peak once he will meet her (level 15 and the Owl)
   return null;
 }
 function storyLines() {   // What to do: every step done so far, and the NEXT one only (what comes after stays a surprise)
@@ -2229,9 +2246,10 @@ function storyLines() {   // What to do: every step done so far, and the NEXT on
     [S.level >= 6 || !!S.lessons.falcon, 'Level 6.', 'Reach level 6 (you are level ' + S.level + ').'],
     [!!S.lessons.falcon, 'The Peregrine taught you to fly high and to dive bomb.', 'Meet the Peregrine, out on the lighthouse.'],
     [!!S.lessons.owl, 'The Owl taught you to see in the dark.', owlHours() ? 'The Owl is awake: find it in the forest, past the old signpost. Follow the arrow.' : 'Wait for dusk: the Owl wakes in the forest, past the old signpost, and sleeps at dawn.'],
-    [!!S.eagleFound, 'The Eagle came back, and the dove blessed your nest.', 'Fly to the top of the highest peak. Someone old is waiting there.']];
+    [!!S.eagleFound, 'The Eagle came back, and the dove blessed your nest.', eagleReady() ? 'Fly to the top of the highest peak. Someone old is waiting there.' : 'Fly to the top of the highest peak once you are level ' + EAGLE_LEVEL + '.']];   // 602: the second half is a DRAFT for Marth
   let next = true;
   for (const [done, yes, todo] of steps) { if (done) L.push('✓ ' + yes); else if (next) { L.push('→ ' + todo); next = false; } }
+  if (!S.eagleFound) L.push(eagleGoalLine());   // 602: the Eagle stays in sight, at every step (no arrow of its own)
   return L;
 }
 function nestLines() {   // Marth, 21:20: the nest's next step and its gate, in plain words (TIERS and their gates are read, never copied)
@@ -2288,7 +2306,7 @@ const mentorWaiting = () => MENTORS.find((m) => !S.lessons[m.id] && m.ready());
 function startMentor(m) {   // 567: one way in, from the walk-up or the Talk button
   if (S.talking) return;
   try { if (window.WFR_SOUND) WFR_SOUND.call(m.kind, { vol: 0.7 }); } catch (e) { /* a call that fails must never stop the lesson */ }
-  say(m.lines, () => { S.lessons[m.id] = true; save(); ding(); gainXP(30); hud(); });
+  say(m.lines, () => { S.lessons[m.id] = true; save(); ding(); gainXP(30); hud(); leaveStart(m); });   // 601: saved before the leaving starts (a reload mid-fade keeps it)
 }
 function mentors(dt) {
   S.nearMentor = null;
@@ -2303,6 +2321,86 @@ function mentors(dt) {
     if (here && md < 14) S.nearMentor = m;   // close enough to call out to: the Talk button (14 m: the Crow sits 10.6 m above the green)
     if (here && md < 7) startMentor(m);
   }
+}
+
+/* ---------- 601 THE VISITOR LEAVES (Marth, Oct 10: "when cutscenes with an animal are done, they should fly ... away then the
+   screen fades black and when it unfades from black then the visitor is gone. then the screen pauses briefly and says the message
+   of what to do or a recap of what was just taught."). startMentor SAVES the lesson, then leaveStart: the teacher turns and flies
+   off (LEAVE_FLY s), the screen fades to black (LEAVE_FADE s), the camera is put back where it was and the teacher is gone (its
+   saved lesson keeps it gone: mentors() shows only a teacher still waiting), the screen fades back, a short pause (LEAVE_PAUSE s),
+   then the recap card (OK, or LEAVE_CARD s). The hedgehogs live in the dunes: their Zoom gets the card only (hedgehogs.js calls
+   api.recap -> recapQueue; it waits for their talk and the book to close). Driven by the frame's dt (game time), right after mentors(). S.mode 'event' holds input while it runs (the pause button
+   refuses 'event'); leaveEnd puts the mode, the UI and the camera back. Nothing here is saved (a reload drops the card only). ---------- */
+const LEAVE_FLY = 2.0, LEAVE_FADE = 0.6, LEAVE_BLACK = 0.2, LEAVE_PAUSE = 0.5, LEAVE_CARD = 4;
+const LEAVE = { m: null, id: '', ph: '', t: 0, was: 'walk', air: false, cam: null, quat: null, look: null, yaw0: 0, yaw: 0, v: 0, toast: '', ann: [], queue: [], shown: 0 };
+const RECAPS = {   // what was just taught, from each lesson's own closing words; the NEXT step is the story's own (storyLines, "What to do")
+  crow: () => 'The Crow taught you to understand the villagers and to spot shiny metal, and your memory grew: you can carry one more thing.',   // DRAFT for Marth
+  falcon: () => 'The Peregrine taught you to fly higher than ever, to dive bomb (point down hard), and to swim (dive into deep water).',   // DRAFT for Marth
+  owl: () => 'The Owl taught you to see in the dark: the night is brighter for you now.',   // DRAFT for Marth
+  zoom: () => touchy ? 'The hedgehogs taught you Zoom: walking, hold the stick all the way forward, or tap Zoom.' : 'The hedgehogs taught you Zoom: walking, press Shift.' };   // DRAFT for Marth
+function recapNext() {   // the story's next step, word for word as What to do says it (storyLines); after the last teacher, where to look
+  try { const n = storyLines().find((l) => l[0] === '→'); return n ? n.slice(2) : 'Tap your level (top left) to see What to do.'; } catch (e) { return 'Tap your level (top left) to see What to do.'; }
+}
+const leaveFade = document.createElement('div'); leaveFade.id = 'leaveFade';
+leaveFade.style.cssText = 'position:fixed;inset:0;background:#000;opacity:0;pointer-events:none;z-index:26;display:none';
+const recapEl = document.createElement('div'); recapEl.className = 'talk'; recapEl.id = 'recap'; recapEl.hidden = true; recapEl.setAttribute('role', 'dialog'); recapEl.setAttribute('aria-label', 'What you learned');
+recapEl.style.cssText = 'z-index:27;bottom:auto;top:50%;transform:translate(-50%,-50%)';
+recapEl.innerHTML = '<b>What you learned</b><p id="recapText"></p><p id="recapNext" style="margin:0"><strong>Next: </strong><span id="recapNextText"></span></p><button type="button" id="recapOk" style="min-height:48px;min-width:96px">OK</button>';
+document.body.appendChild(leaveFade); document.body.appendChild(recapEl);
+$('recapOk').addEventListener('pointerdown', (e) => { e.preventDefault(); e.stopPropagation(); if (LEAVE.ph === 'card') leaveEnd(); });   // a tap closes it
+function leaveHold() {   // the game holds while a visitor leaves and while the card is up (input off: 'event'; the pause button refuses it)
+  LEAVE.was = S.mode === 'event' || S.mode === 'paused' || S.mode === 'menu' || S.mode === 'hover' ? (S.mode === 'hover' ? 'fly' : 'walk') : S.mode;
+  LEAVE.air = LEAVE.was === 'fly'; LEAVE.toast = $('toast').hidden ? '' : $('toast').textContent;   // a level-up said just now is said again after the card
+  LEAVE.ann = MENTORS.filter((x) => x.announced);   // a teacher announced WHILE this plays (its toast sits in the hidden #ui) is announced again after
+  S.mode = 'event'; $('ui').hidden = true;
+}
+function leaveStart(m) {   // called from the lesson's end, AFTER S.lessons[m.id] = true and save()
+  if (LEAVE.ph) leaveEnd();
+  if (S.inEagle || S.inSky || !m || !m.g || !RECAPS[m.id]) return;   // never inside another scene; only a teacher with a recap leaves (a new entry in MENTORS, e.g. 602's, stays put)
+  leaveHold(); LEAVE.m = m; LEAVE.id = m.id; LEAVE.ph = 'fly'; LEAVE.t = 0; LEAVE.v = 0;
+  LEAVE.cam = camera.position.clone(); LEAVE.quat = camera.quaternion.clone();
+  LEAVE.look = camera.getWorldDirection(new THREE.Vector3()).multiplyScalar(camera.position.distanceTo(m.g.position)).add(camera.position);
+  LEAVE.yaw0 = m.g.rotation.y; LEAVE.yaw = Math.atan2(m.g.position.x - S.pos.x, m.g.position.z - S.pos.z);   // away from her
+  m.mark.visible = false; leaveFade.style.opacity = '0'; leaveFade.style.display = 'block';
+}
+function recapQueue(id) { if (RECAPS[id] && LEAVE.id !== id && !LEAVE.queue.includes(id)) LEAVE.queue.push(id); }   // the card only (the hedgehogs)
+function leavePerch(m) {   // back to its perch, wings folded, hidden: nothing of the flight outlives it (its lesson keeps it hidden)
+  m.g.position.copy(m.at); m.g.position.y += standOf(m.kind); m.g.rotation.set(0, LEAVE.yaw0, 0); m.g.visible = false;
+  const w = m.g.userData.wings; if (w) { w[0].rotation.set(0, 1.3, -0.18); w[1].rotation.set(0, -1.3, 0.18); }
+}
+function recapShow() {
+  $('recapText').textContent = RECAPS[LEAVE.id] ? RECAPS[LEAVE.id]() : ''; $('recapNextText').textContent = recapNext();
+  recapEl.hidden = false; LEAVE.ph = 'card'; LEAVE.t = 0; LEAVE.shown++;
+}
+function leaveEnd() {   // every way out: the mode, the UI and the camera come back, the overlay goes
+  if (LEAVE.m) { leavePerch(LEAVE.m); if (LEAVE.cam) { camera.position.copy(LEAVE.cam); camera.quaternion.copy(LEAVE.quat); } }
+  recapEl.hidden = true; leaveFade.style.opacity = '0'; leaveFade.style.display = 'none';
+  if (S.mode === 'event' && !S.inEagle && !S.inSky) { S.mode = LEAVE.was; $('ui').hidden = false; flapBtn.textContent = S.mode === 'walk' ? 'Fly' : 'Flap'; if (LEAVE.toast) toast(LEAVE.toast, 3000); }
+  for (const x of MENTORS) if (x.announced && !LEAVE.ann.includes(x)) x.announced = false;   // its call was spent unseen: mentors() calls it again
+  LEAVE.m = null; LEAVE.id = ''; LEAVE.ph = ''; LEAVE.t = 0; LEAVE.toast = '';
+}
+function leaveTick(dt) {
+  if (!LEAVE.ph) {   // a card waiting its turn (the hedgehogs'): only when nothing else is on screen
+    if (LEAVE.queue.length && !S.talking && $('story').hidden && !$('ui').hidden && (S.mode === 'walk' || S.mode === 'fly') && !cutQ.length) { LEAVE.id = LEAVE.queue.shift(); leaveHold(); LEAVE.ph = 'pause'; LEAVE.t = 0; }
+    return;
+  }
+  LEAVE.t += dt; const m = LEAVE.m;
+  if (LEAVE.air && bird && wingL && wingR) { bird.position.copy(S.pos); S.fold = 0; const fl = Math.sin(S.t * 14) * 0.7; wingL.rotation.z = fl; wingR.rotation.z = -fl; }   // she was flying: she hovers, wings beating, while it plays
+  if (m && (LEAVE.ph === 'fly' || LEAVE.ph === 'out')) {   // the takeoff: it turns away, opens its wings, and climbs out
+    const T = LEAVE.t + (LEAVE.ph === 'out' ? LEAVE_FLY : 0), g = m.g, k = Math.min(1, T / 0.35); g.visible = true; m.mark.visible = false;   // mentors() just hid it (its lesson is learned): shown until the black
+    let dy = LEAVE.yaw - LEAVE.yaw0; dy = Math.atan2(Math.sin(dy), Math.cos(dy)); g.rotation.y = LEAVE.yaw0 + dy * k;
+    if (T > 0.3) { LEAVE.v = Math.min(18, LEAVE.v + dt * 15); g.position.x += Math.sin(LEAVE.yaw) * LEAVE.v * dt; g.position.z += Math.cos(LEAVE.yaw) * LEAVE.v * dt; g.position.y += (2.5 + LEAVE.v * 0.55) * dt; g.rotation.x = -0.4 * Math.min(1, (T - 0.3) * 2); }
+    const w = g.userData.wings; if (w) { const o = Math.min(1, T / 0.3), f = Math.sin(T * 17) * 0.85 * o; w[0].rotation.y = 1.3 * (1 - o); w[1].rotation.y = -1.3 * (1 - o); w[0].rotation.z = f; w[1].rotation.z = -f; }
+    camera.position.copy(LEAVE.cam); LEAVE.look.lerp(g.position, Math.min(1, dt * 0.9)); camera.lookAt(LEAVE.look);   // the camera stays; its eyes lag behind, and the bird climbs out of the frame
+  }
+  if (LEAVE.ph === 'fly' && LEAVE.t >= LEAVE_FLY) { LEAVE.ph = 'out'; LEAVE.t = 0; }
+  else if (LEAVE.ph === 'out') { leaveFade.style.opacity = String(Math.min(1, LEAVE.t / LEAVE_FADE));
+    if (LEAVE.t >= LEAVE_FADE) { leaveFade.style.opacity = '1'; if (m) { leavePerch(m); camera.position.copy(LEAVE.cam); camera.quaternion.copy(LEAVE.quat); } LEAVE.m = null; LEAVE.ph = 'black'; LEAVE.t = 0; } }   // black: the visitor is gone, the view is hers again
+  else if (LEAVE.ph === 'black' && LEAVE.t >= LEAVE_BLACK) { LEAVE.ph = 'in'; LEAVE.t = 0; }
+  else if (LEAVE.ph === 'in') { leaveFade.style.opacity = String(Math.max(0, 1 - LEAVE.t / LEAVE_FADE));
+    if (LEAVE.t >= LEAVE_FADE) { leaveFade.style.opacity = '0'; leaveFade.style.display = 'none'; LEAVE.ph = 'pause'; LEAVE.t = 0; } }
+  else if (LEAVE.ph === 'pause' && LEAVE.t >= LEAVE_PAUSE) recapShow();
+  else if (LEAVE.ph === 'card' && LEAVE.t >= LEAVE_CARD) leaveEnd();
 }
 
 /* ---------- the easter egg: a soft, wet ceiling far above (Oct 8, Marth's words) ---------- */
@@ -2390,6 +2488,13 @@ function bathTick(dt) {
    After 8 s of plain play (walking, flying, swimming) with nothing playing, the island's song comes in softly as the harp ('legend'). It never
    starts over the song at the egg, a cutscene, a talk, Skypiea, or a pause; those keep their own music and it comes back after them. */
 let bgQuiet = 0;
+/* 617: Marth, Oct 10: "keep the music, but just make it a bit quieter" - under the dove's words the music plays softer */
+var DOVE_DUCK = 0.45, musicDuck = 1;
+function musicDuckTick() {
+  if (!window.WFR_MUSIC || !WFR_MUSIC.setVolume) return;
+  const want = S.inEagle ? DOVE_DUCK : 1;
+  if (want !== musicDuck) { musicDuck = want; WFR_MUSIC.setVolume(want); }
+}
 function bgMusicTick(dt) {
   if (!window.WFR_MUSIC || !audio()) return;
   const plain = (S.mode === 'walk' || S.mode === 'fly' || S.mode === 'swim') && !S.talking && !S.inSky && !S.inEagle && !(RH && (RH.on || RH.out > 0)) && $('story').hidden;
@@ -2646,7 +2751,7 @@ function chickTick(dt) {
 /* ---------- THE HEDGEHOGS (boards 529 + 542): the dunes, Bramble, Moss and Pip, Pip's lost book, the Zoom lesson, the
    book's pages behind BOOK_PAGES_OK (hedgehogs.js). Everything it needs is handed over here; it keeps no other hook. ---------- */
 const HOGS = window.WFR_HOGS && DUNES ? WFR_HOGS.init(THREE, { scene, camera, renderer, H, ground: groundAt, S, input, items, trees, fruitTrees, dunes: DUNES, touchy,
-  standOf: () => standOf(kind), bird: () => bird, rig: () => birdRig, say, save, hud, ding, chirp, gainXP, emojiSprite, steer, walkStep, doLand,
+  standOf: () => standOf(kind), bird: () => bird, rig: () => birdRig, say, save, hud, ding, chirp, gainXP, recap: (id) => recapQueue(id), emojiSprite, steer, walkStep, doLand,
   ui: (on) => { $('ui').hidden = !on; },
   panels: { play: playPanels, at: () => storyAt, count: () => storyPanels.length, go: (k) => { storyAt = k; showPanel(); } } }) : null;
 /* ---------- the Eagle: hidden on the highest peak, reachable only once you can fly high ---------- */
@@ -2788,9 +2893,48 @@ function gatherBirds() {
   dove.position.copy(eagleSpot).add(new THREE.Vector3(0, 60, 0)); dove.userData.dove = true; scene.add(dove); gathered.push(dove);
   const halo = new THREE.Mesh(new THREE.SphereGeometry(2.2, 16, 12), new THREE.MeshBasicMaterial({ color: 0xfff2c0, transparent: true, opacity: 0.3, depthWrite: false })); dove.add(halo);
 }
+/* ---------- 602: THE EAGLE ON THE PEAK. Always there until she has met him, perched and idle. Before she is ready
+   (EAGLE_LEVEL and the Owl's lesson) he speaks a short word when she comes near, walking or landing, once each visit; when she
+   is ready, eagleEvent below starts the event exactly as before. Nothing here is saved: hearing "not yet" changes nothing. ---------- */
+const EAGLE_NEAR = 9, EAGLE_AWAY = 20, EAGLE_PAUSE = 1.0, EAGLE_FACE = 40;   // metres; game seconds near him before he speaks; within EAGLE_FACE he turns to her
+const EG = { nearT: 0, told: false, wasReady: null, readyPending: false, home: Math.atan2(eagleSpot.x, eagleSpot.z) };   // home: he looks out to sea
+const eagleMark = emojiSprite('❗', 1.4); eagleMark.position.copy(eagleBird.position).add(new THREE.Vector3(0, 1.6, 0)); eagleMark.visible = false; scene.add(eagleMark);
+function eagleNotYetLines() {   // DRAFT for Marth: every line here
+  const young = S.level < EAGLE_LEVEL, noOwl = !S.lessons.owl;
+  const L = [['Eagle', young && noOwl ? '…Hm. A little one, all the way up here.' : young ? '…Hm. You have the Owl\'s eyes now. Good.' : '…Hm. Strong wings, little one.']];
+  if (young) L.push(['Eagle', (noOwl ? 'You are' : 'But you are') + ' not ready yet. You need more training: come back when you are level ' + EAGLE_LEVEL + '.']);
+  if (noOwl) L.push(['Eagle', young ? 'And find the Owl. When you find the Owl, you will see what you need.' : 'But you are not ready yet. Find the Owl, and you will see what you need.']);
+  return L;
+}
+function eagleNotYet(dt) {   // before she is ready: a beat after she comes near, his short word; again only after she has gone away
+  const d = eagleBird.position.distanceTo(S.pos);
+  if (d > EAGLE_AWAY) EG.told = false;   // she went away: when she comes back, he speaks again
+  const here = (S.mode === 'walk' || S.mode === 'fly') && d < EAGLE_NEAR && S.tut === 0 && !S.inside && $('story').hidden && !cutQ.length;
+  EG.nearT = here ? EG.nearT + dt : 0;
+  if (EG.told || EG.nearT < EAGLE_PAUSE) return;   // a beat first: he turns to her, then speaks (a sign beside him can be read first)
+  EG.told = true; EG.nearT = 0;
+  try { if (window.WFR_SOUND) WFR_SOUND.call('eagle', { vol: 0.7 }); } catch (e) { /* a call that fails must never stop his words */ }
+  say(eagleNotYetLines());
+}
+function eagleIdle(dt) {   // perched and idle: he looks slowly about, out to sea and back; within EAGLE_FACE metres he turns to her
+  const dx = S.pos.x - eagleBird.position.x, dz = S.pos.z - eagleBird.position.z, near = Math.hypot(dx, dz) < EAGLE_FACE;
+  const want = near ? Math.atan2(dx, dz) : EG.home + Math.sin(S.t * 0.35) * 0.9 + Math.sin(S.t * 0.13) * 0.5;
+  const a = eagleBird.rotation.y, da = Math.atan2(Math.sin(want - a), Math.cos(want - a));
+  eagleBird.rotation.y = a + da * Math.min(1, dt * (near ? 3 : 0.8));
+}
+function eagleMarkTick(show) {   // his ❗ once he will meet her; and the moment she becomes ready, one word to tell her
+  const ready = show && eagleReady();
+  eagleMark.visible = ready && !S.talking && !S.inEagle;
+  if (eagleMark.visible) eagleMark.position.y = eagleBird.position.y + 1.6 + Math.sin(S.t * 3) * 0.15;
+  if (EG.wasReady === false && ready) EG.readyPending = true;   // wasReady is null on the first frame: a save that loads ready is not told again
+  if (!ready) EG.readyPending = false;
+  EG.wasReady = ready;
+  if (EG.readyPending && $('toast').hidden && $('story').hidden && !S.talking && !cutQ.length && (S.mode === 'walk' || S.mode === 'fly' || S.mode === 'swim' || S.mode === 'nest')) { EG.readyPending = false; toast('The Eagle is waiting for you on the mountain top.', 3600); }   // DRAFT for Marth
+}
 function eagleEvent(dt) {
-  const show = !!S.lessons.falcon && !!S.lessons.owl && !S.eagleFound;   // 589: the Eagle waits for the Owl
+  const show = !S.eagleFound;   // 602: the Eagle waits on the peak from the start, until she has met him (eagleReady() decides whether he meets her)
   eagleBird.visible = show || !!S.inEagle;   // only the Eagle's own event, never a little cutscene (Obito: the camera swooped to the peak)
+  eagleMarkTick(show);   // 602: his ❗ once he will meet her
   if (S.mode === 'event' && S.inEagle) {
     const dove = gathered.find((g) => g.userData.dove);
     if (dove) { const ty = eagleSpot.y + 3.2; dove.position.y += (ty - dove.position.y) * Math.min(1, dt * 0.9); const f = Math.sin(S.t * 8) * 0.6; (dove.userData.wings || dove.children.filter((c) => c.isGroup && Math.abs(c.position.x) > 0.3)).forEach((c) => { c.rotation.z = c.position.x > 0 ? f : -f; }); }   // only the wings beat (Obito)
@@ -2800,7 +2944,8 @@ function eagleEvent(dt) {
     return;
   }
   if (!show || S.talking) return;
-  eagleBird.rotation.y = Math.atan2(S.pos.x - eagleBird.position.x, S.pos.z - eagleBird.position.z);
+  eagleIdle(dt);   // 602: perched and idle: he looks about, and turns to her as she comes near
+  if (!eagleReady()) { eagleNotYet(dt); return; }   // 602: not ready yet: a short word, once each visit
   if ((S.mode === 'walk' || S.mode === 'fly') && eagleBird.position.distanceTo(S.pos) < 9) startEagle();
 }
 function startEagle() {
@@ -2883,8 +3028,18 @@ try { if (localStorage.getItem('wfr.debug') === '1') window.__wfr = { eagle: () 
   rhythm: () => (RH.st ? { on: RH.on, clock: RH.clockWas || RH.clock, t: RH.on ? rhT() : null, notes: RH.st.notes.map((n) => [n.t, n.lane, n.b]), score: RH.st.score, hits: RH.st.hits, misses: RH.st.misses, stars: RH.stars || null, mode: S.mode } : { on: false, mode: S.mode }),
   wings: () => { const v = new THREE.Vector3(), w = (o) => { o.updateWorldMatrix(true, false); v.set(0, 0, 0).applyMatrix4(o.matrixWorld); const q = v.clone().project(camera); return q.x; }; bird.updateWorldMatrix(true, true); return { bird: w(bird), l: w(wingL), r: w(wingR), lz: wingL.rotation.z, rz: wingR.rotation.z }; },   // where each wing's root is on the screen
   nestHome: () => ({ on: onNest(), resting: !!S.resting, btn: $('thBtn').hidden ? null : $('thBtn').textContent, clock: S.clock }),
+  anim: () => { const r = birdRig; if (!r) return null; const f3 = (o) => [o.rotation.x, o.rotation.y, o.rotation.z], hr = r.head.userData.rest, v = new THREE.Vector3();   // 611
+    return { mode: S.mode, kind, size: BIRDS[kind].size, t: S.t, wl: f3(r.wingL), wr: f3(r.wingR), bendL: r.wingL.userData.bend || 0, bendR: r.wingR.userData.bend || 0, hsL: r.wingL.userData.handSweep || 0,
+      legs: r.legs.map((l) => [l.rotation.x, l.scale.y, l.userData.foot ? l.userData.foot.rotation.x : 0]), head: r.head.position.toArray().concat(f3(r.head)), headRest: hr ? hr.toArray() : null,
+      tail: f3(r.tail).concat([r.tail.scale.x]), dy: bird.position.y - S.pos.y, rot: f3(bird), yaw: S.yaw, fold: S.fold || 0, resting: !!S.resting,
+      gs: r.gs ? { ph: r.gs.ph, g: r.gs.g, f: r.gs.f } : null, fs: r.fs ? { ph: r.fs.ph, amp: r.fs.amp, f: r.fs.f, burst: r.fs.burst, tk: r.fs.tk, fan: r.fs.fan, wraps: r.fs.wraps, boutLeft: r.fs.boutLeft } : null,
+      feet: r.legs.map((l) => { (l.userData.foot || l).getWorldPosition(v); return [v.x, v.y, v.z]; }), ground: groundAt(S.pos.x, S.pos.z), pos: S.pos.toArray() }; },
   flight: () => ({ mode: S.mode, y: S.pos.y, speed: S.speed, hold: !!S.hold, holdEver: !!S.holdEver, hoverK: S.hoverK || 0, longK: S.longK || 0, flapT: S.flapT || 0, floor: Math.max(groundAt(S.pos.x, S.pos.z), WATER) + 1.2 }),
+  eaglePeak: () => ({ visible: eagleBird.visible, ready: eagleReady(), level: S.level, owl: !!S.lessons.owl, found: !!S.eagleFound, inEagle: !!S.inEagle, told: EG.told, nearT: EG.nearT, pending: EG.readyPending, was: EG.wasReady, mark: eagleMark.visible, at: eagleBird.position.toArray(), spot: eagleSpot.toArray(), yaw: eagleBird.rotation.y, toHer: Math.atan2(S.pos.x - eagleBird.position.x, S.pos.z - eagleBird.position.z), d: eagleBird.position.distanceTo(S.pos), compass: (goalTarget() || { toArray: () => null }).toArray(), goal: eagleGoalLine(), mode: S.mode, read: $('read').hidden ? null : $('read').textContent }),
+  eagleSeed: (o) => { if ('level' in o) S.level = o.level; if ('owl' in o) S.lessons.owl = !!o.owl; },
   story: () => ({ given: S.given || 0, falconAfter: FALCON_AFTER, lessons: Object.assign({}, S.lessons), eagleFound: !!S.eagleFound, eagleShow: !!eagleBird.visible, owlCalling: !!owlCalling(), owlHours: owlHours(), canDive: canDive(), altCap: altCap(), hemi: HEMI.intensity, nightOut: S.nightOut || 0, compass: (goalTarget() || { toArray: () => null }).toArray(), eagleAt: eagleSpot.toArray(), sign: [OWL_SIGN.x, OWL_SIGN.z], quest: $('quest').textContent, clock: S.clock, level: S.level }),
+  leave: () => ({ ph: LEAVE.ph, t: LEAVE.t, id: LEAVE.id, m: LEAVE.m ? LEAVE.m.id : null, fade: +leaveFade.style.opacity || 0, fadeOn: leaveFade.style.display !== 'none', card: !recapEl.hidden, text: $('recapText').textContent, next: $('recapNextText').textContent, queue: LEAVE.queue.slice(), shown: LEAVE.shown, mode: S.mode, ui: !$('ui').hidden, cam: camera.position.toArray(), was: LEAVE.was }),
+  hogLesson: () => { const it = items.find((i) => i.type && i.type.id === 'book' && !i.done); if (!it || !HOGS) return 'no book'; if (!S.carry.includes(it)) { it.held = true; S.carry.push(it); } return HOGS.deliver(it); },
   mentorsAt: () => MENTORS.map((m) => ({ id: m.id, at: m.g.position.toArray(), show: m.g.visible, lesson: !!S.lessons[m.id] })), talking: () => !!S.talking,
   giveTool: (i, id) => { const n = npcs[i], type = TOOLS.find((t) => t.id === id); if (!n || !type) return false;   // a named tool at her feet for a named villager (the bench's, not spawnTool's dice)
     if (n.need) { const o = n.need; o.done = true; if (o.g.parent) o.g.parent.remove(o.g); }
@@ -3181,13 +3336,14 @@ function walkStep(sx, sy, dt) {
   if (Math.hypot(nx, nz) > EDGE) return;
   S.pos.x = nx; S.pos.z = nz;
 }
+const ATMO = (() => { try { return window.WFR_ATMO ? WFR_ATMO.create(THREE, scene, { renderer, camera, canvas, H, WATER, LAKE, VILLAGE, MOUND, NEST, trees, sun, HEMI, S, night: () => nightAmt(S.clock), clock: () => S.clock, under: () => wasUnder, bird: () => S.pos }) : null; } catch (e) { return null; } })();   // 613: the air - light by the clock, one wind, butterflies, dragonflies, fireflies (atmo.js)
 function frame(now) {
-  const dt = Math.min(0.05, (now - last) / 1000); last = now; S.t += dt; if (window.WFR_TREES) WFR_TREES.update(S.t);
+  const dt = Math.max(0, Math.min(0.05, (now - last) / 1000)); last = now; musicDuckTick(); S.t += dt; if (window.WFR_TREES) WFR_TREES.update(S.t);
   if (S.mode !== 'fly' && S.hold) { S.hold = false; S.holdT = 0; }   // a hold belongs to flight
   S.warnCd = Math.max(0, S.warnCd - dt); S.singCd = Math.max(0, S.singCd - dt); S.turnBack = Math.max(0, S.turnBack - dt); S.bonkCd = Math.max(0, S.bonkCd - dt);
   waterTick(dt); panTick(dt); clockTick(dt);
   if (window.WFR_SOUND && ac && !muted && S.mode !== 'menu' && S.mode !== 'event' && S.mode !== 'swim') birdHomes(dt);   // calls come from where each bird lives (board 541)
-  if (S.mode !== 'menu' && S.mode !== 'paused') { mentors(dt); nestTiers(dt); eagleEvent(dt); chickTick(dt); fishTick(dt); signTick(); cutTick(); nodeTick(dt); folkTick(dt); }
+  if (S.mode !== 'menu' && S.mode !== 'paused') { mentors(dt); leaveTick(dt); nestTiers(dt); eagleEvent(dt); chickTick(dt); fishTick(dt); signTick(); cutTick(); nodeTick(dt); folkTick(dt); }
   for (const it of items) if (!it.held && !it.done) it.g.visible = !it.type.metal || !!S.lessons.crow;   // metal shines only once you know how to look
   for (const c of clouds) { c.position.x += dt * 1.2; if (c.position.x > 300) c.position.x = -300;
     // a cloud fades as the camera nears it: gone inside 20 m, whole beyond 60 (Oct 9: the home flight's high stops met a
@@ -3213,8 +3369,14 @@ function frame(now) {
     const moving = Math.abs(sy) > 0.05 && Math.hypot(S.pos.x - wx0, S.pos.z - wz0) > 1e-4;   // 584
     const floorY = S.inside ? floorOf(S.inside) : groundAt(S.pos.x, S.pos.z);   // 584
     S.hopV -= 14 * dt; S.hopY = Math.max(0, S.hopY + S.hopV * dt); if (S.hopY === 0) S.hopV = Math.max(0, S.hopV);   // the hop
-    if (S.climb) climbTick(dt); else S.pos.y = floorY + standOf(kind) + S.hopY + (moving && !airborne() ? Math.abs(Math.sin(S.t * 11)) * 0.12 * B.size : 0);
-    bird.position.copy(S.pos); bird.rotation.y = S.yaw; bird.rotation.x = 0; bird.rotation.z = moving ? Math.sin(S.t * 11) * 0.12 : 0;
+    const gaitOn = !!(window.WFR_BIRDS && WFR_BIRDS.walk && birdRig);   // 611: the gait (birds.js) - the small birds hop, the big ones stride
+    if (S.climb) climbTick(dt); else S.pos.y = floorY + standOf(kind) + S.hopY + (moving && !airborne() && !gaitOn ? Math.abs(Math.sin(S.t * 11)) * 0.12 * B.size : 0);
+    bird.position.copy(S.pos); bird.rotation.y = S.yaw; bird.rotation.x = 0; bird.rotation.z = moving && !gaitOn ? Math.sin(S.t * 11) * 0.12 : 0;
+    if (gaitOn) {   // 611: her real speed over the ground drives the feet (a wall stops them too); the hop of the Jump button and the ladder's mantle reach the feet forward
+      const ws = moving && dt > 0 ? Math.min(12, Math.hypot(S.pos.x - wx0, S.pos.z - wz0) / dt) * (sy < 0 ? -1 : 1) : 0;
+      const go = WFR_BIRDS.walk(birdRig, dt, { speed: ws, turn: S.talking || S.climb || S.noWalk ? 0 : sx, air: airborne() || !!S.mantle, rest: !!S.resting, still: !!S.talking, shake: !!S.inBath });
+      bird.position.y += go.y * B.size; bird.rotation.x = go.pitch; bird.rotation.z = go.roll; bird.rotation.y += go.yaw;
+    }
     const fr = airborne() ? Math.sin(S.t * 30) * 0.8 : S.resting ? 0.04 : 0.35; wingL.rotation.z = fr; wingR.rotation.z = -fr;
     if (S.resting) { bird.position.y -= 0.22 * B.size; bird.scale.y = B.size * (1 + Math.sin(S.t * 1.6) * 0.03); if (window.WFR_BIRDS && birdRig) WFR_BIRDS.tuck(birdRig, 1); }   // settled in, slow breaths
     else if (bird.scale.y !== B.size) bird.scale.y = B.size;   // (the residue law: a breath never outlives the rest)   // frantic little beats mid-hop
@@ -3260,7 +3422,7 @@ function frame(now) {
     camera.position.lerp(camPos, Math.min(1, dt * 3)); camera.lookAt(S.pos);
     if (LS ? S.landDone : (Math.abs(S.pos.y - target) < 0.08 || S.landT > 2.4)) { S.pos.y = target; bird.rotation.x = 0; bird.position.y = target; touchDown(); }
   } else if (S.mode === 'fly' && bird) {
-    if (window.WFR_BIRDS && birdRig) WFR_BIRDS.tuck(birdRig, 1);   // legs folded back in flight (the landing starts tucked)
+    if (window.WFR_BIRDS && birdRig && !WFR_BIRDS.fly) WFR_BIRDS.tuck(birdRig, 1);   // legs folded back in flight (the landing starts tucked); 611: WFR_BIRDS.fly tucks them itself, trailing up after a takeoff
     let { sx, sy } = steer();
     if (S.flapHeld) { S.holdT = (S.holdT || 0) + dt; if (S.holdT >= 0.25) { S.hold = true; S.holdEver = true; } }
     const hov = !!S.hold && Math.abs(sy) > 0.5, lng = !!S.hold && !hov;   // held: stick up/down hovers, neutral flies long and level
@@ -3306,8 +3468,13 @@ function frame(now) {
     if ($('land').hidden === canLand) $('land').hidden = !canLand;
     bird.position.copy(S.pos);
     bird.rotation.y = S.yaw; bird.rotation.x = -S.pitch * 0.8 - 0.5 * (S.hoverK || 0); bird.rotation.z += ((S.yawV - (S.panTurnV || 0)) / B.turn * 0.6 - bird.rotation.z) * Math.min(1, dt * 4);   // the bank follows the real turn
+    if (window.WFR_BIRDS && WFR_BIRDS.fly && birdRig) {   // 611: the turn is the real one (the bank's own measure); the head is held level against the body's pitch and roll
+      const fo = WFR_BIRDS.fly(birdRig, dt, { t: S.t, flap: S.flapT > 0, hover: S.hoverK || 0, long: S.longK || 0, flutter: S.flutT > 0, dive: diving, speed: S.speed, turn: (S.yawV - (S.panTurnV || 0)) / B.turn, legsDown: (S.hoverK || 0) > 0.5 && sy < -0.5, body: bird.rotation.x, roll: bird.rotation.z });
+      bird.position.y += fo.y * B.size; bird.rotation.x += fo.pitch;
+    } else {
     const fl = (S.hoverK || 0) > 0.5 ? Math.sin(S.t * 24) * 0.75 : (S.longK || 0) > 0.5 ? Math.sin(S.t * 9) * 0.6 : S.flutT > 0 ? Math.sin(S.t * 44) * 1.0 : S.flapT > 0 ? Math.sin(S.t * 26) * 0.9 : (diving ? 0.55 : Math.sin(S.t * 2.2) * 0.08);
     wingL.rotation.z = fl; wingR.rotation.z = -fl;
+    }
     pickups(); carryFollow();
     if (!S.nestDone && S.got >= 5 && S.pos.distanceTo(NEST) < 6) arriveAtNest();
     pointCompass();
@@ -3425,7 +3592,9 @@ function frame(now) {
   if (bird && wingL) {
     const folded = (S.mode === 'walk' && !airborne()) || (S.mode === 'nest' && !RH.on && !(RH.out > 0)) || S.mode === 'hatch' || S.mode === 'card' || S.mode === 'event' || S.mode === 'debugcam';
     S.fold = (S.fold || 0) + ((folded ? 1 : 0) - (S.fold || 0)) * Math.min(1, dt * 6);
-    wingL.rotation.y = 1.3 * S.fold; wingR.rotation.y = -1.3 * S.fold;
+    const ownSweep = window.WFR_BIRDS && birdRig && (S.mode === 'fly' || S.mode === 'landing') ? 1 - S.fold : 0;   // 611: written this frame by WFR_BIRDS.fly / the landing; any other mode starts from 0, as before
+    wingL.rotation.y = wingL.rotation.y * ownSweep + 1.3 * S.fold; wingR.rotation.y = wingR.rotation.y * ownSweep - 1.3 * S.fold;
+    if (window.WFR_BIRDS && WFR_BIRDS.rest && birdRig && S.mode !== 'walk' && S.mode !== 'fly' && S.mode !== 'landing') WFR_BIRDS.rest(birdRig, dt);   // 611: the residue law - a walk's head bob or a flight's tail twist never outlives its mode
     wingL.rotation.z = wingL.rotation.z * (1 - S.fold) - 0.18 * S.fold; wingR.rotation.z = wingR.rotation.z * (1 - S.fold) + 0.18 * S.fold;   // folded wings lie down along the body
   }
   const jumpOn = S.mode === 'walk' && !S.talking && !$('ui').hidden;
@@ -3440,6 +3609,7 @@ function frame(now) {
   morphTick(dt);   // after the mode block: it writes the bird's turn and size last, and puts them back at the end
   arrowTick(dt); S.camCut = false;   // 588: after the camera has moved; 584: a door's camera cut lasts one frame
   sunFollow();
+  if (ATMO) ATMO.tick(dt, S.t);   // 613: after sunFollow, before the picture (it never throws: a fault switches the air off, not the game)
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
 }
@@ -3504,7 +3674,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build bf677aafe91c): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build 755ac0e8b3ba): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>

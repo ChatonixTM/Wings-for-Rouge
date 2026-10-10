@@ -355,7 +355,7 @@
       pip.g.add(it.g); it.g.position.set(0.42, 0.06, 0.1); it.g.rotation.set(0, 0.3, 0); it.g.scale.setScalar(0.24);   // beside Pip, his own again
       S.seen.hogsBook = true; api.save(); api.ding(); api.hud();
       hogSay(L.thanks(), () => {
-        S.lessons.zoom = true; api.save(); api.ding(); api.gainXP(30); api.hud();
+        S.lessons.zoom = true; api.save(); api.ding(); api.gainXP(30); api.hud(); if (api.recap) api.recap('zoom');   /* 601: the card only, after the lesson is saved */
         if (BOOK_PAGES_OK && !S.seen.bookSeen) hogSay(L.show(), () => openBook());
       });
       return true;

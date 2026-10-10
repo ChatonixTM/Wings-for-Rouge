@@ -40,6 +40,7 @@ window.WFR_SKY = (function () {
 
   /* ---------- THE LINE TABLE: every word of this scene, and nothing elsewhere ---------- */
   var GRANDMA = 'Grandma';   // the speaker label. Marth (~16:30) offered her name or "Grandma" (his spelling of the name is unconfirmed): this one line changes it
+  var DEPART = 'Madame Shirley';   // Marth, Oct 10 ~03:20: her label starts as Grandma and becomes this as she departs ('madame or madamme (whichever one is more appropriate, she was Irish and I believe was married at some point)'): Madame
   var LINES = {
     arrive:  ['', 'Above the clouds, everything is quiet and bright. Someone is waiting for you on the rise.'],   // OURS (closing, allowed by Marth ~16:20)
     hi:      [GRANDMA, 'Hi, {name}.'],   // OURS (closing, allowed by Marth ~16:20) - his reported speech: "says hi"
@@ -51,8 +52,8 @@ window.WFR_SKY = (function () {
     notYet:  [GRANDMA, 'Don\'t worry, for things of that nature need to be settled correctly, and make sure God is at the base of your struggles.'],   // HIS (typing fixed per answer 2)
     okay:    [GRANDMA, 'You\'ll be okay, {name}.'],   // OURS (closing, allowed by Marth ~16:20) - his reported speech: "and she'll be okay"
     flowers: [GRANDMA, 'I miss my 4 beautiful flowers, and all their seed they left behind. But it\'s alright. They\'re in Good Hands.'],   // HIS (typing fixed per answer 2; "Good Hands" capitalised as he typed it)
-    close1:  [GRANDMA, 'Keep flying, little one. And keep singing.'],   // OURS (closing, allowed by Marth ~16:20)
-    close2:  [GRANDMA, 'I love you, {name}.'],   // OURS (closing, allowed by Marth ~16:20) - he wrote "you can say I love you Rouge if you want"
+    close1:  [DEPART, 'Keep flying, little one. And keep singing.'],   // OURS (closing, allowed by Marth ~16:20)
+    close2:  [DEPART, 'I love you, {name}.'],   // OURS (closing, allowed by Marth ~16:20) - he wrote "you can say I love you Rouge if you want"
   };
   var FREEZE = 'It looks like the reunion with your loved caretaker was finished. It appears some things aren\'t meant for right now... With that, {name} gracefully falls down.';   // HIS (typing fixed per answer 2)
   var CARD = 'MISSION COMPLETE.';   // HIS; then two more dots, slowly (his "two more dots slowly appear")

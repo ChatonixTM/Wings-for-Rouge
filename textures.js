@@ -723,5 +723,684 @@ window.WFR_TEX = (function () {
     } catch (e) { api.seaDressed = { error: String(e && e.message || e) }; return false; }
   };
 
+  /* ═══════════════════════════════════════════════════════════════════════════
+     board 578, PASS 2 (Oct 10; Marth: "Texture tf outta it" - "women like NICE things and NICE LOOKING things").
+     THE VILLAGE: painted walls in three builds (half-timber, brick under plaster, limewashed fieldstone), clay tiles and
+     slate shingles in the roof's own colour with soft moss and rain streaks, framed windows and painted doors whose
+     glass glows warm at night (an emissiveMap on the lights the game already turns up; no new light).
+     THE MOUNTAIN: rock with painted strata, moss in the low folds, snow at the peak with soft blue shade.
+     THE SHORE: warm dry sand with a fine grain, darker wet sand along the water line. THE GREEN: worn paths.
+     THE SKY: fluffy cumulus on the far ring and round soft drifting clouds; a softer ramp in the dome.
+     Same rules as above: seeded (never the game's rnd()), periodic where it repeats, at most 512 px, painted once and
+     shared. Nothing here moves a vertex of the island, or the place of any house, tree or cloud.
+     ═══════════════════════════════════════════════════════════════════════════ */
+  const clamp255 = (v) => (v < 0 ? 0 : v > 255 ? 255 : v);
+  const rgbaC = (r, g, b, a) => 'rgba(' + (clamp255(r) | 0) + ',' + (clamp255(g) | 0) + ',' + (clamp255(b) | 0) + ',' + a + ')';
+  const hexRGB = (h) => [(h >> 16) & 255, (h >> 8) & 255, h & 255];
+  const segDist = (x, y, ax, ay, bx, by) => { const dx = bx - ax, dy = by - ay, t = Math.max(0, Math.min(1, ((x - ax) * dx + (y - ay) * dy) / (dx * dx + dy * dy))); return Math.hypot(x - ax - dx * t, y - ay - dy * t); };
+  /* tileable fbm on a W x H canvas (fx x fy lattice cells, doubling per octave) */
+  function fbmWH(W, H, rand, fx, fy, oct, gain) {
+    const out = new Float32Array(W * H); gain = gain == null ? 0.5 : gain;
+    let amp = 1, total = 0;
+    const C0 = new Int32Array(W), C1 = new Int32Array(W), TX = new Float32Array(W);
+    for (let o = 0; o < oct; o++) {
+      const lx = fx << o, ly = fy << o, L = new Float32Array(lx * ly);
+      for (let i = 0; i < L.length; i++) L[i] = rand() * amp;
+      const sx = lx / W, sy = ly / H;
+      for (let x = 0; x < W; x++) { const gx = x * sx, xi = gx | 0, t = gx - xi; C0[x] = xi % lx; C1[x] = (xi + 1) % lx; TX[x] = t * t * (3 - 2 * t); }
+      for (let y = 0; y < H; y++) {
+        const gy = y * sy, yi = gy | 0, t0 = gy - yi, ty = t0 * t0 * (3 - 2 * t0), r0 = (yi % ly) * lx, r1 = ((yi + 1) % ly) * lx, row = y * W;
+        for (let x = 0; x < W; x++) {
+          const c0 = C0[x], c1 = C1[x], tx = TX[x], a = L[r0 + c0] + (L[r0 + c1] - L[r0 + c0]) * tx, b = L[r1 + c0] + (L[r1 + c1] - L[r1 + c0]) * tx;
+          out[row + x] += a + (b - a) * ty;
+        }
+      }
+      total += amp; amp *= gain;
+    }
+    const inv = 1 / total; for (let i = 0; i < out.length; i++) out[i] *= inv;
+    return out;
+  }
+  function pixWH(W, H, fn) {
+    const c = canvas(W, H), g = ctx(c), img = g.createImageData(W, H), d = img.data, o = [0, 0, 0];
+    for (let y = 0, i = 0; y < H; y++) for (let x = 0; x < W; x++, i++) { fn(x, y, i, o); const p = i * 4; d[p] = o[0]; d[p + 1] = o[1]; d[p + 2] = o[2]; d[p + 3] = 255; }
+    g.putImageData(img, 0, 0);
+    return { c: c, g: g };
+  }
+  /* a rounded, slightly irregular stone, lit from above (the plinths and the cottage walls) */
+  function stoneShape(g, x, y, w, h, col, jit) {
+    const rr = Math.min(w, h) * 0.32;
+    g.beginPath();
+    g.moveTo(x + rr + jit[0], y + jit[1]); g.lineTo(x + w - rr + jit[2], y + jit[3]);
+    g.quadraticCurveTo(x + w, y, x + w + jit[4] * 0.4, y + rr); g.lineTo(x + w + jit[5] * 0.4, y + h - rr);
+    g.quadraticCurveTo(x + w, y + h, x + w - rr + jit[6], y + h); g.lineTo(x + rr + jit[7], y + h);
+    g.quadraticCurveTo(x, y + h, x, y + h - rr); g.lineTo(x, y + rr); g.quadraticCurveTo(x, y, x + rr + jit[0], y + jit[1]);
+    g.closePath();
+    const gr = g.createLinearGradient(0, y, 0, y + h);
+    gr.addColorStop(0, rgbaC(col[0] + 24, col[1] + 24, col[2] + 22, 1)); gr.addColorStop(0.3, rgbaC(col[0], col[1], col[2], 1)); gr.addColorStop(1, rgbaC(col[0] - 42, col[1] - 44, col[2] - 44, 1));
+    g.fillStyle = gr; g.fill();
+    g.strokeStyle = 'rgba(58,50,42,0.45)'; g.lineWidth = 1.2; g.stroke();
+  }
+  /* two courses of fieldstone along the foot of a wall, from row y0 to the bottom (tiles in x) */
+  function plinth(g, W, Hh, y0, r) {
+    g.fillStyle = 'rgb(150,142,128)'; g.fillRect(0, y0, W, Hh - y0);
+    const rh = (Hh - y0) / 2;
+    for (let row = 0; row < 2; row++) {
+      const ry = y0 + row * rh; let x = -r() * 20; const x0 = x;
+      while (x < x0 + W) {
+        const w = Math.min(16 + r() * 24, x0 + W - x), v = 150 + r() * 56, warm = r(), jit = [];
+        for (let k = 0; k < 8; k++) jit.push((r() - 0.5) * 3);
+        const col = [v + warm * 16, v + warm * 6, v - 8 - warm * 10];
+        if (w > 4) for (const ox of [-W, 0, W]) stoneShape(g, x + ox + 1.2, ry + 1, w - 2.4, rh - 2, col, jit);
+        if (w < 0.5) break;
+        x += w;
+      }
+    }
+    g.fillStyle = 'rgba(40,32,24,0.5)'; g.fillRect(0, y0, W, 3);   // the shadow under the sole beam
+  }
+  const timberRGB = (L, o) => { o[0] = 104 * L; o[1] = 70 * L; o[2] = 46 * L; };
+  /* the door's little arched window (the door and its glow share it, so the glow lands on the glass exactly) */
+  const DWIN = { cx: 64, cy: 46, r: 27, bot: 76 };
+  function archPath(g, inset) { const r = DWIN.r - inset; g.beginPath(); g.moveTo(DWIN.cx - r, DWIN.bot - inset); g.lineTo(DWIN.cx - r, DWIN.cy); g.arc(DWIN.cx, DWIN.cy, r, Math.PI, 0); g.lineTo(DWIN.cx + r, DWIN.bot - inset); g.closePath(); }
+  function archBars(g) { g.fillRect(DWIN.cx - 2, DWIN.cy - DWIN.r, 4, DWIN.bot - DWIN.cy + DWIN.r); g.fillRect(DWIN.cx - DWIN.r, DWIN.cy + 6, DWIN.r * 2, 4); }
+  /* the window's four panes [x, y, w, h] on its 128 px face: frame 13 px, mullion and transom between, a sill below */
+  const WPANES = [[13, 11, 47, 45], [68, 11, 47, 45], [13, 62, 47, 45], [68, 62, 47, 45]];
+
+  Object.assign(painters, {
+    /* wallTimber: a half-timbered panel (u = one panel between two posts, v = the whole wall, eaves at the top):
+       oak posts at both edges, a top plate, a rail under the windows, a sole beam on a fieldstone plinth, braces;
+       near-white lime plaster between (the house's own wall colour tints it), the timbers standing proud with a
+       soft shadow, eaves shade at the top and splash grime at the foot. 256 x 512. */
+    wallTimber: function () {
+      const W = 256, Hh = 512, r = rng(579001);
+      const mot = stretch(fbmWH(W, Hh, r, 3, 6, 4)), fine = fbmWH(W, Hh, r, 64, 128, 1), grime = stretch(fbmWH(W, Hh, r, 4, 4, 3));
+      const gV = stretch(fbmWH(W, Hh, r, 48, 3, 2)), gH = stretch(fbmWH(W, Hh, r, 3, 96, 2)), knot = stretch(fbmWH(W, Hh, r, 8, 16, 2));
+      const P = 15, T0 = 4, T1 = 24, R0 = 290, R1 = 308, S0 = 446, S1 = 466;   // post half-width; top plate, rail and sole beam rows
+      const tim = function (x, y) {   // 0 plaster, 1 post, 2 beam, 3 brace
+        x = ((x % W) + W) % W; const m = Math.min(x, W - x);
+        if (y < T0 || y >= S1) return 0;
+        if (m < P) return 1;
+        if (y < T1 || (y >= R0 && y < R1) || y >= S0) return 2;
+        if (y > R1 && y < S0 && segDist(m, y, P - 2, S0, P + 58, R1) < 6.5) return 3;
+        if (y > T1 && y < R0 && segDist(m, y, P - 2, T1 + 78, P + 46, T1) < 5.5) return 3;
+        return 0;
+      };
+      const M = new Uint8Array(W * Hh);
+      for (let y = T0, i = T0 * W; y < S1; y++) for (let x = 0; x < W; x++, i++) M[i] = tim(x, y);
+      const T = (x, y) => (y < 0 || y >= Hh ? 0 : M[y * W + (((x % W) + W) % W)]);
+      const out = pixWH(W, Hh, function (x, y, i, o) {
+        if (y >= S1) { o[0] = o[1] = o[2] = 0; return; }
+        const t = M[i];
+        if (t) {
+          const gr = t === 1 ? gV[i] : t === 2 ? gH[i] : (gV[i] + gH[i]) * 0.5;
+          let L = 1 + (gr - 0.5) * 0.38 + (knot[i] - 0.5) * 0.12 + (fine[i] - 0.5) * 0.08;
+          if (!T(x - 2, y - 2)) L += 0.18; else if (!T(x + 2, y + 2)) L -= 0.24;
+          L *= 1 - 0.16 * smooth(0.55, 0.95, grime[i]);
+          timberRGB(L, o); return;
+        }
+        let L = 242 + (mot[i] - 0.5) * 20 + (fine[i] - 0.5) * 9;
+        if (T(x - 3, y - 4)) L -= 28; else if (T(x - 6, y - 7)) L -= 10;
+        L -= 16 * smooth(320, 446, y) * grime[i];
+        L -= 20 * (1 - smooth(T1, T1 + 30, y));
+        o[0] = L; o[1] = L - 2; o[2] = L - 7;
+      });
+      plinth(out.g, W, Hh, S1, r);
+      const g = out.g;
+      for (const [px, py] of [[7, T0 + 10], [7, R0 + 9], [7, S0 + 10], [24, R0 + 14], [22, T1 + 4]]) for (const sx of [px, W - px]) {
+        drawWrapped(W, Hh, sx, py, 4, function (qx, qy) { g.fillStyle = 'rgba(40,26,16,0.85)'; g.beginPath(); g.arc(qx, qy, 2.3, 0, TAU); g.fill(); g.fillStyle = 'rgba(255,230,200,0.3)'; g.fillRect(qx - 1, qy - 2, 1.5, 1); });   // oak pegs at the joints
+      }
+      return out.c;
+    },
+
+    /* wallBrick: warm running-bond brick below, a timber band, lime plaster above with rain streaks, a damp line,
+       and a few patches fallen away to show the brick beneath. 256 x 512, tiles in u. */
+    wallBrick: function () {
+      const W = 256, Hh = 512, r = rng(579002);
+      const mot = stretch(fbmWH(W, Hh, r, 3, 6, 4)), fine = fbmWH(W, Hh, r, 64, 128, 1), grime = stretch(fbmWH(W, Hh, r, 4, 6, 3));
+      const spall = stretch(fbmWH(W, Hh, r, 4, 8, 3, 0.6)), gH = stretch(fbmWH(W, Hh, r, 3, 96, 2)), streak = stretch(fbmWH(W, Hh, r, 24, 2, 2));
+      const T0 = 4, T1 = 22, B0 = 254, B1 = 272, BW = 32, BH = 14, FOOT = 496;
+      const tone = []; for (let k = 0; k < 40 * 8; k++) tone.push([r(), r()]);
+      const brick = function (x, y, i, o) {
+        const yy = y - B1, row = Math.floor(yy / BH), ly = yy - row * BH, off = (row & 1) ? BW / 2 : 0, xx = (((x + off) % W) + W) % W, cI = (xx / BW) | 0, lx = xx - cI * BW;
+        if (ly >= BH - 3 || lx >= BW - 3) { const v = 194 + (fine[i] - 0.5) * 26 - (ly >= BH - 3 && ly < BH - 1 && lx < BW - 3 ? 32 : 0); o[0] = v; o[1] = v - 6; o[2] = v - 16; return; }   // mortar, shaded under each brick
+        const tt = tone[(((row % 40) + 40) % 40) * 8 + cI], q = tt[0];
+        let R = 172, G = 88, B = 62;
+        if (q < 0.16) { R = 126; G = 64; B = 54; } else if (q > 0.92) { R = 198; G = 146; B = 108; } else if (q > 0.72) { R = 190; G = 104; B = 66; } else if (q > 0.6) { R = 158; G = 92; B = 74; }
+        let k = 0.88 + tt[1] * 0.22 + (fine[i] - 0.5) * 0.16 + (mot[i] - 0.5) * 0.08;
+        if (ly < 1) k += 0.1; if (lx >= BW - 4) k -= 0.08; if (ly >= BH - 4) k -= 0.06;
+        o[0] = R * k; o[1] = G * k; o[2] = B * k;
+      };
+      return pixWH(W, Hh, function (x, y, i, o) {
+        if ((y >= T0 && y < T1) || (y >= B0 && y < B1)) {
+          const top = y >= B0 ? B0 : T0, bot = y >= B0 ? B1 : T1;
+          let L = 1 + (gH[i] - 0.5) * 0.38 + (fine[i] - 0.5) * 0.08; if (y < top + 2) L += 0.18; else if (y >= bot - 2) L -= 0.26;
+          timberRGB(L, o); return;
+        }
+        if (y >= B1) {
+          brick(x, y, i, o);
+          const k = 1 - 0.24 * smooth(FOOT - 40, Hh, y) * (0.6 + 0.4 * grime[i]) - (y < B1 + 4 ? 0.22 : 0);
+          o[0] *= k; o[1] *= k; o[2] *= k; return;
+        }
+        const sp = spall[i] * (0.78 + 0.22 * smooth(T1, B0, y));
+        if (sp > 0.8) { brick(x, y, i, o); const k = sp < 0.83 ? 0.7 : 0.92; o[0] *= k; o[1] *= k; o[2] *= k; return; }   // the brick under a fallen patch, shadowed at its edge
+        let L = 242 + (mot[i] - 0.5) * 20 + (fine[i] - 0.5) * 9;
+        if (sp > 0.77) L += 7;   // the broken plaster edge
+        L -= 16 * smooth(0.72, 0.95, streak[i]) * (1 - smooth(T1, T1 + 170, y));
+        L -= 12 * smooth(B0 - 50, B0, y) * (0.4 + 0.6 * grime[i]);
+        L -= 20 * (1 - smooth(T1, T1 + 28, y));
+        if (y >= T1 && y < T1 + 4) L -= 22;
+        o[0] = L; o[1] = L - 2; o[2] = L - 7;
+      }).c;
+    },
+
+    /* wallStone: a cottage of coursed fieldstone - warm greys, ochres, a few dark stones - under an old limewash
+       worn thin toward the foot, moss creeping up from the ground, a timber plate under the eaves. 256 x 512. */
+    wallStone: function () {
+      const W = 256, Hh = 512, c = canvas(W, Hh), g = ctx(c), r = rng(579003);
+      g.fillStyle = 'rgb(204,196,180)'; g.fillRect(0, 0, W, Hh);
+      let y = 20;
+      while (y < Hh) {
+        const rh = 15 + r() * 13 + (y > Hh - 70 ? 6 : 0);
+        let x = -r() * 30; const x0 = x;
+        while (x < x0 + W) {
+          const w = Math.min(rh * (1.0 + r() * 1.7), x0 + W - x), q = r(), v = 184 + r() * 46, jit = [];
+          for (let k = 0; k < 8; k++) jit.push((r() - 0.5) * 4);
+          const col = q < 0.5 ? [v + 22, v + 12, v - 14] : q < 0.64 ? [v - 2, v - 1, v + 2] : q < 0.7 ? [v - 28, v - 31, v - 34] : [v + 14, v + 9, v - 4];
+          if (w > 4) for (const ox of [-W, 0, W]) stoneShape(g, x + ox + 1.5, y + 1.5, w - 3, rh - 3, col, jit);
+          if (w < 0.5) break;
+          x += w;
+        }
+        y += rh;
+      }
+      const mot = stretch(fbmWH(W, Hh, r, 4, 8, 4)), fine = fbmWH(W, Hh, r, 64, 128, 1), wash = stretch(fbmWH(W, Hh, r, 3, 6, 3)), gH = stretch(fbmWH(W, Hh, r, 3, 96, 2)), moss = stretch(fbmWH(W, Hh, r, 8, 4, 3));
+      const img = g.getImageData(0, 0, W, Hh), dd = img.data, o = [0, 0, 0];
+      for (let yy = 0, i = 0; yy < Hh; yy++) for (let x = 0; x < W; x++, i++) {
+        const p = i * 4;
+        if (yy >= 3 && yy < 20) { let L = 1 + (gH[i] - 0.5) * 0.38 + (fine[i] - 0.5) * 0.08; if (yy < 5) L += 0.18; else if (yy >= 18) L -= 0.26; timberRGB(L, o); dd[p] = o[0]; dd[p + 1] = o[1]; dd[p + 2] = o[2]; continue; }
+        let R = dd[p], G = dd[p + 1], B = dd[p + 2];
+        const k = 1 + (mot[i] - 0.5) * 0.16 + (fine[i] - 0.5) * 0.1; R *= k; G *= k; B *= k;
+        const wsh = 0.16 + 0.22 * smooth(0.45, 0.8, wash[i]) * (1 - yy / Hh);
+        R += (246 - R) * wsh; G += (244 - G) * wsh; B += (236 - B) * wsh;
+        const ms = smooth(0.55, 0.85, moss[i]) * smooth(Hh - 90, Hh, yy);
+        R += (92 - R) * ms * 0.6; G += (118 - G) * ms * 0.6; B += (60 - B) * ms * 0.6;
+        const ao = 1 - 0.2 * (1 - smooth(20, 48, yy)) - (yy < 24 ? 0.12 : 0);
+        dd[p] = R * ao; dd[p + 1] = G * ao; dd[p + 2] = B * ao;
+      }
+      g.putImageData(img, 0, 0);
+      return c;
+    },
+
+    /* houseWindow: a painted frame, a mullion and transom, four panes of glass with the sky in them and a soft
+       reflection, the frame's shadow on the glass, a lit sill. White-based: the material goes white for it. 128 px. */
+    houseWindow: function () {
+      const S = 128, c = canvas(S), g = ctx(c), r = rng(579020);
+      g.fillStyle = 'rgb(238,231,214)'; g.fillRect(0, 0, S, S);
+      for (const [x, y, w, h] of WPANES) {
+        const gl = g.createLinearGradient(x, y, x + w * 0.4, y + h);
+        gl.addColorStop(0, 'rgb(204,231,245)'); gl.addColorStop(0.55, 'rgb(128,170,204)'); gl.addColorStop(1, 'rgb(80,118,152)');
+        g.fillStyle = gl; g.fillRect(x, y, w, h);
+        g.fillStyle = 'rgba(255,255,255,0.26)'; g.beginPath(); g.moveTo(x + w * 0.12, y + h); g.lineTo(x + w * 0.42, y + h); g.lineTo(x + w * 0.86, y); g.lineTo(x + w * 0.56, y); g.closePath(); g.fill();
+        g.fillStyle = 'rgba(36,46,58,0.38)'; g.fillRect(x, y, w, 3); g.fillRect(x, y, 3, h);
+        g.fillStyle = 'rgba(255,255,255,0.55)'; g.fillRect(x, y + h, w, 1.5);
+      }
+      g.fillStyle = 'rgb(250,246,236)'; g.fillRect(3, 109, S - 6, 4);
+      g.fillStyle = 'rgba(70,60,50,0.35)'; g.fillRect(3, 121, S - 6, 7);
+      g.strokeStyle = 'rgba(90,80,70,0.5)'; g.lineWidth = 3; g.strokeRect(1.5, 1.5, S - 3, S - 3);
+      modulate(g, S, stretch(fbm(S, r, 4, 4, 3)), 0.08, r, 6);
+      return c;
+    },
+    /* houseWindowGlow: the emissiveMap - lamp-lit panes (brighter low and in the middle), curtains drawn back at the
+       sides, the frame dark. The game's night ramp sets the colour (WINDOW_MATS). 128 px. */
+    houseWindowGlow: function () {
+      const S = 128, c = canvas(S), g = ctx(c);
+      g.fillStyle = '#000'; g.fillRect(0, 0, S, S);
+      for (const [x, y, w, h] of WPANES) {
+        const gl = g.createRadialGradient(64, 98, 6, 64, 70, 84); gl.addColorStop(0, '#ffffff'); gl.addColorStop(1, 'rgb(150,150,150)');
+        g.fillStyle = gl; g.fillRect(x, y, w, h);
+      }
+      g.fillStyle = 'rgba(0,0,0,0.5)'; g.fillRect(13, 11, 9, 96); g.fillRect(106, 11, 9, 96);
+      return c;
+    },
+    houseDoorGlow: function () {
+      const W = 128, Hh = 256, c = canvas(W, Hh), g = ctx(c);
+      g.fillStyle = '#000'; g.fillRect(0, 0, W, Hh);
+      const gl = g.createRadialGradient(DWIN.cx, DWIN.bot - 6, 4, DWIN.cx, DWIN.cy, DWIN.r + 8); gl.addColorStop(0, '#ffffff'); gl.addColorStop(1, 'rgb(170,170,170)');
+      g.fillStyle = gl; archPath(g, 3); g.fill();
+      g.fillStyle = '#000'; archBars(g);
+      return c;
+    },
+
+    /* groundDetail: three grey detail fields in one texture, read by the island's shader as masks -
+       R rock (grain, cracks, pale lichen), G sand (wind ripples, grains, specks), B dirt (lumps and pebbles). 256 px. */
+    groundDetail: function () {
+      const S = 256, r = rng(579050);
+      const rn = stretch(fbm(S, r, 4, 4, 4, 0.55)), cr = fbm(S, r, 8, 8, 3, 0.6), cr2 = fbm(S, r, 16, 16, 2, 0.6), lich = stretch(fbm(S, r, 12, 12, 2));
+      const warp = fbm(S, r, 2, 3, 2), sl = fbm(S, r, 4, 4, 2), sf = fbm(S, r, 64, 64, 1), dl = stretch(fbm(S, r, 8, 8, 3)), peb = fbm(S, r, 32, 32, 1);
+      return pixels(S, function (x, y, i, o) {
+        const ridge = 1 - Math.abs(cr[i] - 0.5) * 2, ridge2 = 1 - Math.abs(cr2[i] - 0.5) * 2;
+        o[0] = clamp255(150 + (rn[i] - 0.5) * 130 - 34 * smooth(0.88, 0.99, ridge) - 16 * smooth(0.9, 0.99, ridge2) + 30 * smooth(0.82, 0.95, lich[i]) + (r() - 0.5) * 26);
+        const s = fract(y / S * 7 + x / S * 2 + (warp[i] - 0.5) * 2.2), rip = s < 0.7 ? s / 0.7 : (1 - s) / 0.3, q = r();
+        o[1] = clamp255(150 + rip * 30 + (sl[i] - 0.5) * 40 + (sf[i] - 0.5) * 30 + (q < 0.04 ? 60 : q > 0.97 ? -70 : (r() - 0.5) * 30));
+        o[2] = clamp255(150 + (dl[i] - 0.5) * 90 + 50 * smooth(0.62, 0.72, peb[i]) + (r() - 0.5) * 26);
+      }).c;
+    }
+  });
+
+  /* the roofs, painted IN the roof's colour (so moss can be green on a red roof): 'clay' barrel tiles or 'slate'
+     shingles; rows run along the eave (canvas bottom = eave, top = ridge; u tiles, v is one face). 256 px. */
+  function tint(base, k, h) { return [base[0] * k * (1 + h), base[1] * k * (1 + h * 0.15), base[2] * k * (1 - h * 0.6)]; }
+  function paintClay(g, S, base, r) {
+    const rows = 11, cols = 8, th = S / rows, tw = S / cols;
+    g.fillStyle = rgbaC(base[0] * 0.42, base[1] * 0.42, base[2] * 0.42, 1); g.fillRect(0, 0, S, S);
+    const tone = []; for (let k = 0; k < rows * cols; k++) { const q = r(); tone.push([0.84 + r() * 0.26 - (q < 0.06 ? 0.2 : 0), (r() - 0.5) * 0.22, (r() - 0.5) * 2.4]); }
+    for (let j = 0; j < rows; j++) {
+      const yb = S - j * th, yt = yb - th * 1.4;
+      for (let i = -1; i <= cols; i++) {
+        const ii = ((i % cols) + cols) % cols, t = tone[j * cols + ii], x = i * tw + (j % 2 ? tw / 2 : 0) + t[2] * 0.4, col = tint(base, t[0], t[1]);
+        g.fillStyle = 'rgba(30,18,12,0.38)'; g.beginPath(); g.ellipse(x + tw / 2, yb + 2, tw * 0.46, 5, 0, 0, TAU); g.fill();
+        const gr = g.createLinearGradient(x, 0, x + tw, 0);
+        gr.addColorStop(0, rgbaC(col[0] * 0.62, col[1] * 0.62, col[2] * 0.62, 1)); gr.addColorStop(0.32, rgbaC(col[0], col[1], col[2], 1));
+        gr.addColorStop(0.46, rgbaC(col[0] * 1.12 + 10, col[1] * 1.12 + 10, col[2] * 1.12 + 10, 1)); gr.addColorStop(0.7, rgbaC(col[0] * 0.92, col[1] * 0.92, col[2] * 0.92, 1)); gr.addColorStop(1, rgbaC(col[0] * 0.55, col[1] * 0.55, col[2] * 0.55, 1));
+        g.fillStyle = gr; g.beginPath();
+        g.moveTo(x + 1, yt); g.lineTo(x + tw - 1, yt); g.lineTo(x + tw - 1, yb - 5); g.quadraticCurveTo(x + tw / 2, yb + 3, x + 1, yb - 5); g.closePath(); g.fill();
+        const vg = g.createLinearGradient(0, yt, 0, yb);
+        vg.addColorStop(0, 'rgba(20,10,5,0.5)'); vg.addColorStop(0.5, 'rgba(20,10,5,0)'); vg.addColorStop(0.9, 'rgba(255,240,220,0)'); vg.addColorStop(1, 'rgba(255,240,220,0.22)');
+        g.fillStyle = vg; g.fill();
+      }
+    }
+  }
+  function paintSlate(g, S, base, r) {
+    const rows = 12, th = S / rows;
+    g.fillStyle = rgbaC(base[0] * 0.35, base[1] * 0.35, base[2] * 0.35, 1); g.fillRect(0, 0, S, S);
+    for (let j = 0; j < rows; j++) {
+      const yb = S - j * th, yt = yb - th * 1.5, ws = []; let sum = 0;
+      while (sum < S - 18) { const w = 20 + r() * 18; ws.push(w); sum += w; }
+      const kw = S / sum; let x = r() * 20;
+      for (let n = 0; n < ws.length; n++) {
+        const w = ws[n] * kw, q = r(), kk = 0.8 + r() * 0.3 + (q > 0.94 ? 0.18 : 0) - (q < 0.05 ? 0.16 : 0), hh = (r() - 0.5) * 0.16, dy = (r() - 0.5) * 2.5, col = tint(base, kk, hh);
+        for (const ox of [-S, 0, S]) {
+          const X = x + ox; if (X > S + 2 || X + w < -2) continue;
+          g.fillStyle = 'rgba(10,10,20,0.4)'; g.fillRect(X + 1, yb + dy - 1, w - 1, 4);
+          const gr = g.createLinearGradient(0, yt, 0, yb + dy);
+          gr.addColorStop(0, rgbaC(col[0] * 0.7, col[1] * 0.7, col[2] * 0.7, 1)); gr.addColorStop(0.6, rgbaC(col[0], col[1], col[2], 1)); gr.addColorStop(1, rgbaC(col[0] * 1.08, col[1] * 1.08, col[2] * 1.08, 1));
+          g.fillStyle = gr;
+          const rr = 3.5, B = yb + dy; g.beginPath(); g.moveTo(X + 1, yt); g.lineTo(X + w - 1, yt); g.lineTo(X + w - 1, B - rr); g.quadraticCurveTo(X + w - 1, B, X + w - 1 - rr, B); g.lineTo(X + 1 + rr, B); g.quadraticCurveTo(X + 1, B, X + 1, B - rr); g.closePath(); g.fill();
+          g.fillStyle = 'rgba(255,255,255,0.18)'; g.fillRect(X + 2, B - 2, w - 4, 1.2);
+          g.fillStyle = 'rgba(0,0,0,0.25)'; g.fillRect(X + w - 1.5, yt, 1, B - yt);
+        }
+        x += w;
+      }
+    }
+  }
+  function weatherRoof(g, S, base, r) {   // soft moss in the lower courses, lichen, a sun-faded ridge end, rain streaks, ridge cap, drip edge
+    const moss = stretch(fbm(S, r, 6, 6, 3)), lich = fbm(S, r, 32, 32, 1), fade = fbm(S, r, 3, 3, 2), fine = fbm(S, r, 64, 64, 1);
+    const img = g.getImageData(0, 0, S, S), d = img.data;
+    for (let y = 0, i = 0; y < S; y++) for (let x = 0; x < S; x++, i++) {
+      const p = i * 4; let R = d[p], G = d[p + 1], B = d[p + 2];
+      const low = smooth(S * 0.45, S, y), m = smooth(0.6, 0.82, moss[i] * (0.55 + 0.45 * low) + (fine[i] - 0.5) * 0.12);
+      R += (86 - R) * m * 0.78; G += (116 - G) * m * 0.78; B += (54 - B) * m * 0.78;
+      const li = lich[i] > 0.83 ? smooth(0.83, 0.9, lich[i]) * (0.4 + 0.6 * low) : 0;
+      R += (214 - R) * li * 0.5; G += (210 - G) * li * 0.5; B += (160 - B) * li * 0.5;
+      const sun = (1 - smooth(0, S * 0.5, y)) * 0.12 * (0.6 + 0.4 * fade[i]), L = (R + G + B) / 3 + 18;
+      R += (L - R) * sun; G += (L - G) * sun; B += (L - B) * sun;
+      const k = 1 + (fine[i] - 0.5) * 0.08; d[p] = R * k; d[p + 1] = G * k; d[p + 2] = B * k;
+    }
+    g.putImageData(img, 0, 0);
+    for (let n = 0; n < 14; n++) {
+      const x = r() * S, y0 = r() * S * 0.5, len = 40 + r() * 120, w = 2 + r() * 4;
+      for (const ox of [-S, 0, S]) { const gr = g.createLinearGradient(0, y0, 0, y0 + len); gr.addColorStop(0, 'rgba(20,16,12,0)'); gr.addColorStop(0.3, 'rgba(20,16,12,0.14)'); gr.addColorStop(1, 'rgba(20,16,12,0)'); g.fillStyle = gr; g.fillRect(x + ox, y0, w, len); }
+    }
+    const rg = g.createLinearGradient(0, 0, 0, 10);
+    rg.addColorStop(0, rgbaC(base[0] * 0.55, base[1] * 0.55, base[2] * 0.55, 1)); rg.addColorStop(0.5, rgbaC(base[0] * 0.95, base[1] * 0.95, base[2] * 0.95, 1)); rg.addColorStop(1, rgbaC(base[0] * 0.5, base[1] * 0.5, base[2] * 0.5, 1));
+    g.fillStyle = rg; g.fillRect(0, 0, S, 10);
+    g.fillStyle = 'rgba(25,18,12,0.5)'; g.fillRect(0, S - 3, S, 3);
+  }
+  function roofPainter(kind, hex) {
+    return function () {
+      const S = 256, c = canvas(S), g = ctx(c), r = rng((kind === 'slate' ? 579400 : 579300) + (hex % 997)), base = hexRGB(hex);
+      if (kind === 'slate') paintSlate(g, S, base, r); else paintClay(g, S, base, r);
+      weatherRoof(g, S, base, r);
+      return c;
+    };
+  }
+  /* a painted plank door in its own colour: four boards, two ledges, iron strap hinges, a brass knob, an arched
+     window up top (houseDoorGlow lights it at night), paint worn to bare wood low down. 128 x 256. */
+  function doorPainter(hex) {
+    return function () {
+      const W = 128, Hh = 256, r = rng(579010 + (hex % 4093)), base = hexRGB(hex);
+      const gV = stretch(fbmWH(W, Hh, r, 40, 3, 2)), fine = fbmWH(W, Hh, r, 64, 128, 1), wear = stretch(fbmWH(W, Hh, r, 4, 8, 3));
+      const tones = [0.93 + r() * 0.14, 0.93 + r() * 0.14, 0.93 + r() * 0.14, 0.93 + r() * 0.14];
+      const P = pixWH(W, Hh, function (x, y, i, o) {
+        const pl = (x / 32) | 0, lx = x - pl * 32;
+        let k = tones[pl] * (1 + (gV[i] - 0.5) * 0.32 + (fine[i] - 0.5) * 0.06);
+        if (x > 2 && lx < 2) k *= 0.5; else if (x > 2 && lx < 3) k *= 1.14;
+        const bare = smooth(0.8, 0.97, wear[i]) * (0.25 + 0.5 * smooth(170, 256, y));
+        const R = base[0] + (150 - base[0]) * bare, G = base[1] + (108 - base[1]) * bare, B = base[2] + (72 - base[2]) * bare;
+        if (x < 6 || x >= W - 6 || y < 6) k *= 0.7;
+        o[0] = R * k; o[1] = G * k; o[2] = B * k;
+      }), g = P.g;
+      for (const ly of [100, 210]) {
+        g.fillStyle = 'rgba(0,0,0,0.28)'; g.fillRect(5, ly + 13, W - 10, 4);
+        const gr = g.createLinearGradient(0, ly, 0, ly + 13); gr.addColorStop(0, rgbaC(base[0] * 1.18, base[1] * 1.18, base[2] * 1.18, 1)); gr.addColorStop(1, rgbaC(base[0] * 0.78, base[1] * 0.78, base[2] * 0.78, 1));
+        g.fillStyle = gr; g.fillRect(5, ly, W - 10, 13);
+      }
+      g.fillStyle = rgbaC(base[0] * 0.62, base[1] * 0.62, base[2] * 0.62, 1); archPath(g, -3); g.fill();
+      const gl = g.createLinearGradient(0, DWIN.cy - DWIN.r, 0, DWIN.bot); gl.addColorStop(0, 'rgb(200,228,243)'); gl.addColorStop(1, 'rgb(88,128,160)');
+      g.fillStyle = gl; archPath(g, 3); g.fill();
+      g.fillStyle = 'rgba(255,255,255,0.28)'; g.beginPath(); g.moveTo(DWIN.cx - 14, DWIN.bot - 3); g.lineTo(DWIN.cx - 4, DWIN.bot - 3); g.lineTo(DWIN.cx + 14, DWIN.cy - 18); g.lineTo(DWIN.cx + 4, DWIN.cy - 20); g.closePath(); g.fill();
+      g.fillStyle = rgbaC(base[0] * 0.62, base[1] * 0.62, base[2] * 0.62, 1); archBars(g);
+      for (const ly of [103, 213]) {
+        g.fillStyle = 'rgba(0,0,0,0.3)'; g.fillRect(4, ly + 3, 68, 8);
+        g.fillStyle = 'rgb(46,42,40)'; g.beginPath(); g.moveTo(3, ly); g.lineTo(64, ly + 1); g.arc(66, ly + 4, 4, -Math.PI / 2, Math.PI / 2); g.lineTo(3, ly + 7); g.closePath(); g.fill();
+        g.fillStyle = 'rgba(255,255,255,0.22)'; g.fillRect(4, ly + 0.5, 58, 1);
+        for (const rx of [12, 32, 52]) { g.fillStyle = 'rgb(24,22,20)'; g.beginPath(); g.arc(rx, ly + 3.5, 1.6, 0, TAU); g.fill(); }
+      }
+      g.fillStyle = 'rgb(56,48,42)'; g.fillRect(100, 134, 12, 32);
+      const kg = g.createRadialGradient(104, 146, 1, 106, 148, 7); kg.addColorStop(0, 'rgb(255,238,168)'); kg.addColorStop(0.5, 'rgb(214,170,74)'); kg.addColorStop(1, 'rgb(118,84,30)');
+      g.fillStyle = kg; g.beginPath(); g.arc(106, 148, 6.5, 0, TAU); g.fill();
+      g.fillStyle = 'rgb(20,16,14)'; g.fillRect(105, 158, 2, 5);
+      return P.c;
+    };
+  }
+
+  /* house textures: shared once per name, tiled in u, clamped in v (each wall and roof face is ONE v span) */
+  const CLAMPED = new Set();
+  function houseTex(name, renderer, painter) {
+    if (!painters[name] && painter) painters[name] = painter;
+    const t = get(name, renderer);
+    if (!CLAMPED.has(t)) { t.wrapT = THREE.ClampToEdgeWrapping; t.needsUpdate = true; CLAMPED.add(t); }
+    return t;
+  }
+  /* wall UVs in panels: u counts panels across each wall from its corner (an odd number, so a post never stands
+     over the door or a window), v runs from the ground (0) to the eaves (1). Each wall box has its own geometry. */
+  function wallUV(m, o, nW, nD) {
+    const geo = m.geometry, p = geo.attributes.position, n = geo.attributes.normal, uv = geo.attributes.uv;
+    const px = m.position.x, py = m.position.y, pz = m.position.z, pw = o.w / nW, pd = o.d / nD;
+    for (let k = 0; k < p.count; k++) {
+      const X = p.getX(k) + px, Y = p.getY(k) + py, Z = p.getZ(k) + pz, nx = n.getX(k), ny = n.getY(k), nz = n.getZ(k);
+      let u;
+      if (Math.abs(nz) > 0.5) u = ((nz > 0 ? X : -X) + o.w / 2) / pw;
+      else if (Math.abs(nx) > 0.5) u = ((nx > 0 ? -Z : Z) + o.d / 2) / pd;
+      else u = (X + o.w / 2) / pw;
+      uv.setXY(k, u, ny > 0.5 ? 0.985 : Math.max(0.002, Math.min(0.998, Y / o.ht)));
+    }
+    uv.needsUpdate = true;
+  }
+  /* the roof: un-indexed so each of its four faces is flat-lit and has its own planar UV - u along the eave
+     (2.4 units a tile), v from the eave (0) to the ridge point (1). Same vertices, same place. */
+  function dressRoof(m, tex, i) {
+    const T = THREE, src = m.geometry, geo = src.index ? src.toNonIndexed() : src.clone(), p = geo.attributes.position, uv = geo.attributes.uv;
+    const H2 = src.parameters && src.parameters.height ? src.parameters.height / 2 : 1.3, U = 2.4;
+    const a = new T.Vector3(), b = new T.Vector3(), c = new T.Vector3(), e1 = new T.Vector3(), e2 = new T.Vector3(), nrm = new T.Vector3(), right = new T.Vector3(), mid = new T.Vector3(), q = new T.Vector3(), up = new T.Vector3(0, 1, 0);
+    for (let t = 0; t + 2 < p.count; t += 3) {
+      a.fromBufferAttribute(p, t); b.fromBufferAttribute(p, t + 1); c.fromBufferAttribute(p, t + 2);
+      nrm.crossVectors(e1.subVectors(b, a), e2.subVectors(c, a));
+      if (nrm.lengthSq() < 1e-10) continue;
+      nrm.normalize();
+      const low = [a, b, c].filter((v) => v.y < 0);
+      if (Math.abs(nrm.y) > 0.98 || low.length !== 2) { for (let k = 0; k < 3; k++) { q.fromBufferAttribute(p, t + k); uv.setXY(t + k, q.x / U, q.z / U); } continue; }
+      mid.addVectors(low[0], low[1]).multiplyScalar(0.5);
+      right.set(-nrm.x, 0, -nrm.z).normalize().cross(up);
+      for (let k = 0; k < 3; k++) { q.fromBufferAttribute(p, t + k); uv.setXY(t + k, q.clone().sub(mid).dot(right) / U + 0.5, Math.max(0, Math.min(1, (q.y + H2) / (2 * H2)))); }
+    }
+    uv.needsUpdate = true; geo.computeVertexNormals();
+    m.geometry = geo; src.dispose();
+    const mat = m.material, k = 0.92 + 0.08 * fract(Math.sin((i + 1) * 12.9898) * 43758.5453);
+    mat.color.setRGB(k, k, k); mat.map = tex; mat.needsUpdate = true;   // the colour is in the paint now; a gentle shade apart per house
+  }
+  const WALLS = ['wallTimber', 'wallBrick', 'wallStone'], DOORS = [0x8e3b2f, 0x3f6b4a, 0x2f5277, 0x9a6a3c];
+  /* dressHouse(g, { i, w, d, ht, wall, roof, roofHex, door, glow, renderer }) - called once per village house as it is
+     built, before it is scaled and placed. glow: the array whose emissive the night ramp turns up (WINDOW_MATS): the
+     door's glass joins it (the windows are in it already). */
+  api.dressHouse = function (g, o) {
+    const t0 = now();
+    try {
+      const R = o.renderer, i = o.i | 0, panels = (len) => Math.max(1, 2 * Math.round((len / 1.9 - 1) / 2) + 1);
+      const nW = panels(o.w), nD = panels(o.d), wallT = houseTex(WALLS[i % 3], R);
+      const winT = houseTex('houseWindow', R), winG = houseTex('houseWindowGlow', R), doorG = houseTex('houseDoorGlow', R);
+      const rk = (o.roofHex === 0x3f6e8c || o.roofHex === 0x8a5a9c) ? 'slate' : 'clay', rName = 'roof_' + rk + '_' + o.roofHex.toString(16);
+      const roofT = houseTex(rName, R, roofPainter(rk, o.roofHex));
+      const dc = DOORS[(i + ((i / 4) | 0)) % 4], doorT = houseTex('houseDoor_' + dc.toString(16), R, doorPainter(dc));
+      let walls = 0, wins = 0;
+      g.traverse(function (m) {
+        if (!m.isMesh || !m.material || !m.material.color) return;
+        const mat = m.material, hx = mat.color.getHex(), isBox = m.geometry && m.geometry.type === 'BoxGeometry';
+        if (m === o.roof) { dressRoof(m, roofT, i); return; }
+        if (m === o.door) { mat.color.setRGB(1, 1, 1); mat.map = doorT; if ('emissiveMap' in mat) { mat.emissiveMap = doorG; if (o.glow) o.glow.push(mat); } mat.needsUpdate = true; return; }
+        if (isBox && hx === o.wall) { wallUV(m, o, nW, nD); mat.map = wallT; mat.needsUpdate = true; walls++; return; }
+        if (isBox && hx === 0x9fd3f0) { mat.color.setRGB(1, 1, 1); mat.map = winT; if ('emissiveMap' in mat) mat.emissiveMap = winG; mat.needsUpdate = true; wins++; }
+      });
+      const s = api.housesDressed || (api.housesDressed = { houses: 0, walls: 0, windows: 0, ms: 0 }); s.houses++; s.walls += walls; s.windows += wins; s.ms = Math.round((s.ms + now() - t0) * 10) / 10;
+      return true;
+    } catch (e) { api.housesDressed = { error: String(e && e.message || e) }; return false; }
+  };
+
+  /* THE ISLAND, pass 2: vertex colours for the shore (warm dry sand, darker wet sand), the rock (warm and cool, darker
+     in the folds, pale on the crests, moss in the low folds) and the snow (white, soft blue where the sun seldom
+     reaches); a per-vertex surface weight (rock, sand, snow, steepness) for the shader, which swaps the grass grain for
+     rock, sand or snow grain, paints thin strata by height in the rock, darkens the sand at the water line, and wears
+     paths into the village green - one spoke from the well to every door. No height is touched; no rnd(). */
+  const GROUND_MAP = [
+    '#ifdef USE_MAP',
+    '  vec4 texelColor = texture2D( map, vUv );',
+    '  texelColor = mapTexelToLinear( texelColor );',
+    '#endif'].join('\n');
+  const GROUND_FRAG = [
+    '#ifdef USE_MAP',
+    '{',
+    '  vec4 d1 = texture2D( wfrDetail, vUv * 0.41 );',
+    '  vec4 d2 = texture2D( wfrDetail, vUv * 0.093 + vec2( 0.37, 0.71 ) );',
+    '  float nz = d2.r - 0.5;',
+    '  float wSnow = smoothstep( 0.36, 0.64, vWfrSurf.z + nz * 0.55 + ( d1.r - 0.5 ) * 0.25 );',
+    '  float wRock = smoothstep( 0.3, 0.7, vWfrSurf.x + nz * 0.8 + ( d1.r - 0.5 ) * 0.3 ) * ( 1.0 - wSnow );',
+    '  float wSand = smoothstep( 0.43, 0.57, vWfrSurf.y + ( d1.b - 0.55 ) * 0.12 + nz * 0.3 ) * ( 1.0 - wRock ) * ( 1.0 - wSnow );',
+    '  vec3 tSand = vec3( 0.88 + ( d1.g - 0.55 ) * 0.4 );',
+    '  vec3 tRock = vec3( 0.66 + d1.r * 0.44 ) * ( 0.9 + d2.r * 0.2 );',
+    '  vec3 tSnow = vec3( 0.97 + ( d1.r - 0.55 ) * 0.12 );',
+    '  vec3 tex3 = mix( texelColor.rgb, tRock, wRock );',
+    '  tex3 = mix( tex3, tSnow, wSnow );',
+    '  vec3 col = diffuseColor.rgb * tex3;',
+    '  vec3 sandCol = vec3( 0.76, 0.64, 0.44 ) * ( 0.93 + d2.g * 0.12 ) * tSand;',
+    '  col = mix( col, sandCol, wSand );',
+    '  float st = sin( vWfrPos.y * 1.25 + nz * 5.0 + ( d1.r - 0.5 ) * 1.4 );',
+    '  float st2 = sin( vWfrPos.y * 3.3 + d2.g * 4.0 );',
+    '  vec3 band = mix( vec3( 1.1, 1.02, 0.9 ), vec3( 0.84, 0.88, 0.98 ), 0.5 + 0.5 * st ) * ( 0.94 + 0.06 * st2 );',
+    '  col *= mix( vec3( 1.0 ), band, wRock * clamp( vWfrSurf.w * 1.4, 0.25, 1.0 ) );',
+    '  float wet = ( 1.0 - smoothstep( wfrWater + 0.05, wfrWater + 0.85, vWfrPos.y ) ) * wSand;',
+    '  col *= mix( vec3( 1.0 ), vec3( 0.72, 0.69, 0.64 ), wet ) * ( 1.0 - 0.28 * smoothstep( 0.5, 3.0, wfrWater - vWfrPos.y ) );',
+    '  vec2 vp = vWfrPos.xz - wfrVil.xy;',
+    '  float rr = length( vp );',
+    '  if ( wfrVilOn > 0.5 && rr < 48.0 ) {',
+    '    float an = atan( vp.y, vp.x );',
+    '    float wob = ( d1.b - 0.55 ) * 0.8 + sin( rr * 0.31 + an * 3.0 ) * 0.25;',
+    '    float k = floor( an / 0.5235988 + 0.5 );',
+    '    float rEnd = mod( k, 2.0 ) < 0.5 ? wfrVil.z : wfrVil.w;',
+    '    float laneR = 29.0 + sin( an * 2.0 + 0.7 ) * 2.2 + sin( an * 5.0 + 1.3 ) * 0.8;',
+    '    float spur = ( 1.0 - smoothstep( 0.5, 0.95, abs( sin( an - k * 0.5235988 ) ) * rr + wob * ( 1.0 - 0.85 * smoothstep( rEnd - 7.0, rEnd - 1.5, rr ) ) ) ) * smoothstep( laneR - 1.5, laneR + 0.5, rr ) * ( 1.0 - smoothstep( rEnd - 1.0, rEnd + 0.4, rr ) );',
+    '    float inner = smoothstep( 5.0, 7.5, rr ) * ( 1.0 - smoothstep( laneR - 0.5, laneR + 1.0, rr ) );',
+    '    float a1 = an - 0.5236 - sin( rr * 0.09 ) * 0.14;',
+    '    float a2 = an - 2.618 - sin( rr * 0.08 + 1.0 ) * 0.14;',
+    '    float a3 = an - 4.1888 - sin( rr * 0.1 + 2.0 ) * 0.14;',
+    '    float spoke = ( 1.0 - smoothstep( 0.6, 1.1, abs( sin( a1 ) ) * rr + wob ) ) * step( 0.0, cos( a1 ) );',
+    '    spoke = max( spoke, ( 1.0 - smoothstep( 0.6, 1.1, abs( sin( a2 ) ) * rr + wob ) ) * step( 0.0, cos( a2 ) ) );',
+    '    spoke = max( spoke, ( 1.0 - smoothstep( 0.6, 1.1, abs( sin( a3 ) ) * rr + wob ) ) * step( 0.0, cos( a3 ) ) ) * inner;',
+    '    float lane = 1.0 - smoothstep( 0.65, 1.2, abs( rr - laneR ) + wob * 0.7 );',
+    '    float plaza = 1.0 - smoothstep( 5.5, 7.5, rr + wob * 1.8 );',
+    '    float wPath = max( max( spur, spoke ), max( lane, plaza ) ) * ( 0.78 + 0.22 * smoothstep( 0.3, 0.7, d1.b ) );',
+    '    vec3 dirt = vec3( 0.5, 0.42, 0.29 ) * ( 0.8 + d1.b * 0.4 );',
+    '    col = mix( col, dirt, wPath * 0.85 );',
+    '  }',
+    '  diffuseColor.rgb = col;',
+    '}',
+    '#endif'].join('\n');
+  api.dressTerrain = function (mesh, o) {
+    const t0 = now();
+    try {
+      const T = THREE, geo = mesh.geometry, pos = geo.attributes.position, col = geo.attributes.color, nor = geo.attributes.normal, W = 151, WATER = o.water;
+      if (!pos || !col || !nor || pos.count !== W * W || mesh.userData.terrainDressed) return false;
+      const N = pos.count, surf = new Float32Array(N * 4), c = new T.Color(), t = new T.Color();
+      const SAND = new T.Color(0xead2a0), SAND2 = new T.Color(0xdcbf88), DUNE = new T.Color(0xe3cf9a);
+      const RWARM = new T.Color(0x7d6d5a), RCOOL = new T.Color(0x646970), RDARK = new T.Color(0x514a42), RPALE = new T.Color(0x9c9488), MOSS = new T.Color(0x56723a);
+      const SNOW = new T.Color(0xe6edf6), SNOWB = new T.Color(0x98b0dc);
+      let nSand = 0, nRock = 0, nSnow = 0;
+      /* how far (m) each vertex is from the water line: dry vertices beside the water start at their interpolated
+         crossing, then a two-pass chamfer over the grid carries it inland */
+      const SP = 720 / 150, D2 = SP * Math.SQRT2, dist = new Float32Array(N).fill(1e9);
+      for (let i = 0; i < N; i++) {
+        const y = pos.getY(i); if (y < WATER) { dist[i] = 0; continue; }
+        const ix = i % W, iz = (i / W) | 0;
+        for (const j of [ix > 0 ? i - 1 : -1, ix < W - 1 ? i + 1 : -1, iz > 0 ? i - W : -1, iz < W - 1 ? i + W : -1]) {
+          if (j < 0) continue; const yj = pos.getY(j); if (yj < WATER) dist[i] = Math.min(dist[i], SP * (y - WATER) / (y - yj));
+        }
+      }
+      for (let iz = 0; iz < W; iz++) for (let ix = 0; ix < W; ix++) {
+        const i = iz * W + ix; let d = dist[i]; if (d === 0) continue;
+        if (ix > 0) d = Math.min(d, dist[i - 1] + SP);
+        if (iz > 0) { d = Math.min(d, dist[i - W] + SP); if (ix > 0) d = Math.min(d, dist[i - W - 1] + D2); if (ix < W - 1) d = Math.min(d, dist[i - W + 1] + D2); }
+        dist[i] = d;
+      }
+      for (let iz = W - 1; iz >= 0; iz--) for (let ix = W - 1; ix >= 0; ix--) {
+        const i = iz * W + ix; let d = dist[i]; if (d === 0) continue;
+        if (ix < W - 1) d = Math.min(d, dist[i + 1] + SP);
+        if (iz < W - 1) { d = Math.min(d, dist[i + W] + SP); if (ix < W - 1) d = Math.min(d, dist[i + W + 1] + D2); if (ix > 0) d = Math.min(d, dist[i + W - 1] + D2); }
+        dist[i] = d;
+      }
+      for (let i = 0; i < N; i++) {
+        const ix = i % W, iz = (i / W) | 0, x = pos.getX(i), y = pos.getY(i), z = pos.getZ(i);
+        const ny = nor.getY(i), nz = nor.getZ(i), steep = Math.min(1, Math.max(0, (1 - ny) * 2.2));
+        const yn = (ix > 0 ? pos.getY(i - 1) : y) + (ix < W - 1 ? pos.getY(i + 1) : y) + (iz > 0 ? pos.getY(i - W) : y) + (iz < W - 1 ? pos.getY(i + W) : y);
+        const cav = Math.max(-1, Math.min(1, (yn / 4 - y) * 1.2));
+        c.fromArray(col.array, i * 3);
+        const big = 0.5 + 0.5 * Math.sin(x * 0.047 + Math.cos(z * 0.031) * 1.9) * Math.cos(z * 0.043 - Math.sin(x * 0.027) * 1.3);
+        const dune = 1 - smooth(0.05, 0.13, Math.abs(c.r - DUNE.r) + Math.abs(c.g - DUNE.g) + Math.abs(c.b - DUNE.b));
+        let sand = y < WATER ? 1.15 : Math.max(0, 1 - dist[i] / 20) * (1 - smooth(WATER + 4.0, WATER + 7.5, y));   // 1 at the water line, 0.5 ten metres in
+        if (y < WATER + 0.6) { t.copy(SAND).lerp(SAND2, big * 0.6); c.lerp(t, 1 - smooth(WATER - 0.4, WATER + 0.6, y)); }   // under the shallows: sand, for the far view
+        sand = Math.max(sand, dune);
+        const rock = Math.max(smooth(19, 26, y), y > WATER + 1.2 ? smooth(0.34, 0.6, steep) : 0);
+        const snow = smooth(33, 37.5, y) * (1 - 0.65 * smooth(0.4, 0.85, steep));
+        if (rock > 0) {
+          t.copy(RWARM).lerp(RCOOL, big);
+          t.lerp(RDARK, Math.max(0, cav) * 0.5);
+          t.lerp(RPALE, Math.max(0, -cav) * 0.6);
+          t.lerp(MOSS, smooth(0.04, 0.4, cav) * (1 - smooth(27, 32, y)) * 0.75);
+          c.lerp(t, rock * 0.92);
+        }
+        if (snow > 0) {
+          const lit = ny * 0.92 + nz * 0.39, shade = Math.min(1, Math.max(0, 1 - smooth(0.8, 0.995, lit) + Math.max(0, cav) * 0.6));
+          t.copy(SNOW).lerp(SNOWB, 0.12 + shade * 0.78); c.lerp(t, snow);
+        }
+        surf[i * 4] = rock * (1 - snow); surf[i * 4 + 1] = sand * (1 - rock); surf[i * 4 + 2] = snow; surf[i * 4 + 3] = steep;
+        if (sand > 0.5 && y >= WATER) nSand++; if (rock > 0.5) nRock++; if (snow > 0.5) nSnow++;
+        col.array[i * 3] = c.r; col.array[i * 3 + 1] = c.g; col.array[i * 3 + 2] = c.b;
+      }
+      geo.setAttribute('wfrSurf', new T.BufferAttribute(surf, 4)); col.needsUpdate = true;
+      const V = o.village, uni = {
+        wfrDetail: { value: get('groundDetail', o.renderer) }, wfrWater: { value: WATER },
+        wfrVil: { value: new T.Vector4(V ? V.x : 0, V ? V.z : 0, 35.4, 41.4) }, wfrVilOn: { value: V ? 1 : 0 },
+      };
+      const m = mesh.material, st = api.terrainDressed = { sand: nSand, rock: nRock, snow: nSnow, shader: 'pending', ms: 0 };
+      m.onBeforeCompile = function (sh) {
+        const v = sh.vertexShader, f = sh.fragmentShader;
+        if (v.indexOf('#include <common>') < 0 || v.indexOf('#include <begin_vertex>') < 0 || f.indexOf('#include <common>') < 0 || f.indexOf('#include <map_fragment>') < 0 || f.indexOf('#include <color_fragment>') < 0) { st.shader = 'skipped (chunks not found)'; return; }
+        Object.assign(sh.uniforms, uni);
+        sh.vertexShader = v.replace('#include <common>', '#include <common>\nattribute vec4 wfrSurf;\nvarying vec4 vWfrSurf;\nvarying vec3 vWfrPos;')
+          .replace('#include <begin_vertex>', '#include <begin_vertex>\nvWfrSurf = wfrSurf;\nvWfrPos = ( modelMatrix * vec4( transformed, 1.0 ) ).xyz;');
+        sh.fragmentShader = f.replace('#include <common>', '#include <common>\nuniform sampler2D wfrDetail;\nuniform float wfrWater;\nuniform vec4 wfrVil;\nuniform float wfrVilOn;\nvarying vec4 vWfrSurf;\nvarying vec3 vWfrPos;')
+          .replace('#include <map_fragment>', GROUND_MAP).replace('#include <color_fragment>', '#include <color_fragment>\n' + GROUND_FRAG);
+        st.shader = 'on';
+      };
+      m.customProgramCacheKey = function () { return 'wfr-ground-578b'; };
+      m.needsUpdate = true; mesh.userData.terrainDressed = true; st.ms = Math.round((now() - t0) * 10) / 10;
+      return true;
+    } catch (e) { api.terrainDressed = { error: String(e && e.message || e) }; return false; }
+  };
+
+  /* THE CLOUDS: each faceted puff becomes a round soft one - a smooth ball and four smaller lobes on its shoulders,
+     a flatter underside, white on top and a soft blue-grey beneath (vertex colours on the cloud's own material).
+     The radius each puff was made with is kept; its place and its cloud's place are not touched. */
+  function puffGeometry(R, k) {
+    const T = THREE, parts = [new T.IcosahedronGeometry(R, 2)];
+    const h = (n) => fract(Math.sin(n * 127.1 + k * 311.7) * 43758.5453);
+    for (let j = 0; j < 4; j++) {
+      const a = j * 1.5708 + h(j) * 0.9, el = 0.2 + h(j + 9) * 0.35, s = 0.52 + h(j + 17) * 0.2, gj = new T.IcosahedronGeometry(R * s, 1);
+      gj.translate(Math.cos(a) * R * 0.6, el * R, Math.sin(a) * R * 0.42); parts.push(gj);
+    }
+    let n = 0; parts.forEach(function (gp) { n += gp.attributes.position.count; });
+    const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), col = new Float32Array(n * 3), base = -0.28 * R, top = 0.95 * R;
+    let o = 0;
+    parts.forEach(function (gp) {
+      const p = gp.attributes.position, q = gp.attributes.normal;
+      for (let v = 0; v < p.count; v++, o++) {
+        let y = p.getY(v); if (y < base) y = base + (y - base) * 0.3;
+        pos[o * 3] = p.getX(v); pos[o * 3 + 1] = y; pos[o * 3 + 2] = p.getZ(v);
+        const bx = q.getX(v) * 0.7, by = q.getY(v) * 0.7 + 0.6, bz = q.getZ(v) * 0.7, bl = Math.hypot(bx, by, bz) || 1;
+        nor[o * 3] = bx / bl; nor[o * 3 + 1] = by / bl; nor[o * 3 + 2] = bz / bl;
+        const t = smooth(base - 0.1 * R, top, y);
+        col[o * 3] = 0.88 + 0.12 * t; col[o * 3 + 1] = 0.91 + 0.09 * t; col[o * 3 + 2] = 0.96 + 0.04 * t;
+      }
+      gp.dispose();
+    });
+    const geo = new T.BufferGeometry();
+    geo.setAttribute('position', new T.BufferAttribute(pos, 3)); geo.setAttribute('normal', new T.BufferAttribute(nor, 3)); geo.setAttribute('color', new T.BufferAttribute(col, 3));
+    geo.computeBoundingSphere();
+    return geo;
+  }
+  api.dressClouds = function (clouds) {
+    const t0 = now();
+    try {
+      let n = 0;
+      clouds.forEach(function (cl, ci) {
+        const m = cl.children[0] && cl.children[0].material; if (!m) return;
+        if (!cl.children.every(function (b) { return b.material === m && b.geometry && b.geometry.parameters && b.geometry.parameters.radius; })) return;   // all or none: the shared material turns on vertex colours only when every puff carries them
+        cl.children.forEach(function (b, bi) { const old = b.geometry; b.geometry = puffGeometry(old.parameters.radius, ci * 7 + bi); old.dispose(); n++; });
+        m.vertexColors = true; m.needsUpdate = true;
+      });
+      api.cloudsDressed = { puffs: n, ms: Math.round((now() - t0) * 10) / 10 };
+      return true;
+    } catch (e) { api.cloudsDressed = { error: String(e && e.message || e) }; return false; }
+  };
+
+  /* THE SKY RING: its alphaMap repainted (still fully opaque - black where there is no cloud, the bench holds that)
+     with cumulus - round lobes on a level soft base - and a few high thin wisps; the ring itself gets six height rows
+     with a blue-grey underside and white tops (vertex colours; the night/dusk tint still multiplies over them). */
+  api.dressSky = function (ring, cc, ct) {
+    const t0 = now();
+    try {
+      const T = THREE, W = cc.width, Hc = cc.height, g = cc.getContext('2d'), r = rng(579060), SQ = 3.4;
+      g.globalCompositeOperation = 'source-over'; g.fillStyle = '#000'; g.fillRect(0, 0, W, Hc);
+      for (let k = 0; k < 10; k++) {
+        const x = r() * W, y = 18 + r() * 30, w = 30 + r() * 60, a = 0.1 + r() * 0.12;
+        for (const ox of [-W, 0, W]) { g.save(); g.translate(x + ox, y); g.scale(1, 0.18 * SQ); const gr = g.createRadialGradient(0, 0, 0, 0, 0, w); gr.addColorStop(0, 'rgba(255,255,255,' + a + ')'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.beginPath(); g.arc(0, 0, w, 0, TAU); g.fill(); g.restore(); }
+      }
+      const tmp = canvas(160, Hc), tg = ctx(tmp);
+      for (let k = 0; k < 22; k++) {
+        const cx = r() * W, base = 104 + r() * 14, size = 0.6 + r() * 0.8, nl = 5 + ((r() * 6) | 0), lobes = [];
+        for (let j = 0; j < nl; j++) { const tt = j / (nl - 1), rx = (4 + r() * 5) * size * (1 - 0.5 * Math.abs(tt - 0.5)); lobes.push([(tt - 0.5) * 34 * size + (r() - 0.5) * 4, base - rx * SQ * (0.55 + r() * 0.5), rx]); }
+        for (let j = 0; j < nl + 2; j++) { const tt = r(), rx = (2 + r() * 2.6) * size * (1 - 0.6 * Math.abs(tt - 0.5)); lobes.push([(tt - 0.5) * 30 * size, base - (7 + r() * 7) * size * SQ * (1 - 0.7 * Math.abs(tt - 0.5)) - rx * SQ * 0.3, rx]); }   // small lobes on the crown
+        tg.globalCompositeOperation = 'source-over'; tg.clearRect(0, 0, 160, Hc);
+        for (const [lx, ly, rx] of lobes) { tg.save(); tg.translate(80 + lx, ly); tg.scale(1, SQ); const gr = tg.createRadialGradient(0, 0, 0, 0, 0, rx); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.68, 'rgba(255,255,255,0.9)'); gr.addColorStop(1, 'rgba(255,255,255,0)'); tg.fillStyle = gr; tg.beginPath(); tg.arc(0, 0, rx, 0, TAU); tg.fill(); tg.restore(); }
+        tg.globalCompositeOperation = 'destination-out';
+        const bg = tg.createLinearGradient(0, base - 6, 0, base + 4); bg.addColorStop(0, 'rgba(0,0,0,0)'); bg.addColorStop(1, 'rgba(0,0,0,1)'); tg.fillStyle = bg; tg.fillRect(0, base - 6, 160, Hc);
+        tg.globalCompositeOperation = 'source-over';
+        for (const ox of [-W, 0, W]) g.drawImage(tmp, cx - 80 + ox, 0);
+      }
+      ct.needsUpdate = true;
+      const geo = new T.CylinderGeometry(780, 780, 150, 48, 6, true), p = geo.attributes.position, colr = new Float32Array(p.count * 3);
+      for (let i = 0; i < p.count; i++) { const v = (p.getY(i) + 75) / 150, tt = smooth(0.08, 0.5, v); colr[i * 3] = 0.85 + 0.15 * tt; colr[i * 3 + 1] = 0.88 + 0.12 * tt; colr[i * 3 + 2] = 0.93 + 0.07 * tt; }
+      geo.setAttribute('color', new T.BufferAttribute(colr, 3));
+      ring.geometry.dispose(); ring.geometry = geo; ring.material.vertexColors = true; ring.material.needsUpdate = true;
+      api.skyDressed = { ring: true, ms: Math.round((now() - t0) * 10) / 10 };
+      return true;
+    } catch (e) { api.skyDressed = { error: String(e && e.message || e) }; return false; }
+  };
+  /* the dome's ramp, eased: the zenith holds its deep blue longer and the light gathers near the horizon. The five
+     stops (and so the fog = col[4] and the background = col[2] the bench reads) are the game's own, unchanged. */
+  let SKY_A = null, SKY_B = null;
+  api.skyStops = function (gr, col) {
+    if (!SKY_A) { SKY_A = new THREE.Color(); SKY_B = new THREE.Color(); }
+    const mix = (i, j, f) => '#' + SKY_A.set(col[i]).lerp(SKY_B.set(col[j]), f).getHexString();
+    gr.addColorStop(0, col[0]); gr.addColorStop(0.2, mix(0, 1, 0.3)); gr.addColorStop(0.32, col[1]); gr.addColorStop(0.42, mix(1, 2, 0.42)); gr.addColorStop(0.47, col[2]);
+    gr.addColorStop(0.49, mix(2, 3, 0.5)); gr.addColorStop(0.5, col[3]); gr.addColorStop(0.51, mix(3, 4, 0.55)); gr.addColorStop(0.53, col[4]); gr.addColorStop(1, col[4]);
+  };
+
   return api;
 })();
