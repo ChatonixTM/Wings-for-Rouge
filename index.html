@@ -372,21 +372,21 @@ body.rhythmOn .hud{visibility:hidden}   /* the song has the whole screen: the le
 <div id="fade" aria-hidden="true"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="textures.js?v=b379349ea090"></script>
-<script src="birds.js?v=b379349ea090"></script>
-<script src="humans.js?v=b379349ea090"></script>
-<script src="folk.js?v=b379349ea090"></script>
-<script src="trees.js?v=b379349ea090"></script>
-<script src="treehouses.js?v=b379349ea090"></script>
-<script src="cabins.js?v=b379349ea090"></script>
-<script src="cave.js?v=b379349ea090"></script>
-<script src="sounds.js?v=b379349ea090"></script>
-<script src="music.js?v=b379349ea090"></script>
-<script src="rhythm.js?v=b379349ea090"></script>
-<script src="pictograms.js?v=b379349ea090"></script>
-<script src="hedgehogs.js?v=b379349ea090"></script>
-<script src="opening.js?v=b379349ea090"></script>
-<script src="skypiea.js?v=b379349ea090"></script>
+<script src="textures.js?v=1ab23f4f8b14"></script>
+<script src="birds.js?v=1ab23f4f8b14"></script>
+<script src="humans.js?v=1ab23f4f8b14"></script>
+<script src="folk.js?v=1ab23f4f8b14"></script>
+<script src="trees.js?v=1ab23f4f8b14"></script>
+<script src="treehouses.js?v=1ab23f4f8b14"></script>
+<script src="cabins.js?v=1ab23f4f8b14"></script>
+<script src="cave.js?v=1ab23f4f8b14"></script>
+<script src="sounds.js?v=1ab23f4f8b14"></script>
+<script src="music.js?v=1ab23f4f8b14"></script>
+<script src="rhythm.js?v=1ab23f4f8b14"></script>
+<script src="pictograms.js?v=1ab23f4f8b14"></script>
+<script src="hedgehogs.js?v=1ab23f4f8b14"></script>
+<script src="opening.js?v=1ab23f4f8b14"></script>
+<script src="skypiea.js?v=1ab23f4f8b14"></script>
 <script>
 (() => {
 'use strict';
@@ -1383,6 +1383,7 @@ function drawCards() {
 }
 drawCards();
 $('go').textContent = S.storySeen ? 'Fly' : 'Begin';
+const KICKER0 = $('kicker').textContent;   // 608: the title's own line, put back when Main menu returns in place
 $('rewatch').hidden = !S.storySeen;
 $('go').addEventListener('click', () => {
   audio();
@@ -1433,7 +1434,12 @@ function pickFile(n) {
 }
 $('newGame').addEventListener('click', () => { fileMode = fileMode === 'new' ? 'play' : 'new'; fileArmed = 0; drawFiles(); });
 $('saveBtn').addEventListener('click', () => { save(); toast('Saved to File ' + ACTIVE + '.', 2200); chirp(); });
-$('toTitle').addEventListener('click', () => { save(); cineSkipNext(); location.reload(); });   // back out to the title: the island flight and the song
+$('toTitle').addEventListener('click', () => { save(); toTitleInPlace(); });   // 608: back to the title IN PLACE, no reload, so the song keeps playing
+function toTitleInPlace() {   // the start screen as it is on load, with her game in memory and saved: Fly resumes exactly where she was
+  S.mode = 'menu'; $('kicker').textContent = KICKER0; $('pauseRow').hidden = true; $('files').hidden = false; $('newGame').hidden = false;
+  $('go').textContent = S.storySeen ? 'Fly' : 'Begin'; $('ui').hidden = true; $('start').hidden = false; fileMode = 'play'; fileArmed = 0; drawFiles(); drawCards();
+  if (window.WFR_MUSIC && audio() && !WFR_MUSIC.playing) music('home');
+}
 drawFiles();
 $('start').addEventListener('click', (e) => { if (e.target.closest('#go, #rewatch')) return; if (S.mode === 'menu' || S.mode === 'paused') music('home'); });
 
@@ -3372,7 +3378,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build b379349ea090): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build 1ab23f4f8b14): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>

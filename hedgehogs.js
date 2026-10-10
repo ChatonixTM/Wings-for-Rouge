@@ -40,7 +40,7 @@
   /* ── the names (Marth may rename them: change them here and nowhere else) ── */
   const NAMES = { father: 'Bramble', mother: 'Moss', son: 'Pip' };
   /* ── board 542: the book's pages open ONLY once Marth has seen the drawings. Flip to true when he says so. ── */
-  const BOOK_PAGES_OK = false;
+  const BOOK_PAGES_OK = true;   // Marth, Oct 10 ~00:15: "book is ok-ed" (he saw the redrawn pages: Hades follows Death, Jesus without wrinkles at regular scale)
 
   const DUNES = { x: 40, z: -215, r: 45 };          // BRIEF_528_530 section C; checked against the island (H 8.7 at the centre)
   const WATER = 1.2;                                // the game's sea level (the bench checks it against landmarks().WATER)

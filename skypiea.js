@@ -74,38 +74,38 @@ window.WFR_SKY = (function () {
      'birds' (the six silhouettes). {name} = the game's name. Every quote is a real recorded line; its source is beside it (file:line, the
      files in C:/Chatonix/Chatonix-workshop). Marth's are typo-fixed per his ruling ("fix my clear errors in typing"), his voice kept. ---------- */
   var CREDITS = [
-    ['title', 'Wings for {name}'],   // DRAFT for Marth
-    ['line', 'Made by Marth, for {name}'],   // DRAFT for Marth
-    ['line', 'Happy birthday, {name} \u2014 October 10, 2026'],   // DRAFT for Marth
+    ['title', 'Wings for {name}'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts")
+    ['line', 'Made by Marth, for {name}'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts")
+    ['line', 'Happy birthday, {name} \u2014 October 10, 2026'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts")
     ['gap', ''],
-    ['line', 'Story, design and every idea: Marth'],   // DRAFT for Marth
-    ['line', 'Built with Susano\'o and the crew'],   // DRAFT for Marth
+    ['line', 'Story, design and every idea: Marth'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts")
+    ['line', 'Built with Susano\'o and the crew'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts")
     ['gap', ''],
-    ['line', 'In loving memory of ' + GRANDMA],   // DRAFT for Marth (the label constant, never her name)
+    ['line', 'In loving memory of ' + GRANDMA],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") (the label constant, never her name)
     ['gap', ''],
-    ['line', 'Island song: original, composed for this game'],   // DRAFT for Marth
-    ['line', 'Happy Birthday to You (the melody): public domain'],   // DRAFT for Marth (song() in the html plays its first two lines)
-    ['line', 'three.js (MIT License)'],   // DRAFT for Marth (r128, cdnjs: the only third-party code the game loads)
-    ['line', 'Fredoka and Nunito typefaces, via Google Fonts (SIL Open Font License)'],   // DRAFT for Marth (the only third-party files besides three.js)
+    ['line', 'Island song: original, composed for this game'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts")
+    ['line', 'Happy Birthday to You (the melody): public domain'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") (song() in the html plays its first two lines)
+    ['line', 'three.js (MIT License)'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") (r128, cdnjs: the only third-party code the game loads)
+    ['line', 'Fredoka and Nunito typefaces, via Google Fonts (SIL Open Font License)'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") (the only third-party files besides three.js)
     ['gap', ''],
-    ['head', 'In their own words'],   // DRAFT for Marth (Marth ~17:45: "add any and all words i said and what you and the crew said too")
-    ['quote', 'A buncha different birds, namely an eagle. She said it was the best but had weird legs.', 'Marth'],   // DRAFT for Marth - SUSANOO_ORDER_BOARD.md:534 (board 517)
-    ['quote', 'Make the chicks like Chao in Sonic Adventure 2 Battle.', 'Marth'],   // DRAFT for Marth - SUSANOO_ORDER_BOARD.md:538 (board 521)
-    ['quote', 'The camera is phenomenal tho... I want the gameplay to feel nostalgic but polished.', 'Marth'],   // DRAFT for Marth - SUSANOO_ORDER_BOARD.md:548 (board 531)
-    ['quote', 'When you reach a certain point the bird should flap its wings and dismount from the sky.', 'Marth'],   // DRAFT for Marth - SUSANOO_ORDER_BOARD.md:552 (board 535)
-    ['quote', 'I love the texture pack and the shadows. But I know we can do even better.', 'Marth'],   // DRAFT for Marth - SUSANOO_ORDER_BOARD.md:558 (board 541)
-    ['quote', 'Hm, the music is better than I expected, good work, I enjoy it.', 'Marth'],   // DRAFT for Marth - gifts/rouge-birthday-2026/BRIEF_547_548_OWL_DOVE_MUSIC_2026-10-09.md:5
-    ['quote', 'Good stuff with the chick creation.', 'Marth'],   // DRAFT for Marth - SUSANOO_ORDER_BOARD.md:567 (board 550)
-    ['quote', 'The game was made into a home-screen app that keeps her game when she leaves.', 'Hinata'],   // DRAFT for Marth - gifts/rouge-birthday-2026/DIARY_2026-10-09.md:22 (Hinata's diary, 09:53 entry)
-    ['quote', 'I will.', 'Hinata'],   // DRAFT for Marth - gifts/rouge-birthday-2026/DIARY_2026-10-09.md:220 (her answer to "have hinata keep logging this... keeep it up")
-    ['quote', 'The nest quest can\'t be lost.', 'Stark'],   // DRAFT for Marth - gifts/rouge-birthday-2026/ASSAY_2026-10-09/02-stark-softlocks.md:19 (Stark's assay, "What works")
-    ['quote', 'An original phone flight game: one island, a nest and an egg.', 'Fern'],   // DRAFT for Marth - gifts/rouge-birthday-2026/ASSAY_2026-10-09/01-fern-orders.md:14 (Fern's assay, board 517)
-    ['quote', 'A phone game is tested by a thumb.', 'Susano\'o'],   // DRAFT for Marth - THE_CREW.md:1079 ("a phone game is tested by a thumb", capital A ours)
+    ['head', 'In their own words'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") (Marth ~17:45: "add any and all words i said and what you and the crew said too")
+    ['quote', 'A buncha different birds, namely an eagle. She said it was the best but had weird legs.', 'Marth'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") - SUSANOO_ORDER_BOARD.md:534 (board 517)
+    ['quote', 'Make the chicks like Chao in Sonic Adventure 2 Battle.', 'Marth'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") - SUSANOO_ORDER_BOARD.md:538 (board 521)
+    ['quote', 'The camera is phenomenal tho... I want the gameplay to feel nostalgic but polished.', 'Marth'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") - SUSANOO_ORDER_BOARD.md:548 (board 531)
+    ['quote', 'When you reach a certain point the bird should flap its wings and dismount from the sky.', 'Marth'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") - SUSANOO_ORDER_BOARD.md:552 (board 535)
+    ['quote', 'I love the texture pack and the shadows. But I know we can do even better.', 'Marth'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") - SUSANOO_ORDER_BOARD.md:558 (board 541)
+    ['quote', 'Hm, the music is better than I expected, good work, I enjoy it.', 'Marth'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") - gifts/rouge-birthday-2026/BRIEF_547_548_OWL_DOVE_MUSIC_2026-10-09.md:5
+    ['quote', 'Good stuff with the chick creation.', 'Marth'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") - SUSANOO_ORDER_BOARD.md:567 (board 550)
+    ['quote', 'The game was made into a home-screen app that keeps her game when she leaves.', 'Hinata'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") - gifts/rouge-birthday-2026/DIARY_2026-10-09.md:22 (Hinata's diary, 09:53 entry)
+    ['quote', 'I will.', 'Hinata'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") - gifts/rouge-birthday-2026/DIARY_2026-10-09.md:220 (her answer to "have hinata keep logging this... keeep it up")
+    ['quote', 'The nest quest can\'t be lost.', 'Stark'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") - gifts/rouge-birthday-2026/ASSAY_2026-10-09/02-stark-softlocks.md:19 (Stark's assay, "What works")
+    ['quote', 'An original phone flight game: one island, a nest and an egg.', 'Fern'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") - gifts/rouge-birthday-2026/ASSAY_2026-10-09/01-fern-orders.md:14 (Fern's assay, board 517)
+    ['quote', 'A phone game is tested by a thumb.', 'Susano\'o'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") - THE_CREW.md:1079 ("a phone game is tested by a thumb", capital A ours)
     ['gap', ''],
-    ['line', 'Hinata and Stark were modelled after {name}.'],   // DRAFT for Marth (Marth ~17:47: "no i meant hinata and stark were modelled after rouge hahahah")
+    ['line', 'Hinata and Stark were modelled after {name}.'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") (Marth ~17:47: "no i meant hinata and stark were modelled after rouge hahahah")
     ['gap', ''],
     ['birds', ''],
-    ['title', 'Thank you for playing.'],   // DRAFT for Marth
+    ['title', 'Thank you for playing.'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts")
   ];
 
   /* ---------- numbers (design, not measurement) ---------- */
