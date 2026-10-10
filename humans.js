@@ -44,7 +44,7 @@ window.WFR_HUMANS = (function () {
     { torso: 'm', sleeves: 'long', hair: 'cap', iris: 0x4a3220, h: 1.03, w: 1.08, shirtTex: 'knit', cap: 0x5e5244 },
     // Cyril — shirt and leather waistcoat, close crop, a trimmed beard
     { torso: 'm', sleeves: 'long', hair: 'crop', beard: true, vest: 0x6b4a2e, iris: 0x2e1d12, h: 1.06, w: 1.03, shirtTex: 'linen' },
-    // Dina — short sleeves, trousers, a ponytail
+    // Go (was Dina, board 603) — short sleeves, trousers, a ponytail; a warm chestnut brunette (her hair colour is HAIR[3] in the html)
     { torso: 'f', sleeves: 'short', hair: 'pony', iris: 0x4d6a3a, h: 0.97, w: 0.95, shirtTex: 'linen' },
     // Eli — short sleeves and a head of curls
     { torso: 'm', sleeves: 'short', hair: 'curls', iris: 0x2b1a10, h: 1.02, w: 1.0, shirtTex: 'knit' },

@@ -60,7 +60,8 @@ window.WFR_SKY = (function () {
     yes: 'Yes', notYet: 'Not yet',   // the two answers (Marth's decision via Su: Rouge's own tap)
     sing: 'Sing ♪',             // the game's own Sing label
     ok: 'OK', wake: 'Continue',      // OURS (closing, allowed by Marth ~16:20)
-    skip: 'Skip',                    // the credits' skip button (his coordinator's order, ~17:40)
+    rew: 'Rewind', pause: 'Pause', play: 'Play', ff: 'Fast forward',   // the credits' controls (596, Marth ~22:00: "a proper fastforward icon ... and a reverse button")
+    done: 'Done',                    // the end of the credits: she wakes in her nest (596)
     glint: 'Something glints above the highest peak…',   // OURS (closing, allowed by Marth ~16:20)
     climb: 'Hold Flap to climb faster.',   // OURS (closing, allowed by Marth ~16:20)
     lift: 'The wind carries you up, up through the clouds…',   // OURS (closing, allowed by Marth ~16:20)
@@ -114,7 +115,7 @@ window.WFR_SKY = (function () {
   var RIDE = 0.05, RIDE_HELD = 0.085;   // helix fraction per second: ~20 s, ~12 s holding Flap
   var LIFT_S = 5.5, GLIDE_S = 2.2, LINGER_S = 7, FADE_S = 6, FALL_S = 3, PAN_S = 4, V_S = 6.6, DARK_S = 2;
   var DOT2 = 1.2, DOT3 = 2.4, WAKE_BTN = 3.9, WAKE_S = 1.4, TYPE_CPS = 28;
-  var CREDITS_S = 52, CREDITS_SCROLL = 44, CREDITS_OUT = 1.6, CREDITS_GUARD = 0.8;   // ~44 s of scroll, a hold on the last line, a fade; a tap in the first 0.8 s never skips
+  var CREDITS_S = 52, CREDITS_SCROLL = 44, CREDITS_OUT = 1.6, CR_FAST = 3;   // ~44 s of scroll, a hold on the last line, a fade; the controls run x3 forward or back (596)   // ~44 s of scroll, a hold on the last line, a fade; a tap in the first 0.8 s never skips
 
   var CSS = '#skyWhite{position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:4}' +
     '#skyFreeze{position:fixed;inset:0;z-index:28;display:grid;place-items:center;padding:24px;background:radial-gradient(ellipse at center,rgba(5,8,18,.55) 0%,rgba(5,8,18,.9) 75%);touch-action:none}' +
@@ -135,7 +136,10 @@ window.WFR_SKY = (function () {
     '#skyCredits .roll p.q small{display:block;margin-top:2px;font-size:14px;opacity:.75;font-style:italic}#skyCredits .roll p.head{font-size:13px;letter-spacing:.2em;text-transform:uppercase;opacity:.7}' +
     '#skyCredits .roll .gap{height:28px}#skyCredits .roll svg{width:min(340px,86vw);height:auto}' +
     '#skyCredits .drift{position:absolute;left:0;top:0;width:34px;height:20px;will-change:transform}' +
-    '#skySkip{position:absolute;right:calc(env(safe-area-inset-right,0px) + 14px);top:calc(env(safe-area-inset-top,0px) + 12px);min-height:44px;min-width:72px;border-radius:999px;background:rgba(10,12,24,.78);color:#f6ecd6;font-size:15px;font-weight:600;border:1px solid rgba(246,236,214,.35)}';
+    '.skyCtl{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 18px);transform:translateX(-50%);display:flex;gap:14px;align-items:center;z-index:2}' +
+    '.skyCtl button{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;background:rgba(10,12,24,.72);border:1px solid rgba(246,236,214,.35);color:#f6ecd6;padding:0;touch-action:none}' +
+    '.skyCtl button svg{width:24px;height:24px;fill:currentColor}.skyCtl button.on{background:#f6ecd6;color:#1c2234}' +
+    '#skyDone{position:absolute;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 86px);transform:translateX(-50%);min-height:48px;min-width:120px;border-radius:999px;background:#f6ecd6;color:#1c2234;font-size:17px;font-weight:600;z-index:2;box-shadow:0 6px 18px rgba(0,0,0,.35)}';
 
   function create(THREE, scene, api) {
     var S = api.S, $ = api.$, camera = api.camera;
@@ -154,6 +158,9 @@ window.WFR_SKY = (function () {
     var Gpos = O.clone().addScaledVector(back, 7); Gpos.y = RISE;           // Grandma's feet
     var Ppos = O.clone().addScaledVector(back, 4.4); Ppos.y = FLOOR;        // Rouge's feet
     var th0 = Math.atan2(-PK.z, -PK.x), Y0 = PK.y + 30;
+    var HIM = new THREE.Vector3(PK.x * 0.55, 128, PK.z * 0.55);                // 593: where HE flies in the Yes pan: over the island, under the cloud layer
+    var RIM = O.clone().addScaledVector(back, -27); RIM.y = FLOOR + 1.2;      // the shelf's rim on the island side: where the camera peers down
+    var BASE_FOV = camera.fov, GAP_FOV = 12;
     function helix(u, out) { var th = th0 + u * HELIX_TURNS * Math.PI * 2; return (out || new THREE.Vector3()).set(PK.x + Math.cos(th) * HELIX_R, Y0 + u * (HELIX_TOP - Y0), PK.z + Math.sin(th) * HELIX_R); }
 
     /* ---------- DOM (all made here; every control is a pointerdown, every button at least 44 px) ---------- */
@@ -165,7 +172,12 @@ window.WFR_SKY = (function () {
     var dark = el('div', { id: 'skyDark', 'aria-live': 'polite' }), card = el('div', { class: 'card', hidden: '' }, dark);
     var cardText = el('div', { id: 'skyCardText' }, card), wakeBtn = el('button', { type: 'button', id: 'skyWake', text: UI.wake, hidden: '' }, card);
     var creditsEl = el('div', { id: 'skyCredits', hidden: '', 'aria-label': 'End credits' }), dawnEl = el('div', { class: 'dawn' }, creditsEl), roll = el('div', { class: 'roll', id: 'skyRoll' }, creditsEl);
-    var skipBtn = el('button', { type: 'button', id: 'skySkip', text: UI.skip }, creditsEl), drifters = [];
+    var ICON = { rew: '<svg viewBox="0 0 24 24"><path d="M11 6 L2 12 L11 18 Z M21 6 L12 12 L21 18 Z"/></svg>', ff: '<svg viewBox="0 0 24 24"><path d="M3 6 L12 12 L3 18 Z M13 6 L22 12 L13 18 Z"/></svg>',
+      pause: '<svg viewBox="0 0 24 24"><path d="M6 5 H10 V19 H6 Z M14 5 H18 V19 H14 Z"/></svg>', play: '<svg viewBox="0 0 24 24"><path d="M7 5 L19 12 L7 19 Z"/></svg>' };
+    var ctl = el('div', { class: 'skyCtl', id: 'skyCtl' }, creditsEl);
+    var rewBtn = el('button', { type: 'button', id: 'skyRew', 'aria-label': UI.rew }, ctl), playBtn = el('button', { type: 'button', id: 'skyPlay', 'aria-label': UI.pause }, ctl), ffBtn = el('button', { type: 'button', id: 'skyFf', 'aria-label': UI.ff }, ctl);
+    rewBtn.innerHTML = ICON.rew; ffBtn.innerHTML = ICON.ff; playBtn.innerHTML = ICON.pause;
+    var doneBtn = el('button', { type: 'button', id: 'skyDone', text: UI.done, hidden: '' }, creditsEl), drifters = [];
     var uiLayer = $('ui') || document.body;
     var choice = el('div', { class: 'skyChoice', id: 'skyChoice', hidden: '' }, uiLayer);
     var yesBtn = el('button', { type: 'button', id: 'skyYes', text: UI.yes }, choice), notBtn = el('button', { type: 'button', id: 'skyNotYet', class: 'alt', text: UI.notYet }, choice);
@@ -314,8 +326,10 @@ window.WFR_SKY = (function () {
         b.position.set(c.x + Math.cos(a) * 4, c.y + Math.sin(t * 1.2) * 0.4, c.z + Math.sin(a) * 4);
         if (st.focus === 'birds') { b.rotation.set(0, Math.atan2(camera.position.x - b.position.x, camera.position.z - b.position.z), Math.sin(t * 3) * 0.12); flap(b, 3, 0.35, t); }   // she turns to the camera, a slow happy waggle ("the owl smiling")
         else { b.rotation.set(0, Math.atan2(Math.sin(a), -Math.cos(a)) + Math.PI, 0.25); flap(b, 4, 0.25, t); } }
-      if ((b = flock.by.marth)) { ps = 1.3 * b.userData.size; b.scale.setScalar(ps); a = t * 0.45; c = O.clone().addScaledVector(side, -24).addScaledVector(back, 4); c.y = FLOOR + 6;   // HIM: off to her other side, the open sky behind him (never the robed rim)
-        b.position.set(c.x + Math.cos(a) * 10, c.y + Math.sin(t * 2) * 0.5, c.z + Math.sin(a) * 10); b.rotation.set(0, Math.atan2(-Math.sin(a), Math.cos(a)), -0.3); flap(b, 16, 0.8, t); }
+      if ((b = flock.by.marth)) {   // 593 (Marth ~22:00: "you put me (the other bird) flying around in heaven. lol nah"): HE is alive - never on or near the
+        // shelf. He flies far BELOW, over the island, under the cloud ceiling (y ~128); the camera looks down at him through a gap in the clouds
+        ps = 2.4 * b.userData.size; b.scale.setScalar(ps); a = t * 0.5;
+        b.position.set(HIM.x + Math.cos(a) * 7, HIM.y + Math.sin(t * 2) * 0.6, HIM.z + Math.sin(a) * 7); b.rotation.set(0, Math.atan2(-Math.sin(a), Math.cos(a)), -0.3); flap(b, 16, 0.8, t); }
     }
 
     /* ---------- the temple placeholder (546): rock, not cloud; no green gem; its door shut ---------- */
@@ -384,6 +398,7 @@ window.WFR_SKY = (function () {
       st.beat = 'fade'; go('fade'); api.music(null); if (flock) flock.g.visible = false;
     }
     function freezeNow() {
+      closeGap(); lensReset();
       dropSky(); dropDiamonds(); st.beat = 'freeze'; go('freeze'); S.mode = 'event'; controls(false); uiLayer.hidden = true;
       if (api.canvas) api.canvas.style.filter = 'grayscale(.5)';
       st.typed = 0; msgP.textContent = ''; okBtn.hidden = true; freeze.hidden = false;
@@ -419,6 +434,8 @@ window.WFR_SKY = (function () {
       return '<svg viewBox="0 0 310 56" role="img" aria-label="Six birds" fill="currentColor" style="color:#f6ecd6">' + body(22, true, 7, 0) + body(74, true, 7, 2) + body(124, false, 6, 4) + body(172, false, 6, 1) + owl + eagle + '</svg>';
     })();
     var DRIFT_SVG = '<svg viewBox="0 0 34 20" fill="#f6ecd6" opacity=".55"><path d="M0 8 Q8 0 17 8 Q26 0 34 8 Q26 5 17 12 Q8 5 0 8 Z"/></svg>';
+    /* Marth ~23:10: "in the credits when the birds are flying away ADD rouge plsss" - HER bird flies with them: cardinal red, a crest, her name under it */
+    var ROUGE_SVG = '<svg viewBox="0 0 44 30" width="44" height="30"><path fill="#d0263a" d="M2 14 Q11 4 22 14 Q33 4 42 14 Q33 10 22 19 Q11 10 2 14 Z"/><path fill="#d0263a" d="M19 12 Q22 4 26 9 Q24 10 22 13 Z"/><path fill="#f28c28" d="M25 12 L29 13 L25 14 Z"/></svg>';
     function startCredits() {
       if (st.ph !== 'card' || wakeBtn.hidden) return;
       st.credits = (st.credits || 0) + 1; st.beat = 'credits'; go('credits'); dropFlock(); card.hidden = true;
@@ -429,17 +446,34 @@ window.WFR_SKY = (function () {
         el(r[0] === 'title' ? 'h2' : 'p', { text: name(r[1]), class: r[0] === 'head' ? 'head' : '' }, roll);
       });
       drifters.forEach(function (d) { d.remove(); }); drifters = [0, 1, 2].map(function () { var d = el('div', { class: 'drift', 'aria-hidden': 'true' }, creditsEl); d.innerHTML = DRIFT_SVG; return d; });
+      var rd = el('div', { class: 'drift rouge', id: 'skyRougeBird', 'aria-label': name('{name}'), style: 'width:44px;height:46px;text-align:center' }, creditsEl); rd.innerHTML = ROUGE_SVG + '<div style="font:600 11px Georgia,serif;color:#ffd9de;margin-top:-2px">' + name('{name}') + '</div>'; drifters.push(rd);   // her bird, with the flock
       creditsEl.style.opacity = '1'; dawnEl.style.opacity = '0'; roll.style.transform = 'translateY(' + innerHeight + 'px)'; creditsEl.hidden = false;
+      st.cr = { pos: 0, rate: 1, out: -1 }; doneBtn.hidden = true; ctlShow();
       if (window.WFR_MUSIC && api.audio()) window.WFR_MUSIC.play({ variant: 'legend', fadeIn: 4 });   // the island's own song, softly (the harp)
     }
-    function skipCredits() { if (st.ph === 'credits' && st.t >= CREDITS_GUARD && st.t < CREDITS_S) st.t = CREDITS_S; }
-    function creditsTick(t) {
-      var vh = innerHeight, h = roll.offsetHeight, last = roll.lastElementChild, endY = last ? vh / 2 - (last.offsetTop + last.offsetHeight / 2) : -h;
-      var k = Math.min(1, t / CREDITS_SCROLL);
+    /* 596 (Marth ~22:00: "dont make the credits tap to skip. make a proper fastforward icon that fast forwards the credits (and music) and a
+       reverse button"): no tap skips them. Three buttons, each a toggle a thumb can work: REWIND (x3 backwards), PAUSE / PLAY, FAST
+       FORWARD (x3). The song cannot change tempo (music.js has no tempo control), so it keeps playing at its own pace: full while the
+       credits run forward, softer while paused or rewinding. They still end on their own after the last line; "Done" appears there. */
+    function ctlShow() {
+      var r = st.cr ? st.cr.rate : 1;
+      rewBtn.classList.toggle('on', r < 0); ffBtn.classList.toggle('on', r > 1);
+      playBtn.innerHTML = r === 0 ? ICON.play : ICON.pause; playBtn.setAttribute('aria-label', r === 0 ? UI.play : UI.pause);
+      if (window.WFR_MUSIC && window.WFR_MUSIC.setVolume) window.WFR_MUSIC.setVolume(r === 0 ? 0.35 : r < 0 ? 0.6 : 1);
+    }
+    function crRate(want) { if (st.ph !== 'credits' || !st.cr || st.cr.out >= 0) return; st.cr.rate = st.cr.rate === want ? 1 : want; ctlShow(); }
+    function crPlay() { if (st.ph !== 'credits' || !st.cr || st.cr.out >= 0) return; st.cr.rate = st.cr.rate === 0 ? 1 : 0; ctlShow(); }
+    function crDone() { if (st.ph !== 'credits' || !st.cr || doneBtn.hidden || st.cr.out >= 0) return; st.cr.out = 0; }
+    function creditsTick(t, dt) {
+      var cr = st.cr, vh = innerHeight, h = roll.offsetHeight, last = roll.lastElementChild, endY = last ? vh / 2 - (last.offsetTop + last.offsetHeight / 2) : -h;
+      if (cr.out < 0) { cr.pos = Math.max(0, Math.min(CREDITS_S, cr.pos + dt * cr.rate)); if (cr.pos >= CREDITS_S) cr.out = 0; }
+      var k = Math.min(1, cr.pos / CREDITS_SCROLL);
       roll.style.transform = 'translateY(' + (vh + (endY - vh) * k).toFixed(1) + 'px)';   // slow, even: ends with the last line held in the middle
-      dawnEl.style.opacity = String(Math.min(1, t / CREDITS_S) * 0.9);                    // dark, slowly to dawn
-      drifters.forEach(function (d, i) { var p = ((t + i * 6.5) / 19) % 1, y = vh * (0.18 + i * 0.22) + Math.sin(t * 1.3 + i) * 10; d.style.transform = 'translate(' + (-40 + p * (innerWidth + 80)).toFixed(1) + 'px,' + y.toFixed(1) + 'px)'; });
-      if (t >= CREDITS_S) { var o = Math.max(0, 1 - (t - CREDITS_S) / CREDITS_OUT); creditsEl.style.opacity = String(o); if (o <= 0) { creditsEl.hidden = true; api.music(null); wakeNow(); } }
+      dawnEl.style.opacity = String(Math.min(1, cr.pos / CREDITS_S) * 0.9);                 // dark, slowly to dawn (and back, rewinding)
+      drifters.forEach(function (d, i) { var j = i === 3 ? 1 : i, lag = i === 3 ? 1.1 : 0, p = ((t - lag + j * 6.5) / 19) % 1, y = vh * (0.18 + j * 0.22) + (i === 3 ? 34 : 0) + Math.sin(t * 1.3 + j) * 10; if (p < 0) p += 1; /* the fourth is HER, just behind the middle bird */ d.style.transform = 'translate(' + (-40 + p * (innerWidth + 80)).toFixed(1) + 'px,' + y.toFixed(1) + 'px)'; });
+      if (doneBtn.hidden === cr.pos >= CREDITS_SCROLL) doneBtn.hidden = cr.pos < CREDITS_SCROLL;   // only once the last line is on screen
+      if (cr.out >= 0) { cr.out += dt; var o = Math.max(0, 1 - cr.out / CREDITS_OUT); creditsEl.style.opacity = String(o);
+        if (o <= 0) { creditsEl.hidden = true; if (window.WFR_MUSIC && window.WFR_MUSIC.setVolume) window.WFR_MUSIC.setVolume(1); api.music(null); wakeNow(); } }
     }
     function wake() { startCredits(); }   // the card's Continue
     function wakeNow() {
@@ -451,15 +485,31 @@ window.WFR_SKY = (function () {
       buildTemple(); st.beat = 'wake'; go('wake'); api.toast(UI.woke, 4200);
     }
     tap(singBtn, duetTap); tap(yesBtn, function () { answer(true); }); tap(notBtn, function () { answer(false); });
-    tap(okBtn, freezeOk); tap(freeze, freezeOk); tap(wakeBtn, wake); tap(skipBtn, skipCredits); tap(creditsEl, skipCredits);
+    tap(okBtn, freezeOk); tap(freeze, freezeOk); tap(wakeBtn, wake); tap(rewBtn, function () { crRate(-CR_FAST); }); tap(ffBtn, function () { crRate(CR_FAST); }); tap(playBtn, crPlay); tap(doneBtn, crDone);
 
     /* ---------- the camera ---------- */
+    /* the lens keeps its OWN value (st.fov) and writes it every frame: hedgehogs.js puts the camera back to 62 every frame when it is not zooming */
+    function lens(want, k) { var f = st.fov == null ? BASE_FOV : st.fov; f += (want - f) * Math.min(1, k); if (Math.abs(f - want) < 0.05) f = want; st.fov = f; if (camera.fov !== f) { camera.fov = f; camera.updateProjectionMatrix(); } }
+    function lensReset() { st.fov = BASE_FOV; if (camera.fov !== BASE_FOV) { camera.fov = BASE_FOV; camera.updateProjectionMatrix(); } }
+    /* the gap: any of the html's high cloud clumps (heavenLayer: groups of six puffs at y 172-176) across the line from the rim down to HIM
+       is hidden for the shot, and put back after (nothing else is touched) */
+    function openGap(to) {
+      var seg = new THREE.Line3(RIM.clone(), to.clone()), q = new THREE.Vector3(); st.gaps = [];
+      scene.children.forEach(function (o) {
+        if (!o.isGroup || !o.visible || o.position.y < 168 || o.position.y > 180 || o.children.length !== 6) return;
+        seg.closestPointToPoint(o.position, true, q); if (q.distanceTo(o.position) < 48) { o.visible = false; st.gaps.push(o); }
+      });
+    }
+    function closeGap() { (st.gaps || []).forEach(function (o) { o.visible = true; }); st.gaps = null; }
     function aim(pos, look, k) { camera.position.lerp(pos, k); camLook.lerp(look, k); camera.lookAt(camLook); }
     function shelfCam(dt, t) {
       var b = api.bird(), mid = v1.copy(Gpos).add(Ppos).multiplyScalar(0.5); mid.y = FLOOR + 0.9;
       var focus = st.focus, k = Math.min(1, dt * 2.2);
       if (focus === 'birds' && flock) { var f = flock.by.falcon.position, o = flock.by.owl.position; lookWant.copy(f).add(o).multiplyScalar(0.5); camWant.copy(mid).addScaledVector(back, -6).add(v2.set(0, 3, 0)); aim(camWant, lookWant, Math.min(1, dt * 1.6)); return; }
-      if (focus === 'marth' && flock) { var m = flock.by.marth.position; lookWant.copy(m); camWant.copy(m).add(v2.copy(mid).sub(m).setY(0).normalize().multiplyScalar(9)).add(v3.set(0, 1.5, 0)); aim(camWant, lookWant, Math.min(1, dt * 1.4)); return; }
+      if (focus === 'marth' && flock) {   // 593: down through a gap in the clouds to HIM, far below; a long lens, then back to her
+        if (!st.gaps) openGap(flock.by.marth.position);
+        lookWant.copy(flock.by.marth.position); aim(RIM, lookWant, Math.min(1, dt * 1.4)); lens(GAP_FOV, dt * 1.6); return; }
+      if (st.gaps) closeGap(); lens(BASE_FOV, dt * 2.2);
       var sway = Math.sin(t * 0.1) * 1.5, orbit = focus === 'linger' ? t * 0.18 : 0;
       var dirC = v2.copy(side).multiplyScalar(Math.cos(orbit)).addScaledVector(back, -Math.sin(orbit) - 0.35).normalize();
       camWant.copy(mid).addScaledVector(dirC, 9.5).addScaledVector(side, focus === 'linger' ? 0 : sway).add(v3.set(0, 3.2, 0)); lookWant.copy(mid).add(v3.set(0, -0.2, 0));
@@ -528,7 +578,7 @@ window.WFR_SKY = (function () {
       if (ph === 'talk' || ph === 'duet' || ph === 'ask' || ph === 'pans' || ph === 'linger') {
         flockAroundShelf(S.t);
         if (ph === 'duet' && st.duet >= 3 && !st.calls.length && st.duetCd <= 0) duetOut();
-        if (ph === 'pans') { st.focus = t < 4 ? 'birds' : t < 7.2 ? 'marth' : 'her'; if (t >= 8.4) flowers(); }   // answer 1: the Falcon showing off and the Owl smiling, then HIM for a bit, then back to her
+        if (ph === 'pans') { st.focus = t < 4 ? 'birds' : t < 8 ? 'marth' : 'her'; if (t >= 9.4) flowers(); }   // answer 1: the Falcon showing off and the Owl smiling, then HIM for a bit, then back to her
         if (ph === 'linger') { st.focus = 'linger'; if (t >= LINGER_S) fadeAway(); }
         shelfCam(dt, t); return;
       }
@@ -571,7 +621,7 @@ window.WFR_SKY = (function () {
         if (t >= WAKE_BTN && wakeBtn.hidden) wakeBtn.hidden = false;
         return;
       }
-      if (ph === 'credits') { creditsTick(t); return; }
+      if (ph === 'credits') { creditsTick(t, dt); return; }
       if (ph === 'wake') {
         dark.style.opacity = String(Math.max(0, 1 - t / WAKE_S));
         if (t >= WAKE_S) { dark.style.opacity = '0'; dark.style.pointerEvents = 'none'; S.sky.ended = true; st.beat = 'done'; go('done'); }
@@ -591,7 +641,10 @@ window.WFR_SKY = (function () {
         freeze: freeze.hidden ? null : msgP.textContent, okShown: !okBtn.hidden, singShown: !singBtn.hidden, choiceShown: !choice.hidden, cue: st.cue == null ? null : st.cue,
         figures: figSpots.map(function (p) { return [p.x, p.y, p.z]; }), standAt: [Ppos.x, FLOOR, Ppos.z], grandmaAt: [Gpos.x, RISE, Gpos.z], first: helix(0).toArray(), clockAtStart: st.clockAtStart, clockAtWake: st.clockAtWake == null ? null : st.clockAtWake,
         grandma: sky ? (function () { var c = null, white = 0; sky.grandma.traverse(function (m) { if (m.isMesh && m.material.color) { var x = m.material.color; if (x.r > 0.97 && x.g > 0.97 && x.b > 0.97 && !m.userData.keepColor) white++; if (m.name === 'body' || !c) c = x.getHexString(); } }); return { kind: sky.gk, body: c, pureWhite: white }; })() : null,
-        credits: st.credits || 0, creditsShown: !creditsEl.hidden, creditsText: creditsEl.hidden ? null : [].map.call(roll.children, function (c) { return c.className === 'gap' ? '' : c.className === 'birds' ? '[birds]' : c.className === 'q' ? c.firstChild.textContent + ' | ' + c.lastChild.textContent : c.textContent; }), creditsHtml: creditsEl.hidden ? null : roll.innerHTML, creditsT: st.ph === 'credits' ? st.t : null, CREDITS_S: CREDITS_S, skipSize: (function () { var r = skipBtn.getBoundingClientRect(); return [Math.round(r.width), Math.round(r.height)]; })(),
+        credits: st.credits || 0, creditsShown: !creditsEl.hidden, creditsText: creditsEl.hidden ? null : [].map.call(roll.children, function (c) { return c.className === 'gap' ? '' : c.className === 'birds' ? '[birds]' : c.className === 'q' ? c.firstChild.textContent + ' | ' + c.lastChild.textContent : c.textContent; }), creditsHtml: creditsEl.hidden ? null : roll.innerHTML, creditsT: st.ph === 'credits' ? st.t : null, credPos: st.cr ? st.cr.pos : null, credRate: st.cr ? st.cr.rate : null, doneShown: !doneBtn.hidden, CREDITS_S: CREDITS_S, CREDITS_SCROLL: CREDITS_SCROLL,
+        ctlSizes: [rewBtn, playBtn, ffBtn, doneBtn].map(function (b) { var r = b.getBoundingClientRect(); return [b.id, Math.round(r.width), Math.round(r.height)]; }), playIcon: playBtn.getAttribute('aria-label'),
+        gameT: S.t,
+        himAt: flock && flock.by.marth ? flock.by.marth.position.toArray() : null, shelfAt: [O.x, FLOOR, O.z], fov: camera.fov, gaps: st.gaps ? st.gaps.length : 0, heavenVisible: scene.children.filter(function (o) { return o.isGroup && o.visible && o.position.y >= 168 && o.position.y <= 180 && o.children.length === 6; }).length, camDown: camera.position.y - camLook.y,
         him: other(), flock: flock ? Object.keys(flock.by) : [], LINES: LINES, FREEZE: FREEZE, CARD: CARD, GRANDMA: GRANDMA };
     }
     function open() {   // the gate, for a bench: dawn, and her flying just short of the first diamond, straight at it
@@ -612,7 +665,7 @@ window.WFR_SKY = (function () {
         card: function () { S.sky.seen = true; api.save(); freezeNow(); freeze.hidden = true; fallFrom = Ppos.clone(); fallCam = camera.position.clone(); toV(); st.calls.length = 0; dark.style.opacity = '1'; toCard(); } };
       if (map[nm]) map[nm](); return st.ph;
     }
-    return { casters: casters, tick: tick, state: state, open: open, speed: function (k) { st.speed = Math.max(0.1, Math.min(8, +k || 1)); }, beat: beat, census: census, duetTap: duetTap, answer: answer, wake: wake, skip: skipCredits, freezeOk: freezeOk, LINES: LINES };
+    return { casters: casters, tick: tick, state: state, open: open, speed: function (k) { st.speed = Math.max(0.1, Math.min(8, +k || 1)); }, beat: beat, census: census, duetTap: duetTap, answer: answer, wake: wake, skip: crDone, freezeOk: freezeOk, LINES: LINES };
   }
   return { create: create, CREDITS: CREDITS, LINES: LINES, GRANDMA: GRANDMA, FREEZE: FREEZE, CARD: CARD };
 })();

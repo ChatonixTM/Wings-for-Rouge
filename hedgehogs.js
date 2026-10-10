@@ -394,7 +394,7 @@
     const zoomBtn = document.createElement('button'); zoomBtn.className = 'act'; zoomBtn.id = 'zoom'; zoomBtn.type = 'button'; zoomBtn.hidden = true; zoomBtn.textContent = 'Zoom \u{1F4A8}';
     zoomBtn.style.cssText = 'right:calc(env(safe-area-inset-right,0px) + 132px);bottom:calc(env(safe-area-inset-bottom,0px) + 176px);background:#fff6df;color:#8b5e34';
     const ui = $('ui'); if (ui) ui.appendChild(zoomBtn);
-    const zoomable = () => S.mode === 'walk' && !S.talking && !S.inside && !S.insideTH && !S.climb && S.tut === 0 && !S.noWalk && !S.resting && !S.morph;
+    const zoomable = () => (S.mode === 'walk' || S.mode === 'fly') && !S.talking && !S.inside && !S.insideTH && !S.climb && S.tut === 0 && !S.noWalk && !S.resting && !S.morph && !S.inSky && !S.inEagle;   // 592: in the air too (a flight burst)
     function startZoom(by) {
       if (!S.lessons.zoom || !zoomable() || Z.t > 0 || Z.cd > 0) return false;
       Z.t = ZOOM.dur; Z.hold = 0; Z.by = by; Z.starts++; api.chirp(); return true;
@@ -425,7 +425,7 @@
       const cam = api.camera, fov = ZOOM.fov0 + (ZOOM.fov1 - ZOOM.fov0) * Z.k;
       if (cam.fov !== fov) { cam.fov = Z.k === 0 ? ZOOM.fov0 : fov; cam.updateProjectionMatrix(); }   // exactly 62 again after
       const rig = api.rig(), legs = rig && rig.legs, gh = ghosts(rig);
-      if (Z.t > 0 && legs) {   // ~60 rad/s: too fast to follow, with a faint pair half a phase behind
+      if (Z.t > 0 && legs && S.mode === 'walk') {   // ~60 rad/s: too fast to follow, with a faint pair half a phase behind (on the ground)
         const ph = S.t * ZOOM.legRate;
         legs.forEach((l, i) => { l.rotation.x = Math.sin(ph + i * Math.PI) * 0.95; if (gh[i]) { gh[i].visible = true; gh[i].rotation.x = Math.sin(ph + i * Math.PI - Math.PI) * 0.95; } });
         Z.legsDirty = true;
@@ -452,8 +452,8 @@
       if (Z.t > 0) { Z.t -= dt; if (Z.t <= 0 || !zoomable()) endZoom(); }
       else if (Z.cd > 0) Z.cd = Math.max(0, Z.cd - dt);
       const inp = api.input;   // the stick held fully forward (a thumb; the keyboard has Shift)
-      if (S.lessons.zoom && zoomable() && Z.t <= 0 && Z.cd <= 0 && inp.sy >= ZOOM.full && Math.abs(inp.sx) < 0.3) { Z.hold += dt; if (Z.hold >= ZOOM.hold) startZoom('stick'); } else Z.hold = 0;
-      if (Z.t > 0) { const st = api.steer(); if (st.sy > 0.05) api.walkStep(0, st.sy, dt * (ZOOM.mult - 1)); }
+      if (S.lessons.zoom && zoomable() && S.mode === 'walk' && Z.t <= 0 && Z.cd <= 0 && inp.sy >= ZOOM.full && Math.abs(inp.sx) < 0.3) { Z.hold += dt; if (Z.hold >= ZOOM.hold) startZoom('stick'); } else Z.hold = 0;
+      if (Z.t > 0 && S.mode === 'walk') { const st = api.steer(); if (st.sy > 0.05) api.walkStep(0, st.sy, dt * (ZOOM.mult - 1)); }   // the extra stride is a ground thing; in the air the html adds the burst (592)
       if (S.mode === 'walk' && !S.inside && site.visible) for (const k of rockList) {   // she walks round a rock, never through it
         const dx = S.pos.x - k.x, dz = S.pos.z - k.z, d = Math.hypot(dx, dz), rr = k.r + 0.2;
         if (d < rr && d > 1e-4 && S.pos.y - api.standOf() < k.top - 0.3) { S.pos.x = k.x + dx / d * rr; S.pos.z = k.z + dz / d * rr; }
@@ -513,7 +513,7 @@
       prevMode = S.mode;
     }
 
-    const API = { pre, tick, deliver, openBook, state: () => ({ met: !!S.seen.hogsMet, returned: !!S.seen.hogsBook, bookSeen: !!S.seen.bookSeen, zoom: !!S.lessons.zoom }) };
+    const API = { air: () => (Z.t > 0 && S.mode === 'fly' ? 1 : 0), pre, tick, deliver, openBook, state: () => ({ met: !!S.seen.hogsMet, returned: !!S.seen.hogsBook, bookSeen: !!S.seen.bookSeen, zoom: !!S.lessons.zoom }) };
     if (debugOn) root.WFR_HOGS.dbg = {
       state: () => ({ met: !!S.seen.hogsMet, returned: !!S.seen.hogsBook, bookSeen: !!S.seen.bookSeen, lesson: !!S.lessons.zoom, mode: S.mode, talking: !!S.talking, talkingHogs,
         zoom: { t: Z.t, cd: Z.cd, k: Z.k, hold: Z.hold, by: Z.by, starts: Z.starts, fov: api.camera.fov }, bookOpen, story: !story.hidden, at: api.panels.at(), count: api.panels.count(),
