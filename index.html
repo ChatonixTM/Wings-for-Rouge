@@ -426,23 +426,23 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 <div id="fade" aria-hidden="true"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="tex-photos.js?v=a3df8a8a9113"></script>
-<script src="textures.js?v=a3df8a8a9113"></script>
-<script src="birds.js?v=a3df8a8a9113"></script>
-<script src="humans.js?v=a3df8a8a9113"></script>
-<script src="folk.js?v=a3df8a8a9113"></script>
-<script src="trees.js?v=a3df8a8a9113"></script>
-<script src="treehouses.js?v=a3df8a8a9113"></script>
-<script src="cabins.js?v=a3df8a8a9113"></script>
-<script src="cave.js?v=a3df8a8a9113"></script>
-<script src="sounds.js?v=a3df8a8a9113"></script>
-<script src="music.js?v=a3df8a8a9113"></script>
-<script src="rhythm.js?v=a3df8a8a9113"></script>
-<script src="pictograms.js?v=a3df8a8a9113"></script>
-<script src="hedgehogs.js?v=a3df8a8a9113"></script>
-<script src="opening.js?v=a3df8a8a9113"></script>
-<script src="skypiea.js?v=a3df8a8a9113"></script>
-<script src="atmo.js?v=a3df8a8a9113"></script>
+<script src="tex-photos.js?v=9faaac0b35a7"></script>
+<script src="textures.js?v=9faaac0b35a7"></script>
+<script src="birds.js?v=9faaac0b35a7"></script>
+<script src="humans.js?v=9faaac0b35a7"></script>
+<script src="folk.js?v=9faaac0b35a7"></script>
+<script src="trees.js?v=9faaac0b35a7"></script>
+<script src="treehouses.js?v=9faaac0b35a7"></script>
+<script src="cabins.js?v=9faaac0b35a7"></script>
+<script src="cave.js?v=9faaac0b35a7"></script>
+<script src="sounds.js?v=9faaac0b35a7"></script>
+<script src="music.js?v=9faaac0b35a7"></script>
+<script src="rhythm.js?v=9faaac0b35a7"></script>
+<script src="pictograms.js?v=9faaac0b35a7"></script>
+<script src="hedgehogs.js?v=9faaac0b35a7"></script>
+<script src="opening.js?v=9faaac0b35a7"></script>
+<script src="skypiea.js?v=9faaac0b35a7"></script>
+<script src="atmo.js?v=9faaac0b35a7"></script>
 <script>
 (() => {
 'use strict';
@@ -1992,7 +1992,7 @@ const CSTATS = [['fly', 'Flight', 0x7ec8f0], ['run', 'Run', 0xf5a623], ['str', '
 const WORM = { id: 'worm', emoji: '\u{1FAB1}', name: 'a worm', gives: { str: 2, sta: 1 }, food: 30 };   // 550: a treat from the ground
 const FRUITS = [{ id: 'blueberry', emoji: '🫐', stat: 'fly', name: 'blueberries' }, { id: 'apple', emoji: '🍎', stat: 'run', name: 'an apple' },
   { id: 'cherry', emoji: '🍒', stat: 'str', name: 'cherries' }, { id: 'strawberry', emoji: '🍓', stat: 'sta', name: 'a strawberry' }, { id: 'grapes', emoji: '🍇', stat: 'swim', name: 'sea grapes' }];
-const STAGES = [{ name: 'Chick', scale: 1 }, { name: 'Fledgling', scale: 1.5, at: 15 }, { name: 'Young bird', scale: 2.1, at: 45 }];
+const STAGES = [{ name: 'Chick', scale: 0.3 }, { name: 'Fledgling', scale: 0.4, at: 15 }, { name: 'Young bird', scale: 0.5, at: 45 }];   // 619: smaller than her bird at every stage (was 1 / 1.5 / 2.1)
 const ORB = ['❤️', '❗', '\u{1F60A}', '\u{1F34E}'];   // 586: chickFeel(i)'s moments, drawn in the thought bubble (the '?' is gone)
 const STAT_STEP = 50, STAT_MAX = 1000;   // 563: a full bar is a level and the bar starts again; level 20 is the top
 const statLevel = (v) => Math.floor(Math.min(STAT_MAX, v || 0) / STAT_STEP);
@@ -2015,8 +2015,8 @@ function makeChick(p) {
   const ch = new THREE.Mesh(new THREE.SphereGeometry(0.29, 16, 12), m); ch.position.set(0, 0.45, 0.14); body.add(ch);
   const bk = new THREE.Mesh(new THREE.ConeGeometry(0.08, 0.22, 8), lam(0xf28c28)); bk.rotation.x = Math.PI / 2; bk.position.set(0, 0.42, 0.45); body.add(bk);
   for (const s of [-1, 1]) {
-    const e = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 6), new THREE.MeshBasicMaterial({ color: 0x111111 })); e.position.set(0.12 * s, 0.53, 0.38); body.add(e);
-    const shine = new THREE.Mesh(new THREE.SphereGeometry(0.018, 6, 4), new THREE.MeshBasicMaterial({ color: 0xffffff })); shine.position.set(0.13 * s, 0.56, 0.43); body.add(shine);
+    const e = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 6), new THREE.MeshBasicMaterial({ color: 0x111111 })); e.position.set(0.12 * s, 0.53, 0.38); body.add(e); (body.userData.eyes = body.userData.eyes || []).push(e);
+    const shine = new THREE.Mesh(new THREE.SphereGeometry(0.018, 6, 4), new THREE.MeshBasicMaterial({ color: 0xffffff })); shine.position.set(0.13 * s, 0.56, 0.43); body.add(shine); (body.userData.shines = body.userData.shines || []).push(shine);
     const foot = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.04, 0.18), lam(0xf28c28)); foot.position.set(0.15 * s, -0.4, 0.1); body.add(foot);
   }
   const wings = [-1, 1].map((s) => { const piv = new THREE.Group(); piv.position.set(0.38 * s, 0.05, 0); const w = new THREE.Mesh(new THREE.SphereGeometry(0.2, 10, 8), m); w.scale.set(0.5, 1, 1.3); w.position.x = 0.06 * s; piv.add(w); body.add(piv); return piv; });
@@ -2747,7 +2747,13 @@ function chickTick(dt) {
   S.chickFeelT = Math.max(0, S.chickFeelT - dt);
   mindTick(U, dt, d);   // 586: the thought bubble (was the orb and its standing '?')
   S.chickHop = Math.max(0, (S.chickHop || 0) - dt * 1.6);
-  U.body.position.y = Math.abs(Math.sin(S.t * 9)) * 0.25 * S.chickHop + Math.sin(S.t * 2.4) * 0.02;
+  const cSc = STAGES[S.chick.stage].scale; U.body.position.y = -0.4 * (1 - cSc) + (Math.abs(Math.sin(S.t * 9)) * 0.25 * S.chickHop + Math.sin(S.t * 2.4) * 0.02) * cSc;   // 619: feet stay on the nest floor at every size
+  /* 619: it sleeps at night and while she rests with it: eyes shut, head tucked, slow breaths; a feed, a pet or a hop wakes it a while */
+  const sleepy = (nightAmt(S.clock) > 0.5 || !!S.resting) && !(S.chickFeelT > 0) && !(S.chickHop > 0.05) && !(RH && RH.on);
+  U.sleepK = (U.sleepK || 0) + ((sleepy ? 1 : 0) - (U.sleepK || 0)) * Math.min(1, dt * 2);
+  for (const e of U.body.userData.eyes || []) e.scale.y = 1 - 0.85 * U.sleepK;
+  for (const e of U.body.userData.shines || []) e.visible = U.sleepK < 0.5;
+  U.body.rotation.x = 0.25 * U.sleepK; U.body.scale.setScalar(STAGES[c.stage].scale * (1 + (U.sleepK > 0.5 ? Math.sin(S.t * 1.6) * 0.03 : 0)));
   const flap = S.chickHop > 0 ? Math.sin(S.t * 30) * 0.9 : Math.sin(S.t * 1.7) * 0.08;
   U.wings[0].rotation.z = flap; U.wings[1].rotation.z = -flap;
   chickSong(dt, U);   // 598: after its own bob is set, so the beat's bob rides on top
@@ -3001,7 +3007,7 @@ try { if (localStorage.getItem('wfr.debug') === '1') window.__wfr = { eagle: () 
     const c = v.clone().addScaledVector(r, (140 - 42) / 256 * sz).addScaledVector(u, (248 - 108) / 256 * sz), edge = c.clone().addScaledVector(r, 92 / 256 * sz), P = (q) => { q.project(camera); return [(q.x + 1) / 2 * innerWidth, (1 - q.y) / 2 * innerHeight]; }, cs = P(c.clone()), es = P(edge);
     return { up: M.up, shown: M.s.visible, k: M.k, e: M.e, want: M.want && M.want.e, why: M.want && M.want.why, need: !!(M.want && M.want.need), moment: !!(M.want && M.want.moment), screen: cs, rpx: Math.hypot(es[0] - cs[0], es[1] - cs[1]) }; },
   chickYaw: () => (chick ? chick.rotation.y : null), chickSet: (o) => { Object.assign(S.chick, o); }, tucked: () => !!S.chick.tucked,
-  chickSing: () => chickSing(), chickSong: () => ({ on: !!(RH.on && RH.chick), kid: !!RH.chick, rest: S.chick.songRest || 0, songs: S.chick.songs || 0, noWalk: !!S.noWalk, feel: S.chickFeelT > 0 ? ORB[S.chickFeel] : null, bodyY: chick ? chick.userData.body.position.y : null, sway: chick ? chick.userData.body.rotation.z : null, stats: Object.assign({}, S.chick.stats), happy: S.chick.happy, mode: S.mode, restMax: CHICK_SONG.rest }),
+  chickSing: () => chickSing(), chickSleep: () => (chick ? { k: chick.userData.sleepK || 0, eyes: (chick.userData.body.userData.eyes || []).map((e) => e.scale.y), scale: chick.userData.body.scale.x } : null), chickSong: () => ({ on: !!(RH.on && RH.chick), kid: !!RH.chick, rest: S.chick.songRest || 0, songs: S.chick.songs || 0, noWalk: !!S.noWalk, feel: S.chickFeelT > 0 ? ORB[S.chickFeel] : null, bodyY: chick ? chick.userData.body.position.y : null, sway: chick ? chick.userData.body.rotation.z : null, stats: Object.assign({}, S.chick.stats), happy: S.chick.happy, mode: S.mode, restMax: CHICK_SONG.rest }),
   standAt: (dx, dz) => { S.pos.set(NEST.x + dx, NEST.y - 0.2 + standOf(kind), NEST.z + dz); S.mode = 'walk'; }, faceChick: () => { if (chick) S.yaw = Math.atan2(chick.position.x - S.pos.x, chick.position.z - S.pos.z); },
   chickScreen: () => { if (!chick) return null; const v = chick.position.clone(); v.y += 0.45 * STAGES[S.chick.stage].scale; v.project(camera); return [(v.x + 1) / 2 * innerWidth, (1 - v.y) / 2 * innerHeight, v.z]; },
   giveFruit: (i) => { const g = emojiSprite(FRUITS[i].emoji, 0.9); scene.add(g); S.fruit = { type: FRUITS[i], g }; save(); }, chick: () => JSON.parse(JSON.stringify(S.chick)),
@@ -3679,7 +3685,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build a3df8a8a9113): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build 9faaac0b35a7): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>
