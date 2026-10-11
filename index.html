@@ -428,23 +428,24 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 <div id="fade" aria-hidden="true"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="tex-photos.js?v=480faf0ed656"></script>
-<script src="textures.js?v=480faf0ed656"></script>
-<script src="birds.js?v=480faf0ed656"></script>
-<script src="humans.js?v=480faf0ed656"></script>
-<script src="folk.js?v=480faf0ed656"></script>
-<script src="trees.js?v=480faf0ed656"></script>
-<script src="treehouses.js?v=480faf0ed656"></script>
-<script src="cabins.js?v=480faf0ed656"></script>
-<script src="cave.js?v=480faf0ed656"></script>
-<script src="sounds.js?v=480faf0ed656"></script>
-<script src="music.js?v=480faf0ed656"></script>
-<script src="rhythm.js?v=480faf0ed656"></script>
-<script src="pictograms.js?v=480faf0ed656"></script>
-<script src="hedgehogs.js?v=480faf0ed656"></script>
-<script src="opening.js?v=480faf0ed656"></script>
-<script src="skypiea.js?v=480faf0ed656"></script>
-<script src="atmo.js?v=480faf0ed656"></script>
+<script src="tex-photos.js?v=32c77372fb7b"></script>
+<script src="textures.js?v=32c77372fb7b"></script>
+<script src="birds.js?v=32c77372fb7b"></script>
+<script src="humans.js?v=32c77372fb7b"></script>
+<script src="folk.js?v=32c77372fb7b"></script>
+<script src="trees.js?v=32c77372fb7b"></script>
+<script src="treehouses.js?v=32c77372fb7b"></script>
+<script src="cabins.js?v=32c77372fb7b"></script>
+<script src="cave.js?v=32c77372fb7b"></script>
+<script src="sounds.js?v=32c77372fb7b"></script>
+<script src="music.js?v=32c77372fb7b"></script>
+<script src="music-orchestra.js?v=32c77372fb7b"></script>
+<script src="rhythm.js?v=32c77372fb7b"></script>
+<script src="pictograms.js?v=32c77372fb7b"></script>
+<script src="hedgehogs.js?v=32c77372fb7b"></script>
+<script src="opening.js?v=32c77372fb7b"></script>
+<script src="skypiea.js?v=32c77372fb7b"></script>
+<script src="atmo.js?v=32c77372fb7b"></script>
 <script>
 (() => {
 'use strict';
@@ -2172,11 +2173,11 @@ function hatch() {
   S.nestDone = true; gainXP(40);
 }
 const sparks = [];
-function burst(p) {
-  const cols = [0xc8314a, 0xf2b134, 0xffffff, 0x9fd3f0, 0xff8fa3];
-  for (let i = 0; i < 90; i++) {
-    const m = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.18, 0.04), new THREE.MeshBasicMaterial({ color: cols[i % cols.length] }));
-    m.position.copy(p); m.userData.v = new THREE.Vector3((Math.random() - 0.5) * 9, 6 + Math.random() * 7, (Math.random() - 0.5) * 9); m.userData.r = Math.random() * 6;
+function burst(p, colours, count, size, spread, lift) {   // 619: a feed bursts in the stat's colour (a Chaos Drive going in); without the extra arguments this is the hatch's burst, unchanged
+  const cols = colours || [0xc8314a, 0xf2b134, 0xffffff, 0x9fd3f0, 0xff8fa3], n = count || 90, sz = size || 0.18, sp = spread || 9, up = lift || 6, rise = lift ? up * 1.2 : 7;
+  for (let i = 0; i < n; i++) {
+    const m = new THREE.Mesh(new THREE.BoxGeometry(sz, sz, sz * 0.22), new THREE.MeshBasicMaterial({ color: cols[i % cols.length] }));
+    m.position.copy(p); m.userData.v = new THREE.Vector3((Math.random() - 0.5) * sp, up + Math.random() * rise, (Math.random() - 0.5) * sp); m.userData.r = Math.random() * 6;
     scene.add(m); sparks.push(m);
   }
 }
@@ -2207,6 +2208,7 @@ function nextLine() {
     $('talkText').innerHTML = h + '<br><small style="color:#6b7a93;font-weight:700">' + esc(line.ref) + ' (ASV)</small>';
   }
   if (line.focus) S.evFocus = line.focus;
+  if (line.music) orchCue(line.music);   // 548: a line can carry its music (the narrator's last line in the Eagle event)
   $('talkNext').textContent = talkQ.length ? 'Next' : 'OK'; chirp();
 }
 $('talkNext').addEventListener('click', nextLine);
@@ -2314,6 +2316,7 @@ const mentorWaiting = () => MENTORS.find((m) => !S.lessons[m.id] && m.ready());
 function startMentor(m) {   // 567: one way in, from the walk-up or the Talk button
   if (S.talking) return;
   try { if (window.WFR_SOUND) WFR_SOUND.call(m.kind, { vol: 0.7 }); } catch (e) { /* a call that fails must never stop the lesson */ }
+  if (m.id === 'owl') orchCue('owl');   // 547: "The Owl's Hour", 1.2 s after her hoot, until her lesson ends
   say(m.lines, () => { S.lessons[m.id] = true; save(); ding(); gainXP(30); hud(); leaveStart(m); });   // 601: saved before the leaving starts (a reload mid-fade keeps it)
 }
 function mentors(dt) {
@@ -2506,9 +2509,91 @@ function musicDuckTick() {
 function bgMusicTick(dt) {
   if (!window.WFR_MUSIC || !audio()) return;
   const plain = (S.mode === 'walk' || S.mode === 'fly' || S.mode === 'swim') && !S.talking && !S.inSky && !S.inEagle && !(RH && (RH.on || RH.out > 0)) && $('story').hidden;
-  if (!plain || WFR_MUSIC.playing) { bgQuiet = 0; return; }
+  if (!plain || WFR_MUSIC.playing || orchHolds()) { bgQuiet = 0; return; }   // 547/548: nor over the orchestra (the dove's piece runs on into the walk)
   bgQuiet += dt; if (bgQuiet >= 8) { bgQuiet = 0; WFR_MUSIC.play({ variant: 'legend', fadeIn: 4 }); }
 }
+/* 547/548: THE ORCHESTRA (music-orchestra.js, WFR_ORCH; Marth ~03:20: "Yes download the orchestral samples"). "The Owl's Hour" (a loop)
+   while the Owl teaches, from 1.2 s after her hoot to the lesson's end, then the game's own music fades back; "After the Dove" (a
+   one-shot, ~78 s) from the narrator's last line in the Eagle event, never under the dove's words (option A). The samples
+   (orch-samples.js: VSCO 2 Community Edition by Versilian Studios, CC0) are fetched by a script tag only after her first tap AND
+   after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
+   music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
+   menu, a cutscene), the orchestra bows out. */
+const ORCH_SRC = 'orch-samples.js?v=32c77372fb7b';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
+window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
+const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
+function orchUnpack(e) {   // [rate, gain, frames, base64 RIFF 16-bit mono] -> an AudioBuffer at its own rate (no decodeAudioData: no codec questions)
+  if (!Array.isArray(e) || typeof e[3] !== 'string') return null;
+  const bin = atob(e[3]); if (bin.length < 46 || bin.slice(0, 4) !== 'RIFF' || bin.slice(36, 40) !== 'data') return null;
+  const sr = (bin.charCodeAt(24) | (bin.charCodeAt(25) << 8) | (bin.charCodeAt(26) << 16)) >>> 0, n = Math.min(e[2] | 0, (bin.length - 44) >> 1), k = e[1] / 32767;
+  if (!(n > 0) || sr !== e[0] || !(k > 0)) return null;
+  let b = null, up = 1; try { b = ac.createBuffer(1, n, sr); } catch (x) { up = 2; b = ac.createBuffer(1, n * 2, sr * 2); }   // an older Safari refuses rates under 22.05 kHz: twice the rate, interpolated
+  const d = b.getChannelData(0); let last = 0;
+  for (let i = 0, p = 44; i < n; i++, p += 2) { let v = bin.charCodeAt(p) | (bin.charCodeAt(p + 1) << 8); if (v >= 32768) v -= 65536; v *= k;
+    if (up === 1) d[i] = v; else { d[2 * i] = v; if (i) d[2 * i - 1] = (last + v) / 2; d[2 * i + 1] = v; } last = v; }
+  return b;
+}
+function orchBytes(b64) { const bin = atob(b64), u = new Uint8Array(bin.length); for (let i = 0; i < bin.length; i++) u[i] = bin.charCodeAt(i); return u.buffer; }
+function orchDecode(e, cb) {   // the MP3 form (Oct 11): [rate, gain, frames, base64 MP3, "mp3", encoderDelay, encoderPadding] -> the browser's own decoder (off the main thread), the gain restored, the encoder's lead-in cut off when a decoder leaves it in (Safari has)
+  let ab; try { ab = orchBytes(e[3]); } catch (x) { return cb(null); }
+  let once = false; const give = (b) => { if (once) return; once = true; cb(b); };
+  const done = (b) => { try {
+    if (!b || !b.length) return give(null);
+    const R = b.sampleRate / e[0], want = Math.round(e[2] * R), whole = Math.round((e[2] + (e[5] | 0) + (e[6] | 0)) * R), lead = Math.round(((e[5] | 0) + 529) * R);
+    const src = b.getChannelData(0); let from = 0, n = Math.min(b.length, want);
+    if (e[5] > 0 && Math.abs(b.length - whole) < Math.abs(b.length - want) && b.length >= lead + want) { from = lead; n = want; }   // the lead-in is still there: skip it (a gapless decoder, like Chromium's, already cut it)
+    const m = Math.round(n / R), k = e[1];   // back at the crop's own small rate (16 / 22.05 kHz): a third of the memory, as the WAV form; the content never went above half that rate
+    let out = null, up = 1; try { out = ac.createBuffer(1, m, e[0]); } catch (x) { up = 2; out = ac.createBuffer(1, m * 2, e[0] * 2); }   // an older Safari refuses rates under 22.05 kHz
+    const d = out.getChannelData(0), N = n - 1;
+    for (let i = 0; i < m; i++) { const p = Math.min(N, i * R), j = Math.floor(p), f = p - j, v = (src[from + j] * (1 - f) + src[from + Math.min(N, j + 1)] * f) * k;
+      if (up === 1) d[i] = v; else { d[2 * i] = v; d[2 * i + 1] = v; } }
+    give(out);
+  } catch (x) { give(null); } };
+  try { const q = ac.decodeAudioData(ab, done, () => give(null)); if (q && q.then) q.then(done, () => give(null)); } catch (x) { give(null); }
+}
+function orchTick() {   // every frame, its own loop: wake after the tap, load, unpack, keep the mute, end the Owl's piece with her lesson
+  try {
+    orch.ctx = ac ? ac.state : 'none';   // the benches read the context's state (it runs only after a gesture)
+    if (!window.WFR_ORCH || !ac || orch.failed) return;
+    if (!orch.on && typeof CINE === 'object' && CINE && CINE.phase !== 'off' && CINE.phase !== 'done') return;   // 606: asleep through the title's flight (the hall, 5 MB to parse and unpack): after it
+    if (!orch.on) { if (ac.state !== 'running') return; orch.on = WFR_ORCH.init(ac, ac.destination, { isMuted: () => muted }); orch.muted = muted; if (!orch.on) return; }   // the context runs only after her first tap
+    if (!orch.asked) { orch.asked = true; orch.t0 = performance.now(); const s = document.createElement('script'); s.src = ORCH_SRC; s.async = true; s.onerror = () => { orch.failed = true; orch.err = 'load'; }; document.head.appendChild(s); }
+    if (!orch.ready && window.WFR_ORCH_SAMPLES) {   // unpacked a few ms per frame (one sample per frame on a phone): never a hitch
+      const data = window.WFR_ORCH_SAMPLES.data || {}, t1 = performance.now();
+      if (!orch.queue) { orch.queue = Object.keys(data); orch.loadMs = Math.round(t1 - orch.t0); }
+      do { const id = orch.queue.shift();
+        if (id) { const e = data[id];
+          if (Array.isArray(e) && e[4] === 'mp3') { orch.pending++; orchDecode(e, (b) => { orch.pending--; if (b) { orch.bufs[id] = b; orch.n++; } else orch.bad++; }); }
+          else { let b = null; try { b = orchUnpack(e); } catch (x) { b = null; } if (b) { orch.bufs[id] = b; orch.n++; } else orch.bad++; } }
+      } while (orch.queue.length && performance.now() - t1 < 6);
+      const dt1 = performance.now() - t1; orch.cpu = (orch.cpu || 0) + dt1; orch.worst = Math.max(orch.worst || 0, dt1);   // the cost, for the benches
+      if (!orch.queue.length && !orch.pending) { WFR_ORCH.setSamples(orch.bufs); orch.ready = orch.n > 0; orch.ms = Math.round(performance.now() - orch.t0); window.WFR_ORCH_SAMPLES = null; }   // the base64 is let go once unpacked
+    }
+    if (orch.muted !== muted) { orch.muted = muted; WFR_ORCH.setMuted(muted); }
+    if (orch.cue && !orchHolds()) { orch.cue = null; orch.prev = null; }   // the dove's piece ended by itself, or a stop
+    else if (orch.cue && window.WFR_MUSIC && WFR_MUSIC.playing) { WFR_ORCH.stop({ fade: 0.8 }); orch.cue = null; orch.prev = null; }   // the game's music started: it wins
+    else if (orch.cue === 'owl') { if (S.talking) orch.sawTalk = true; else if (orch.sawTalk) orchEnd(4); }   // the Owl's lesson is over
+  } catch (e) { orch.err = String((e && e.message) || e); orch.failed = true; try { WFR_ORCH.stop({ fade: 0.5 }); } catch (x) { /* gone */ } }   // the orchestra must never stop the game
+}
+function orchEnd(fade) {   // the orchestra fades, and what the game was playing before comes back under it
+  const prev = orch.prev; orch.cue = null; orch.prev = null; orch.sawTalk = false;
+  WFR_ORCH.stop({ fade });
+  if (prev && window.WFR_MUSIC) WFR_MUSIC.play({ variant: prev, fadeIn: fade });
+}
+function orchCue(v) {   // 'owl': the Owl's lesson began (her hoot lands first, brief D); 'dove': the narrator's last line in the Eagle event
+  if (!window.WFR_ORCH || !orch.ready || orch.failed) { orch.skipped++; return; }   // not in yet: the game's music carries on, silently
+  const go = () => {
+    try {
+      if (orch.failed || (v === 'owl' && !S.talking)) return;   // the lesson ended inside the hoot's 1.2 s
+      orch.prev = window.WFR_MUSIC && WFR_MUSIC.playing ? WFR_MUSIC.variant : null;
+      if (orch.prev) WFR_MUSIC.stop({ fade: 1.5 });
+      orch.cue = WFR_ORCH.play({ variant: v, fadeIn: v === 'owl' ? 2 : 3 }) ? v : null; orch.sawTalk = !!S.talking;
+    } catch (e) { orch.err = String((e && e.message) || e); }
+  };
+  if (v === 'owl') setTimeout(go, 1200); else go();
+}
+requestAnimationFrame(function orchLoop() { orchTick(); requestAnimationFrame(orchLoop); });
 function nestTiers(dt) {
   bathTick(dt); bgMusicTick(dt);   // 591, 599
   const next = TIERS[S.nestTier + 1];
@@ -2556,7 +2641,10 @@ function growCheck() {
 }
 $('feedBtn').addEventListener('click', () => {
   if (!S.fruit) return; const f = S.fruit.type, gives = f.gives || { [f.stat]: 3 };
-  const ups = []; for (const k in gives) { const u = addStat(k, gives[k]); if (u) ups.push(u); } S.chick.food = Math.min(100, S.chick.food + (f.keepsake ? 0 : f.food || 25)); if (f.keepsake) (S.chick.marks = S.chick.marks || {})[f.id] = true; S.chick.happy = Math.min(100, S.chick.happy + 8 + (f.happy || 0));
+  const ups = []; for (const k in gives) { const u = addStat(k, gives[k]); if (u) ups.push(u); }
+  if (chick && Object.keys(gives).length) burst(chick.position.clone().add(new THREE.Vector3(0, 0.5, 0)), Object.keys(gives).map((k) => (CSTATS.find((c) => c[0] === k) || [0, 0, 0xffd94a])[2]), 20, 0.08, 2.2, 1.6);   // 619: the drive goes in, in its stat's colours
+  chickLook();   // 619: and its colour drifts toward its strongest stat on every feed, not only when it grows a stage
+  S.chick.food = Math.min(100, S.chick.food + (f.keepsake ? 0 : f.food || 25)); if (f.keepsake) (S.chick.marks = S.chick.marks || {})[f.id] = true; S.chick.happy = Math.min(100, S.chick.happy + 8 + (f.happy || 0));
   if (S.fruit.g.parent) S.fruit.g.parent.remove(S.fruit.g); S.fruit = null; ding(); chirp(); chickFeel(0, 3); S.chickHop = 1; gainXP(5); growCheck(); save(); careStats(); hud();
   toast((f.keepsake ? 'Your chick keeps ' + f.name + '! ' + (f.happy ? 'Mood +' + f.happy + (Object.keys(gives).length ? ', ' : '') : '') : 'Yum! ') + Object.keys(gives).map((k) => CSTATS.find((c) => c[0] === k)[1] + ' +' + gives[k]).join(', ') + (ups.length ? ' \u2014 ' + ups.join(' ') : ''), ups.length ? 3600 : 2400);
 });
@@ -2990,7 +3078,7 @@ function startEagle() {
           { who: 'The dove', ref: 'Matthew 25:40', text: SCRIPT.mat2540, lord: true, focus: 'nest' },
           Object.assign(['The dove', 'And do not forget your Creator: God.'], { focus: 'peak' }),
           { who: 'The dove', ref: 'Ecclesiastes 12:1', text: SCRIPT.ecc121 },
-          ['', 'The dove rises into the clouds and is gone. Far above, for just a moment, you think you see something white and shining…'],
+          Object.assign(['', 'The dove rises into the clouds and is gone. Far above, for just a moment, you think you see something white and shining…'], { music: 'dove' }),   // 548: "After the Dove" begins here, after her words (option A: nothing under the verses)
         ], () => {
           for (const g of gathered) scene.remove(g); gathered.length = 0;
           S.eagleFound = true; S.inEagle = false; const grew = S.nestTier >= 4; if (grew) S.nestTier = 5; drawNest(); save(); gainXP(100); fanfare();
@@ -3007,7 +3095,7 @@ try { if (localStorage.getItem('wfr.debug') === '1') window.__wfr = { eagle: () 
   gpu: () => ({ textures: renderer.info.memory.textures, geometries: renderer.info.memory.geometries, calls: renderer.info.render.calls }),
   toNest: () => { S.pos.set(NEST.x + 1.6, NEST.y - 0.2 + standOf(kind), NEST.z); S.mode = 'walk'; },
   careStats: () => careStats(), pet: () => { S.petCd = 0; $('petBtn').click(); }, bondDayBack: () => { S.chick.bondDay = 'yesterday'; },
-  chickAt: () => (chick ? chick.position.toArray() : null), setStat: (k, v) => { S.chick.stats[k] = v; },
+  chickAt: () => (chick ? chick.position.toArray() : null), sparks: () => sparks.map((m) => m.material.color.getHex()),   /* 619: the burst's colours, for tests/chick619.js */ setStat: (k, v) => { S.chick.stats[k] = v; },
   mind: () => { const M = chick && chick.userData.mind; if (!M) return null; const v = new THREE.Vector3(); M.s.getWorldPosition(v); const r = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 0), u = new THREE.Vector3().setFromMatrixColumn(camera.matrixWorld, 1), sz = M.s.scale.x * (chick.scale.x || 1);
     const c = v.clone().addScaledVector(r, (140 - 42) / 256 * sz).addScaledVector(u, (248 - 108) / 256 * sz), edge = c.clone().addScaledVector(r, 92 / 256 * sz), P = (q) => { q.project(camera); return [(q.x + 1) / 2 * innerWidth, (1 - q.y) / 2 * innerHeight]; }, cs = P(c.clone()), es = P(edge);
     return { up: M.up, shown: M.s.visible, k: M.k, e: M.e, want: M.want && M.want.e, why: M.want && M.want.why, need: !!(M.want && M.want.need), moment: !!(M.want && M.want.moment), screen: cs, rpx: Math.hypot(es[0] - cs[0], es[1] - cs[1]) }; },
@@ -3690,7 +3778,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build 480faf0ed656): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build 32c77372fb7b): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>

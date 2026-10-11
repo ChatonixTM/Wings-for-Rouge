@@ -88,6 +88,7 @@ window.WFR_SKY = (function () {
     ['line', 'Happy Birthday to You (the melody): public domain'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") (song() in the html plays its first two lines)
     ['line', 'three.js (MIT License)'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") (r128, cdnjs: the only third-party code the game loads)
     ['line', 'Fredoka and Nunito typefaces, via Google Fonts (SIL Open Font License)'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") (the only third-party files besides three.js)
+    ['line', 'Orchestral samples: VSCO 2 Community Edition by Versilian Studios (CC0)'],   // 547/548 NEW, not yet approved by Marth: VSCO 2 CE's Readme.txt asks for credit to Versilian Studios / Sam Gossner (LICENSE CC0 1.0 Universal); the samples ship in orch-samples.js
     ['gap', ''],
     ['head', 'In their own words'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") (Marth ~17:45: "add any and all words i said and what you and the crew said too")
     ['quote', 'A buncha different birds, namely an eagle. She said it was the best but had weird legs.', 'Marth'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") - SUSANOO_ORDER_BOARD.md:534 (board 517)
