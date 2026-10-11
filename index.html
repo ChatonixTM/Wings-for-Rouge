@@ -392,7 +392,7 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
     <div class="files" id="files" role="group" aria-label="Save files"></div>
     <div class="birds" role="group" aria-label="Pick your bird" id="birdCards"></div>
     <button class="go" id="go" type="button">Fly</button>
-    <div class="pause-row" id="pauseRow" hidden><button class="ghost" id="saveBtn" type="button">💾 Save</button><button class="ghost" id="toTitle" type="button">🏠 Main menu</button></div>
+    <div class="pause-row" id="pauseRow" hidden><button class="ghost" id="saveBtn" type="button">💾 Save</button><button class="ghost" id="toTitle" type="button">🏠 Main menu</button><button class="ghost" id="lookBtn" type="button">🧍 Look: Standard</button></div>
     <p class="how" id="how"></p>
     <div class="title-links"><button class="linkish" id="rewatch" type="button" style="min-height:44px" hidden>Watch the story again</button><button class="linkish" id="newGame" type="button" style="min-height:44px">New game</button></div>
   </div>
@@ -428,24 +428,30 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 <div id="fade" aria-hidden="true"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="tex-photos.js?v=32c77372fb7b"></script>
-<script src="textures.js?v=32c77372fb7b"></script>
-<script src="birds.js?v=32c77372fb7b"></script>
-<script src="humans.js?v=32c77372fb7b"></script>
-<script src="folk.js?v=32c77372fb7b"></script>
-<script src="trees.js?v=32c77372fb7b"></script>
-<script src="treehouses.js?v=32c77372fb7b"></script>
-<script src="cabins.js?v=32c77372fb7b"></script>
-<script src="cave.js?v=32c77372fb7b"></script>
-<script src="sounds.js?v=32c77372fb7b"></script>
-<script src="music.js?v=32c77372fb7b"></script>
-<script src="music-orchestra.js?v=32c77372fb7b"></script>
-<script src="rhythm.js?v=32c77372fb7b"></script>
-<script src="pictograms.js?v=32c77372fb7b"></script>
-<script src="hedgehogs.js?v=32c77372fb7b"></script>
-<script src="opening.js?v=32c77372fb7b"></script>
-<script src="skypiea.js?v=32c77372fb7b"></script>
-<script src="atmo.js?v=32c77372fb7b"></script>
+<script src="gltf-loader.js?v=c8417874b8f3"></script>
+<script src="skeleton-utils.js?v=c8417874b8f3"></script>
+<script src="meshopt-decoder.js?v=c8417874b8f3"></script>
+<script src="models.js?v=c8417874b8f3"></script>
+<script src="people.js?v=c8417874b8f3"></script>
+<script src="villagers.js?v=c8417874b8f3"></script>
+<script src="tex-photos.js?v=c8417874b8f3"></script>
+<script src="textures.js?v=c8417874b8f3"></script>
+<script src="birds.js?v=c8417874b8f3"></script>
+<script src="humans.js?v=c8417874b8f3"></script>
+<script src="folk.js?v=c8417874b8f3"></script>
+<script src="trees.js?v=c8417874b8f3"></script>
+<script src="treehouses.js?v=c8417874b8f3"></script>
+<script src="cabins.js?v=c8417874b8f3"></script>
+<script src="cave.js?v=c8417874b8f3"></script>
+<script src="sounds.js?v=c8417874b8f3"></script>
+<script src="music.js?v=c8417874b8f3"></script>
+<script src="music-orchestra.js?v=c8417874b8f3"></script>
+<script src="rhythm.js?v=c8417874b8f3"></script>
+<script src="pictograms.js?v=c8417874b8f3"></script>
+<script src="hedgehogs.js?v=c8417874b8f3"></script>
+<script src="opening.js?v=c8417874b8f3"></script>
+<script src="skypiea.js?v=c8417874b8f3"></script>
+<script src="atmo.js?v=c8417874b8f3"></script>
 <script>
 (() => {
 'use strict';
@@ -981,6 +987,9 @@ const strength = () => 1 + (S.level >= 3 ? 1 : 0) + (S.level >= 12 ? 1 : 0);
 
 /* ---------- sound (only after a tap) ---------- */
 let ac = null, muted = false;
+/* 622: the look. Standard = the CC0 model people, fish and the orchestra; Classic = the hand-built villagers, the cone fish and the game's own music (Marth, Oct 11:
+   "that way everyone is satisfied ... and all my prompts to be just overridden"). Saved on the device; the pause menu flips it and reloads. */
+let classicLook = false; try { classicLook = localStorage.getItem('wfr.look') === 'classic'; } catch (e) { /* private mode: Standard */ }
 function audio() { if (!ac) { try { ac = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { ac = null; } if (ac && window.WFR_SOUND) WFR_SOUND.init(ac, ac.destination, { isMuted: () => muted }); if (ac && window.WFR_MUSIC) WFR_MUSIC.init(ac, ac.destination, { isMuted: () => muted }); } if (ac && ac.state === 'suspended') ac.resume(); return ac; }
 function tone(f, t0, dur, type, vol) {
   const a = audio(); if (!a || muted) return;
@@ -1273,6 +1282,14 @@ const npcs = NAMES.map((name, i) => {
     happyT: 0, smileT: 0, waveCd: 0, need: null, partner: null, yaw: 0, stride: 0, fav: ['garden', 'market', 'well', 'bench', 'sweep', 'sky'][i] });
 });
 npcs.forEach((n) => spawnTool(n));
+/* 618/622: the villagers wear the model people once the models decode (a few ms, after the island is up); Classic keeps the
+   hand-built villagers inside the same groups, so nothing of theirs is lost. The look is decided once, at load. */
+const peopleSt = { on: false, n: 0, err: '', classic: classicLook }; window.WFR_PEOPLE_STATE = peopleSt;   // the benches read it
+if (!classicLook && window.WFR_VILLAGERS && window.WFR_PEOPLE && window.WFR_MODELS) setTimeout(() => { try {
+  const box = new THREE.Box3().setFromObject(npcs[0].g), height = box.max.y - box.min.y;   // the model stands as tall as the hand-built villager
+  npcs.forEach((n) => WFR_VILLAGERS.swap(THREE, n, n.i, { WFR_PEOPLE, height, pal: { shirt: SHIRTS[n.i], pants: PANTS[n.i], shoes: SHOES[n.i], skin: SKIN[n.i], hair: HAIR[n.i] },
+    onSwap: (m) => { peopleSt.n++; peopleSt.on = true; m.body.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); } }));
+} catch (e) { peopleSt.err = String((e && e.message) || e); } }, 0);
 /* every solid thing built so far casts a shadow and takes one: the forest, the houses, the lighthouse, the big tree, the villagers */
 scene.traverse((o) => { if (!o.isMesh || o.userData.ground || (o.material && o.material.transparent) || o.material.fog === false) return; o.castShadow = !/^trees:/.test(o.name); o.receiveShadow = true; });   // the forest's own soft discs stand in for its shadow (Obito: ~92k triangles a frame)
 const doorFront = (h, out) => toWorld(h, 0, h.d / 2 + out);
@@ -1308,6 +1325,7 @@ function chooseAct(n) {
 const ease = (o, k, v, r) => { o[k] += (v - o[k]) * r; };
 const PROP_OF = { kneel: 'can', shop: 'basket', sit: 'book', look: 'mug', talk: 'bread' };   // garden, market, bench, bath, a visit
 function pose(n, kind, dt, walkAmt, bt) {   // bt: the time into a beat sequence (the receive)
+  if (n.model && window.WFR_VILLAGERS) WFR_VILLAGERS.pose(n, kind, dt, walkAmt, bt);   // 618: a model villager plays the act's clip; the writes below land on loose objects
   const r = Math.min(1, dt * (kind === 'receive' ? 14 : kind === 'kneel' || kind === 'sit' ? 5 : 8)), w = Math.sin(n.stride) * walkAmt, t = S.t + n.i;   // settling down is slower than standing up
   let lL = w * 0.6, lR = -w * 0.6, aL = -w * 0.45, aR = w * 0.45, aLz = 0, aRz = 0, by = Math.abs(Math.cos(n.stride)) * 0.04 * walkAmt, hx = 0, wx = 0, wz = 0;   // wx, wz: the waist (board 555, "bend better")
   n.broom.visible = kind === 'sweep';
@@ -1648,6 +1666,9 @@ function cutscene(dt) {
     S.tut = 1; tutShow(); toast('Birds, just like you. Could you fly too?', 3200);
   }
 }
+/* 622: the look switch in the pause menu: Standard <-> Classic, saved on this device, then the island reloads with the other look */
+$('lookBtn').textContent = '🧍 Look: ' + (classicLook ? 'Classic' : 'Standard');
+$('lookBtn').addEventListener('click', () => { try { localStorage.setItem('wfr.look', classicLook ? 'standard' : 'classic'); } catch (e) { /* private mode */ } classicLook = !classicLook; $('lookBtn').textContent = '🧍 Look: ' + (classicLook ? 'Classic' : 'Standard'); save(); try { sessionStorage.setItem('wfr.toStart', '0'); } catch (e) { /* fine */ } setTimeout(() => location.reload(), 150); });
 $('birdsBtn').addEventListener('click', () => {
   if (S.mode === 'nest' || S.mode === 'hatch' || S.mode === 'card' || S.mode === 'event' || S.mode === 'homing' || S.talking || S.tut !== 0) return;   // homing: the glide home hides Flap and the stick until it lands (the assay, Oct 9)
   S.prevMode = S.mode; S.mode = 'paused'; music('home'); drawCards(); $('kicker').textContent = 'Paused'; $('pauseRow').hidden = false; $('files').hidden = true; $('newGame').hidden = true; $('go').textContent = 'Back to the island'; $('start').hidden = false;
@@ -2519,7 +2540,7 @@ function bgMusicTick(dt) {
    after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
    music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
    menu, a cutscene), the orchestra bows out. */
-const ORCH_SRC = 'orch-samples.js?v=32c77372fb7b';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const ORCH_SRC = 'orch-samples.js?v=c8417874b8f3';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
 const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
 window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
 const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
@@ -2582,7 +2603,7 @@ function orchEnd(fade) {   // the orchestra fades, and what the game was playing
   if (prev && window.WFR_MUSIC) WFR_MUSIC.play({ variant: prev, fadeIn: fade });
 }
 function orchCue(v) {   // 'owl': the Owl's lesson began (her hoot lands first, brief D); 'dove': the narrator's last line in the Eagle event
-  if (!window.WFR_ORCH || !orch.ready || orch.failed) { orch.skipped++; return; }   // not in yet: the game's music carries on, silently
+  if (!window.WFR_ORCH || !orch.ready || orch.failed || classicLook) { orch.skipped++; return; }   // 622: Classic keeps the game's own music   // not in yet: the game's music carries on, silently
   const go = () => {
     try {
       if (orch.failed || (v === 'owl' && !S.talking)) return;   // the lesson ended inside the hoot's 1.2 s
@@ -2734,6 +2755,7 @@ const FISH = {
 const fishGeo = { body: new THREE.ConeGeometry(0.16, 0.62, 6), tail: new THREE.ConeGeometry(0.13, 0.26, 3) };
 fishGeo.body.rotateX(Math.PI / 2); fishGeo.tail.rotateX(-Math.PI / 2);
 const schools = [];
+const FISH_FORWARD = '+z';   // 618: which way the model's nose points (set from the side-by-side shot)
 function school(type, cx, cz, n, spread) {
   const home = new THREE.Vector3(cx, 0, cz), fish = [], mat = new THREE.MeshLambertMaterial({ color: type.color, emissive: 0x111111 });
   for (let i = 0; i < n; i++) {
@@ -2749,6 +2771,18 @@ function school(type, cx, cz, n, spread) {
   for (let k = 0; k < 6; k++) { const a = k / 6 * Math.PI * 2 + 0.4; let r = 270; while (r < 318 && groundAt(Math.cos(a) * r, Math.sin(a) * r) > WATER - 2.5) r += 2;   /* the first deep water out from the shore: as far from the wind (330) as the sea allows */ school(FISH.silver, Math.cos(a) * r, Math.sin(a) * r, 7, 10); }
   if (groundAt(LAKE.x, LAKE.z) < WATER - 1.6) school(FISH.perch, LAKE.x, LAKE.z, 6, 6);
 }());
+/* 618: the fish take the CC0 model's shape (people.js + models.js) once it decodes; until then, and if it never does, the cones swim as before */
+const fishModel = { on: false, n: 0, err: '' }; window.WFR_FISH_STATE = fishModel;   // the benches read it
+if (typeof classicLook !== 'undefined' && classicLook) fishModel.err = 'classic';   // 622: Classic keeps the cone fish
+else if (window.WFR_PEOPLE && window.WFR_MODELS && WFR_MODELS.fish) setTimeout(() => { try {
+  WFR_PEOPLE.geometry(THREE, 'fish', { length: 0.9, forward: FISH_FORWARD }, (m) => { try {
+    if (!m) { fishModel.err = 'no model'; return; }
+    const cut = -0.22, parts = WFR_PEOPLE.splitZ(THREE, m.geo, cut); parts.back.translate(0, 0, -cut);   // the tail pivots where it joins the body
+    for (const sc of schools) { sc.fish.forEach((f) => { const body = f.g.children[0]; body.geometry = parts.front; f.tail.geometry = parts.back; f.tail.position.z = cut; fishModel.n++; });
+      const mat = sc.fish[0] && sc.fish[0].g.children[0].material; if (mat) { mat.vertexColors = true; mat.color.lerp(new THREE.Color(0xffffff), 0.45); mat.needsUpdate = true; } }   // the model's own colours, tinted toward the species
+    fishModel.on = true;
+  } catch (e) { fishModel.err = String((e && e.message) || e); } });
+} catch (e) { fishModel.err = String((e && e.message) || e); } }, 0);
 /* ---------- FOLK (board 552): Hal fishes the lake's south-west shore (folk.js) ---------- */
 const FOLK = window.WFR_FOLK ? WFR_FOLK.create(THREE, scene, { H, WATER, LAKE, humans: window.WFR_HUMANS, renderer, landNear, ground: groundAt, emojiSprite, home: (() => { const c = CABINS.find((x) => x.who === 'Hal'); return c ? doorFront(c, 0.6) : undefined; })(),
   getClock: () => S.clock, birdPos: () => S.pos,
@@ -3778,7 +3812,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build 32c77372fb7b): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build c8417874b8f3): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>
