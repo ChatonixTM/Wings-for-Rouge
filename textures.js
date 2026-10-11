@@ -625,8 +625,47 @@ window.WFR_TEX = (function () {
       const t0 = now(); const c = bumpCanvas(paint(base)); const dt = now() - t0;
       stats.ms += dt; stats.each[name] = Math.round(dt * 10) / 10;
       cache[name] = finish(c, renderer, { linear: true });
-    } else cache[name] = finish(paint(base), renderer, base === 'cloud' ? { clamp: true } : null);
+    } else { cache[name] = finish(paint(base), renderer, base === 'cloud' ? { clamp: true } : null); photoFor(base); }
     return cache[name];
+  }
+
+  /* 578/618 - THE PHOTOS (Marth, Oct 11: "implement all fixes ... that can use other ppls code"; his "!!!" on the texture pack).
+     tex-photos.js carries CC0 photo textures (Poly Haven). Once a photo decodes it is painted INTO the hand-made texture's own
+     canvas, so every surface already sharing that texture (the per-repeat clones too) changes at once. The photo lends its
+     DETAIL; the hand-made texture's average colour is kept, so the island's vertex and instance colours still lead and nothing
+     darkens. No photo, or a failed decode: the hand-made texture simply stays. */
+  const photoState = {};
+  const PHOTO_SIZE = 512, PHOTO_HUE = 0.25, PHOTO_CONTRAST = 0.85;   // how much of the photo's own colour survives; detail strength
+  function photoFor(base) {
+    const P = window.WFR_PHOTOS; if (!P || !P.use || !P.files || photoState[base]) return;
+    const key = P.use[base] ? base : (/^roof_clay_/.test(base) ? 'roofTiles' : null);   // the village houses' clay roofs (any colour) wear the clay-tile photo
+    const src = key && P.files[P.use[key]]; if (!src) return;
+    photoState[base] = 'loading';
+    const img = new Image();
+    img.onerror = function () { photoState[base] = 'failed'; };
+    img.onload = function () {
+      try {
+        const c = canvases[base]; if (!c) { photoState[base] = 'failed'; return; }
+        const old = ctx(c).getImageData(0, 0, c.width, c.height).data; let ar = 0, ag = 0, ab = 0; const n = old.length / 4;
+        for (let p = 0; p < old.length; p += 4) { ar += old[p]; ag += old[p + 1]; ab += old[p + 2]; }
+        ar /= n; ag /= n; ab /= n; const baseL = ar * 0.3 + ag * 0.59 + ab * 0.11;
+        c.width = c.height = PHOTO_SIZE; const g = ctx(c); g.drawImage(img, 0, 0, PHOTO_SIZE, PHOTO_SIZE);
+        const im = g.getImageData(0, 0, PHOTO_SIZE, PHOTO_SIZE), d = im.data; let L = 0;
+        for (let p = 0; p < d.length; p += 4) L += d[p] * 0.3 + d[p + 1] * 0.59 + d[p + 2] * 0.11;
+        L = (L / (d.length / 4)) || 1; const k = baseL / L;
+        for (let p = 0; p < d.length; p += 4) {
+          const l = 1 + ((d[p] * 0.3 + d[p + 1] * 0.59 + d[p + 2] * 0.11) / L - 1) * PHOTO_CONTRAST;
+          d[p] = ar * l * (1 - PHOTO_HUE) + d[p] * k * PHOTO_HUE;   // the data is clamped to 0..255 by the browser
+          d[p + 1] = ag * l * (1 - PHOTO_HUE) + d[p + 1] * k * PHOTO_HUE;
+          d[p + 2] = ab * l * (1 - PHOTO_HUE) + d[p + 2] * k * PHOTO_HUE;
+        }
+        g.putImageData(im, 0, 0);
+        for (const t of Object.values(cache).concat(Object.values(shared))) if (t && t.image === c) t.needsUpdate = true;
+        const bump = cache[base + 'Bump']; if (bump) { bump.image = bumpCanvas(c); bump.needsUpdate = true; }
+        photoState[base] = 'photo';
+      } catch (e) { photoState[base] = 'failed'; }
+    };
+    img.src = src;
   }
 
   /* bumpScale that reads well at game distance (r128 bump is screen-space: at heavy minification a big scale
@@ -635,6 +674,7 @@ window.WFR_TEX = (function () {
   const api = { names: Object.keys(painters).concat(Object.keys(ALIAS)), bumpNames: Object.keys(BUMP_SCALE), bumpScale: BUMP_SCALE, get: get, stats: stats };
   api.names.forEach(function (n) { api[n] = function (renderer) { return get(n, renderer); }; });
   api.bump = function (name, renderer) { return get(name + 'Bump', renderer); };
+  api.photos = photoState;   // 578/618: which textures wear a photo (loading / photo / failed)
   api.count = function () {                         // distinct THREE.Textures alive (aliases share, so dedupe)
     const set = new Set(Object.values(cache).concat(Object.values(shared))); return set.size;
   };

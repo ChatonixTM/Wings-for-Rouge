@@ -386,7 +386,7 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
   <div class="sheet">
     <div class="brand"><canvas id="wfrMini" width="50" height="15" role="img" aria-label="WFR"></canvas><h1>Wings for <span class="who">Rouge</span></h1></div>
     <div class="kicker" id="kicker">An island, a village, and a nest to build</div>
-    <p>Gather twigs for a nest in the big tree. Help the villagers find their tools. Grow from level 1 to 20.</p>
+    <p>Gather twigs for a nest in the big tree. Help the villagers find their tools. Grow from level 1 to 42.</p>
     <div class="files" id="files" role="group" aria-label="Save files"></div>
     <div class="birds" role="group" aria-label="Pick your bird" id="birdCards"></div>
     <button class="go" id="go" type="button">Fly</button>
@@ -426,22 +426,23 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 <div id="fade" aria-hidden="true"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="textures.js?v=755ac0e8b3ba"></script>
-<script src="birds.js?v=755ac0e8b3ba"></script>
-<script src="humans.js?v=755ac0e8b3ba"></script>
-<script src="folk.js?v=755ac0e8b3ba"></script>
-<script src="trees.js?v=755ac0e8b3ba"></script>
-<script src="treehouses.js?v=755ac0e8b3ba"></script>
-<script src="cabins.js?v=755ac0e8b3ba"></script>
-<script src="cave.js?v=755ac0e8b3ba"></script>
-<script src="sounds.js?v=755ac0e8b3ba"></script>
-<script src="music.js?v=755ac0e8b3ba"></script>
-<script src="rhythm.js?v=755ac0e8b3ba"></script>
-<script src="pictograms.js?v=755ac0e8b3ba"></script>
-<script src="hedgehogs.js?v=755ac0e8b3ba"></script>
-<script src="opening.js?v=755ac0e8b3ba"></script>
-<script src="skypiea.js?v=755ac0e8b3ba"></script>
-<script src="atmo.js?v=755ac0e8b3ba"></script>
+<script src="tex-photos.js?v=a3df8a8a9113"></script>
+<script src="textures.js?v=a3df8a8a9113"></script>
+<script src="birds.js?v=a3df8a8a9113"></script>
+<script src="humans.js?v=a3df8a8a9113"></script>
+<script src="folk.js?v=a3df8a8a9113"></script>
+<script src="trees.js?v=a3df8a8a9113"></script>
+<script src="treehouses.js?v=a3df8a8a9113"></script>
+<script src="cabins.js?v=a3df8a8a9113"></script>
+<script src="cave.js?v=a3df8a8a9113"></script>
+<script src="sounds.js?v=a3df8a8a9113"></script>
+<script src="music.js?v=a3df8a8a9113"></script>
+<script src="rhythm.js?v=a3df8a8a9113"></script>
+<script src="pictograms.js?v=a3df8a8a9113"></script>
+<script src="hedgehogs.js?v=a3df8a8a9113"></script>
+<script src="opening.js?v=a3df8a8a9113"></script>
+<script src="skypiea.js?v=a3df8a8a9113"></script>
+<script src="atmo.js?v=a3df8a8a9113"></script>
 <script>
 (() => {
 'use strict';
@@ -672,10 +673,12 @@ let SEA = null;
 const lam = (c, extra) => { const o = Object.assign({ color: c }, extra || {}); delete o.flatShading; return new THREE.MeshLambertMaterial(o); };
 const tex = (m, name, rx, ry) => { if (window.WFR_TEX) WFR_TEX.apply(m, name, rx, ry, renderer); return m; };   // the surfaces (textures.js)
 const box = (w, h, d, c, extra) => new THREE.Mesh(new THREE.BoxGeometry(w, h, d), lam(c, Object.assign({ flatShading: true }, extra || {})));
-function emojiSprite(ch, size) {
-  const cv = document.createElement('canvas'); cv.width = cv.height = 128; const g = cv.getContext('2d');
-  g.font = '96px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(ch, 64, 72);
-  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: new THREE.CanvasTexture(cv), depthWrite: false })); s.scale.set(size, size, 1); return s;
+function emojiSprite(ch, size) {   // 618: one texture per emoji, painted once and shared (each sprite used to paint its own, and none was freed)
+  const cache = emojiSprite.tex || (emojiSprite.tex = {}); let tex = cache[ch];
+  if (!tex) { const cv = document.createElement('canvas'); cv.width = cv.height = 128; const g = cv.getContext('2d');
+    g.font = '96px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText(ch, 64, 72);
+    tex = cache[ch] = new THREE.CanvasTexture(cv); }
+  const s = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthWrite: false })); s.scale.set(size, size, 1); return s;
 }
 
 /* terrain, faceted, coloured by height */
@@ -1684,7 +1687,7 @@ const BUB = 40, bubGeo = new THREE.BufferGeometry(), bubPos = new Float32Array(B
 bubGeo.setAttribute('position', new THREE.BufferAttribute(bubPos, 3));
 const bubPts = new THREE.Points(bubGeo, new THREE.PointsMaterial({ color: 0xe8f8ff, size: 0.18, transparent: true, opacity: 0.8, depthWrite: false }));
 bubPts.frustumCulled = false; scene.add(bubPts); let bubNext = 0, bubAcc = 0;
-function bubbles(dt, frac) {   // more of them as the breath runs low
+function underBubbles(dt, frac) {   // more of them as the breath runs low (618: it shared its name with the speech bubbles, which won, so these never showed)
   bubAcc += dt * (frac < 0.5 ? 14 : 3);
   while (bubAcc > 1) { bubAcc--; const i = bubNext++ % BUB; bubPos[i * 3] = S.pos.x + Math.sin(S.yaw) * 0.6 + (Math.random() - 0.5) * 0.2; bubPos[i * 3 + 1] = S.pos.y + 0.3; bubPos[i * 3 + 2] = S.pos.z + Math.cos(S.yaw) * 0.6; }
   for (let i = 0; i < BUB; i++) { if (bubPos[i * 3 + 1] < -900) continue; bubPos[i * 3 + 1] += dt * 1.6; bubPos[i * 3] += Math.sin(S.t * 6 + i) * dt * 0.2; if (bubPos[i * 3 + 1] > WATER) bubPos[i * 3 + 1] = -999; }
@@ -1910,7 +1913,9 @@ stick.addEventListener('pointermove', (e) => {
   const r = stick.getBoundingClientRect(); knob.style.left = (ox - r.left + Math.cos(a) * m * 50) + 'px'; knob.style.top = (oy - r.top + Math.sin(a) * m * 50) + 'px';
 });
 const release = (e) => { if (e.pointerId !== sid) return; sid = null; input.sx = 0; input.sy = 0; base.hidden = true; knob.hidden = true; };
-stick.addEventListener('pointerup', release); stick.addEventListener('pointercancel', release);
+stick.addEventListener('pointerup', release); stick.addEventListener('pointercancel', release); stick.addEventListener('lostpointercapture', release);
+const releaseAll = () => { if (sid === null) return; sid = null; input.sx = 0; input.sy = 0; base.hidden = true; knob.hidden = true; };   // 618: the app lost focus or went to the background
+addEventListener('blur', releaseAll); document.addEventListener('visibilitychange', () => { if (document.hidden) releaseAll(); });
 /* ---------- the other finger: pan the camera ---------- */
 const UPV = new THREE.Vector3(0, 1, 0);
 let panId = null, panX = 0, panY = 0, panIdle = 9;
@@ -3506,7 +3511,7 @@ function frame(now) {
     $('under').classList.toggle('tight', frac < 0.12);
     if (frac < 0.25 && !S.rescue) { warn('Your chest is tight. Up!'); S.dingT = (S.dingT || 0) - dt; if (S.dingT <= 0) { ding(); S.dingT = 2; } }
     if (S.breath <= 0 && !S.rescue) S.rescue = true;
-    bubbles(dt, frac);
+    underBubbles(dt, frac);
     if (S.pos.y > WATER - 0.35) leaveSwim();
     else {
       bird.position.copy(S.pos);
@@ -3674,7 +3679,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build 755ac0e8b3ba): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build a3df8a8a9113): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>
