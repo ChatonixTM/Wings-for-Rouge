@@ -37,14 +37,17 @@ window.WFR_VILLAGERS = (function () {
   function paint(THREE, body, name, pal) {
     const P = PAINT[name]; if (!P || !pal) return;
     const want = {}; for (const k of Object.keys(P)) for (const m of P[k]) want[m] = pal[k];
-    body.traverse((o) => { if (!o.isMesh) return; for (const m of (Array.isArray(o.material) ? o.material : [o.material])) if (m && want[m.name] !== undefined && want[m.name] !== null) m.color.set(want[m.name]); });
+    if (window.WFR_PEOPLE && WFR_PEOPLE.paint) WFR_PEOPLE.paint(THREE, body, want);   // the merged body: colours live in the vertices, by the former material's name
+    body.traverse((o) => { if (!o.isMesh || o.userData.ranges) return; for (const m of (Array.isArray(o.material) ? o.material : [o.material])) if (m && want[m.name] !== undefined && want[m.name] !== null) m.color.set(want[m.name]); });   // an unmerged body: by material
   }
   function swap(THREE, n, i, api) {   // api: { WFR_PEOPLE, height, pal, scene }
     if (n.model || !api.WFR_PEOPLE) return false;
     const name = api.body || BODY[i % BODY.length];
-    api.WFR_PEOPLE.make(THREE, name, { height: api.height, clips: 'man1' }, (p) => {
+    const gs = n.g.getWorldScale(new THREE.Vector3()).y || 1;   // the villager's group already scales its body (1.35): size the model INSIDE that, or it stands a third too tall (ship #13 on his phone, Oct 11)
+    api.WFR_PEOPLE.make(THREE, name, { height: api.height / gs, clips: name }, (p) => {   // each body's OWN clips: the women's skeleton rests differently, and the man's numbers put their hands behind their backs (his phone, Oct 11)
       if (!p || n.model) return;
       paint(THREE, p.body, name, api.pal);
+      if (api.headScale && api.headScale !== 1) { const hd = p.body.getObjectByName('Head'); if (hd) hd.scale.setScalar(api.headScale); }   // the children: a bigger head on a short body (folk.js's K_HEAD)
       const s = p.body.scale.x, wrist = p.body.getObjectByName('Wrist.R') || p.body.getObjectByName('LowerArm.R');
       const hand = new THREE.Object3D(); hand.position.set(0, -0.72 / s, 0); hand.rotation.x = Math.PI; hand.scale.setScalar(1 / s);   // the old rig's armR frame: (0, -0.72, 0) lands on the wrist
       if (wrist) wrist.add(hand);
@@ -80,5 +83,12 @@ window.WFR_VILLAGERS = (function () {
     /* the body's height while seated is the game's own ease of n.body.position.y (n.body is this model's root), the same path the
        hand-built body takes; writing it here too made two hands fight on one knob (the bench's "listens sitting down" caught it) */
   }
-  return { swap, restore, pose, BODY, PAINT, CLIP };
+  /* the children (folk.js kPose has no dt: each kid keeps its own clock). Their kinds: run/reach/jog/walk/laugh/dig/watch/cheer/shrug/stand */
+  const KID_CLIP = { run: 'run', reach: 'run', jog: 'run', walk: 'walk', laugh: 'idle_neutral', dig: 'interact', watch: 'idle_neutral', cheer: 'wave', shrug: 'idle_neutral', stand: 'idle' };
+  function kidPose(k, kind) {
+    const p = k.model; if (!p) return;
+    const now = performance.now(), dt = Math.min(0.05, (now - (k.modelT || now)) / 1000); k.modelT = now;
+    p.play(KID_CLIP[kind] || 'idle'); p.tick(dt);
+  }
+  return { swap, restore, pose, kidPose, BODY, PAINT, CLIP, KID_CLIP };
 })();

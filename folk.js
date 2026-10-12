@@ -799,6 +799,7 @@ window.WFR_FOLK = (function () {
   /* ── their bodies: the villagers' rig (legL/legR/armL/armR .x/.z, body.y, waist .x/.z, head .x/.y) ── */
   function kPose(k, r, rf, t) {
     const m = k, w = Math.sin(k.stride), kind = k.kind;
+    if (k.model && window.WFR_VILLAGERS) WFR_VILLAGERS.kidPose(k, kind);   // 618: a model child plays the kind's clip; the eases below land on loose objects
     let lL = 0, lR = 0, aL = 0, aR = 0, aLz = 0, aRz = 0, by = 0, hx = 0, wx = 0, wz = 0, fast = false;
     if (kind === 'run' || kind === 'reach') {
       lL = w * 0.95; lR = -lL; aL = -w * 0.9 - 0.3; aR = w * 0.9 - 0.3; aLz = -0.14; aRz = 0.14; by = Math.abs(Math.cos(k.stride)) * 0.12 - 0.02; wx = 0.22; hx = -0.08; fast = true;

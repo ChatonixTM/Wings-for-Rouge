@@ -40,6 +40,49 @@ window.WFR_PEOPLE = (function () {
     if (m.transparent) { o.transparent = true; o.opacity = m.opacity; }
     const l = new THREE.MeshLambertMaterial(o); l.name = m.name; return l;
   }
+  /* one draw per body part: a glTF mesh with several flat-colour primitives loads as one Mesh per primitive; the siblings are merged
+     into ONE skinned mesh with vertex colours, and each former material's vertex range is kept by name, so the game's paints still
+     land (paint, below). The merged mesh binds to the first part's skeleton and bind matrix. */
+  function mergeParts(THREE, root) {
+    const groups = new Map();
+    root.traverse((o) => { if (o.isMesh && o.parent) { if (!groups.has(o.parent)) groups.set(o.parent, []); groups.get(o.parent).push(o); } });
+    for (const [parent, list] of groups) {
+      const parts = []; let nV = 0, nI = 0;
+      for (const m of list) { const g = m.geometry, vc = g.attributes.position.count, ic = g.index ? g.index.count : vc; parts.push({ m, g, vc, ic }); nV += vc; nI += ic; }
+      const buf = {}; for (const a of ['position', 'normal', 'skinIndex', 'skinWeight']) { const src = parts[0].g.attributes[a]; if (src) buf[a] = { arr: new (a === 'skinIndex' ? Uint16Array : Float32Array)(nV * src.itemSize), size: src.itemSize }; }
+      const col = new Float32Array(nV * 3), idx = new (nV > 65535 ? Uint32Array : Uint16Array)(nI), ranges = {}; let vo = 0, io = 0;
+      const get = [(s, i) => s.getX(i), (s, i) => s.getY(i), (s, i) => s.getZ(i), (s, i) => s.getW(i)];
+      for (const p of parts) {
+        for (const a in buf) { const src = p.g.attributes[a]; if (!src) continue; const sz = buf[a].size, arr = buf[a].arr;   // per vertex, through the attribute's own reads: the files store vertices INTERLEAVED (a raw .array copy tore the bodies apart, Oct 11)
+          for (let i = 0; i < p.vc; i++) for (let c = 0; c < sz; c++) arr[(vo + i) * sz + c] = get[c](src, i); }
+        const c = (p.m.material && p.m.material.color) || new THREE.Color(1, 1, 1);
+        for (let i = 0; i < p.vc; i++) { col[(vo + i) * 3] = c.r; col[(vo + i) * 3 + 1] = c.g; col[(vo + i) * 3 + 2] = c.b; }
+        if (p.g.index) { const ia = p.g.index.array; for (let i = 0; i < p.ic; i++) idx[io + i] = ia[i] + vo; } else for (let i = 0; i < p.ic; i++) idx[io + i] = vo + i;
+        const nm = (p.m.material && p.m.material.name) || ''; (ranges[nm] = ranges[nm] || []).push([vo, p.vc]);
+        vo += p.vc; io += p.ic;
+      }
+      const out = new THREE.BufferGeometry();
+      for (const a in buf) out.setAttribute(a, new THREE.BufferAttribute(buf[a].arr, buf[a].size));
+      out.setAttribute('color', new THREE.BufferAttribute(col, 3)); out.setIndex(new THREE.BufferAttribute(idx, 1));
+      const first = parts[0].m, skinned = !!first.isSkinnedMesh, mat = new THREE.MeshLambertMaterial({ vertexColors: true, skinning: skinned });
+      const mesh = skinned ? new THREE.SkinnedMesh(out, mat) : new THREE.Mesh(out, mat);
+      if (skinned) mesh.bind(first.skeleton, first.bindMatrix);
+      mesh.frustumCulled = false; mesh.castShadow = first.castShadow; mesh.receiveShadow = first.receiveShadow; mesh.name = parent.name; mesh.userData.ranges = ranges;
+      for (const p of parts) parent.remove(p.m);
+      parent.add(mesh);
+    }
+  }
+  /* the game's paints onto a merged body: map = { materialName: hex }; every vertex of that former material takes the colour */
+  function paint(THREE, root, map) {
+    const c = new THREE.Color();
+    root.traverse((o) => {
+      if (!o.isMesh || !o.userData.ranges || !o.geometry.attributes.color) return;
+      const col = o.geometry.attributes.color; let touched = false;
+      for (const nm in map) { const rs = o.userData.ranges[nm]; if (!rs || map[nm] === undefined || map[nm] === null) continue; c.set(map[nm]);
+        for (const [start, count] of rs) for (let i = start; i < start + count; i++) { col.setXYZ(i, c.r, c.g, c.b); } touched = true; }
+      if (touched) col.needsUpdate = true;
+    });
+  }
   function load(THREE, name, cb) {
     if (cache[name]) return cb(cache[name]);
     if (!window.WFR_MODELS || !WFR_MODELS[name] || !THREE.GLTFLoader) return cb(null);
@@ -69,6 +112,7 @@ window.WFR_PEOPLE = (function () {
         if (opts.shadow !== false) { o.castShadow = true; o.receiveShadow = true; }
         if (opts.lambert !== false) o.material = Array.isArray(o.material) ? o.material.map((x) => toLambert(THREE, x)) : toLambert(THREE, o.material);
       });
+      if (opts.merge !== false) mergeParts(THREE, body);   // one draw per body part (a modular body is 10 primitives: 10 draws → 4; the kids' guard pins draws)
       const mixer = new THREE.AnimationMixer(body), actions = {}, clips = [];
       for (const c of m.clips) { const n = clipName(c); clips.push(n); actions[n] = mixer.clipAction(c); }
       let now = null;
@@ -120,5 +164,5 @@ window.WFR_PEOPLE = (function () {
       o.computeBoundingBox(); return o; };
     return { front: take(front), back: take(back) };
   }
-  return { make, load, clipName, geometry, splitZ };
+  return { make, load, clipName, geometry, splitZ, paint, mergeParts };
 })();

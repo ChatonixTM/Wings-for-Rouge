@@ -428,30 +428,30 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 <div id="fade" aria-hidden="true"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="gltf-loader.js?v=c8417874b8f3"></script>
-<script src="skeleton-utils.js?v=c8417874b8f3"></script>
-<script src="meshopt-decoder.js?v=c8417874b8f3"></script>
-<script src="models.js?v=c8417874b8f3"></script>
-<script src="people.js?v=c8417874b8f3"></script>
-<script src="villagers.js?v=c8417874b8f3"></script>
-<script src="tex-photos.js?v=c8417874b8f3"></script>
-<script src="textures.js?v=c8417874b8f3"></script>
-<script src="birds.js?v=c8417874b8f3"></script>
-<script src="humans.js?v=c8417874b8f3"></script>
-<script src="folk.js?v=c8417874b8f3"></script>
-<script src="trees.js?v=c8417874b8f3"></script>
-<script src="treehouses.js?v=c8417874b8f3"></script>
-<script src="cabins.js?v=c8417874b8f3"></script>
-<script src="cave.js?v=c8417874b8f3"></script>
-<script src="sounds.js?v=c8417874b8f3"></script>
-<script src="music.js?v=c8417874b8f3"></script>
-<script src="music-orchestra.js?v=c8417874b8f3"></script>
-<script src="rhythm.js?v=c8417874b8f3"></script>
-<script src="pictograms.js?v=c8417874b8f3"></script>
-<script src="hedgehogs.js?v=c8417874b8f3"></script>
-<script src="opening.js?v=c8417874b8f3"></script>
-<script src="skypiea.js?v=c8417874b8f3"></script>
-<script src="atmo.js?v=c8417874b8f3"></script>
+<script src="gltf-loader.js?v=50cf91218bb4"></script>
+<script src="skeleton-utils.js?v=50cf91218bb4"></script>
+<script src="meshopt-decoder.js?v=50cf91218bb4"></script>
+<script src="models.js?v=50cf91218bb4"></script>
+<script src="people.js?v=50cf91218bb4"></script>
+<script src="villagers.js?v=50cf91218bb4"></script>
+<script src="tex-photos.js?v=50cf91218bb4"></script>
+<script src="textures.js?v=50cf91218bb4"></script>
+<script src="birds.js?v=50cf91218bb4"></script>
+<script src="humans.js?v=50cf91218bb4"></script>
+<script src="folk.js?v=50cf91218bb4"></script>
+<script src="trees.js?v=50cf91218bb4"></script>
+<script src="treehouses.js?v=50cf91218bb4"></script>
+<script src="cabins.js?v=50cf91218bb4"></script>
+<script src="cave.js?v=50cf91218bb4"></script>
+<script src="sounds.js?v=50cf91218bb4"></script>
+<script src="music.js?v=50cf91218bb4"></script>
+<script src="music-orchestra.js?v=50cf91218bb4"></script>
+<script src="rhythm.js?v=50cf91218bb4"></script>
+<script src="pictograms.js?v=50cf91218bb4"></script>
+<script src="hedgehogs.js?v=50cf91218bb4"></script>
+<script src="opening.js?v=50cf91218bb4"></script>
+<script src="skypiea.js?v=50cf91218bb4"></script>
+<script src="atmo.js?v=50cf91218bb4"></script>
 <script>
 (() => {
 'use strict';
@@ -2540,7 +2540,7 @@ function bgMusicTick(dt) {
    after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
    music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
    menu, a cutscene), the orchestra bows out. */
-const ORCH_SRC = 'orch-samples.js?v=c8417874b8f3';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const ORCH_SRC = 'orch-samples.js?v=50cf91218bb4';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
 const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
 window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
 const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
@@ -2799,6 +2799,13 @@ const KIDS = window.WFR_FOLK && WFR_FOLK.createKids ? WFR_FOLK.createKids(THREE,
   getClock: () => S.clock, birdPos: () => S.pos, door: doorFront(houses[0], 0.2), doorOut: doorFront(houses[0], 1.4), openDoor: (t) => { houses[0].openT = Math.max(houses[0].openT, t); },
   onDig: (at) => { const f = DUG.find((x) => !x.live); if (!f) return false; f.live = true; f.back = 0; f.s.position.set(at[0], at[1] + 0.45, at[2]); return true; },
   dugLive: () => { let n = 0; for (const f of DUG) { if (f.live && f.back > 0) f.live = false; if (f.live) n++; } return n; } }) : null;   // picked (back > 0): gone for good
+/* 618: the children wear the model people too (Pim a small man1, Tess a small woman2, heads a quarter bigger), unless Classic */
+if (!classicLook && KIDS && window.WFR_VILLAGERS && window.WFR_PEOPLE && WFR_FOLK.children) setTimeout(() => { try {
+  const KID_PAINT = [{ shirt: 0x5f9e4a, pants: 0x2f3a52, shoes: 0x3a2a1e, skin: SKIN[0], hair: HAIR[1] }, { shirt: 0xc8574b, pants: 0x4a3a2a, shoes: 0x5a3a1e, skin: SKIN[5], hair: HAIR[5] }];
+  WFR_FOLK.children.list.forEach((k, j) => { const box = new THREE.Box3().setFromObject(k.g), height = box.max.y - box.min.y;
+    WFR_VILLAGERS.swap(THREE, k, j, { WFR_PEOPLE, height, body: j ? 'woman2' : 'man1', headScale: 1.25, pal: KID_PAINT[j % 2],
+      onSwap: (m) => { peopleSt.kids = (peopleSt.kids || 0) + 1; m.body.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); } }); });
+} catch (e) { peopleSt.err = String((e && e.message) || e); } }, 0);
 function folkTick(dt) {
   if (!FOLK) return;
   WFR_FOLK.tick(dt);
@@ -3812,7 +3819,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build c8417874b8f3): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build 50cf91218bb4): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>
