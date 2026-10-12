@@ -101,12 +101,12 @@ window.WFR_SKY = (function () {
     ['quote', 'Hm, the music is better than I expected, good work, I enjoy it.', 'Marth'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") - gifts/rouge-birthday-2026/BRIEF_547_548_OWL_DOVE_MUSIC_2026-10-09.md:5
     ['quote', 'Good stuff with the chick creation.', 'Marth'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") - SUSANOO_ORDER_BOARD.md:567 (board 550)
     ['quote', 'The game was made into a home-screen app that keeps her game when she leaves.', 'Hinata'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") - gifts/rouge-birthday-2026/DIARY_2026-10-09.md:22 (Hinata's diary, 09:53 entry)
-    ['quote', 'I will.', 'Hinata'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") - gifts/rouge-birthday-2026/DIARY_2026-10-09.md:220 (her answer to "have hinata keep logging this... keeep it up")
+    /* 630: the 'I will.' quote was dropped (Marth: "so random") */   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") - gifts/rouge-birthday-2026/DIARY_2026-10-09.md:220 (her answer to "have hinata keep logging this... keeep it up")
     ['quote', 'The nest quest can\'t be lost.', 'Stark'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") - gifts/rouge-birthday-2026/ASSAY_2026-10-09/02-stark-softlocks.md:19 (Stark's assay, "What works")
     ['quote', 'An original phone flight game: one island, a nest and an egg.', 'Fern'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") - gifts/rouge-birthday-2026/ASSAY_2026-10-09/01-fern-orders.md:14 (Fern's assay, board 517)
     ['quote', 'A phone game is tested by a thumb.', 'Susano\'o'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") - THE_CREW.md:1079 ("a phone game is tested by a thumb", capital A ours)
     ['gap', ''],
-    ['line', 'Hinata and Stark were modelled after {name}.'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") (Marth ~17:47: "no i meant hinata and stark were modelled after rouge hahahah")
+    ['line', 'Hinata and Fern were modelled after {name}.'],   // 630: Fern, not Stark (Marth ~23:00: "FERN and Hinata were modelled after rouge not stark")   // APPROVED by Marth (Oct 10 ~00:15, "credits texts") (Marth ~17:47: "no i meant hinata and stark were modelled after rouge hahahah")
     ['gap', ''],
     ['birds', ''],
     ['title', 'Thank you for playing.'],   // APPROVED by Marth (Oct 10 ~00:15, "credits texts")
