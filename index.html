@@ -274,7 +274,7 @@ html.cine #boot{display:grid}
 @keyframes careSlide{from{opacity:0;transform:translateY(-8px)}}
 .care.tucked{grid-template-columns:auto minmax(0,1fr);align-items:center;gap:8px;width:max-content;max-width:calc(100% - 16px);box-sizing:border-box;padding:4px 6px 4px 14px;white-space:nowrap}   /* max-content: at left:50% a shrink-to-fit width wrapped it into two lines; capped to the screen since the fifth button (Dress, #18) cut it on his iPhone 12 (Oct 12) */
 .care.tucked .row{overflow-x:auto;overscroll-behavior-x:contain;scrollbar-width:none;-webkit-overflow-scrolling:touch;padding-bottom:1px}.care.tucked .row::-webkit-scrollbar{display:none}   /* the row slides under a thumb when the phone is narrower than the five */
-.care.tucked .stats,.care.tucked #careStage{display:none}
+.care.tucked .stats,.care.tucked #careStage,.care.tucked #dress{display:none}   /* 635: the Dress page (#18) came after this rule and stayed painted under the tucked bar (his recording, Oct 12 ~01:36) */
 .care.tucked .row{flex-wrap:nowrap;gap:6px}
 .care.tucked .row button{padding:6px 14px}
 @media (prefers-reduced-motion:reduce){ .care .stats,.care.tucked .row{animation:none} }
@@ -433,31 +433,31 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 <div id="fade" aria-hidden="true"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="gltf-loader.js?v=d0c0664df6f2"></script>
-<script src="skeleton-utils.js?v=d0c0664df6f2"></script>
-<script src="meshopt-decoder.js?v=d0c0664df6f2"></script>
-<script src="models.js?v=d0c0664df6f2"></script>
-<script src="people.js?v=d0c0664df6f2"></script>
-<script src="villagers.js?v=d0c0664df6f2"></script>
-<script src="tex-photos.js?v=d0c0664df6f2"></script>
-<script src="textures.js?v=d0c0664df6f2"></script>
-<script src="birds.js?v=d0c0664df6f2"></script>
-<script src="humans.js?v=d0c0664df6f2"></script>
-<script src="folk.js?v=d0c0664df6f2"></script>
-<script src="trees.js?v=d0c0664df6f2"></script>
-<script src="treehouses.js?v=d0c0664df6f2"></script>
-<script src="cabins.js?v=d0c0664df6f2"></script>
-<script src="cave.js?v=d0c0664df6f2"></script>
-<script src="sounds.js?v=d0c0664df6f2"></script>
-<script src="music.js?v=d0c0664df6f2"></script>
-<script src="music-orchestra.js?v=d0c0664df6f2"></script>
-<script src="rhythm.js?v=d0c0664df6f2"></script>
-<script src="pictograms.js?v=d0c0664df6f2"></script>
-<script src="chick-wear.js?v=d0c0664df6f2"></script>
-<script src="hedgehogs.js?v=d0c0664df6f2"></script>
-<script src="opening.js?v=d0c0664df6f2"></script>
-<script src="skypiea.js?v=d0c0664df6f2"></script>
-<script src="atmo.js?v=d0c0664df6f2"></script>
+<script src="gltf-loader.js?v=d9e814e9c4bf"></script>
+<script src="skeleton-utils.js?v=d9e814e9c4bf"></script>
+<script src="meshopt-decoder.js?v=d9e814e9c4bf"></script>
+<script src="models.js?v=d9e814e9c4bf"></script>
+<script src="people.js?v=d9e814e9c4bf"></script>
+<script src="villagers.js?v=d9e814e9c4bf"></script>
+<script src="tex-photos.js?v=d9e814e9c4bf"></script>
+<script src="textures.js?v=d9e814e9c4bf"></script>
+<script src="birds.js?v=d9e814e9c4bf"></script>
+<script src="humans.js?v=d9e814e9c4bf"></script>
+<script src="folk.js?v=d9e814e9c4bf"></script>
+<script src="trees.js?v=d9e814e9c4bf"></script>
+<script src="treehouses.js?v=d9e814e9c4bf"></script>
+<script src="cabins.js?v=d9e814e9c4bf"></script>
+<script src="cave.js?v=d9e814e9c4bf"></script>
+<script src="sounds.js?v=d9e814e9c4bf"></script>
+<script src="music.js?v=d9e814e9c4bf"></script>
+<script src="music-orchestra.js?v=d9e814e9c4bf"></script>
+<script src="rhythm.js?v=d9e814e9c4bf"></script>
+<script src="pictograms.js?v=d9e814e9c4bf"></script>
+<script src="chick-wear.js?v=d9e814e9c4bf"></script>
+<script src="hedgehogs.js?v=d9e814e9c4bf"></script>
+<script src="opening.js?v=d9e814e9c4bf"></script>
+<script src="skypiea.js?v=d9e814e9c4bf"></script>
+<script src="atmo.js?v=d9e814e9c4bf"></script>
 <script>
 (() => {
 'use strict';
@@ -2573,7 +2573,7 @@ function bgMusicTick(dt) {
    after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
    music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
    menu, a cutscene), the orchestra bows out. */
-const ORCH_SRC = 'orch-samples.js?v=d0c0664df6f2';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const ORCH_SRC = 'orch-samples.js?v=d9e814e9c4bf';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
 const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
 window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
 const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
@@ -3873,7 +3873,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build d0c0664df6f2): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build d9e814e9c4bf): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>
