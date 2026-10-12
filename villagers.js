@@ -70,7 +70,8 @@ window.WFR_VILLAGERS = (function () {
     const L = LOOKS[i]; if (!L) return;
     if (L.hair !== undefined && window.WFR_PEOPLE && WFR_PEOPLE.paint) { const nm = {}; for (const k of (PAINT[p.name] ? PAINT[p.name].hair : [])) nm[k] = L.hair; WFR_PEOPLE.paint(THREE, p.body, nm); }
     if (L.hideHair) hideRanges(THREE, p.body, L.hideHair);
-    if (L.piece) { const head = p.body.getObjectByName('Head'); if (head) { const pc = piece(THREE, L.piece, p.body.scale.x); pc.position.y = 0.12 / p.body.scale.x; head.add(pc); } }
+    if (L.piece) { const head = p.body.getObjectByName('Head'); if (head) { p.body.updateMatrixWorld(true); const gs = n.g.getWorldScale(new THREE.Vector3()).x || 1, hs = head.getWorldScale(new THREE.Vector3()).x / gs || 1;   // the bone's TRUE scale, in the group's units (never assume the body's)
+      const pc = piece(THREE, L.piece, hs); pc.position.y = 0.12 / hs; head.add(pc); } }
   }
   function swap(THREE, n, i, api) {   // api: { WFR_PEOPLE, height, pal, scene }
     if (n.model || !api.WFR_PEOPLE) return false;
@@ -81,11 +82,13 @@ window.WFR_VILLAGERS = (function () {
       paint(THREE, p.body, name, api.pal);
       if (api.looks !== false && api.pal) look(THREE, n, i, p);   // 628: the villagers' own looks (the kids pass looks: false)
       if (api.headScale && api.headScale !== 1) { const hd = p.body.getObjectByName('Head'); if (hd) hd.scale.setScalar(api.headScale); }   // the children: a bigger head on a short body (folk.js's K_HEAD)
-      const s = p.body.scale.x, wrist = p.body.getObjectByName('Wrist.R') || p.body.getObjectByName('LowerArm.R');
-      const hand = new THREE.Object3D(); hand.position.set(0, -0.72 / s, 0); hand.rotation.x = Math.PI; hand.scale.setScalar(1 / s);   // the old rig's armR frame: (0, -0.72, 0) lands on the wrist
-      if (wrist) wrist.add(hand);
       n.classic = { body: n.body, legL: n.legL, legR: n.legR, armL: n.armL, armR: n.armR, head: n.head, waist: n.waist, props: n.props, broom: n.broom };
-      n.g.remove(n.body); n.g.add(p.g);
+      n.g.remove(n.body); n.g.add(p.g); n.g.updateMatrixWorld(true);
+      /* ⚠ a bone's world scale is NOT the body's scale (the armature carries its own); assume it and a prop or a hairpiece comes out
+         fifty times too big (ship #15, Oct 12: Go and Eli wore a mountain). Read it. */
+      const wrist = p.body.getObjectByName('Wrist.R') || p.body.getObjectByName('LowerArm.R'), ws = wrist ? wrist.getWorldScale(new THREE.Vector3()).x / (n.g.getWorldScale(new THREE.Vector3()).x || 1) : 1;
+      const hand = new THREE.Object3D(); hand.position.set(0, -0.72 / ws, 0); hand.rotation.x = Math.PI; hand.scale.setScalar(1 / ws);   // the old rig's armR frame: (0, -0.72, 0) lands on the wrist, in the group's units
+      if (wrist) wrist.add(hand);
       for (const k of ['broom']) if (n.broom) { hand.add(n.broom); }
       if (n.props) for (const k in n.props) hand.add(n.props[k]);
       if (n.tool && n.tool.g) hand.add(n.tool.g);
