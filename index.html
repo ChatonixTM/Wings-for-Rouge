@@ -326,6 +326,7 @@ html.cine #boot{display:grid}
 .rhythm .ring.on{transform:scale(1.18);background:color-mix(in srgb,var(--c) 35%,transparent)}
 .rhythm .note{position:absolute;left:50%;top:0;width:46px;height:46px;margin-left:-23px;border-radius:50%;background:radial-gradient(circle at 35% 35%,#fff,var(--c) 60%);box-shadow:0 0 12px var(--c);pointer-events:none;will-change:transform}
 .rhythm .note.hit{opacity:0;transition:opacity .15s}.rhythm .note.miss{opacity:.25}
+.dress{margin-top:6px}.dress b{display:block;font-size:12px;opacity:.7;margin:4px 0 2px}.wearRow{display:flex;flex-wrap:wrap;gap:6px}.wearRow button{min-width:44px;min-height:44px;border-radius:12px;border:2px solid rgba(0,0,0,.12);background:#fff;font-size:22px;padding:0 6px}.wearRow button.on{border-color:#c8314a;background:#ffe9ec}.wearRow button.locked{opacity:.35}
 .rowPick{display:flex;gap:8px;justify-content:center;margin-top:8px}.rowPick b{min-height:44px;min-width:72px;display:inline-flex;align-items:center;justify-content:center;border-radius:22px;border:2px solid rgba(255,255,255,.5);color:#fff;font-family:var(--display);font-weight:700;padding:0 14px;cursor:pointer}.rowPick b.on{background:#fff;color:#1d2b44;border-color:#fff}
 .rhythm .rtop{position:absolute;left:0;right:0;top:calc(env(safe-area-inset-top,0px) + 14px);display:flex;justify-content:center;gap:16px;font-family:var(--display);font-weight:700;color:#fff;text-shadow:0 2px 6px rgba(0,0,0,.45);font-size:18px;pointer-events:none}
 .rhythm .rstop{position:absolute;right:14px;top:calc(env(safe-area-inset-top,0px) + 8px);min-height:44px;min-width:64px;border-radius:999px;background:rgba(255,255,255,.85);color:var(--ink);font-weight:700}
@@ -376,7 +377,8 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
   <div class="care" id="care" hidden>
     <div class="top">Your chick <span id="careStage">Chick</span><button type="button" class="tuck" id="careTuck" aria-label="Tuck the card away" aria-expanded="true">&#9660;</button></div>
     <div class="stats" id="careStats"></div>
-    <div class="row"><button type="button" id="feedBtn">Feed</button><button type="button" class="alt" id="petBtn">Pet</button><button type="button" class="sing" id="singChick" aria-label="Sing to your chick">Sing ♪</button></div>
+    <div class="row"><button type="button" id="feedBtn">Feed</button><button type="button" class="alt" id="petBtn">Pet</button><button type="button" class="sing" id="singChick" aria-label="Sing to your chick">Sing ♪</button><button type="button" class="alt" id="dressBtn" aria-label="Dress your chick">Dress</button></div>
+    <div class="dress" id="dress" hidden><b>Hold</b><div class="wearRow" id="dressHeld"></div><b>Wear</b><div class="wearRow" id="dressWear"></div></div>
   </div>
   <div class="talk" id="talk" hidden><b id="talkWho"></b><p id="talkText"></p><button type="button" id="talkNext">Next</button></div>
   <div class="tut" id="tut" hidden><b id="tutStep">Step 1 of 5</b><span id="tutText"></span></div>
@@ -430,30 +432,31 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 <div id="fade" aria-hidden="true"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="gltf-loader.js?v=90e3b364baf1"></script>
-<script src="skeleton-utils.js?v=90e3b364baf1"></script>
-<script src="meshopt-decoder.js?v=90e3b364baf1"></script>
-<script src="models.js?v=90e3b364baf1"></script>
-<script src="people.js?v=90e3b364baf1"></script>
-<script src="villagers.js?v=90e3b364baf1"></script>
-<script src="tex-photos.js?v=90e3b364baf1"></script>
-<script src="textures.js?v=90e3b364baf1"></script>
-<script src="birds.js?v=90e3b364baf1"></script>
-<script src="humans.js?v=90e3b364baf1"></script>
-<script src="folk.js?v=90e3b364baf1"></script>
-<script src="trees.js?v=90e3b364baf1"></script>
-<script src="treehouses.js?v=90e3b364baf1"></script>
-<script src="cabins.js?v=90e3b364baf1"></script>
-<script src="cave.js?v=90e3b364baf1"></script>
-<script src="sounds.js?v=90e3b364baf1"></script>
-<script src="music.js?v=90e3b364baf1"></script>
-<script src="music-orchestra.js?v=90e3b364baf1"></script>
-<script src="rhythm.js?v=90e3b364baf1"></script>
-<script src="pictograms.js?v=90e3b364baf1"></script>
-<script src="hedgehogs.js?v=90e3b364baf1"></script>
-<script src="opening.js?v=90e3b364baf1"></script>
-<script src="skypiea.js?v=90e3b364baf1"></script>
-<script src="atmo.js?v=90e3b364baf1"></script>
+<script src="gltf-loader.js?v=a2dd0ec234b4"></script>
+<script src="skeleton-utils.js?v=a2dd0ec234b4"></script>
+<script src="meshopt-decoder.js?v=a2dd0ec234b4"></script>
+<script src="models.js?v=a2dd0ec234b4"></script>
+<script src="people.js?v=a2dd0ec234b4"></script>
+<script src="villagers.js?v=a2dd0ec234b4"></script>
+<script src="tex-photos.js?v=a2dd0ec234b4"></script>
+<script src="textures.js?v=a2dd0ec234b4"></script>
+<script src="birds.js?v=a2dd0ec234b4"></script>
+<script src="humans.js?v=a2dd0ec234b4"></script>
+<script src="folk.js?v=a2dd0ec234b4"></script>
+<script src="trees.js?v=a2dd0ec234b4"></script>
+<script src="treehouses.js?v=a2dd0ec234b4"></script>
+<script src="cabins.js?v=a2dd0ec234b4"></script>
+<script src="cave.js?v=a2dd0ec234b4"></script>
+<script src="sounds.js?v=a2dd0ec234b4"></script>
+<script src="music.js?v=a2dd0ec234b4"></script>
+<script src="music-orchestra.js?v=a2dd0ec234b4"></script>
+<script src="rhythm.js?v=a2dd0ec234b4"></script>
+<script src="pictograms.js?v=a2dd0ec234b4"></script>
+<script src="chick-wear.js?v=a2dd0ec234b4"></script>
+<script src="hedgehogs.js?v=a2dd0ec234b4"></script>
+<script src="opening.js?v=a2dd0ec234b4"></script>
+<script src="skypiea.js?v=a2dd0ec234b4"></script>
+<script src="atmo.js?v=a2dd0ec234b4"></script>
 <script>
 (() => {
 'use strict';
@@ -2057,6 +2060,7 @@ function makeChick(p) {
   ms.center.set(42 / 256, 1 - 248 / 256); ms.renderOrder = 6; ms.visible = false; chick.add(ms);
   const mind = { s: ms, g: mcv.getContext('2d'), tex: mtex, e: '', t: 0, k: 0, up: false, want: null };
   chick.userData = { body, wings, mind, mat: m };
+  if (window.WFR_WEAR) WFR_WEAR.apply(THREE, chick, S.chick);   // 624: what it holds and wears, from the save
   body.scale.setScalar(STAGES[S.chick.stage].scale);
   chick.position.copy(p); scene.add(chick);
 }
@@ -2556,7 +2560,7 @@ function bgMusicTick(dt) {
    after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
    music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
    menu, a cutscene), the orchestra bows out. */
-const ORCH_SRC = 'orch-samples.js?v=90e3b364baf1';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const ORCH_SRC = 'orch-samples.js?v=a2dd0ec234b4';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
 const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
 window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
 const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
@@ -2676,6 +2680,20 @@ function growCheck() {
   const next = STAGES[S.chick.stage + 1];
   if (next && chickTotal() >= next.at) { S.chick.stage++; chickLook(); fanfare(); chickFeel(0, 4); gainXP(40); toast('Your chick has grown into a ' + next.name.toLowerCase() + '!', 4200); if (S.chick.stage === 1) queueCut('grown'); }
 }
+/* 624: the Dress page. S.chick.held (one id or null) and S.chick.wear (ids) are new save keys; a keepsake item needs its mark. */
+function dressDraw() {
+  if (!window.WFR_WEAR) return; const c = S.chick; c.wear = c.wear || [];
+  const cell = (it, on) => '<button type="button" data-id="' + it.id + '" class="' + (on ? 'on' : '') + (WFR_WEAR.can(c, it.id) ? '' : ' locked') + '" title="' + it.name + '" aria-label="' + it.name + (on ? ' (on)' : '') + '">' + it.emoji + '</button>';
+  $('dressHeld').innerHTML = WFR_WEAR.HELD.map((it) => cell(it, c.held === it.id)).join(''); $('dressWear').innerHTML = WFR_WEAR.WEAR.map((it) => cell(it, c.wear.includes(it.id))).join('');
+}
+function dressPick(id) {
+  const c = S.chick; c.wear = c.wear || [];
+  if (!WFR_WEAR.can(c, id)) { toast('Find it first: it is one of the keepsakes.', 2200); return false; }
+  if (WFR_WEAR.HELD.some((it) => it.id === id)) c.held = c.held === id ? null : id; else c.wear = c.wear.includes(id) ? c.wear.filter((x) => x !== id) : c.wear.concat(id);
+  WFR_WEAR.apply(THREE, chick, c); dressDraw(); save(); chirp(); return true;
+}
+$('dressBtn').addEventListener('click', () => { const d = $('dress'); d.hidden = !d.hidden; if (!d.hidden) dressDraw(); });
+$('dress').addEventListener('click', (e) => { const b = e.target.closest('button[data-id]'); if (b) dressPick(b.dataset.id); });
 $('feedBtn').addEventListener('click', () => {
   if (!S.fruit) return; const f = S.fruit.type, gives = f.gives || { [f.stat]: 3 };
   const ups = []; for (const k in gives) { const u = addStat(k, gives[k]); if (u) ups.push(u); }
@@ -3158,6 +3176,7 @@ try { if (localStorage.getItem('wfr.debug') === '1') window.__wfr = { eagle: () 
     const c = v.clone().addScaledVector(r, (140 - 42) / 256 * sz).addScaledVector(u, (248 - 108) / 256 * sz), edge = c.clone().addScaledVector(r, 92 / 256 * sz), P = (q) => { q.project(camera); return [(q.x + 1) / 2 * innerWidth, (1 - q.y) / 2 * innerHeight]; }, cs = P(c.clone()), es = P(edge);
     return { up: M.up, shown: M.s.visible, k: M.k, e: M.e, want: M.want && M.want.e, why: M.want && M.want.why, need: !!(M.want && M.want.need), moment: !!(M.want && M.want.moment), screen: cs, rpx: Math.hypot(es[0] - cs[0], es[1] - cs[1]) }; },
   chickYaw: () => (chick ? chick.rotation.y : null), chickSet: (o) => { Object.assign(S.chick, o); }, tucked: () => !!S.chick.tucked,
+  dress: (id) => dressPick(id), wearing: () => (chick && window.WFR_WEAR ? WFR_WEAR.apply(THREE, chick, S.chick) : null), wearMeshes: () => (chick ? Object.keys(chick.userData.body.userData.wear || {}) : null),   /* 624 */
   chickSing: () => chickSing(), chickSleep: () => (chick ? { k: chick.userData.sleepK || 0, eyes: (chick.userData.body.userData.eyes || []).map((e) => e.scale.y), scale: chick.userData.body.scale.x } : null), chickSong: () => ({ on: !!(RH.on && RH.chick), kid: !!RH.chick, rest: S.chick.songRest || 0, songs: S.chick.songs || 0, noWalk: !!S.noWalk, feel: S.chickFeelT > 0 ? ORB[S.chickFeel] : null, bodyY: chick ? chick.userData.body.position.y : null, sway: chick ? chick.userData.body.rotation.z : null, stats: Object.assign({}, S.chick.stats), happy: S.chick.happy, mode: S.mode, restMax: CHICK_SONG.rest }),
   standAt: (dx, dz) => { S.pos.set(NEST.x + dx, NEST.y - 0.2 + standOf(kind), NEST.z + dz); S.mode = 'walk'; }, faceChick: () => { if (chick) S.yaw = Math.atan2(chick.position.x - S.pos.x, chick.position.z - S.pos.z); },
   chickScreen: () => { if (!chick) return null; const v = chick.position.clone(); v.y += 0.45 * STAGES[S.chick.stage].scale; v.project(camera); return [(v.x + 1) / 2 * innerWidth, (1 - v.y) / 2 * innerHeight, v.z]; },
@@ -3836,7 +3855,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build 90e3b364baf1): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build a2dd0ec234b4): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>
