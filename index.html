@@ -430,30 +430,30 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 <div id="fade" aria-hidden="true"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="gltf-loader.js?v=f1632b3b9d81"></script>
-<script src="skeleton-utils.js?v=f1632b3b9d81"></script>
-<script src="meshopt-decoder.js?v=f1632b3b9d81"></script>
-<script src="models.js?v=f1632b3b9d81"></script>
-<script src="people.js?v=f1632b3b9d81"></script>
-<script src="villagers.js?v=f1632b3b9d81"></script>
-<script src="tex-photos.js?v=f1632b3b9d81"></script>
-<script src="textures.js?v=f1632b3b9d81"></script>
-<script src="birds.js?v=f1632b3b9d81"></script>
-<script src="humans.js?v=f1632b3b9d81"></script>
-<script src="folk.js?v=f1632b3b9d81"></script>
-<script src="trees.js?v=f1632b3b9d81"></script>
-<script src="treehouses.js?v=f1632b3b9d81"></script>
-<script src="cabins.js?v=f1632b3b9d81"></script>
-<script src="cave.js?v=f1632b3b9d81"></script>
-<script src="sounds.js?v=f1632b3b9d81"></script>
-<script src="music.js?v=f1632b3b9d81"></script>
-<script src="music-orchestra.js?v=f1632b3b9d81"></script>
-<script src="rhythm.js?v=f1632b3b9d81"></script>
-<script src="pictograms.js?v=f1632b3b9d81"></script>
-<script src="hedgehogs.js?v=f1632b3b9d81"></script>
-<script src="opening.js?v=f1632b3b9d81"></script>
-<script src="skypiea.js?v=f1632b3b9d81"></script>
-<script src="atmo.js?v=f1632b3b9d81"></script>
+<script src="gltf-loader.js?v=90e3b364baf1"></script>
+<script src="skeleton-utils.js?v=90e3b364baf1"></script>
+<script src="meshopt-decoder.js?v=90e3b364baf1"></script>
+<script src="models.js?v=90e3b364baf1"></script>
+<script src="people.js?v=90e3b364baf1"></script>
+<script src="villagers.js?v=90e3b364baf1"></script>
+<script src="tex-photos.js?v=90e3b364baf1"></script>
+<script src="textures.js?v=90e3b364baf1"></script>
+<script src="birds.js?v=90e3b364baf1"></script>
+<script src="humans.js?v=90e3b364baf1"></script>
+<script src="folk.js?v=90e3b364baf1"></script>
+<script src="trees.js?v=90e3b364baf1"></script>
+<script src="treehouses.js?v=90e3b364baf1"></script>
+<script src="cabins.js?v=90e3b364baf1"></script>
+<script src="cave.js?v=90e3b364baf1"></script>
+<script src="sounds.js?v=90e3b364baf1"></script>
+<script src="music.js?v=90e3b364baf1"></script>
+<script src="music-orchestra.js?v=90e3b364baf1"></script>
+<script src="rhythm.js?v=90e3b364baf1"></script>
+<script src="pictograms.js?v=90e3b364baf1"></script>
+<script src="hedgehogs.js?v=90e3b364baf1"></script>
+<script src="opening.js?v=90e3b364baf1"></script>
+<script src="skypiea.js?v=90e3b364baf1"></script>
+<script src="atmo.js?v=90e3b364baf1"></script>
 <script>
 (() => {
 'use strict';
@@ -2556,7 +2556,7 @@ function bgMusicTick(dt) {
    after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
    music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
    menu, a cutscene), the orchestra bows out. */
-const ORCH_SRC = 'orch-samples.js?v=f1632b3b9d81';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const ORCH_SRC = 'orch-samples.js?v=90e3b364baf1';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
 const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
 window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
 const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
@@ -3836,7 +3836,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build f1632b3b9d81): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build 90e3b364baf1): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>

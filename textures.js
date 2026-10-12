@@ -635,8 +635,11 @@ window.WFR_TEX = (function () {
      DETAIL; the hand-made texture's average colour is kept, so the island's vertex and instance colours still lead and nothing
      darkens. No photo, or a failed decode: the hand-made texture simply stays. */
   const photoState = {};
-  const PHOTO_SIZE = 512, PHOTO_HUE = 0.25, PHOTO_CONTRAST = 0.85;   // how much of the photo's own colour survives; detail strength
+  /* 626: the dial. Standard = the photos at full strength; Classic = no photos (the island as hand-painted). Read once per load. */
+  const CLASSIC_LOOK = (function () { try { return localStorage.getItem('wfr.look') === 'classic'; } catch (e) { return false; } })();
+  const PHOTO_SIZE = 512, PHOTO_HUE = CLASSIC_LOOK ? 0.25 : 0.65, PHOTO_CONTRAST = CLASSIC_LOOK ? 0.85 : 1.0;   // how much of the photo's own colour survives; detail strength
   function photoFor(base) {
+    if (CLASSIC_LOOK) return;   // 626: Classic keeps the hand-made textures untouched
     const P = window.WFR_PHOTOS; if (!P || !P.use || !P.files || photoState[base]) return;
     const key = P.use[base] ? base : (/^roof_clay_/.test(base) ? 'roofTiles' : null);   // the village houses' clay roofs (any colour) wear the clay-tile photo
     const src = key && P.files[P.use[key]]; if (!src) return;
@@ -1442,5 +1445,6 @@ window.WFR_TEX = (function () {
     gr.addColorStop(0.49, mix(2, 3, 0.5)); gr.addColorStop(0.5, col[3]); gr.addColorStop(0.51, mix(3, 4, 0.55)); gr.addColorStop(0.53, col[4]); gr.addColorStop(1, col[4]);
   };
 
+  api.photoDial = () => ({ classic: CLASSIC_LOOK, hue: PHOTO_HUE, contrast: PHOTO_CONTRAST, state: Object.assign({}, photoState) });   // 626: the dial, for the benches
   return api;
 })();
