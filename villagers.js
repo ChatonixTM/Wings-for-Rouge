@@ -70,7 +70,11 @@ window.WFR_VILLAGERS = (function () {
     const L = LOOKS[i]; if (!L) return;
     if (L.hair !== undefined && window.WFR_PEOPLE && WFR_PEOPLE.paint) { const nm = {}; for (const k of (PAINT[p.name] ? PAINT[p.name].hair : [])) nm[k] = L.hair; WFR_PEOPLE.paint(THREE, p.body, nm); }
     if (L.hideHair) hideRanges(THREE, p.body, L.hideHair);
-    if (L.piece) { const head = p.body.getObjectByName('Head'); if (head) { p.body.updateMatrixWorld(true); const gs = n.g.getWorldScale(new THREE.Vector3()).x || 1, hs = head.getWorldScale(new THREE.Vector3()).x / gs || 1;   // the bone's TRUE scale, in the group's units (never assume the body's)
+    if (L.piece) { const head = p.body.getObjectByName('Head'); if (head) { p.g.updateMatrixWorld(true);
+      /* the bone's TRUE scale in the BODY's units (p.g's), which are the group's units once the body stands inside it. Ship #19 divided by
+         the villager GROUP's world scale (1.35) while the head was measured BEFORE the body had joined that group, so every piece came out
+         1.35x too big and too high: Eli's dome floated over his head and his dreads hung from his brow (his shot, Oct 12 ~01:36). */
+      const hs = head.getWorldScale(new THREE.Vector3()).x / (p.g.getWorldScale(new THREE.Vector3()).x || 1) || 1;
       const pc = piece(THREE, L.piece, hs); pc.position.y = 0.12 / hs; head.add(pc); } }
   }
   function swap(THREE, n, i, api) {   // api: { WFR_PEOPLE, height, pal, scene }
