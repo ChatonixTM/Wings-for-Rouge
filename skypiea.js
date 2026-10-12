@@ -69,7 +69,12 @@ window.WFR_SKY = (function () {
     climb: 'Hold Flap to climb faster.',   // OURS (closing, allowed by Marth ~16:20)
     lift: 'The wind carries you up, up through the clouds…',   // OURS (closing, allowed by Marth ~16:20)
     woke: 'You wake up in your nest. The sun is just coming up.',   // OURS (closing, allowed by Marth ~16:20)
-    temple: 'High above, a temple floats on a rock. Its door is shut. Coming soon.',   // OURS (closing, allowed by Marth ~16:20); what it unlocks is his to decide (c)
+    gateAsk: 'Enter the sky island?',   // 610 (Marth: the game asks you if you want to 'enter the sky island'); OURS
+    gateYes: 'Yes', gateNo: 'Not now',   // 610, OURS
+    gateCrow: 'The Crow can\'t fly this high yet. The Falcon could teach it.',   // 610 (Marth: "all but crow, needs to learn from falcon"); OURS
+    gateIn: 'The sky island. A bare stone for now; more is coming.',   // 610, OURS (what stands up here is 625/621)
+    gateEdge: 'The edge. Fly to leave the sky island.',   // 610, OURS
+    gateHome: 'Back over the island.',   // 610, OURS
   };
 
   /* ---------- THE END CREDITS (Marth ~17:40: "you can do an end credits scene"). One table; every row a DRAFT for him.
@@ -116,6 +121,8 @@ window.WFR_SKY = (function () {
   var DAWN_END = 150;        // phaseOf(): dawn is clock 0-150
   var N_DIA = 12, HELIX_R = 13, HELIX_TURNS = 2.25, HELIX_TOP = 150;   // the last diamond sits under the ceiling (166)
   var SHELF_Y = 230, TEMPLE_Y = 216;
+  var WALL_Y = 150, WALL_R = 40, DISC_R = 15, DISC_TOP = TEMPLE_Y + 0.6, SKY_CAP = TEMPLE_Y + 40;   // 610: the wall under the temple; the disc is ground; the air above it is thin
+  var ENTER_S = 4.2, SETTLE_S = 1.6, TURN_S = 2.2, TURN_DROP = 22, TURN_BACK = 14;   // 610: the yes ride, the set-down, the no turn (seconds, metres)
   var RIDE = 0.05, RIDE_HELD = 0.085;   // helix fraction per second: ~20 s, ~12 s holding Flap
   var LIFT_S = 5.5, GLIDE_S = 2.2, LINGER_S = 7, FADE_S = 6, FALL_S = 3, PAN_S = 4, V_S = 6.6, DARK_S = 2;
   var DOT2 = 1.2, DOT3 = 2.4, WAKE_BTN = 3.9, WAKE_S = 1.4, TYPE_CPS = 28;
@@ -131,6 +138,7 @@ window.WFR_SKY = (function () {
     '.skyChoice{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 24px);width:min(520px,calc(100% - 32px));display:flex;gap:12px;justify-content:center;z-index:5;pointer-events:auto}' +
     '.skyChoice button{flex:1;min-height:52px;border-radius:999px;font-size:18px;font-weight:600;background:var(--rouge,#c8314a);color:#fff;box-shadow:0 8px 20px rgba(34,49,74,.28)}' +
     '.skyChoice button.alt{background:var(--paper,#fff8ec);color:var(--ink,#22314a)}' +
+    '#skyGate{flex-wrap:wrap}#skyGate p{flex:1 0 100%;margin:0 0 2px;text-align:center;font-family:Georgia,"Times New Roman",serif;font-size:19px;color:#fff8ec;text-shadow:0 1px 8px rgba(0,0,0,.55)}' +
     '#skySing{bottom:calc(env(safe-area-inset-bottom,0px) + 114px);background:#fff3f2;color:var(--rouge,#c8314a);min-height:52px}' +
     '#skyCredits{position:fixed;inset:0;z-index:31;overflow:hidden;background:#05070d;touch-action:none;-webkit-user-select:none;user-select:none}' +
     '#skyCredits .dawn{position:absolute;inset:0;opacity:0;background:linear-gradient(to top,#f2b48a 0%,#c98a9a 22%,#5a5f8f 55%,#141a33 100%)}' +
@@ -186,6 +194,9 @@ window.WFR_SKY = (function () {
     var choice = el('div', { class: 'skyChoice', id: 'skyChoice', hidden: '' }, uiLayer);
     var yesBtn = el('button', { type: 'button', id: 'skyYes', text: UI.yes }, choice), notBtn = el('button', { type: 'button', id: 'skyNotYet', class: 'alt', text: UI.notYet }, choice);
     var singBtn = el('button', { type: 'button', class: 'act', id: 'skySing', text: UI.sing, hidden: '' }, uiLayer);
+    var gate = el('div', { class: 'skyChoice', id: 'skyGate', hidden: '' }, uiLayer);   // 610: the wall's ask
+    el('p', { id: 'skyGateText', text: UI.gateAsk }, gate);
+    var gateYes = el('button', { type: 'button', id: 'skyGateYes', text: UI.gateYes }, gate), gateNo = el('button', { type: 'button', id: 'skyGateNo', class: 'alt', text: UI.gateNo }, gate);
     var tap = function (b, f) { b.addEventListener('pointerdown', function (e) { e.preventDefault(); e.stopPropagation(); f(); }); };
 
     /* ---------- materials ---------- */
@@ -348,7 +359,7 @@ window.WFR_SKY = (function () {
       g.add(pil);
       var roof = new THREE.Mesh(new THREE.BoxGeometry(13, 0.8, 9), stone); roof.position.set(Math.cos(0.45) * 6.5, 8, Math.sin(0.45) * 6.5); roof.rotation.y = -0.45 - Math.PI / 2; g.add(roof);   // over four of the seven
       var altar = new THREE.Mesh(new THREE.BoxGeometry(2.4, 1.2, 1.4), stone); altar.position.y = 1.2; g.add(altar);
-      var door = new THREE.Mesh(new THREE.BoxGeometry(3, 5, 0.6), dk); door.position.set(0, 3.1, -6); g.add(door);   // shut
+      /* 610/625 (Marth: "what door?", "maybe we should not do a door"): no door; the way up is the wall's ask */
       g.position.set(O.x, TEMPLE_Y, O.z); scene.add(g); temple = { g: g, said: false };
     }
 
@@ -493,6 +504,7 @@ window.WFR_SKY = (function () {
       buildTemple(); st.beat = 'wake'; go('wake'); api.toast(UI.woke, 4200);
     }
     tap(singBtn, duetTap); tap(yesBtn, function () { answer(true); }); tap(notBtn, function () { answer(false); });
+    tap(gateYes, function () { gateAnswer(true); }); tap(gateNo, function () { gateAnswer(false); });   // 610
     tap(okBtn, freezeOk); tap(freeze, freezeOk); tap(wakeBtn, wake); tap(rewBtn, function () { crRate(-CR_FAST); }); tap(ffBtn, function () { crRate(CR_FAST); }); tap(playBtn, crPlay); tap(doneBtn, crDone);
 
     /* ---------- the camera ---------- */
@@ -534,8 +546,7 @@ window.WFR_SKY = (function () {
       if (st.duetQ > 0 && st.duetCd <= 0 && st.ph === 'duet') { st.duetQ--; duetTap(); }
       for (var i = st.calls.length - 1; i >= 0; i--) if (st.clk >= st.calls[i].at) { var c = st.calls[i]; st.calls.splice(i, 1); c.fn(); }
       if (st.resume && (S.mode === 'walk' || S.mode === 'fly') && !S.talking && (!$('story') || $('story').hidden)) { st.resume = false; standOnShelf(); camera.position.copy(Ppos).addScaledVector(side, 8).add(v1.set(0, 2, 0)); camLook.copy(Ppos); freezeNow(); return; }
-      if (temple) { temple.g.position.y = TEMPLE_Y + Math.sin(S.t * 0.3) * 0.8; temple.g.rotation.y += dt * 0.02;
-        if (!temple.said && S.mode === 'fly' && S.pos.y > 110 && Math.hypot(S.pos.x - O.x, S.pos.z - O.z) < 70) { temple.said = true; api.toast(UI.temple, 4200); } }
+      /* 610: the temple holds still (she walks on it); the wall below it is the thing that speaks */
       var ph = st.ph, b = api.bird(), k = api.kind();
       if (ph === 'idle') {
         var open = gateOpen();
@@ -550,7 +561,7 @@ window.WFR_SKY = (function () {
         if (open && dia && dia.fade > 0.5 && S.mode === 'fly' && !S.talking && S.pos.distanceTo(helix(0, v1)) < 4) beginClimb();
         return;
       }
-      if (ph === 'done') return;
+      if (ph === 'done' || ph === 'gate' || ph === 'enter' || ph === 'settle' || ph === 'turn') { gateTick(dt, t, b, k); return; }
       if (ph === 'climb') {
         st.u = Math.min(1, st.u + dt * (S.flapHeld ? RIDE_HELD : RIDE));
         for (var j = 0; j < N_DIA; j++) if (st.u >= j / (N_DIA - 1) - 1e-6) collect(j);
@@ -640,6 +651,83 @@ window.WFR_SKY = (function () {
       }
     }
 
+    /* ---------- 610: THE SKY WALL. After the ending the air under the temple stops her and asks; Yes rides the climb's own column up
+       through the white and sets her down on the disc; No (or the Crow) turns her around and lowers her. S.sky.where is the save. ---------- */
+    function discStand(out) { return (out || new THREE.Vector3()).copy(O).addScaledVector(back, -5).setY(DISC_TOP + api.standOf(api.kind())); }
+    function column(p, y) {   // the climb's lift column, at any height
+      var colm = new THREE.Mesh(new THREE.CylinderGeometry(2.6, 3.4, 100, 16, 1, true), new THREE.MeshBasicMaterial({ color: 0xdff1ff, transparent: true, opacity: 0, depthWrite: false, side: THREE.DoubleSide, blending: THREE.AdditiveBlending }));
+      colm.position.set(p.x, y, p.z); scene.add(colm); return colm;
+    }
+    function dropColumn() { if (st.column) { scene.remove(st.column); st.column.geometry.dispose(); st.column.material.dispose(); st.column = null; } }
+    function controlsBack(mode) { S.mode = mode; S.inSky = false; S.speed = mode === 'fly' ? 9 : 0; S.landTo = null; if (api.flapBtn) api.flapBtn.textContent = mode === 'walk' ? 'Fly' : 'Flap'; uiLayer.hidden = false; controls(true); }
+    function wall(k) {   // the invisible wall: she stops in the air; the ask, or the Crow's line and the turn
+      st.wallFrom = S.pos.clone(); st.yaw0 = S.yaw; st.crow = k === 'crow'; st.armed = false;
+      S.mode = 'event'; S.inSky = true; S.speed = 0; S.flapT = 0; controls(false); camLook.copy(S.pos);
+      [330, 262].forEach(function (f, i) { api.tone(f, i * 0.05, 0.25, 'sine', 0.05); });
+      if (st.crow) { api.toast(UI.gateCrow, 3600); turnBack(); return; }
+      go('gate'); gate.hidden = false;
+    }
+    function gateAnswer(yes) {
+      if (st.ph !== 'gate') return; gate.hidden = true;
+      if (!yes) { turnBack(); return; }
+      st.liftFrom = S.pos.clone(); st.column = column(st.liftFrom, WALL_Y + 40); api.hint(UI.lift);
+      [392, 494, 587].forEach(function (f, i) { api.tone(f, i * 0.08, 1.6, 'sine', 0.04); }); go('enter');
+    }
+    function turnBack() { st.turnFrom = S.pos.clone(); var d = Math.hypot(S.pos.x - O.x, S.pos.z - O.z); st.out = d > 1 ? new THREE.Vector3((S.pos.x - O.x) / d, 0, (S.pos.z - O.z) / d) : back.clone(); go('turn'); }
+    function arriveDisc() {   // set down on the disc: the island is hers to walk; the save remembers
+      var p = discStand(v1); S.pos.copy(p); var b = api.bird(); if (b) { b.position.copy(p); b.rotation.set(0, 0, 0); }
+      S.yaw = Math.atan2(-back.x, -back.z); S.camYaw = S.yaw; S.pitch = 0; S.camCut = true; S.sky.where = 'temple'; st.edgeSaid = false; st.armed = false;
+      controlsBack('walk'); api.save(); api.toast(UI.gateIn, 4200); go('done');
+    }
+    function standOnDisc() { var p = discStand(v1); S.pos.copy(p); var b = api.bird(); if (b) b.position.copy(p); S.yaw = Math.atan2(-back.x, -back.z); S.camYaw = S.yaw; S.camCut = true; S.mode = 'walk'; S.speed = 0; }
+    function ground(x, z) { return (S.sky.where || 'home') === 'temple' && Math.hypot(x - O.x, z - O.z) < DISC_R + 0.5 ? DISC_TOP : -Infinity; }   // the html's groundAt reads this
+    function gateTick(dt, t, b, k) {
+      var ph = st.ph, d = Math.hypot(S.pos.x - O.x, S.pos.z - O.z), e, ee, p;
+      if (ph === 'done') {
+        if (st.resumeTemple && (S.mode === 'walk' || S.mode === 'fly') && !S.talking && (!$('story') || $('story').hidden)) { st.resumeTemple = false; standOnDisc(); return; }
+        if ((S.sky.where || 'home') === 'temple') {
+          if (S.mode === 'walk' && d > DISC_R - 0.4) {   // the rim holds her
+            var f = (DISC_R - 0.4) / d; S.pos.x = O.x + (S.pos.x - O.x) * f; S.pos.z = O.z + (S.pos.z - O.z) * f; S.pos.y = DISC_TOP + api.standOf(k); if (b) b.position.copy(S.pos);
+            if (!st.edgeSaid) { st.edgeSaid = true; api.toast(UI.gateEdge, 2600); } }
+          else if (S.mode === 'fly' && S.pos.y > SKY_CAP) { S.pos.y = SKY_CAP; S.pitch = Math.min(S.pitch, 0); if (b) b.position.y = S.pos.y; }
+          else if (S.mode === 'fly' && S.pos.y < WALL_Y + 6 && d > DISC_R + 4) { S.sky.where = 'home'; st.armed = false; api.save(); api.toast(UI.gateHome, 2600); }   // down off the island: the ceiling is back
+          return;
+        }
+        if (!st.armed) { if (d > WALL_R + 8 || S.pos.y < WALL_Y - 30) st.armed = true; return; }   // the wall asks again only after she has left its zone (the No's own drop does not count)
+        if (S.sky.ended && S.mode === 'fly' && !S.talking && S.pos.y >= WALL_Y && d < WALL_R) wall(k);
+        return;
+      }
+      if (ph === 'gate') {   // held in the air at the wall, wings beating
+        p = st.wallFrom; birdPose(p.x, p.y + Math.sin(t * 2.2) * 0.3, p.z, st.yaw0, -0.1, 0); wingsOpen(Math.sin(S.t * 22) * 0.9);
+        return;
+      }
+      if (ph === 'enter') {   // the yes ride: the column, the white at the ceiling, up to the temple
+        e = Math.min(1, t / ENTER_S); ee = e * e * (3 - 2 * e); var lf = st.liftFrom, y = lf.y + (TEMPLE_Y + 8 - lf.y) * ee;
+        birdPose(lf.x + Math.sin(t * 2) * 0.6, y, lf.z + Math.cos(t * 2) * 0.6, S.yaw + dt * 0.8, -0.5, 0); wingsOpen(0.9 + Math.sin(S.t * 3) * 0.1);
+        if (st.column) st.column.material.opacity = 0.32 * Math.min(1, t * 2) * (1 - Math.max(0, e - 0.85) / 0.15);
+        white.style.opacity = String(Math.max(0, 1 - Math.abs(y - 171) / 13) * 0.92);
+        camWant.set(lf.x, y - 6, lf.z).addScaledVector(back, -10); lookWant.set(lf.x, y + 1, lf.z); aim(camWant, lookWant, Math.min(1, dt * 3));
+        if (e >= 1) { white.style.opacity = '0'; dropColumn(); st.glideFrom = b ? b.position.clone() : lf.clone(); go('settle'); }
+        return;
+      }
+      if (ph === 'settle') {   // the glide down onto the disc
+        e = Math.min(1, t / SETTLE_S); ee = e * e * (3 - 2 * e); var to = discStand(v2), at = v1.copy(st.glideFrom).lerp(to, ee); at.y += Math.sin(e * Math.PI) * 1.2;
+        birdPose(at.x, at.y, at.z, Math.atan2(-back.x, -back.z), e > 0.75 ? -0.4 : 0, 0); wingsOpen(e > 0.75 ? Math.sin(S.t * 22) * 1.0 : 0.9);
+        camWant.copy(to).addScaledVector(back, 9).add(v3.set(0, 3.5, 0)); lookWant.copy(at); aim(camWant, lookWant, Math.min(1, dt * 2.5));
+        if (e >= 1) arriveDisc();
+        return;
+      }
+      if (ph === 'turn') {   // the no ride: around, and down a little, back over the island
+        e = Math.min(1, t / TURN_S); ee = e * e * (3 - 2 * e); var yaw = st.yaw0 + Math.PI * ee, tf = st.turnFrom;
+        p = v1.copy(tf).addScaledVector(st.out, TURN_BACK * ee); p.y = tf.y - TURN_DROP * ee;
+        birdPose(p.x, p.y, p.z, yaw, -0.2, Math.sin(e * Math.PI) * 0.5); wingsOpen(Math.sin(S.t * 18) * 0.9);
+        camWant.set(p.x - Math.sin(yaw) * 10, p.y + 3, p.z - Math.cos(yaw) * 10); lookWant.copy(p); aim(camWant, lookWant, Math.min(1, dt * 3));
+        if (e >= 1) { S.yaw = st.yaw0 + Math.PI; S.camYaw = S.yaw; S.pitch = -0.1; S.pos.copy(p); controlsBack('fly'); go('done'); }
+        return;
+      }
+    }
+    if (S.sky.ended && (S.sky.where || 'home') === 'temple') st.resumeTemple = true;   // a reload up there stands her on the disc
+
     /* ---------- the bench's door (only reached through window.__wfr, which exists only with wfr.debug) ---------- */
     function casters() { var n = 0; [dia && dia.g, sky && sky.g, flock && flock.g, temple && temple.g, st.column].filter(Boolean).forEach(function (r) { r.traverse(function (o) { if (o.castShadow) n++; }); }); return n; }
     function census() {
@@ -648,7 +736,7 @@ window.WFR_SKY = (function () {
       return n;
     }
     function state() {
-      return { present: !S.sky.seen, gate: gateOpen(), worthy: worthy(), told: !!S.sky.told, called: !!st.called, phase: st.ph, beat: st.beat, seq: st.seq.slice(), seen: !!S.sky.seen, ended: !!S.sky.ended, built: !!sky, diamonds: dia ? dia.got.filter(function (x) { return !x; }).length : 0,
+      return { present: !S.sky.seen, where: S.sky.where || 'home', yaw: S.yaw, gateShown: !gate.hidden, armed: !!st.armed, wallAt: st.wallFrom ? st.wallFrom.toArray() : null, discTop: DISC_TOP, wallY: WALL_Y, wallR: WALL_R, gateSizes: gate.hidden ? null : [gateYes, gateNo].map(function (x) { var r = x.getBoundingClientRect(); return [x.id, Math.round(r.width), Math.round(r.height)]; }), gate: gateOpen(), worthy: worthy(), told: !!S.sky.told, called: !!st.called, phase: st.ph, beat: st.beat, seq: st.seq.slice(), seen: !!S.sky.seen, ended: !!S.sky.ended, built: !!sky, diamonds: dia ? dia.got.filter(function (x) { return !x; }).length : 0,
         diamondsVisible: !!(dia && dia.g.visible), u: st.u, temple: !!temple, meshes: census(), focus: st.focus, answer: st.answer || null, duet: st.duet, card: cardText.textContent, cardShown: !card.hidden, wakeShown: !wakeBtn.hidden,
         freeze: freeze.hidden ? null : msgP.textContent, okShown: !okBtn.hidden, singShown: !singBtn.hidden, choiceShown: !choice.hidden, cue: st.cue == null ? null : st.cue,
         figures: figSpots.map(function (p) { return [p.x, p.y, p.z]; }), standAt: [Ppos.x, FLOOR, Ppos.z], grandmaAt: [Gpos.x, RISE, Gpos.z], first: helix(0).toArray(), clockAtStart: st.clockAtStart, clockAtWake: st.clockAtWake == null ? null : st.clockAtWake,
@@ -668,6 +756,10 @@ window.WFR_SKY = (function () {
       if (nm === 'climb') { if (!gateOpen()) open(); beginClimb(); return st.ph; }
       if (nm === 'lift') { beat('climb'); st.u = 1; return st.ph; }
       if (nm === 'resume') { st.resume = true; return st.ph; }
+      if (nm === 'wall') {   // 610: her flying into the wall's zone, from 30 m out, straight at the temple's axis (only once the story is done)
+        if (!S.sky.ended) return null; S.sky.where = 'home'; st.armed = true; S.mode = 'fly'; S.inSky = false;
+        S.pos.set(O.x + 30, WALL_Y + 2, O.z); S.yaw = Math.atan2(O.x - S.pos.x, O.z - S.pos.z); S.camYaw = S.yaw; S.pitch = 0; S.speed = 8; return st.ph; }
+      if (nm === 'edge') { if ((S.sky.where || 'home') !== 'temple' || S.mode !== 'walk') return null; S.pos.set(O.x + 30, DISC_TOP + api.standOf(api.kind()), O.z); return st.ph; }   // 610: a step past the rim
       S.mode = 'event'; S.inSky = true; buildSky(); controls(false); standOnShelf(); camLook.copy(Gpos); choice.hidden = true; singBtn.hidden = true;
       if (st.clockAtStart == null) st.clockAtStart = S.clock;
       var map = { arrive: arrive, hi: function () { buildFlock(false); hi(); }, duet: function () { buildFlock(false); duetIn(); }, ask: function () { buildFlock(false); ask(); },
@@ -677,7 +769,7 @@ window.WFR_SKY = (function () {
         card: function () { S.sky.seen = true; api.save(); freezeNow(); freeze.hidden = true; fallFrom = Ppos.clone(); fallCam = camera.position.clone(); toV(); st.calls.length = 0; dark.style.opacity = '1'; toCard(); } };
       if (map[nm]) map[nm](); return st.ph;
     }
-    return { casters: casters, tick: tick, state: state, open: open, speed: function (k) { st.speed = Math.max(0.1, Math.min(8, +k || 1)); }, beat: beat, census: census, duetTap: duetTap, answer: answer, wake: wake, skip: crDone, freezeOk: freezeOk, LINES: LINES };
+    return { casters: casters, tick: tick, state: state, open: open, ground: ground, speed: function (k) { st.speed = Math.max(0.1, Math.min(8, +k || 1)); }, beat: beat, census: census, duetTap: duetTap, answer: answer, wake: wake, skip: crDone, freezeOk: freezeOk, LINES: LINES };
   }
   return { create: create, CREDITS: CREDITS, LINES: LINES, GRANDMA: GRANDMA, FREEZE: FREEZE, CARD: CARD };
 })();
