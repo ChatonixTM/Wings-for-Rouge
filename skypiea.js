@@ -64,6 +64,8 @@ window.WFR_SKY = (function () {
     rew: 'Rewind', pause: 'Pause', play: 'Play', ff: 'Fast forward',   // the credits' controls (596, Marth ~22:00: "a proper fastforward icon ... and a reverse button")
     done: 'Done',                    // the end of the credits: she wakes in her nest (596)
     glint: 'Something glints above the highest peak…',   // OURS (closing, allowed by Marth ~16:20)
+    tonight: 'Something stirs above the peak. At dawn, the sky will call.',   // 627: the evening before (OURS)
+    calling: 'The sky is calling. Fly to the gems above the peak.',   // 627: at dawn, once the gems are out (OURS)
     climb: 'Hold Flap to climb faster.',   // OURS (closing, allowed by Marth ~16:20)
     lift: 'The wind carries you up, up through the clouds…',   // OURS (closing, allowed by Marth ~16:20)
     woke: 'You wake up in your nest. The sun is just coming up.',   // OURS (closing, allowed by Marth ~16:20)
@@ -356,7 +358,11 @@ window.WFR_SKY = (function () {
     var V = { C: new THREE.Vector3(), dir: new THREE.Vector3(1, 0, -0.15).normalize(), cam: new THREE.Vector3() };
     if (S.sky.ended) buildTemple();
     function go(ph) { st.ph = ph; st.t = 0; st.seq.push(ph); }
-    var gateOpen = function () { return !S.sky.seen && !!S.eagleFound && S.clock < DAWN_END && S.tut === 0 && !S.inEagle && !S.morph; };
+    /* 627 (Marth): the sky opens to the worthy: level 24 or up, OR the bell tower built (BUILDS[5], so built >= 6) and the chick at level 2 in
+       any stat (100 points, the html's STAT_STEP 50). Always after the Eagle, at dawn, and never twice. */
+    var worthy = function () { var st2 = (S.chick && S.chick.stats) || {}, two = false; for (var k in st2) if ((st2[k] || 0) >= 100) two = true;
+      return (S.level || 0) >= 24 || ((S.built || 0) >= 6 && two); };
+    var gateOpen = function () { return !S.sky.seen && !!S.eagleFound && worthy() && S.clock < DAWN_END && S.tut === 0 && !S.inEagle && !S.morph; };
     function controls(on) {
       if (api.flapBtn) api.flapBtn.hidden = !on; if (api.stick) api.stick.hidden = !on;
       ['land', 'sing', 'jump', 'flutter', 'thBtn', 'home', 'read'].forEach(function (id) { var e = $(id); if (e && !on) e.hidden = true; });
@@ -533,6 +539,10 @@ window.WFR_SKY = (function () {
       var ph = st.ph, b = api.bird(), k = api.kind();
       if (ph === 'idle') {
         var open = gateOpen();
+        /* 627: the signal. The evening before: once per save, when all but the dawn is met and night has come. At dawn: once per dawn, when the gems are out. */
+        if (!open && !S.sky.seen && S.eagleFound && worthy() && S.clock > 2040 && !S.sky.told && S.mode !== 'paused' && !S.talking) { S.sky.told = true; api.toast(UI.tonight, 4200); if (api.save) api.save(); }
+        if (open && !st.called && (S.mode === 'fly' || S.mode === 'walk') && !S.talking) { st.called = true; api.toast(UI.calling, 4200); }
+        if (!open) st.called = false;
         if (open && !dia) buildDiamonds();
         if (dia) { dia.fade = Math.max(0, Math.min(1, dia.fade + (open ? dt : -dt) * 0.6)); dia.mesh.material.opacity = 0.92 * dia.fade; dia.pts.material.opacity = dia.fade; dia.g.visible = dia.fade > 0.01; placeDiamonds(S.t);
           if (!open && dia.fade <= 0) { dropDiamonds(); st.hinted = false; } }
@@ -638,7 +648,7 @@ window.WFR_SKY = (function () {
       return n;
     }
     function state() {
-      return { present: !S.sky.seen, gate: gateOpen(), phase: st.ph, beat: st.beat, seq: st.seq.slice(), seen: !!S.sky.seen, ended: !!S.sky.ended, built: !!sky, diamonds: dia ? dia.got.filter(function (x) { return !x; }).length : 0,
+      return { present: !S.sky.seen, gate: gateOpen(), worthy: worthy(), told: !!S.sky.told, called: !!st.called, phase: st.ph, beat: st.beat, seq: st.seq.slice(), seen: !!S.sky.seen, ended: !!S.sky.ended, built: !!sky, diamonds: dia ? dia.got.filter(function (x) { return !x; }).length : 0,
         diamondsVisible: !!(dia && dia.g.visible), u: st.u, temple: !!temple, meshes: census(), focus: st.focus, answer: st.answer || null, duet: st.duet, card: cardText.textContent, cardShown: !card.hidden, wakeShown: !wakeBtn.hidden,
         freeze: freeze.hidden ? null : msgP.textContent, okShown: !okBtn.hidden, singShown: !singBtn.hidden, choiceShown: !choice.hidden, cue: st.cue == null ? null : st.cue,
         figures: figSpots.map(function (p) { return [p.x, p.y, p.z]; }), standAt: [Ppos.x, FLOOR, Ppos.z], grandmaAt: [Gpos.x, RISE, Gpos.z], first: helix(0).toArray(), clockAtStart: st.clockAtStart, clockAtWake: st.clockAtWake == null ? null : st.clockAtWake,

@@ -40,6 +40,38 @@ window.WFR_VILLAGERS = (function () {
     if (window.WFR_PEOPLE && WFR_PEOPLE.paint) WFR_PEOPLE.paint(THREE, body, want);   // the merged body: colours live in the vertices, by the former material's name
     body.traverse((o) => { if (!o.isMesh || o.userData.ranges) return; for (const m of (Array.isArray(o.material) ? o.material : [o.material])) if (m && want[m.name] !== undefined && want[m.name] !== null) m.color.set(want[m.name]); });   // an unmerged body: by material
   }
+  /* 628 (Marth, Oct 11: "the white guys shouldn't have braids tbh. Maybe the one dude. Then give Eli dreads and model Go after Nico
+     Robin"): per-villager extras on top of the paints. Bo keeps the Casual body's braids; Eli's braids are folded away (the hair's
+     vertices gathered into the skull) and dreads hang from his Head bone; Go (Nico Robin): long straight black hair down her back
+     and shoulders from her Head bone, black paints. Pieces are the game's own shapes, placed in the bone's space (scaled 1/s). */
+  const LOOKS = {
+    3: { hair: 0x0a0a0a, piece: 'longHair' },   // Go, after Nico Robin
+    4: { hideHair: ['Hair'], piece: 'dreads' },  // Eli
+  };
+  function piece(THREE, kind, s) {
+    const g = new THREE.Group(); g.name = 'look:' + kind; g.scale.setScalar(1 / s);
+    const lam = (c) => new THREE.MeshLambertMaterial({ color: c });
+    if (kind === 'dreads') { for (let k = 0; k < 14; k++) { const a = (k / 14) * Math.PI * 2, r = 0.16 + (k % 2) * 0.02, L = 0.42 + (k % 3) * 0.1;
+      const d = new THREE.Mesh(new THREE.CylinderGeometry(0.028, 0.02, L, 5), lam(0x1a110b)); d.position.set(Math.cos(a) * r, 0.1 - L / 2, Math.sin(a) * r - 0.02); d.rotation.z = Math.cos(a) * 0.35; d.rotation.x = -Math.sin(a) * 0.35; g.add(d); }
+      const cap = new THREE.Mesh(new THREE.SphereGeometry(0.21, 10, 8, 0, Math.PI * 2, 0, Math.PI * 0.5), lam(0x1a110b)); cap.position.y = 0.12; g.add(cap); }
+    if (kind === 'longHair') { const back = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.8, 0.12), lam(0x0a0a0a)); back.position.set(0, -0.3, -0.17); g.add(back);
+      for (const sd of [-1, 1]) { const f = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.62, 0.16), lam(0x0a0a0a)); f.position.set(0.2 * sd, -0.2, 0.02); g.add(f); }
+      const top = new THREE.Mesh(new THREE.SphereGeometry(0.235, 12, 9, 0, Math.PI * 2, 0, Math.PI * 0.48), lam(0x0a0a0a)); top.position.y = 0.1; g.add(top); }
+    g.traverse((o) => { if (o.isMesh) o.castShadow = true; });
+    return g;
+  }
+  function hideRanges(THREE, body, names) {   // gather a former material's vertices to one point inside the head: the part is gone, nothing else moves
+    body.traverse((o) => { if (!o.isMesh || !o.userData.ranges) return; const pos = o.geometry.attributes.position; let t = false;
+      for (const nm of names) for (const [start, count] of (o.userData.ranges[nm] || [])) { let cx = 0, cy = 0, cz = 0; for (let i = start; i < start + count; i++) { cx += pos.getX(i); cy += pos.getY(i); cz += pos.getZ(i); } cx /= count; cy /= count; cz /= count;
+        for (let i = start; i < start + count; i++) pos.setXYZ(i, cx, cy, cz); t = true; }
+      if (t) pos.needsUpdate = true; });
+  }
+  function look(THREE, n, i, p) {
+    const L = LOOKS[i]; if (!L) return;
+    if (L.hair !== undefined && window.WFR_PEOPLE && WFR_PEOPLE.paint) { const nm = {}; for (const k of (PAINT[p.name] ? PAINT[p.name].hair : [])) nm[k] = L.hair; WFR_PEOPLE.paint(THREE, p.body, nm); }
+    if (L.hideHair) hideRanges(THREE, p.body, L.hideHair);
+    if (L.piece) { const head = p.body.getObjectByName('Head'); if (head) { const pc = piece(THREE, L.piece, p.body.scale.x); pc.position.y = 0.12 / p.body.scale.x; head.add(pc); } }
+  }
   function swap(THREE, n, i, api) {   // api: { WFR_PEOPLE, height, pal, scene }
     if (n.model || !api.WFR_PEOPLE) return false;
     const name = api.body || BODY[i % BODY.length];
@@ -47,6 +79,7 @@ window.WFR_VILLAGERS = (function () {
     api.WFR_PEOPLE.make(THREE, name, { height: api.height / gs, clips: name }, (p) => {   // each body's OWN clips: the women's skeleton rests differently, and the man's numbers put their hands behind their backs (his phone, Oct 11)
       if (!p || n.model) return;
       paint(THREE, p.body, name, api.pal);
+      if (api.looks !== false && api.pal) look(THREE, n, i, p);   // 628: the villagers' own looks (the kids pass looks: false)
       if (api.headScale && api.headScale !== 1) { const hd = p.body.getObjectByName('Head'); if (hd) hd.scale.setScalar(api.headScale); }   // the children: a bigger head on a short body (folk.js's K_HEAD)
       const s = p.body.scale.x, wrist = p.body.getObjectByName('Wrist.R') || p.body.getObjectByName('LowerArm.R');
       const hand = new THREE.Object3D(); hand.position.set(0, -0.72 / s, 0); hand.rotation.x = Math.PI; hand.scale.setScalar(1 / s);   // the old rig's armR frame: (0, -0.72, 0) lands on the wrist

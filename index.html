@@ -428,30 +428,30 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 <div id="fade" aria-hidden="true"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="gltf-loader.js?v=50cf91218bb4"></script>
-<script src="skeleton-utils.js?v=50cf91218bb4"></script>
-<script src="meshopt-decoder.js?v=50cf91218bb4"></script>
-<script src="models.js?v=50cf91218bb4"></script>
-<script src="people.js?v=50cf91218bb4"></script>
-<script src="villagers.js?v=50cf91218bb4"></script>
-<script src="tex-photos.js?v=50cf91218bb4"></script>
-<script src="textures.js?v=50cf91218bb4"></script>
-<script src="birds.js?v=50cf91218bb4"></script>
-<script src="humans.js?v=50cf91218bb4"></script>
-<script src="folk.js?v=50cf91218bb4"></script>
-<script src="trees.js?v=50cf91218bb4"></script>
-<script src="treehouses.js?v=50cf91218bb4"></script>
-<script src="cabins.js?v=50cf91218bb4"></script>
-<script src="cave.js?v=50cf91218bb4"></script>
-<script src="sounds.js?v=50cf91218bb4"></script>
-<script src="music.js?v=50cf91218bb4"></script>
-<script src="music-orchestra.js?v=50cf91218bb4"></script>
-<script src="rhythm.js?v=50cf91218bb4"></script>
-<script src="pictograms.js?v=50cf91218bb4"></script>
-<script src="hedgehogs.js?v=50cf91218bb4"></script>
-<script src="opening.js?v=50cf91218bb4"></script>
-<script src="skypiea.js?v=50cf91218bb4"></script>
-<script src="atmo.js?v=50cf91218bb4"></script>
+<script src="gltf-loader.js?v=e7ef6a3cd994"></script>
+<script src="skeleton-utils.js?v=e7ef6a3cd994"></script>
+<script src="meshopt-decoder.js?v=e7ef6a3cd994"></script>
+<script src="models.js?v=e7ef6a3cd994"></script>
+<script src="people.js?v=e7ef6a3cd994"></script>
+<script src="villagers.js?v=e7ef6a3cd994"></script>
+<script src="tex-photos.js?v=e7ef6a3cd994"></script>
+<script src="textures.js?v=e7ef6a3cd994"></script>
+<script src="birds.js?v=e7ef6a3cd994"></script>
+<script src="humans.js?v=e7ef6a3cd994"></script>
+<script src="folk.js?v=e7ef6a3cd994"></script>
+<script src="trees.js?v=e7ef6a3cd994"></script>
+<script src="treehouses.js?v=e7ef6a3cd994"></script>
+<script src="cabins.js?v=e7ef6a3cd994"></script>
+<script src="cave.js?v=e7ef6a3cd994"></script>
+<script src="sounds.js?v=e7ef6a3cd994"></script>
+<script src="music.js?v=e7ef6a3cd994"></script>
+<script src="music-orchestra.js?v=e7ef6a3cd994"></script>
+<script src="rhythm.js?v=e7ef6a3cd994"></script>
+<script src="pictograms.js?v=e7ef6a3cd994"></script>
+<script src="hedgehogs.js?v=e7ef6a3cd994"></script>
+<script src="opening.js?v=e7ef6a3cd994"></script>
+<script src="skypiea.js?v=e7ef6a3cd994"></script>
+<script src="atmo.js?v=e7ef6a3cd994"></script>
 <script>
 (() => {
 'use strict';
@@ -971,7 +971,7 @@ const S = { mode: 'menu', pos: new THREE.Vector3(-110, 30, -60), yaw: 0.6, pitch
   lessons: {}, hopV: 0, hopY: 0, landT: 0, bonkCd: 0, nestTier: 1, mats: {}, eagleFound: false, evFocus: 'peak',
   chick: { stats: { fly: 0, run: 0, str: 0, sta: 0, swim: 0 }, happy: 60, food: 70, stage: 0, pets: 0, at: Date.now() }, fruit: null, chickFeel: 2, chickFeelT: 0, petCd: 0 };
 const input = { sx: 0, sy: 0 };
-(function load() { try { const s = JSON.parse(localStorage.getItem('wfr.save') || 'null'); if (s && s.level) { S.level = Math.min(LEVEL_MAX, s.level); S.xp = s.xp || 0; S.nestDone = !!s.nestDone; S.found = s.found || {}; S.storySeen = !!s.storySeen; S.tutDone = !!s.tutDone; S.built = s.built || 0; S.lessons = s.lessons || {}; S.nestTier = s.nestTier || 1; S.mats = s.mats || {}; S.eagleFound = !!s.eagleFound; S.treatsTaken = s.treats || []; S.fishCaught = s.fish || 0; S.clock = typeof s.clock === 'number' ? s.clock % 2700 : 600; S.beakWas = s.beak || null; S.cutPending = s.cutQ || []; S.twigsTaken = s.twigs || []; S.read = s.read || {}; S.seen = s.seen || {}; S.inv = s.inv || {}; S.toolIn = s.toolIn || 0; S.given = typeof s.given === 'number' ? s.given : (s.built || 0) + (s.toolIn || 0); /* 581: every build and every tool in hand took a tool given */ S.sky = s.sky && typeof s.sky === 'object' ? { seen: !!s.sky.seen, ended: !!s.sky.ended } : null;
+(function load() { try { const s = JSON.parse(localStorage.getItem('wfr.save') || 'null'); if (s && s.level) { S.level = Math.min(LEVEL_MAX, s.level); S.xp = s.xp || 0; S.nestDone = !!s.nestDone; S.found = s.found || {}; S.storySeen = !!s.storySeen; S.tutDone = !!s.tutDone; S.built = s.built || 0; S.lessons = s.lessons || {}; S.nestTier = s.nestTier || 1; S.mats = s.mats || {}; S.eagleFound = !!s.eagleFound; S.treatsTaken = s.treats || []; S.fishCaught = s.fish || 0; S.clock = typeof s.clock === 'number' ? s.clock % 2700 : 600; S.beakWas = s.beak || null; S.cutPending = s.cutQ || []; S.twigsTaken = s.twigs || []; S.read = s.read || {}; S.seen = s.seen || {}; S.inv = s.inv || {}; S.toolIn = s.toolIn || 0; S.given = typeof s.given === 'number' ? s.given : (s.built || 0) + (s.toolIn || 0); /* 581: every build and every tool in hand took a tool given */ S.sky = s.sky && typeof s.sky === 'object' ? { seen: !!s.sky.seen, ended: !!s.sky.ended, told: !!s.sky.told } : null;   // 627: told = the evening's word was said
   if (s.chick && s.chick.stats) { S.chick = Object.assign(S.chick, s.chick);   // time away: a little hungrier, never harmed (floors at 10)
     const mins = Math.max(0, (Date.now() - (s.chick.at || Date.now())) / 60000); S.chick.food = Math.max(10, S.chick.food - mins / 3); S.chick.happy = Math.max(10, S.chick.happy - mins / 5); }
   if (s.kind && BIRDS[s.kind] && isOpen(BIRDS[s.kind])) kind = s.kind; } } catch (e) { /* a fresh start */ } }());
@@ -2540,7 +2540,7 @@ function bgMusicTick(dt) {
    after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
    music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
    menu, a cutscene), the orchestra bows out. */
-const ORCH_SRC = 'orch-samples.js?v=50cf91218bb4';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const ORCH_SRC = 'orch-samples.js?v=e7ef6a3cd994';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
 const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
 window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
 const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
@@ -3819,7 +3819,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build 50cf91218bb4): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build e7ef6a3cd994): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>
