@@ -174,6 +174,11 @@ html.cine #boot{display:grid}
 .missions .top button{min-width:44px;min-height:44px;border-radius:999px;background:#eef6ff;color:#2f5fb0;font-size:16px}
 .missions h3{margin:8px 0 2px;font-family:var(--display);font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
 .missions ul{margin:0;padding-left:18px}.missions li{font-size:14px;line-height:1.45;color:var(--ink)}
+/* 644: the pouch (a smaller What-to-do, same paper); the slow-time vignette under the HUD */
+.quick{width:min(320px,calc(100% - 32px));max-height:calc(100% - 230px);z-index:7}.quick ul{list-style:none;padding-left:0}.quick li{display:grid;grid-template-columns:1fr auto;gap:1px 10px;align-items:center;padding:2px 0}
+.quick li.now{font-weight:700}.quick li.done{color:var(--mute)}.quick li .bar{grid-column:1/-1;height:5px;border-radius:3px;background:#e4ecf6;overflow:hidden}.quick li .bar i{display:block;height:100%;background:var(--rouge)}
+.quick li .bar i.full{background:#5f9e4a}.quick small{color:var(--mute);font-size:12px}.quick li.rare{color:#8a5a9c}
+#slow{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:0;transition:opacity .4s;background:radial-gradient(ellipse at center,rgba(18,28,58,0) 52%,rgba(18,28,58,.5) 100%)}#slow.on{opacity:1}
 .pill{background:var(--paper);border-radius:16px;padding:8px 12px;font-family:var(--display);font-weight:600;font-size:16px;
   box-shadow:0 6px 16px rgba(34,49,74,.18);font-variant-numeric:tabular-nums;min-width:0;display:grid;gap:4px}
 .pill .top{display:flex;align-items:center;gap:8px;white-space:nowrap}
@@ -353,6 +358,7 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 
 <canvas id="c" aria-label="An island to fly over"></canvas>
 
+<div id="slow" aria-hidden="true"></div>
 <div class="layer" id="ui" hidden>
   <div class="hud">
     <div class="pill" id="lvPill"><div class="top"><span id="lvText">Lv 1</span><span class="bar"><i id="xpBar"></i></span></div><small id="quest">Twigs 0 / 5</small><small id="navHud" aria-label="play time and map square">⏱ 0:00:00 · –</small></div><div id="xpPop" hidden aria-live="polite"></div>
@@ -363,6 +369,7 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
     <div class="side">
       <button class="round" id="mute" type="button" aria-label="Sound on">♪</button>
       <button class="round" id="birdsBtn" type="button" aria-label="Pause">⏸</button>
+      <button class="round" id="quickBtn" type="button" aria-label="Pouch" aria-expanded="false">🎒</button>
     </div>
   </div>
   <div id="bubbles"></div>
@@ -374,6 +381,7 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
   <button class="act" id="read" type="button" hidden>📜 Read</button>
   <button class="act" id="home" type="button" aria-label="Go inside nest" hidden>🪺 Nest</button>
   <button class="act" id="thBtn" type="button" hidden>🏡 Go in</button>
+  <div class="missions quick" id="quick" hidden role="dialog" aria-label="Pouch"><div class="top"><span>Pouch</span><button type="button" id="quickClose" aria-label="Close">✕</button></div><div id="quickBody"></div></div>
   <div id="breath" hidden><i id="breathFill"></i></div>
   <div id="under"></div>
   <button class="act" id="sing" type="button" hidden>Sing ♪</button>
@@ -439,31 +447,31 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 <div id="fade" aria-hidden="true"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="gltf-loader.js?v=5b27ef7361d2"></script>
-<script src="skeleton-utils.js?v=5b27ef7361d2"></script>
-<script src="meshopt-decoder.js?v=5b27ef7361d2"></script>
-<script src="models.js?v=5b27ef7361d2"></script>
-<script src="people.js?v=5b27ef7361d2"></script>
-<script src="villagers.js?v=5b27ef7361d2"></script>
-<script src="tex-photos.js?v=5b27ef7361d2"></script>
-<script src="textures.js?v=5b27ef7361d2"></script>
-<script src="birds.js?v=5b27ef7361d2"></script>
-<script src="humans.js?v=5b27ef7361d2"></script>
-<script src="folk.js?v=5b27ef7361d2"></script>
-<script src="trees.js?v=5b27ef7361d2"></script>
-<script src="treehouses.js?v=5b27ef7361d2"></script>
-<script src="cabins.js?v=5b27ef7361d2"></script>
-<script src="cave.js?v=5b27ef7361d2"></script>
-<script src="sounds.js?v=5b27ef7361d2"></script>
-<script src="music.js?v=5b27ef7361d2"></script>
-<script src="music-orchestra.js?v=5b27ef7361d2"></script>
-<script src="rhythm.js?v=5b27ef7361d2"></script>
-<script src="pictograms.js?v=5b27ef7361d2"></script>
-<script src="chick-wear.js?v=5b27ef7361d2"></script>
-<script src="hedgehogs.js?v=5b27ef7361d2"></script>
-<script src="opening.js?v=5b27ef7361d2"></script>
-<script src="skypiea.js?v=5b27ef7361d2"></script>
-<script src="atmo.js?v=5b27ef7361d2"></script>
+<script src="gltf-loader.js?v=3e95e9c3c93c"></script>
+<script src="skeleton-utils.js?v=3e95e9c3c93c"></script>
+<script src="meshopt-decoder.js?v=3e95e9c3c93c"></script>
+<script src="models.js?v=3e95e9c3c93c"></script>
+<script src="people.js?v=3e95e9c3c93c"></script>
+<script src="villagers.js?v=3e95e9c3c93c"></script>
+<script src="tex-photos.js?v=3e95e9c3c93c"></script>
+<script src="textures.js?v=3e95e9c3c93c"></script>
+<script src="birds.js?v=3e95e9c3c93c"></script>
+<script src="humans.js?v=3e95e9c3c93c"></script>
+<script src="folk.js?v=3e95e9c3c93c"></script>
+<script src="trees.js?v=3e95e9c3c93c"></script>
+<script src="treehouses.js?v=3e95e9c3c93c"></script>
+<script src="cabins.js?v=3e95e9c3c93c"></script>
+<script src="cave.js?v=3e95e9c3c93c"></script>
+<script src="sounds.js?v=3e95e9c3c93c"></script>
+<script src="music.js?v=3e95e9c3c93c"></script>
+<script src="music-orchestra.js?v=3e95e9c3c93c"></script>
+<script src="rhythm.js?v=3e95e9c3c93c"></script>
+<script src="pictograms.js?v=3e95e9c3c93c"></script>
+<script src="chick-wear.js?v=3e95e9c3c93c"></script>
+<script src="hedgehogs.js?v=3e95e9c3c93c"></script>
+<script src="opening.js?v=3e95e9c3c93c"></script>
+<script src="skypiea.js?v=3e95e9c3c93c"></script>
+<script src="atmo.js?v=3e95e9c3c93c"></script>
 <script>
 (() => {
 'use strict';
@@ -653,7 +661,7 @@ function carriedIn() {
 function clockTick(dt) {   // only while the world is live; the tutorial never meets the dusk (Itachi)
   const live = !['menu', 'paused', 'event', 'nest', 'hatch', 'card', 'debugcam'].includes(S.mode) && !S.talking;
   if (live) nightOut(dt * (S.timeScale == null ? 1 : S.timeScale));
-  if (live) { S.played = (S.played || 0) + dt;   /* 631: seconds of play in this file */ S.clock = (S.clock + dt * (S.timeScale == null ? 1 : S.timeScale)) % CYCLE;   /* (|| 1 made timeScale(0) a no-op - Ino F1) */ if (S.tut !== 0 && S.clock > 1799) S.clock = 1799; }
+  if (live) { S.played = (S.played || 0) + (S.real || dt);   /* 631: seconds of play in this file (644: real seconds, not slowed) */ S.clock = (S.clock + dt * (S.timeScale == null ? 1 : S.timeScale)) % CYCLE;   /* (|| 1 made timeScale(0) a no-op - Ino F1) */ if (S.tut !== 0 && S.clock > 1799) S.clock = 1799; }
   S.clockSaveT = (S.clockSaveT || 0) + dt; if (S.clockSaveT > 30) { S.clockSaveT = 0; save(); }
   skyTick();
 }
@@ -984,7 +992,7 @@ const S = { mode: 'menu', pos: new THREE.Vector3(-110, 30, -60), yaw: 0.6, pitch
   lessons: {}, hopV: 0, hopY: 0, landT: 0, bonkCd: 0, nestTier: 1, mats: {}, eagleFound: false, evFocus: 'peak',
   chick: { stats: { fly: 0, run: 0, str: 0, sta: 0, swim: 0 }, happy: 60, food: 70, stage: 0, pets: 0, at: Date.now() }, fruit: null, chickFeel: 2, chickFeelT: 0, petCd: 0 };
 const input = { sx: 0, sy: 0 };
-(function load() { try { const s = JSON.parse(localStorage.getItem('wfr.save') || 'null'); if (s && s.level) { S.level = Math.min(LEVEL_MAX, s.level); S.xp = s.xp || 0; S.nestDone = !!s.nestDone; S.found = s.found || {}; S.storySeen = !!s.storySeen; S.tutDone = !!s.tutDone; S.built = s.built || 0; S.lessons = s.lessons || {}; S.nestTier = s.nestTier || 1; S.mats = s.mats || {}; S.eagleFound = !!s.eagleFound; S.treatsTaken = s.treats || []; S.fishCaught = s.fish || 0; S.clock = typeof s.clock === 'number' ? s.clock % 2700 : 600; S.beakWas = s.beak || null; S.cutPending = s.cutQ || []; S.twigsTaken = s.twigs || []; S.read = s.read || {}; S.seen = s.seen || {}; S.inv = s.inv || {}; S.toolIn = s.toolIn || 0; S.played = typeof s.played === 'number' ? s.played : 0;   /* 631 */ S.given = typeof s.given === 'number' ? s.given : (s.built || 0) + (s.toolIn || 0); /* 581: every build and every tool in hand took a tool given */ S.sky = s.sky && typeof s.sky === 'object' ? { seen: !!s.sky.seen, ended: !!s.sky.ended, told: !!s.sky.told, where: s.sky.where === 'temple' ? 'temple' : 'home' } : null;   /* 610: where = home | temple */   // 627: told = the evening's word was said
+(function load() { try { const s = JSON.parse(localStorage.getItem('wfr.save') || 'null'); if (s && s.level) { S.level = Math.min(LEVEL_MAX, s.level); S.xp = s.xp || 0; S.nestDone = !!s.nestDone; S.found = s.found || {}; S.storySeen = !!s.storySeen; S.tutDone = !!s.tutDone; S.built = s.built || 0; S.lessons = s.lessons || {}; S.nestTier = s.nestTier || 1; S.mats = s.mats || {}; S.eagleFound = !!s.eagleFound; S.treatsTaken = s.treats || []; S.fishCaught = s.fish || 0; S.clock = typeof s.clock === 'number' ? s.clock % 2700 : 600; S.beakWas = s.beak || null; S.cutPending = s.cutQ || []; S.twigsTaken = s.twigs || []; S.read = s.read || {}; S.seen = s.seen || {}; S.inv = s.inv || {}; S.toolIn = s.toolIn || 0; S.played = typeof s.played === 'number' ? s.played : 0;   /* 631 */ S.given = typeof s.given === 'number' ? s.given : (s.built || 0) + (s.toolIn || 0); /* 581: every build and every tool in hand took a tool given */ S.grown = typeof s.grown === 'number' ? s.grown : 0; S.marks = Array.isArray(s.marks) ? s.marks : [];   /* 641 U1 */ S.sky = s.sky && typeof s.sky === 'object' ? { seen: !!s.sky.seen, ended: !!s.sky.ended, told: !!s.sky.told, where: s.sky.where === 'temple' ? 'temple' : 'home' } : null;   /* 610: where = home | temple */   // 627: told = the evening's word was said
   if (s.chick && s.chick.stats) { S.chick = Object.assign(S.chick, s.chick);   // time away: a little hungrier, never harmed (floors at 10)
     const mins = Math.max(0, (Date.now() - (s.chick.at || Date.now())) / 60000); S.chick.food = Math.max(10, S.chick.food - mins / 3); S.chick.happy = Math.max(10, S.chick.happy - mins / 5); }
   if (s.kind && BIRDS[s.kind] && isOpen(BIRDS[s.kind])) kind = s.kind; } } catch (e) { /* a fresh start */ } }());
@@ -995,7 +1003,7 @@ if (typeof S.clock !== 'number') S.clock = 600;   // a new game starts mid-morni
 for (const i of S.treatsTaken || []) if (houses[i]) { houses[i].treatTaken = true; if (houses[i].treat) houses[i].treat.visible = false; }   // a treat eaten stays eaten
 for (const n of OLDNESTS) if (S.seen && S.seen['nest:' + n.id]) { n.taken = true; n.treat.visible = false; }   // and a keepsake taken from an old nest (528)
 function save() { try { const s_ = JSON.stringify({ savedAt: Date.now(), level: S.level, xp: S.xp, nestDone: S.nestDone, found: S.found, kind, storySeen: S.storySeen, tutDone: S.tutDone, built: S.built, lessons: S.lessons, nestTier: S.nestTier, mats: S.mats, eagleFound: S.eagleFound, treats: houses.filter((h) => h.treatTaken).map((h) => h.i), twigs: (() => { try { return twigs.map((t, i) => t.visible ? -1 : i).filter((i) => i >= 0); } catch (e) { return S.twigsTaken || []; } })(),   /* a save before the twigs exist must not lose the whole save */
-    fish: S.fishCaught || 0, clock: Math.round(S.clock || 0), played: Math.round(S.played || 0), /* 631 */ beak: S.fruit ? S.fruit.type.id : null, cutQ: (() => { try { return cutQ.slice(); } catch (e) { return S.cutPending || []; } })(), read: S.read, seen: S.seen, inv: S.inv, toolIn: S.toolIn || 0, given: S.given || 0, sky: S.sky || { seen: false, ended: false }, chick: Object.assign({}, S.chick, { at: Date.now() }) }); localStorage.setItem('wfr.save', s_); localStorage.setItem(fileKey(ACTIVE), s_); } catch (e) { /* private mode: it still plays */ } }
+    fish: S.fishCaught || 0, clock: Math.round(S.clock || 0), played: Math.round(S.played || 0), /* 631 */ beak: S.fruit ? S.fruit.type.id : null, cutQ: (() => { try { return cutQ.slice(); } catch (e) { return S.cutPending || []; } })(), read: S.read, seen: S.seen, inv: S.inv, toolIn: S.toolIn || 0, given: S.given || 0, grown: S.grown || 0, marks: S.marks || [], /* 641 U1 */ sky: S.sky || { seen: false, ended: false }, chick: Object.assign({}, S.chick, { at: Date.now() }) }); localStorage.setItem('wfr.save', s_); localStorage.setItem(fileKey(ACTIVE), s_); } catch (e) { /* private mode: it still plays */ } }
 const need = (lv) => 20 + lv * 12;
 const strength = () => 1 + (S.level >= 3 ? 1 : 0) + (S.level >= 12 ? 1 : 0);
 
@@ -1050,6 +1058,7 @@ function missionsHtml() {
     : it.owner.name + ' needs the ' + it.type.name + ' ' + it.type.emoji + (S.lessons.crow ? ' (look ' + it.spot.zone + ')' : '') + (it.type.metal && strength() < 2 ? ' - too heavy for you yet.' : '.'));
   if (needs.length) L.push(['The villagers', needs]);
   if (S.built < BUILDS.length) { const r = recipe(); L.push(['The village', ['Next build: ' + BUILDS[S.built].name + (r ? (Object.keys(r).length ? ' - needs ' + recipeText() : ' - bring a villager their tool') : '') + '.']]); }
+  else if (growing_()) L.push(['The village', ['Saving up for ' + growing_().name + ': ' + recipeText() + '.', 'Open the pouch (\ud83c\udf92) to see every recipe.']]);   /* 641 U1 */
   if (S.nestDone && chick) { const h = Math.round((S.chick.bond || 0) / 20); L.push(['Your chick', [S.chick.food < 30 ? 'Hungry: pick fruit from a fruit tree and bring it home.' : 'Fed and happy.', 'Bond ' + '\u2764\ufe0f'.repeat(h) + '\u2661'.repeat(5 - h) + ' - pet it to grow closer.'].concat(S.level >= 26 && STAGES[S.chick.stage + 1] ? ['Next stage: ' + STAGES[S.chick.stage + 1].name + ' in ' + Math.max(0, STAGES[S.chick.stage + 1].at - chickTotal()) + ' stat points.'] : [])]); }   /* 641: the gift at 26 */
   if (isEvening()) L.push(['Tonight', ['Sleep in a tree house or in your own nest.']]);
   const tips = ['Hold Flap to fly fast and level. Hold Flap and push up or down to hover.', 'Read the signposts.', 'Rest or sleep in your nest.'];
@@ -1058,7 +1067,44 @@ function missionsHtml() {
   L.push(['Things to try', tips]);
   return L.map(([h, lines]) => '<h3>' + esc(h) + '</h3><ul>' + lines.map((x) => '<li>' + esc(x) + '</li>').join('') + '</ul>').join('');
 }
-function openMissions(on) { if (on) $('missionsBody').innerHTML = missionsHtml(); $('missions').hidden = !on; }
+function openMissions(on) { if (on) { $('missionsBody').innerHTML = missionsHtml(); if (S.quick) openQuick(false); } $('missions').hidden = !on; }
+/* 644: THE POUCH (Marth: 'a quick / small menu inside game for the bird (slows da game down for the user like franklin in gta ...) to view
+   inventory of sorts, and what you're holding. Also you can see what is needed to build what artifact or building or item for the villagers
+   to induce growth'). While it is open frame() runs the island at QUICK_SLOW; she keeps flying. */
+const QUICK_SLOW = 0.35;
+/* a row: 'logs 4 / 12' with a bar; count overrides have() (the nest's own row counts what she has gathered, not the gated leftover: Ino);
+   a rare part her nest has not yet earned says so (Obito: a silent dead-end otherwise) */
+function quickRow(k, n, now, count) { const gated = count == null && !STUFF[k] && S.nestTier < (MAT_TIER[k] || 99), h = Math.min(count == null ? have(k) : count, n), full = h >= n, rare = !STUFF[k];
+  return '<li class="' + (now ? 'now' : '') + (rare ? ' rare' : '') + '"><span>' + matEmoji(k) + ' ' + esc(matName(k)) + (gated ? ' <small>\u00b7 your nest first</small>' : '') + '</span><span>' + h + ' / ' + n + '</span><span class="bar"><i class="' + (full ? 'full' : '') + '" style="width:' + Math.round(h / n * 100) + '%"></i></span></li>'; }
+function quickHtml() {
+  const hold = []; if (S.fruit) hold.push(S.fruit.type.emoji + ' fruit, in your beak'); for (const c of S.carry) hold.push(c.type.emoji + ' ' + esc(c.type.name) + (c.owner ? ' for ' + esc(c.owner.name) : ''));
+  if (!hold.length) hold.push('Nothing. Your beak is free (' + carrySlots() + ' thing' + (carrySlots() > 1 ? 's' : '') + ' at once).');
+  if (S.toolIn > 0) hold.push('\ud83e\uddf0 ' + S.toolIn + ' tool' + (S.toolIn > 1 ? 's' : '') + ' delivered, waiting to be built with');
+  for (const it of items) if (!it.done && !it.held) hold.push(esc(it.owner.name) + ' needs the ' + esc(it.type.name) + ' ' + it.type.emoji + (S.lessons.crow ? ' (look ' + it.spot.zone + ')' : ''));   // who needs which tool (Obito)
+  const pouch = Object.keys(STUFF).map((k) => '<li><span>' + STUFF[k].emoji + ' ' + esc(STUFF[k].name) + '</span><span>' + (S.inv[k] || 0) + '</span></li>');
+  for (const k of Object.keys(MAT_TIER)) if (have(k) > 0) pouch.push('<li class="rare"><span>' + MAT_EMOJI[k] + ' ' + esc(MAT_NAME[k]) + '</span><span>' + have(k) + '</span></li>');
+  const build = [];
+  if (S.built < BUILDS.length) { const r = recipe() || {}; build.push('<li class="now"><span>Next: ' + esc(BUILDS[S.built].name) + '</span><span></span></li>'); for (const k in r) build.push(quickRow(k, r[k], false)); build.push('<li><span>+ a tool delivered</span><span>' + (S.toolIn > 0 ? '\u2713' : '\u2013') + '</span></li>'); }
+  GROWTH.forEach((G, i) => { const done = i < growI(), now = i === growI() && S.built >= BUILDS.length;
+    build.push('<li class="' + (done ? 'done' : now ? 'now' : '') + '"><span>' + (done ? '\u2713 ' : '') + esc(G.name) + '</span><span>' + (done ? 'built' : now ? 'saving up' : 'later') + '</span></li>');
+    if (!done) for (const k in G.need) build.push(quickRow(k, G.need[k], now)); if (!done) build.push('<li><span>+ a tool delivered</span><span>' + (S.toolIn > 0 ? '\u2713' : '\u2013') + '</span></li>'); });
+  const nest = []; if (S.nestDone && TIERS[S.nestTier + 1]) { const t = TIERS[S.nestTier + 1]; nest.push(t.gate() ? quickRow(t.mat, t.spots.length, true, S.mats[t.mat] || 0) :'<li><span>' + esc(t.label) + '</span><span>later</span></li>'); }
+  return '<h3>Holding</h3><ul>' + hold.map((x) => '<li><span>' + x + '</span><span></span></li>').join('') + '</ul><h3>Pouch</h3><ul>' + pouch.join('') + '</ul><h3>Building</h3><ul>' + build.join('') + '</ul>' + (nest.length ? '<h3>Your nest</h3><ul>' + nest.join('') + '</ul>' : '') + '<small>The island runs slow while the pouch is open.</small>';
+}
+function openQuick(on) {
+  if (on && (S.talking || S.tut !== 0 || !(S.mode === 'walk' || S.mode === 'fly' || S.mode === 'swim' || S.mode === 'hover'))) return;   // a pouch, not a pause: never over a talk, a cutscene or a menu
+  S.quick = !!on; S.quickT = 0; S.quickAt = 0;
+  if (on) { $('quickBody').innerHTML = quickHtml(); $('missions').hidden = true; }
+  $('quick').hidden = !on; $('slow').classList.toggle('on', !!on); $('quickBtn').setAttribute('aria-expanded', on ? 'true' : 'false');
+}
+function quickTick(real) {
+  if (!S.quick) return; S.quickT += real;
+  if (S.talking || S.tut !== 0 || !(S.mode === 'walk' || S.mode === 'fly' || S.mode === 'swim' || S.mode === 'hover') || S.quickT > 12) { openQuick(false); return; }   // the slow can never leak into a cutscene; a thumb forgets
+  if (S.quickT - S.quickAt > 1) { S.quickAt = S.quickT; $('quickBody').innerHTML = quickHtml(); }
+}
+$('quickBtn').addEventListener('click', () => openQuick(!S.quick));
+$('quickClose').addEventListener('pointerdown', (e) => { e.preventDefault(); openQuick(false); });
+$('quick').addEventListener('pointerdown', () => { S.quickT = 0; });   // a touch keeps it open
 /* 631: the map square (letters across, numbers down, 72 m each over the whole 1440 m sea: the island sits about F-O / 6-15) and the
    play clock, on the level pill's second line; refreshed twice a second, and only when the words change */
 const NAV = { t: 9, last: '' }, NAV_CELL = 72, NAV_ORIGIN = -720;
@@ -1080,6 +1126,8 @@ function hud() {
   else if (S.fruit) q = 'Carrying ' + S.fruit.type.emoji + ' for your chick';
   else if (S.chick.food < 30) q = 'Your chick is hungry: find fruit';
   else if (S.built < BUILDS.length && recipe()) q = 'Next: ' + BUILDS[S.built].name + (Object.keys(recipe()).length ? ' · ' + recipeText() : ' · bring a tool');
+  else if (growing_() && !haveAll()) q = 'Saving: ' + Object.keys(recipe()).map((k) => matEmoji(k) + ' ' + Math.min(have(k), recipe()[k]) + '/' + recipe()[k]).join(' ');   // 641 U1: the thing she is saving for
+  else if (growing_()) q = 'Bring a tool: the village can build ' + growing_().name;
   else if (S.sky && S.sky.ended && nextGift()) q = 'Lv ' + nextGift().lv + ' gives ' + (GIFT_SHORT[nextGift().lv] || 'more');   // 641: the number has somewhere to go
   else q = 'Help the villagers · Strength ' + strength();
   $('quest').textContent = q;
@@ -1208,11 +1256,23 @@ const STUFF = {
   stone: { id: 'stone', emoji: '🪨', name: 'stones', metal: false, heavy: true, nodes: [[74, 200], [50, 176], [-30, -118]] },
 };
 const RECIPES = [{}, { nail: 2 }, { log: 3 }, { log: 2, nail: 2 }, { stone: 3 }, { stone: 3, nail: 2 }];   // one per build, in order
-const recipe = () => RECIPES[S.built] || null;
-const short = (k) => { const r = recipe(); return r && r[k] ? Math.max(0, r[k] - (S.inv[k] || 0)) : 0; };
+/* 641 U1 (Marth, Oct 14: 'keep the Minecraft / clash of clans / Lego Fortnite rule that u need a lot of certain resources or certain things to
+   build certain items'): after the village's six builds come the GROWTH builds, one at a time, each wanting MANY nails/logs/stones and one
+   RARE part: a delivered tool, or the flowers / branches / planks her nest gathered and never spent (they sit in S.mats for good). The
+   rare parts count only once the nest tier that gathered them stands, so a growth build can never eat the nest's own materials. */
+const MAT_TIER = { flower: 2, branch: 3, plank: 4 }, MAT_EMOJI = { flower: '🌸', branch: '🌿', plank: '🟫' }, MAT_NAME = { flower: 'flowers (from your nest)', branch: 'big branches (from your nest)', plank: 'planks (from your nest)' };
+const growI = () => S.grown || 0;
+const growing_ = () => S.built >= BUILDS.length ? (GROWTH[growI()] || null) : null;   // the growth build the village is saving for, or null
+const recipe = () => S.built < BUILDS.length ? (RECIPES[S.built] || null) : (growing_() ? growing_().need : null);
+const have = (k) => STUFF[k] ? (S.inv[k] || 0) : (S.nestTier >= (MAT_TIER[k] || 99) ? (S.mats[k] || 0) : 0);
+const spend = (k, n) => { if (STUFF[k]) S.inv[k] = (S.inv[k] || 0) - n; else S.mats[k] = (S.mats[k] || 0) - n; };
+const matEmoji = (k) => STUFF[k] ? STUFF[k].emoji : (MAT_EMOJI[k] || '▫️');
+const matName = (k) => STUFF[k] ? STUFF[k].name : (MAT_NAME[k] || k);
+const short = (k) => { const r = recipe(); return r && r[k] ? Math.max(0, r[k] - have(k)) : 0; };
 const haveAll = () => { const r = recipe(); return !!r && Object.keys(r).every((k) => !short(k)); };
 const recipeText = () => { const r = recipe(); if (!r) return '';
-  return Object.keys(r).map((k) => STUFF[k].emoji + ' ' + Math.min(S.inv[k] || 0, r[k]) + '/' + r[k]).concat([(S.toolIn > 0 ? '✓' : '+') + ' a tool']).join('  '); };
+  return Object.keys(r).map((k) => matEmoji(k) + ' ' + Math.min(have(k), r[k]) + '/' + r[k]).concat([(S.toolIn > 0 ? '✓' : '+') + ' a tool']).join('  '); };
+const nextBuildName = () => S.built < BUILDS.length ? BUILDS[S.built].name : (growing_() ? growing_().name : '');
 const nodes = [];
 for (const k in STUFF) for (const [x0, z0] of STUFF[k].nodes) {
   const p = landNear(x0, z0), sp = emojiSprite(STUFF[k].emoji, 1.3), g = new THREE.Group(); g.add(sp);
@@ -1235,11 +1295,14 @@ function nodeTick(dt) {
   if (S.toolIn > 0 && haveAll() && Math.hypot(S.pos.x - VILLAGE.x, S.pos.z - VILLAGE.z) < 34) tryBuild(null);
 }
 function tryBuild(n) {
-  if (S.built >= BUILDS.length || S.toolIn <= 0 || !haveAll()) return false;
-  const r = recipe(); for (const k in r) S.inv[k] -= r[k];
-  S.toolIn--; const name = BUILDS[S.built].name; construct(S.built, true); S.built++; gainXP(40, 'the village built'); save(); hud(); fanfare();
-  if (S.built === 1) queueCut('build');
-  toast('The village built ' + name + '!' + (S.built < BUILDS.length && Object.keys(recipe()).length ? ' Next, ' + BUILDS[S.built].name + ': ' + recipeText() : ''), 5200);
+  const grow = S.built >= BUILDS.length;   // 641 U1: after the six, the growth builds
+  if ((grow ? !growing_() : false) || S.toolIn <= 0 || !haveAll()) return false;
+  const r = recipe(); for (const k in r) spend(k, r[k]);
+  S.toolIn--; const name = nextBuildName();
+  if (grow) { construct(growI(), true, GROWTH); S.grown = growI() + 1; gainXP(60, 'the village grew'); } else { construct(S.built, true); S.built++; gainXP(40, 'the village built'); }
+  save(); hud(); fanfare();
+  if (!grow && S.built === 1) queueCut('build');
+  toast('The village built ' + name + '!' + (recipe() && Object.keys(recipe()).length ? ' Next, ' + nextBuildName() + ': ' + recipeText() : ''), 5200);
   return true;
 }
 /* ---------- the village grows: every tool brought home builds something (Oct 8, Marth: "help them build their
@@ -1278,15 +1341,55 @@ const BUILDS = [
     const bell = new THREE.Mesh(new THREE.SphereGeometry(0.6, 10, 8, 0, Math.PI * 2, 0, Math.PI / 1.6), lam(0xf2b134)); bell.position.y = 10.2; g.add(bell);
   } },
 ];
-function construct(i, fresh) {
-  const B = BUILDS[i]; if (!B) return;
-  const g = new THREE.Group(), r = B.r || 18, x = B.at ? VILLAGE.x : VILLAGE.x + Math.cos(B.a) * r, z = B.at ? VILLAGE.z : VILLAGE.z + Math.sin(B.a) * r;
-  builtAt[i] = { x, z, y: H(x, z) };   // where it stands: the villagers' days go there (y: the bird bath's water sits on it, 591)
+/* 641 U1: THE VILLAGE GROWS. Five builds after the six, in order, each a saving-up (Marth: 'you can see the thing you are saving for'):
+   many of a kind from the nodes, one rare part. The sixth, seventh and eighth (a washing line, a boat, a new house) wait for 639's rope,
+   sail and fabric. A growth build is raised like a build: all of it in the pouch, and a tool delivered. */
+const GROWTH = [
+  { name: 'a fence around the green', at: true, need: { log: 12, nail: 6 }, make(g) {
+    const N = 16, R = 30; for (let k = 0; k < N; k++) { const a = k / N * Math.PI * 2, x = Math.cos(a) * R, z = Math.sin(a) * R, y = H(VILLAGE.x + x, VILLAGE.z + z) - H(VILLAGE.x, VILLAGE.z);
+      const post = box(0.2, 1.3, 0.2, 0x8b5e34); post.position.set(x, y + 0.65, z); g.add(post);
+      if (k % 8 === 0) continue;   // two gates, for the villagers' paths
+      const m = (k + 0.5) / N * Math.PI * 2, L = 2 * R * Math.sin(Math.PI / N), y2 = H(VILLAGE.x + Math.cos(m) * R, VILLAGE.z + Math.sin(m) * R) - H(VILLAGE.x, VILLAGE.z);
+      for (const h of [0.55, 1.0]) { const rail = box(L - 0.3, 0.09, 0.09, 0xa9754f); rail.position.set(Math.cos(m) * R, y2 + h, Math.sin(m) * R); rail.rotation.y = -m - Math.PI / 2; g.add(rail); } }
+  } },
+  { name: 'a stone path to the well', at: true, need: { stone: 10, flower: 3 }, make(g) {
+    const a = 1.3, cols = [0x7ec8f0, 0xff8fb8, 0xffffff]; let f = 0;
+    for (let r = 2.6; r <= 14.2; r += 1.2) { const x = Math.cos(a) * r, z = Math.sin(a) * r, y = H(VILLAGE.x + x, VILLAGE.z + z) - H(VILLAGE.x, VILLAGE.z);
+      const s = box(0.95, 0.14, 0.7, (Math.round(r * 10) % 2) ? 0xa9a39a : 0xb8b2a6); s.position.set(x, y + 0.07, z); s.rotation.y = -a; g.add(s);
+      if (r > 4 && Math.round((r - 2.6) / 1.2) % 4 === 1 && f < 3) { const fl = new THREE.Mesh(new THREE.SphereGeometry(0.26, 8, 6), lam(cols[f++])); fl.position.set(x - Math.sin(a) * 0.9, y + 0.3, z + Math.cos(a) * 0.9); g.add(fl); } }
+  } },
+  { name: 'a roof over the well', at: true, need: { log: 8, stone: 6 }, make(g) {
+    for (const [x, z] of [[-1.9, -1.9], [1.9, -1.9], [-1.9, 1.9], [1.9, 1.9]]) { const p = box(0.2, 3.3, 0.2, 0x6e4529); p.position.set(x, 1.65, z); g.add(p); }
+    const roof = new THREE.Mesh(new THREE.ConeGeometry(3.6, 1.7, 4), lam(0xc8314a, { flatShading: true })); roof.position.y = 4.1; roof.rotation.y = Math.PI / 4; g.add(roof);
+    const beam = box(0.16, 0.16, 4.2, 0x6e4529); beam.position.y = 3.2; g.add(beam);
+  } },
+  { name: 'a lookout by the bell tower', a: 5.0, r: 24, need: { stone: 16, log: 8, nail: 6, branch: 4 }, make(g) {
+    const t = box(2.2, 7, 2.2, 0xd8d2c6); t.position.y = 3.5; g.add(t);
+    const deck = box(3.4, 0.3, 3.4, 0x8b5e34); deck.position.y = 7.15; g.add(deck);
+    for (const [x, z] of [[-1.55, -1.55], [1.55, -1.55], [-1.55, 1.55], [1.55, 1.55]]) { const p = box(0.12, 1.1, 0.12, 0x6e4529); p.position.set(x, 7.85, z); g.add(p); }
+    const pole = box(0.1, 2.4, 0.1, 0x2c2c2c); pole.position.set(0, 8.5, 0); g.add(pole); const flag = box(1.1, 0.7, 0.05, 0xc8314a); flag.position.set(0.6, 9.3, 0); g.add(flag);
+  } },
+  { name: 'a jetty on the shore', pos: () => {   // the nearest water from the village: walk out until the ground dips under the sea
+      let best = null; for (let k = 0; k < 24; k++) { const a = k / 24 * Math.PI * 2; let px = VILLAGE.x, pz = VILLAGE.z;
+        for (let d = 8; d <= 200; d += 4) { const x = VILLAGE.x + Math.sin(a) * d, z = VILLAGE.z + Math.cos(a) * d; if (Math.hypot(x, z) > EDGE - 20 || Math.hypot(x - LAKE.x, z - LAKE.z) < 70) break; /* a ray into the lake is no shore (Obito) */ if (H(x, z) < WATER - 0.2) { if (!best || d < best.d) best = { x: px, z: pz, d }; break; } px = x; pz = z; } }
+      return best || { x: VILLAGE.x + Math.sin(1.7) * 30, z: VILLAGE.z + Math.cos(1.7) * 30 }; },
+    need: { log: 12, nail: 8, plank: 4 }, make(g) {
+    const deck = box(2.2, 0.22, 12, 0xc8a06e); deck.position.set(0, 0.95, -6); g.add(deck);
+    for (const z of [-1.5, -5.5, -9.5]) for (const x of [-0.9, 0.9]) { const p = box(0.22, 3, 0.22, 0x6e4529); p.position.set(x, -0.4, z); g.add(p); }
+    const post = box(0.12, 2.2, 0.12, 0x2c2c2c); post.position.set(0.8, 2, -11.4); g.add(post); const glow = new THREE.Mesh(new THREE.SphereGeometry(0.32, 10, 8), new THREE.MeshBasicMaterial({ color: 0xffe08a })); glow.position.set(0.8, 3.2, -11.4); g.add(glow);
+  } },
+];
+const grownAt = [];
+function construct(i, fresh, list) {
+  const L = list || BUILDS, B = L[i]; if (!B) return;
+  const P = B.pos ? B.pos() : null, g = new THREE.Group(), r = B.r || 18, x = P ? P.x : B.at ? VILLAGE.x : VILLAGE.x + Math.cos(B.a) * r, z = P ? P.z : B.at ? VILLAGE.z : VILLAGE.z + Math.sin(B.a) * r;
+  (L === GROWTH ? grownAt : builtAt)[i] = { x, z, y: H(x, z) };   // where it stands: the villagers' days go there (y: the bird bath's water sits on it, 591)
   B.make(g); g.position.set(x, H(x, z), z); g.rotation.y = Math.atan2(VILLAGE.x - x, VILLAGE.z - z) || 0; scene.add(g);
   if (fresh) { g.scale.setScalar(0.01); g.userData.grow = 0; growing.push(g); }
 }
 const growing = [], builtAt = [];
 for (let i = 0; i < Math.min(S.built, BUILDS.length); i++) construct(i, false);
+for (let i = 0; i < Math.min(S.grown || 0, GROWTH.length); i++) construct(i, false, GROWTH);   // 641 U1: what the village grew stands on a reload
 
 /* ---------- the villagers ---------- */
 const NAMES = ['Ada', 'Bo', 'Cyril', 'Go', 'Eli', 'Faye'];   // 603: Dina is now Go (Marth, Oct 9: 'really pretyy brunette (rouge teehee)')
@@ -1422,6 +1525,31 @@ function listen(n) {   // Marth, Oct 9: "the humans need to actually stop and li
   return true;
 }
 const TOOL_USE = { hammer: 'fix', brush: 'paint', key: 'unlock', wrench: 'crank', bucket: 'well', rope: 'well', scissors: 'garden', basket: 'market' };
+/* 641 U1: a delivery is VISIBLE after the pose ends. One small thing per (act, house), kept in S.marks and replayed on load:
+   fix a patched shutter · paint a shutter in the painter's colour · unlock a key hook by the door · crank/well a bucket up on the well's rim ·
+   garden three flowers by the door · market a crate by the door. */
+const markGroup = new THREE.Group(); scene.add(markGroup);
+const MARK_SAID = { fix: 'patched a shutter', paint: 'painted a shutter', unlock: 'hung a key hook by the door', crank: 'raised the bucket on the well', well: 'raised the bucket on the well', garden: 'planted flowers by the door', market: 'set a crate by the door' };
+function markMesh(act, h, who) {
+  const g = new THREE.Group(); let p;
+  if (act === 'crank' || act === 'well') { const b = box(0.5, 0.5, 0.5, 0x8b5e34); b.position.set(VILLAGE.x + 1.0, H(VILLAGE.x, VILLAGE.z) + 1.25, VILLAGE.z); g.add(b); return g; }
+  if (act === 'fix' || act === 'paint') { const side = act === 'fix' ? 1 : -1; p = toWorld(h, side * (h.w / 2 - 1.1), h.d / 2 + 0.06);
+    const sh = box(0.55, 0.9, 0.08, act === 'fix' ? 0xb08a5e : (SHIRTS[who] || 0xc8314a)); sh.position.set(p.x, h.y + 1.45, p.z); sh.rotation.y = h.rot; g.add(sh); return g; }
+  if (act === 'unlock') { p = toWorld(h, 0.75, h.d / 2 + 0.08); const k = box(0.12, 0.12, 0.1, 0xf2b134); k.position.set(p.x, h.y + 1.6, p.z); k.rotation.y = h.rot; g.add(k); return g; }
+  if (act === 'garden') { const cols = [0xc8314a, 0xf2b134, 0xff8fa3]; for (let k = 0; k < 3; k++) { const q = toWorld(h, 1.0 + k * 0.45, h.d / 2 + 1.1), fl = new THREE.Mesh(new THREE.SphereGeometry(0.2, 7, 5), lam(cols[k])); fl.position.set(q.x, H(q.x, q.z) + 0.35, q.z); g.add(fl); } return g; }
+  if (act === 'market') { const q = toWorld(h, -1.2, h.d / 2 + 1.1), c = box(0.7, 0.6, 0.7, 0x9b7046); c.position.set(q.x, H(q.x, q.z) + 0.3, q.z); c.rotation.y = h.rot; g.add(c); return g; }
+  return null;
+}
+function mark(act, n) {
+  S.marks = S.marks || []; const h = n.house, key = (act === 'crank' || act === 'well') ? 'well' : act + ':' + h.i;
+  if (S.marks.some((m) => m.key === key)) return false;
+  const g = markMesh(act, h, n.i); if (!g) return false; markGroup.add(g);
+  S.marks.push({ key, act, house: h.i, who: n.i }); save();
+  toast(n.name + ' ' + (MARK_SAID[act] || 'left a mark') + (n.tool && n.tool.type ? ' with your ' + n.tool.type.name : '') + '.', 3600);   // the delivery answered in words (Obito: Rouge's 'idrk what it does tho')
+  return true;
+}
+function replayMarks() { for (const m of S.marks || []) { const h = houses.find((x) => x.i === m.house) || houses[0]; const g = markMesh(m.act, h, m.who); if (g) markGroup.add(g); } }
+replayMarks();   // 641 U1: the marks stand on a reload (called HERE, after markGroup and the houses exist: a call beside the npcs ran before this const and killed the boot in the smoke)
 function receive(n, it) {   // the tool passes from her beak to their hand, and they thank her
   S.given = (S.given || 0) + 1;   // 581: counted here, saved by the delivery's own gainXP(75) -> save()
   if (n.tool) putAway(n);
@@ -1497,7 +1625,7 @@ function updateNPC(n, dt) {
   if (A.face) { const f = A.face(n); turnTo(n, f.x, f.z, dt); }
   if (A.pose === 'sit') p.y = H(p.x, p.z) + 0.25;
   pose(n, A.pose || 'stand', dt, 0);
-  n.actT -= dt; if (n.actT <= 0) { if (A.end) A.end(n); chooseAct(n); }
+  n.actT -= dt; if (n.actT <= 0) { if (A.end) A.end(n); if (n.tool && TOOL_USE[n.tool.type.id] === n.act) mark(n.act, n); chooseAct(n); }   // 641 U1: the tool leaves its mark
 }
 
 /* ---------- start screen: the birds you have earned ---------- */
@@ -2602,7 +2730,7 @@ function bgMusicTick(dt) {
    after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
    music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
    menu, a cutscene), the orchestra bows out. */
-const ORCH_SRC = 'orch-samples.js?v=5b27ef7361d2';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const ORCH_SRC = 'orch-samples.js?v=3e95e9c3c93c';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
 const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
 window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
 const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
@@ -3292,6 +3420,9 @@ try { if (localStorage.getItem('wfr.debug') === '1') window.__wfr = { eagle: () 
   heldLeft: () => { let n = 0; if (bird) bird.traverse((o) => { if (o !== bird && o.userData && o.userData.slot !== undefined) n++; }); return n; },
   carrying: () => S.fruit ? S.fruit.type.id || S.fruit.type.emoji : null, caught: () => S.fishCaught || 0,
   xp: (n, why) => gainXP(n, why), missions: () => missionsHtml(),   /* 641 */
+  quick: () => ({ open: !!S.quick, slow: QUICK_SLOW, hidden: $('quick').hidden, vignette: $('slow').classList.contains('on'), body: $('quickBody').textContent, t: S.t, played: S.played || 0, mode: S.mode, grown: S.grown || 0, built: S.built, recipe: recipe() ? Object.assign({}, recipe()) : null, haveAll: haveAll(), toolIn: S.toolIn || 0, inv: Object.assign({}, S.inv), mats: Object.assign({}, S.mats), nestTier: S.nestTier, growth: GROWTH.map((g) => ({ name: g.name, need: Object.assign({}, g.need) })), grownAt: grownAt.slice(), marks: (S.marks || []).slice(), markMeshes: markGroup.children.length, shining: nodes.filter((nd) => nd.g.visible).map((nd) => nd.type.id) }),   /* 644 + 641 U1 */
+  openQuick: (on) => openQuick(on), grow: () => tryBuild(null), markNow: (i, act) => mark(act, npcs[i]), setInv: (o) => { Object.assign(S.inv, o); save(); hud(); }, setMats: (o) => { Object.assign(S.mats, o); save(); }, setTool: (n) => { S.toolIn = n; save(); hud(); },
+  npcGive: (i, id) => { const n = npcs[i], t = TOOLS.find((x) => x.id === id); n.tool = { type: t, g: new THREE.Group() }; }, npcActT: (i, t) => { npcs[i].actT = t; }, talk: (lines) => say(lines, null),   /* 641 U1 guard: a tool act through the shipped gate; a talk while the pouch is open */
   lv: () => ({ level: S.level, xp: S.xp, need: need(S.level), queue: (S.lvQ || []).slice(), moment: !!(S.morph && S.morph.levelUp), card: $('lvCard').hidden ? null : $('lvCard').textContent, pop: $('xpPop').hidden ? null : $('xpPop').textContent, next: nextGift(), carry: carrySlots(), flutDur: (() => { const m = S.mode, cd = S.flutCd, sp = S.speed; S.mode = 'fly'; S.flutCd = 0; doFlutter(); const d = S.flutT; S.mode = m; S.flutCd = cd; S.speed = sp; S.flutT = 0; return d; })(), birdScale: bird ? +bird.scale.y.toFixed(3) : null, size: BIRDS[kind].size, morph: !!S.morph }),
   nav: () => ({ played: S.played || 0, cell: mapCell(S.pos.x, S.pos.z), text: $('navHud').textContent, shown: !$('ui').hidden && !$('navHud').hidden, rect: (() => { const r = $('navHud').getBoundingClientRect(); return [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)]; })(), font: parseFloat(getComputedStyle($('navHud')).fontSize) }),   /* 631 */
   water: () => ({ mode: S.mode, y: S.pos.y, breath: S.breath, max: S.breathMax, rescue: !!S.rescue, surfCd: S.surfCd, under: wasUnder, bar: !$('breath').hidden, ground: groundAt(S.pos.x, S.pos.z) }) }; } catch (e) { /* no storage: no door */ }
@@ -3412,9 +3543,9 @@ function pickups() {
     if (n.g.visible && n.g.position.distanceTo(S.pos) < 4.5) {
       S.carry.splice(S.carry.indexOf(it), 1); it.done = true; receive(n, it); n.need = null; n.house.openT = 25;
       ding(); gainXP(75, 'a tool delivered');
-      if (S.built < BUILDS.length) {
+      if (S.built < BUILDS.length || growing_()) {   // 641 U1: after the six, a tool counts toward the growth build
         S.toolIn = (S.toolIn || 0) + 1; save();
-        if (!tryBuild(n)) toast(n.name + ' thanks you for the ' + it.type.name + '! Their door is open. For ' + BUILDS[S.built].name + ' the village still needs ' + recipeText().replace(/\s*✓ a tool$/, '') + '.', 5200);
+        if (!tryBuild(n)) toast(n.name + ' thanks you for the ' + it.type.name + '! Their door is open. For ' + nextBuildName() + ' the village still needs ' + recipeText().replace(/\s*✓ a tool$/, '') + '.', 5200);
       } else toast(n.name + ' thanks you for the ' + it.type.name + '! Their door is open.', 3600);
       setTimeout(() => spawnTool(n), 40000);
     }
@@ -3566,7 +3697,8 @@ function walkStep(sx, sy, dt) {
 }
 const ATMO = (() => { try { return window.WFR_ATMO ? WFR_ATMO.create(THREE, scene, { renderer, camera, canvas, H, WATER, LAKE, VILLAGE, MOUND, NEST, trees, sun, HEMI, S, night: () => nightAmt(S.clock), clock: () => S.clock, under: () => wasUnder, bird: () => S.pos }) : null; } catch (e) { return null; } })();   // 613: the air - light by the clock, one wind, butterflies, dragonflies, fireflies (atmo.js)
 function frame(now) {
-  const dt = Math.max(0, Math.min(0.05, (now - last) / 1000)); last = now; musicDuckTick(); S.t += dt; if (window.WFR_TREES) WFR_TREES.update(S.t);
+  const real = Math.max(0, Math.min(0.05, (now - last) / 1000)), dt = S.quick ? real * QUICK_SLOW : real;   // 644: the pouch slows the whole island
+  S.real = real; last = now; musicDuckTick(); S.t += dt; if (window.WFR_TREES) WFR_TREES.update(S.t);
   if (S.mode !== 'fly' && S.hold) { S.hold = false; S.holdT = 0; }   // a hold belongs to flight
   S.warnCd = Math.max(0, S.warnCd - dt); S.singCd = Math.max(0, S.singCd - dt); S.turnBack = Math.max(0, S.turnBack - dt); S.bonkCd = Math.max(0, S.bonkCd - dt);
   waterTick(dt); panTick(dt); clockTick(dt);
@@ -3834,7 +3966,7 @@ function frame(now) {
     const m = sparks[i]; m.userData.v.y -= 9 * dt; m.position.addScaledVector(m.userData.v, dt); m.rotation.x += m.userData.r * dt; m.rotation.y += m.userData.r * dt;
     if (m.position.y < NEST.y - 14) { scene.remove(m); sparks.splice(i, 1); }
   }
-  navHud(dt);   // 631
+  navHud(S.real || dt); quickTick(S.real || dt);   // 631; 644
   if (SKYEND) SKYEND.tick(dt);   // 544: the ending (a no-op until the gate opens)
   lvTick(); morphTick(dt);   // after the mode block: it writes the bird's turn and size last, and puts them back at the end (642: a queued level-up starts here)
   arrowTick(dt); S.camCut = false;   // 588: after the camera has moved; 584: a door's camera cut lasts one frame
@@ -3904,7 +4036,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build 5b27ef7361d2): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build 3e95e9c3c93c): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>
