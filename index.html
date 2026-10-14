@@ -200,6 +200,10 @@ html.cine #boot{display:grid}
 .round{width:44px;height:44px;border-radius:50%;background:var(--paper);font-size:18px;color:var(--ink);
   box-shadow:0 6px 16px rgba(34,49,74,.18)}
 #fade{position:fixed;inset:0;background:#0b1430;opacity:0;pointer-events:none;z-index:25}   /* a fade from dark: Sleep, and night B */
+/* 625b: the call's words over the world: her cry big and red, the dive's typed line white on the black */
+#callCap{position:fixed;inset:0;z-index:26;display:grid;place-items:center;text-align:center;padding:24px;pointer-events:auto}#callCap[hidden]{display:none}#callCap.cry{align-content:start;padding-top:22vh}   /* the cry sits above her, not across her */
+#callCap.cry b{font-family:var(--display);font-weight:800;font-size:clamp(40px,12vw,76px);line-height:1;color:#c8314a;-webkit-text-stroke:2px #111;text-shadow:0 6px 18px rgba(0,0,0,.35);animation:cryIn .35s cubic-bezier(.2,1.4,.4,1) both}@keyframes cryIn{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:scale(1)}}
+#callCap.black p{font-family:var(--body);font-weight:700;font-size:18px;line-height:1.55;color:#fff8ec;max-width:30ch;margin:0;min-height:3.2em}
 #muteTop{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);right:calc(env(safe-area-inset-right,0px) + 12px);z-index:20}   /* the song plays where the HUD is covered (board 543) */
 .toast{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 84px);
   background:var(--ink);color:var(--paper);font-family:var(--display);font-weight:500;font-size:15px;border-radius:14px;
@@ -359,6 +363,7 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 <canvas id="c" aria-label="An island to fly over"></canvas>
 
 <div id="slow" aria-hidden="true"></div>
+<div id="callCap" hidden></div>
 <div class="layer" id="ui" hidden>
   <div class="hud">
     <div class="pill" id="lvPill"><div class="top"><span id="lvText">Lv 1</span><span class="bar"><i id="xpBar"></i></span></div><small id="quest">Twigs 0 / 5</small><small id="navHud" aria-label="play time and map square">⏱ 0:00:00 · –</small></div><div id="xpPop" hidden aria-live="polite"></div>
@@ -447,31 +452,31 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 <div id="fade" aria-hidden="true"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="gltf-loader.js?v=50b4cee8eecb"></script>
-<script src="skeleton-utils.js?v=50b4cee8eecb"></script>
-<script src="meshopt-decoder.js?v=50b4cee8eecb"></script>
-<script src="models.js?v=50b4cee8eecb"></script>
-<script src="people.js?v=50b4cee8eecb"></script>
-<script src="villagers.js?v=50b4cee8eecb"></script>
-<script src="tex-photos.js?v=50b4cee8eecb"></script>
-<script src="textures.js?v=50b4cee8eecb"></script>
-<script src="birds.js?v=50b4cee8eecb"></script>
-<script src="humans.js?v=50b4cee8eecb"></script>
-<script src="folk.js?v=50b4cee8eecb"></script>
-<script src="trees.js?v=50b4cee8eecb"></script>
-<script src="treehouses.js?v=50b4cee8eecb"></script>
-<script src="cabins.js?v=50b4cee8eecb"></script>
-<script src="cave.js?v=50b4cee8eecb"></script>
-<script src="sounds.js?v=50b4cee8eecb"></script>
-<script src="music.js?v=50b4cee8eecb"></script>
-<script src="music-orchestra.js?v=50b4cee8eecb"></script>
-<script src="rhythm.js?v=50b4cee8eecb"></script>
-<script src="pictograms.js?v=50b4cee8eecb"></script>
-<script src="chick-wear.js?v=50b4cee8eecb"></script>
-<script src="hedgehogs.js?v=50b4cee8eecb"></script>
-<script src="opening.js?v=50b4cee8eecb"></script>
-<script src="skypiea.js?v=50b4cee8eecb"></script>
-<script src="atmo.js?v=50b4cee8eecb"></script>
+<script src="gltf-loader.js?v=ae4fd6bae8c4"></script>
+<script src="skeleton-utils.js?v=ae4fd6bae8c4"></script>
+<script src="meshopt-decoder.js?v=ae4fd6bae8c4"></script>
+<script src="models.js?v=ae4fd6bae8c4"></script>
+<script src="people.js?v=ae4fd6bae8c4"></script>
+<script src="villagers.js?v=ae4fd6bae8c4"></script>
+<script src="tex-photos.js?v=ae4fd6bae8c4"></script>
+<script src="textures.js?v=ae4fd6bae8c4"></script>
+<script src="birds.js?v=ae4fd6bae8c4"></script>
+<script src="humans.js?v=ae4fd6bae8c4"></script>
+<script src="folk.js?v=ae4fd6bae8c4"></script>
+<script src="trees.js?v=ae4fd6bae8c4"></script>
+<script src="treehouses.js?v=ae4fd6bae8c4"></script>
+<script src="cabins.js?v=ae4fd6bae8c4"></script>
+<script src="cave.js?v=ae4fd6bae8c4"></script>
+<script src="sounds.js?v=ae4fd6bae8c4"></script>
+<script src="music.js?v=ae4fd6bae8c4"></script>
+<script src="music-orchestra.js?v=ae4fd6bae8c4"></script>
+<script src="rhythm.js?v=ae4fd6bae8c4"></script>
+<script src="pictograms.js?v=ae4fd6bae8c4"></script>
+<script src="chick-wear.js?v=ae4fd6bae8c4"></script>
+<script src="hedgehogs.js?v=ae4fd6bae8c4"></script>
+<script src="opening.js?v=ae4fd6bae8c4"></script>
+<script src="skypiea.js?v=ae4fd6bae8c4"></script>
+<script src="atmo.js?v=ae4fd6bae8c4"></script>
 <script>
 (() => {
 'use strict';
@@ -554,7 +559,7 @@ const FOG_AIR = scene.fog, BG_AIR = scene.background;
 /* ---------- TIMES OF DAY (board 540; Marth: "a slow passing over sun and then moon"; "each full day abt 35 mins and
    each full night about 10"). ONE game-time clock, S.clock in [0, 2700): dawn 0-150, day 150-1800, dusk 1800-2100,
    night 2100-2700. Everything below is a pure function of it, so nothing can disagree about whether it is night. ---------- */
-const DAYLEN = 2100, CYCLE = 2700;
+const DAYLEN = 2100, CYCLE = 2700, DAY_SPEED = 4.5;   // 648 (Marth, Oct 14): a whole day in ten minutes; the clock's units stay, it runs 4.5x
 const SKYKEYS = {   // dome stops: zenith, high, low, the warm line, horizon (= fog). Design colours; his eye rules.
   day:   ['#3f8fd8', '#7fbdea', '#bfe0f3', '#e9eedd', '#cfe8f4'],
   dusk:  ['#2f4f8a', '#7a6fa8', '#d98a6a', '#ffd9a0', '#f2a878'],
@@ -660,8 +665,8 @@ function carriedIn() {
 }
 function clockTick(dt) {   // only while the world is live; the tutorial never meets the dusk (Itachi)
   const live = !['menu', 'paused', 'event', 'nest', 'hatch', 'card', 'debugcam'].includes(S.mode) && !S.talking;
-  if (live) nightOut(dt * (S.timeScale == null ? 1 : S.timeScale));
-  if (live) { S.played = (S.played || 0) + (S.real || dt);   /* 631: seconds of play in this file (644: real seconds, not slowed) */ S.clock = (S.clock + dt * (S.timeScale == null ? 1 : S.timeScale)) % CYCLE;   /* (|| 1 made timeScale(0) a no-op - Ino F1) */ if (S.tut !== 0 && S.clock > 1799) S.clock = 1799; }
+  if (live) nightOut(dt * DAY_SPEED * (S.timeScale == null ? 1 : S.timeScale));   // 648: the night out is counted at the day's pace
+  if (live) { S.played = (S.played || 0) + (S.real || dt);   /* 631: seconds of play in this file (644: real seconds, not slowed) */ S.clock = (S.clock + dt * DAY_SPEED * (S.timeScale == null ? 1 : S.timeScale)) % CYCLE;   /* 648 */   /* (|| 1 made timeScale(0) a no-op - Ino F1) */ if (S.tut !== 0 && S.clock > 1799) S.clock = 1799; }
   S.clockSaveT = (S.clockSaveT || 0) + dt; if (S.clockSaveT > 30) { S.clockSaveT = 0; save(); }
   skyTick();
 }
@@ -2740,7 +2745,7 @@ function bgMusicTick(dt) {
    after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
    music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
    menu, a cutscene), the orchestra bows out. */
-const ORCH_SRC = 'orch-samples.js?v=50b4cee8eecb';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const ORCH_SRC = 'orch-samples.js?v=ae4fd6bae8c4';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
 const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
 window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
 const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
@@ -3259,18 +3264,6 @@ const CUTS = {
     { typed: true, cap: 'An unfamiliar... bird? It looked like him. But its head was white.',
       svg: "<defs><linearGradient id=\"pr7\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#06080f\"/><stop offset=\"1\" stop-color=\"#020305\"/></linearGradient></defs><rect width=\"400\" height=\"260\" fill=\"url(#pr7)\"/>" + '<circle cx="200" cy="112" r="42" fill="#f5f1e6"/><path d="M236 106 L276 118 L236 132 Z" fill="#f2b134"/><circle cx="214" cy="100" r="6" fill="#111"/>' + sHawk(200, 220, 0.3, 92) },
   ],
-  /* 625 CHAPTER THREE: THE CHICK'S CALL, three drawn beats (DRAFT for Marth): the call from below, her cry, the dive told in the black */
-  call625: () => { const c = '#' + chickTint().getHexString(), me = BIRDS[kind];
-    return [
-      { cap: 'Far below, from the big tree... a small voice.', sound: () => { try { if (window.WFR_SOUND) { WFR_SOUND.call(kind, { vol: 0.5, notes: 1 }); setTimeout(() => WFR_SOUND.call(kind, { vol: 0.5, notes: 1 }), 520); } } catch (e) { /* a call that fails never stops the words */ } },
-        svg: manga('#fff3e6', '<ellipse cx="200" cy="218" rx="72" ry="18" fill="#8b5e34"/><path d="M130 214 q70 30 140 0" stroke="#6e4529" stroke-width="5" fill="none"/>' +
-          '<ellipse cx="200" cy="192" rx="30" ry="24" fill="' + c + '"/><circle cx="216" cy="170" r="14" fill="' + c + '"/><circle cx="221" cy="167" r="2.6" fill="#111"/><path d="M229 171 L242 174 L229 178 Z" fill="#f28c28"/>' +
-          '<text x="200" y="84" text-anchor="middle" font-family="Fredoka" font-weight="700" font-size="66" fill="#c8314a" stroke="#111" stroke-width="2">!!</text>', '\u2026!', 300, 128) },
-      { cap: 'You fill your little chest, and cry out: I\'m coming!', sound: () => { [880, 1175, 1568].forEach((f, i) => tone(f, i * 0.09, 0.5, 'sawtooth', 0.05)); try { if (window.WFR_SOUND) WFR_SOUND.call(kind, { vol: 0.9 }); } catch (e) {} },
-        svg: manga('#fff3e6', sBird(200, 150, 2.4, hex6(me.body), { crest: true, mask: !!me.mask, wing: hex6(me.wing), up: true }) + '<text x="200" y="60" text-anchor="middle" font-family="Fredoka" font-weight="700" font-size="40" fill="#c8314a" stroke="#111" stroke-width="2">I\'M COMING!</text>') },
-      { typed: true, cap: 'You Zoom. You Flutter. The clouds tear past you, and the island rushes up... You reach your chick.', sound: () => { chirp(); setTimeout(chirp, 160); setTimeout(chirp, 320); tone(70, 0.1, 0.9, 'sawtooth', 0.05); },
-        svg: "<defs><linearGradient id=\"c625\" x1=\"0\" y1=\"0\" x2=\"0\" y2=\"1\"><stop offset=\"0\" stop-color=\"#0b1020\"/><stop offset=\"1\" stop-color=\"#020305\"/></linearGradient></defs><rect width=\"400\" height=\"260\" fill=\"url(#c625)\"/>" + Array.from({ length: 12 }, (_, i) => '<line x1="' + (40 + i * 30) + '" y1="0" x2="' + (60 + i * 30) + '" y2="260" stroke="#3a4660" stroke-width="' + (1 + (i % 3)) + '" opacity=".45"/>').join('') },
-    ]; },
 };
 /* 625: where the chick LIVES is where she is: the disc when the island is hers (S.sky.where 'temple'), the nest when home; derived, never stored twice */
 function chickSpot() {
@@ -3279,13 +3272,72 @@ function chickSpot() {
   return NEST.clone().add(new THREE.Vector3(0, 0.3, 0));
 }
 /* 625: the trigger: 3 calm seconds on the bare stone with a chick alive, once */
-const CALL = { t: 0 };
+const CALL = { t: 0, ph: null, pt: 0, hold: 0, n: 0, cam0: false, marks: null };
+/* 625b: the three beats' sounds, as the drawn panels had them (the chick's call is its parent's, soft; her cry; the flutter and a low zoom) */
+const CALL_SOUND = {
+  below: () => { try { if (window.WFR_SOUND) { WFR_SOUND.call(kind, { vol: 0.5, notes: 1 }); setTimeout(() => WFR_SOUND.call(kind, { vol: 0.5, notes: 1 }), 520); } } catch (e) { /* a call that fails never stops the scene */ } },
+  cry: () => { [880, 1175, 1568].forEach((f, i) => tone(f, i * 0.09, 0.5, 'sawtooth', 0.05)); try { if (window.WFR_SOUND) { WFR_SOUND.call(kind, { vol: 0.9 }); setTimeout(() => WFR_SOUND.call(kind, { vol: 0.18, notes: 1 }), 1000); } } catch (e) {} },   // her cry, then the chick's call faint from far below (Obito: the gap heard)
+  black: () => { chirp(); setTimeout(chirp, 160); setTimeout(chirp, 320); tone(70, 0.1, 0.9, 'sawtooth', 0.05); },
+};
+const CALL_LINE = 'You Zoom. You Flutter. The clouds tear past you, and the island rushes up... You reach your chick.';
+function discStandNow() {   // 625b: if the call finds her in the air over the island, she is set down on the stone first (Obito: no frozen hover)
+  const st = (typeof SKYEND !== 'undefined' && SKYEND) ? SKYEND.state() : null; if (!st || !st.shelfAt) return false;
+  S.pos.set(st.shelfAt[0] - 4, st.discTop + standOf(kind), st.shelfAt[2] + 4); if (bird) bird.position.copy(S.pos); S.mode = 'walk'; S.speed = 0; S.landTo = null; S.camCut = true; return true;
+}
+function callStart() {   // the event begins: the HUD goes, the island stands still, the camera is the scene's
+  if (S.mode !== 'walk') discStandNow();
+  CALL.ph = 'hear'; CALL.pt = 0; CALL.hold = 0; CALL.n++; CALL.cam0 = false; S.mode = 'event'; S.speed = 0; $('ui').hidden = true;
+  if (!CALL.marks) CALL.marks = [-0.45, 0.45].map(() => { const m = emojiSprite('\u2757', 1.6); m.visible = false; scene.add(m); return m; });
+  if (!CALL.q) { CALL.q = emojiSprite('\u2753', 1.3); CALL.q.visible = false; scene.add(CALL.q); }
+  CALL.q.visible = true;   // the half second on HER first: she hears it (Obito: the cut then reads as hers)
+  CALL.marks.forEach((m) => { m.visible = true; }); S.chickHop = 1; CALL_SOUND.below();
+}
+function callPhase(dt) {
+  CALL.inTick = true; try { callPhaseIn(dt); } finally { CALL.inTick = false; }   // the end must never run inside this tick (the cut would be cleared the same frame): callEnd records where it ran
+}
+function callPhaseIn(dt) {
+  CALL.pt += dt; const ph = CALL.ph;
+  if (ph === 'hear') {   // on her, where the camera already is: a ❓ over her head, the call faint from far below
+    CALL.q.position.set(S.pos.x, S.pos.y + 1.6 + Math.sin(S.t * 7) * 0.08, S.pos.z);
+    if (CALL.pt >= 0.7) { CALL.ph = 'below'; CALL.pt = 0; CALL.cam0 = false; CALL.q.visible = false; S.chickHop = 1; }   // the hop at the cut, where it is seen
+    return;
+  }
+  if (ph === 'below') {   // CUT to above the nest, then the settle onto the chick (the Eagle's own nest camera), two ❗ bobbing over it
+    if (!CALL.cam0) { CALL.cam0 = true; camera.position.set(NEST.x + 5, NEST.y + 14, NEST.z + 5); }
+    camera.position.lerp(v3.set(NEST.x + 3.2, NEST.y + 2.6, NEST.z + 3.2), Math.min(1, dt * 1.5)); if (chick) camera.lookAt(chick.position.x, chick.position.y + 0.3, chick.position.z); else camera.lookAt(NEST.x, NEST.y + 0.4, NEST.z);   // closer and lower than the Eagle's nest shot: the chick is small
+    if (chick) CALL.marks.forEach((m, i) => { m.position.set(chick.position.x + (i ? 0.45 : -0.45), chick.position.y + 1.5 + Math.sin(S.t * 9) * 0.1, chick.position.z); });
+    if (CALL.pt >= 2.6) { CALL.ph = 'cry'; CALL.pt = 0; CALL.cam0 = false; CALL.marks.forEach((m) => { m.visible = false; }); const c = $('callCap'); c.className = 'cry'; c.innerHTML = '<b>I\'M COMING!</b>'; c.hidden = false; CALL_SOUND.cry(); }
+    return;
+  }
+  if (ph === 'cry') {   // CUT back to her on the disc, close; wings up, chest out; the word big
+    const fx = Math.sin(S.yaw), fz = Math.cos(S.yaw);
+    if (!CALL.cam0) { CALL.cam0 = true; camera.position.set(S.pos.x - fx * 3.5 + 0.8, S.pos.y + 1.2, S.pos.z - fz * 3.5); }
+    camera.position.y += (S.pos.y + 1.5 - camera.position.y) * Math.min(1, dt * 2); camera.lookAt(S.pos.x, S.pos.y + 0.4, S.pos.z);
+    if (bird) { bird.rotation.x = -0.3; if (wingL) { wingL.rotation.z = 1.2; wingR.rotation.z = -1.2; } }
+    if (CALL.pt >= 2.0) { CALL.ph = 'black'; CALL.pt = 0; CALL.hold = 0; if (bird) bird.rotation.x = 0; const el = $('fade'); if (el) { el.style.transition = 'opacity .5s ease'; el.style.opacity = '1'; }
+      const c = $('callCap'); c.className = 'black'; c.innerHTML = '<p></p>'; TYPER.start(c.firstChild, CALL_LINE); CALL_SOUND.black(); }
+    return;
+  }
+  if (ph === 'black') {   // the dive, told: the line types; a tap finishes it; the next tap, or 1.5 s, ends the scene (outside this frame: the cut must survive)
+    if (CALL.pt > 0.5 && !TYPER.active()) { CALL.hold += dt; if (CALL.hold >= 1.5) { CALL.ph = 'ending'; setTimeout(callEnd, 0); } }
+  }
+}
+function callEnd() {
+  if (CALL.ph !== 'black' && CALL.ph !== 'ending') return; CALL.ph = null; CALL.pt = 0; CALL.hold = 0; CALL.endIn = !!CALL.inTick;   // true would mean the cut dies this frame
+  const c = $('callCap'); c.hidden = true; c.className = ''; c.innerHTML = ''; TYPER.stop();
+  if (CALL.marks) CALL.marks.forEach((m) => { m.visible = false; }); if (CALL.q) CALL.q.visible = false;
+  $('ui').hidden = false; S.mode = 'walk'; S.seen = S.seen || {}; S.seen.call625 = true; save();
+  CUT_AFTER.call625();   // the nest, the talk in emojis, the fade, both on the island (as shipped)
+  fadeFromDark();   // from the black onto the nest
+}
+$('callCap').addEventListener('pointerdown', (e) => { e.preventDefault(); if (CALL.ph !== 'black') return; if (TYPER.active()) TYPER.finish(); else { CALL.ph = 'ending'; callEnd(); } });
 function callTick(dt) {
-  if (!S.sky || S.sky.where !== 'temple' || !S.sky.ended || (S.seen || {}).call625 || cutQ.includes('call625')) { CALL.t = 0; return; }
+  if (CALL.ph) { callPhase(dt); return; }
+  if (!S.sky || S.sky.where !== 'temple' || !S.sky.ended || (S.seen || {}).call625) { CALL.t = 0; return; }
   const calm = (S.mode === 'walk' || S.mode === 'fly') && S.nestDone && !!chick && !S.talking && $('story').hidden && $('toast').hidden && S.tut === 0 && !S.quick && !cutQ.length;   // on the stone or in the island's air (where stays 'temple' until she drops off it): a quick Fly does not dodge the call (Obito)
   CALL.t = calm ? CALL.t + dt : 0;
   if (CALL.t < 3) return;
-  CALL.t = 0; queueCut('call625');
+  CALL.t = 0; callStart();   // 625b: the event, not a drawn cut (a shipped save carrying cutQ ['call625'] drops it at the restore: no CUTS entry; the trigger refires)
 }
 /* 643: what is said once a cutscene has played (the Eagle's own line after the prologue; 625: the reunion on the nest, then up together) */
 const CUT_AFTER = {
@@ -3467,7 +3519,7 @@ try { if (localStorage.getItem('wfr.debug') === '1') window.__wfr = { eagle: () 
   signs: () => SIGNS.map((x) => ({ id: x.id, x: x.x, z: x.z })), walkTo: (x, z) => { S.mode = 'walk'; S.pos.set(x, groundAt(x, z) + standOf(kind), z); }, read: () => S.read,
   cuts: () => ({ queued: cutQ.slice(), seen: S.seen || {}, showing: !$('story').hidden, caption: $('caption').textContent, mode: S.mode }),
   prologue: () => ({ t: S.t, homeSaid: !!EG.homeSaid, toast: $('toast').hidden ? '' : $('toast').textContent, eagle: eagleBird.visible, mark: eagleMark.visible, seen: !!(S.seen || {}).prologue, queued: cutQ.includes('prologue'), showing: !$('story').hidden, at: storyPanels ? storyAt : -1, n: storyPanels ? storyPanels.length : 0, caption: $('caption').textContent, typing: TYPER.active(), full: TYPER.text, next: $('next').textContent, talking: !!S.talking, who: $('talkWho').textContent, line: $('talkText').textContent, mode: S.mode, homeTold: !!EG.homeTold, what: storyLines(), spot: eagleSpot.toArray() }),   /* 643 ch1 */
-  call625: () => { const st = (typeof SKYEND !== 'undefined' && SKYEND) ? SKYEND.state() : null; return { seen: !!(S.seen || {}).call625, up: !!(S.seen || {}).call625up, pend: (chick && chick.userData.pendWord) || null, queued: cutQ.includes('call625'), showing: !$('story').hidden, at: storyPanels ? storyAt : -1, n: storyPanels ? storyPanels.length : 0, caption: $('caption').textContent, typing: TYPER.active(), full: TYPER.text, next: $('next').textContent, where: (S.sky && S.sky.where) || 'home', ended: !!(S.sky && S.sky.ended), chickAt: chick ? chick.position.toArray() : null, chickWhere: chick ? chick.userData.where : null, herAt: S.pos.toArray(), nestAt: NEST.toArray(), discAt: st && st.shelfAt ? [st.shelfAt[0], st.discTop, st.shelfAt[2]] : null, toast: $('toast').hidden ? '' : $('toast').textContent, talking: !!S.talking, who: $('talkWho').textContent, line: $('talkText').textContent, feel: S.chickFeelT > 0 ? S.chickFeel : null, mode: S.mode, calm: CALL.t, fade: $('fade') ? +$('fade').style.opacity || 0 : 0, what: storyLines() }; },   /* 625 */
+  call625: () => { const st = (typeof SKYEND !== 'undefined' && SKYEND) ? SKYEND.state() : null; return { ph: CALL.ph, pht: CALL.pt, starts: CALL.n, endIn: !!CALL.endIn, cam: camera.position.toArray(), marks: !!(CALL.marks && CALL.marks[0].visible), q: !!(CALL.q && CALL.q.visible), cap: $('callCap').hidden ? '' : $('callCap').textContent, capCls: $('callCap').className, ui: !$('ui').hidden, hop: S.chickHop || 0, seen: !!(S.seen || {}).call625, up: !!(S.seen || {}).call625up, pend: (chick && chick.userData.pendWord) || null, queued: cutQ.includes('call625'), showing: !$('story').hidden, at: storyPanels ? storyAt : -1, n: storyPanels ? storyPanels.length : 0, caption: $('caption').textContent, typing: TYPER.active(), full: TYPER.text, next: $('next').textContent, where: (S.sky && S.sky.where) || 'home', ended: !!(S.sky && S.sky.ended), chickAt: chick ? chick.position.toArray() : null, chickWhere: chick ? chick.userData.where : null, herAt: S.pos.toArray(), nestAt: NEST.toArray(), discAt: st && st.shelfAt ? [st.shelfAt[0], st.discTop, st.shelfAt[2]] : null, toast: $('toast').hidden ? '' : $('toast').textContent, talking: !!S.talking, who: $('talkWho').textContent, line: $('talkText').textContent, feel: S.chickFeelT > 0 ? S.chickFeel : null, mode: S.mode, calm: CALL.t, fade: $('fade') ? +$('fade').style.opacity || 0 : 0, what: storyLines() }; },   /* 625 */
   toastNow: (t, ms) => toast(t, ms),   /* 625 guard: a word on screen, to prove the call waits behind it */
   toDisc: () => { const st = (typeof SKYEND !== 'undefined' && SKYEND) ? SKYEND.state() : null; if (!st || !st.shelfAt) return false; S.sky.where = 'temple'; S.pos.set(st.shelfAt[0] - 4, st.discTop + standOf(kind), st.shelfAt[2] + 4); if (bird) bird.position.copy(S.pos); S.mode = 'walk'; S.speed = 0; S.landTo = null; S.camCut = true; save(); return true; },   /* 625 guard: the island as the game leaves her there */
   perch: () => { S.mode = 'walk'; S.speed = 0; S.pos.copy(eagleSpot).add(new THREE.Vector3(-3, standOf(kind), 3)); if (bird) bird.position.copy(S.pos); }, queue: (id) => queueCut(id),
@@ -4151,7 +4203,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build 50b4cee8eecb): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build ae4fd6bae8c4): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>
