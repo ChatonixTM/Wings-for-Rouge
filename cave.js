@@ -472,6 +472,7 @@ window.WFR_CAVE = (function () {
         parts.push({ g: disc, m: M(p.x, FT + 0.012, p.z), col: (X, Y, Z) => { const t = 1 - Math.min(1, Math.hypot(X - p.x, Z - p.z) / p.r); return p.c.map((v) => v * t * t); } }); }
       const pm = new T.Mesh(merge(parts), mat('pools', () => new T.MeshBasicMaterial({ vertexColors: true, transparent: true, depthWrite: false, blending: T.AdditiveBlending })));
       pm.name = 'cave:pools'; pm.renderOrder = 2; near.add(pm); }
+    near.userData.pools = pools.map((p) => ({ x: p.x, z: p.z }));   // 643 worlds: where the glow-caps grow (local units; the game places them with toWorld)
     /* the shaft: daylight from a crack in the roof - three crossed soft planes, a pool where it lands, the crack's glow */
     let shaftMesh;
     { const top = new T.Vector3(0.35, domeY(0.35, -0.45, IW, ID, HC) - 0.02, -0.45), foot = new T.Vector3(0.6, FT + 0.02, -0.2), parts = [];
