@@ -180,6 +180,11 @@ html.cine #boot{display:grid}
 .bar{display:block;width:84px;height:7px;border-radius:9px;background:#eadfcd;overflow:hidden}
 .bar i{display:block;height:100%;width:0;background:var(--rouge);border-radius:9px;transition:width .3s}
 .pill small{font-family:var(--body);font-weight:700;font-size:12px;color:var(--mute);white-space:nowrap}#navHud{display:block;margin-top:2px;letter-spacing:.02em;font-variant-numeric:tabular-nums}   /* 631 */
+#xpPop{position:fixed;left:calc(env(safe-area-inset-left,0px) + 22px);top:calc(env(safe-area-inset-top,0px) + 112px);z-index:6;pointer-events:none;font-family:var(--display);font-weight:700;font-size:15px;color:var(--rouge);text-shadow:0 1px 0 var(--paper),0 0 10px var(--paper);opacity:0}   /* 641: +XP and why */
+#xpPop.on{animation:xpRise 1.5s ease-out forwards}@keyframes xpRise{0%{opacity:0;transform:translateY(8px)}15%{opacity:1;transform:translateY(0)}70%{opacity:1}100%{opacity:0;transform:translateY(-18px)}}
+#lvCard{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);z-index:7;pointer-events:none;display:grid;justify-items:center;gap:6px;text-align:center;font-family:var(--display);color:var(--paper);text-shadow:0 2px 0 rgba(34,49,74,.55),0 0 24px rgba(242,177,52,.75)}   /* 642: the level-up's card */
+#lvCard b{font-size:clamp(44px,13vw,84px);font-weight:800;letter-spacing:.04em;line-height:1}#lvCard span{font-family:var(--body);font-weight:700;font-size:17px;max-width:24ch;color:#fff8ec}
+#lvCard.on{animation:lvIn .5s cubic-bezier(.2,1.4,.4,1) both}@keyframes lvIn{from{opacity:0;transform:translate(-50%,-50%) scale(.4)}to{opacity:1;transform:translate(-50%,-50%) scale(1)}}
 .compass{display:grid;justify-items:center;gap:2px}
 .arrow{width:68px;height:68px;border-radius:50%;background:var(--paper);display:grid;place-items:center;position:relative;
   box-shadow:0 6px 16px rgba(34,49,74,.18)}
@@ -350,7 +355,7 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 
 <div class="layer" id="ui" hidden>
   <div class="hud">
-    <div class="pill" id="lvPill"><div class="top"><span id="lvText">Lv 1</span><span class="bar"><i id="xpBar"></i></span></div><small id="quest">Twigs 0 / 5</small><small id="navHud" aria-label="play time and map square">⏱ 0:00:00 · –</small></div>
+    <div class="pill" id="lvPill"><div class="top"><span id="lvText">Lv 1</span><span class="bar"><i id="xpBar"></i></span></div><small id="quest">Twigs 0 / 5</small><small id="navHud" aria-label="play time and map square">⏱ 0:00:00 · –</small></div><div id="xpPop" hidden aria-live="polite"></div>
     <div class="compass" aria-hidden="true">
       <div class="arrow"><canvas id="radar" width="136" height="136"></canvas><svg viewBox="0 0 24 24" id="arrowSvg"><path d="M12 3 L19 19 L12 15 L5 19 Z" fill="#c8314a"/></svg></div>
       <div class="dist" id="dist"></div>
@@ -375,6 +380,7 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
   <button class="act" id="flutter" type="button" hidden>Flutter</button>
   <button class="act" id="jump" type="button" hidden>Jump</button>
   <div class="missions" id="missions" hidden role="dialog" aria-label="What to do"><div class="top"><span>What to do</span><button type="button" id="missionsClose" aria-label="Close">✕</button></div><div id="missionsBody"></div></div>
+  <div id="lvCard" hidden aria-live="polite"><b id="lvNum"></b><span id="lvGift"></span></div>
   <div class="care" id="care" hidden>
     <div class="top">Your chick <span id="careStage">Chick</span><button type="button" class="tuck" id="careTuck" aria-label="Tuck the card away" aria-expanded="true">&#9660;</button></div>
     <div class="stats" id="careStats"></div>
@@ -433,31 +439,31 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 <div id="fade" aria-hidden="true"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="gltf-loader.js?v=d9e814e9c4bf"></script>
-<script src="skeleton-utils.js?v=d9e814e9c4bf"></script>
-<script src="meshopt-decoder.js?v=d9e814e9c4bf"></script>
-<script src="models.js?v=d9e814e9c4bf"></script>
-<script src="people.js?v=d9e814e9c4bf"></script>
-<script src="villagers.js?v=d9e814e9c4bf"></script>
-<script src="tex-photos.js?v=d9e814e9c4bf"></script>
-<script src="textures.js?v=d9e814e9c4bf"></script>
-<script src="birds.js?v=d9e814e9c4bf"></script>
-<script src="humans.js?v=d9e814e9c4bf"></script>
-<script src="folk.js?v=d9e814e9c4bf"></script>
-<script src="trees.js?v=d9e814e9c4bf"></script>
-<script src="treehouses.js?v=d9e814e9c4bf"></script>
-<script src="cabins.js?v=d9e814e9c4bf"></script>
-<script src="cave.js?v=d9e814e9c4bf"></script>
-<script src="sounds.js?v=d9e814e9c4bf"></script>
-<script src="music.js?v=d9e814e9c4bf"></script>
-<script src="music-orchestra.js?v=d9e814e9c4bf"></script>
-<script src="rhythm.js?v=d9e814e9c4bf"></script>
-<script src="pictograms.js?v=d9e814e9c4bf"></script>
-<script src="chick-wear.js?v=d9e814e9c4bf"></script>
-<script src="hedgehogs.js?v=d9e814e9c4bf"></script>
-<script src="opening.js?v=d9e814e9c4bf"></script>
-<script src="skypiea.js?v=d9e814e9c4bf"></script>
-<script src="atmo.js?v=d9e814e9c4bf"></script>
+<script src="gltf-loader.js?v=5b27ef7361d2"></script>
+<script src="skeleton-utils.js?v=5b27ef7361d2"></script>
+<script src="meshopt-decoder.js?v=5b27ef7361d2"></script>
+<script src="models.js?v=5b27ef7361d2"></script>
+<script src="people.js?v=5b27ef7361d2"></script>
+<script src="villagers.js?v=5b27ef7361d2"></script>
+<script src="tex-photos.js?v=5b27ef7361d2"></script>
+<script src="textures.js?v=5b27ef7361d2"></script>
+<script src="birds.js?v=5b27ef7361d2"></script>
+<script src="humans.js?v=5b27ef7361d2"></script>
+<script src="folk.js?v=5b27ef7361d2"></script>
+<script src="trees.js?v=5b27ef7361d2"></script>
+<script src="treehouses.js?v=5b27ef7361d2"></script>
+<script src="cabins.js?v=5b27ef7361d2"></script>
+<script src="cave.js?v=5b27ef7361d2"></script>
+<script src="sounds.js?v=5b27ef7361d2"></script>
+<script src="music.js?v=5b27ef7361d2"></script>
+<script src="music-orchestra.js?v=5b27ef7361d2"></script>
+<script src="rhythm.js?v=5b27ef7361d2"></script>
+<script src="pictograms.js?v=5b27ef7361d2"></script>
+<script src="chick-wear.js?v=5b27ef7361d2"></script>
+<script src="hedgehogs.js?v=5b27ef7361d2"></script>
+<script src="opening.js?v=5b27ef7361d2"></script>
+<script src="skypiea.js?v=5b27ef7361d2"></script>
+<script src="atmo.js?v=5b27ef7361d2"></script>
 <script>
 (() => {
 'use strict';
@@ -968,7 +974,7 @@ const LEVEL_MAX = 42;   // 597: the cap (was 20). Declared HERE, above load(): d
 const BREATH = { cardinal: 5, bluejay: 7, crow: 7, owl: 5, falcon: 9, eagle: 12 };
 const canSwim = () => !!S.lessons.falcon;
 const breathMax = () => BREATH[kind] + Math.max(0, Math.min(S.level, 30) - 6) * 0.25;   // grows to level 30, then holds (597: the cap went to 42)
-const carrySlots = () => BIRDS[kind].carry + (S.lessons.crow ? 1 : 0);          // the Crow's memory
+const carrySlots = () => BIRDS[kind].carry + (S.lessons.crow ? 1 : 0) + (S.level >= 21 ? 1 : 0) + (S.level >= 36 ? 1 : 0);          // the Crow's memory; 641: a gift at 21 and 36
 const isOpen = (b) => b.unlock === 'hawk' ? !!S.lessons.hawk : b.unlock <= S.level;
 
 /* ---------- state, and what is remembered on her phone ---------- */
@@ -1036,12 +1042,15 @@ function missionsHtml() {
   const now = done ? ['The main story is complete: the Eagle came back and the dove blessed your nest. The island is yours.'] : [$('quest').textContent]; if (m) now.push(m.hint);
   if (done) now.push((window.WFR_SKY && SKYEND && SKYEND.state && SKYEND.state().worthy) ? 'At dawn, when the sky calls, fly to the gems above the highest peak.' : 'The gems above the peak will call at dawn once you reach level 24, or once the bell tower stands and your chick has level 2 in a stat.');
   L.push(['Right now', now]);
-  L.push(['The story', storyLines()]); L.push(['Your nest', nestLines()]);   // 581-583, 589; Marth 21:20: "idk how to level up my nest"
+  L.push(['The story', storyLines()]); L.push(['Your nest', nestLines()]);
+  { const g = nextGift(), last = Object.keys(UNLOCKS).map(Number).filter((k) => k <= S.level).sort((a, b) => b - a)[0];   // 641: your level
+    L.push(['Your level', ['Lv ' + S.level + (last ? '. Last gift: ' + UNLOCKS[last] : '.'), g ? 'Next: Lv ' + g.lv + ' gives ' + (GIFT_SHORT[g.lv] || 'more') + '. ' + (need(S.level) - S.xp) + ' XP to go.' : 'As high as a bird can go.']]); }
+  if (S.level >= 28 && SIGNS.length) L.push(['Your map', SIGNS.map((sg) => (S.read[sg.id] ? '\u2713 ' : '') + 'A signpost at ' + mapCell(sg.x, sg.z) + '.')]);   // 641: the gift at 28   // 581-583, 589; Marth 21:20: "idk how to level up my nest"
   const needs = items.filter((it) => !it.done).map((it) => it.held ? 'You carry the ' + it.type.name + ' ' + it.type.emoji + ': take it to ' + it.owner.name + '.'
     : it.owner.name + ' needs the ' + it.type.name + ' ' + it.type.emoji + (S.lessons.crow ? ' (look ' + it.spot.zone + ')' : '') + (it.type.metal && strength() < 2 ? ' - too heavy for you yet.' : '.'));
   if (needs.length) L.push(['The villagers', needs]);
   if (S.built < BUILDS.length) { const r = recipe(); L.push(['The village', ['Next build: ' + BUILDS[S.built].name + (r ? (Object.keys(r).length ? ' - needs ' + recipeText() : ' - bring a villager their tool') : '') + '.']]); }
-  if (S.nestDone && chick) { const h = Math.round((S.chick.bond || 0) / 20); L.push(['Your chick', [S.chick.food < 30 ? 'Hungry: pick fruit from a fruit tree and bring it home.' : 'Fed and happy.', 'Bond ' + '\u2764\ufe0f'.repeat(h) + '\u2661'.repeat(5 - h) + ' - pet it to grow closer.']]); }
+  if (S.nestDone && chick) { const h = Math.round((S.chick.bond || 0) / 20); L.push(['Your chick', [S.chick.food < 30 ? 'Hungry: pick fruit from a fruit tree and bring it home.' : 'Fed and happy.', 'Bond ' + '\u2764\ufe0f'.repeat(h) + '\u2661'.repeat(5 - h) + ' - pet it to grow closer.'].concat(S.level >= 26 && STAGES[S.chick.stage + 1] ? ['Next stage: ' + STAGES[S.chick.stage + 1].name + ' in ' + Math.max(0, STAGES[S.chick.stage + 1].at - chickTotal()) + ' stat points.'] : [])]); }   /* 641: the gift at 26 */
   if (isEvening()) L.push(['Tonight', ['Sleep in a tree house or in your own nest.']]);
   const tips = ['Hold Flap to fly fast and level. Hold Flap and push up or down to hover.', 'Read the signposts.', 'Rest or sleep in your nest.'];
   if (BIRDS[kind].sings) tips.unshift('Sing near villagers: they stop to listen.');
@@ -1071,16 +1080,35 @@ function hud() {
   else if (S.fruit) q = 'Carrying ' + S.fruit.type.emoji + ' for your chick';
   else if (S.chick.food < 30) q = 'Your chick is hungry: find fruit';
   else if (S.built < BUILDS.length && recipe()) q = 'Next: ' + BUILDS[S.built].name + (Object.keys(recipe()).length ? ' · ' + recipeText() : ' · bring a tool');
+  else if (S.sky && S.sky.ended && nextGift()) q = 'Lv ' + nextGift().lv + ' gives ' + (GIFT_SHORT[nextGift().lv] || 'more');   // 641: the number has somewhere to go
   else q = 'Help the villagers · Strength ' + strength();
   $('quest').textContent = q;
 }
-const UNLOCKS = { 3: 'Strength 2: you can carry metal tools now.', 4: 'Quick Flutter unlocked: a burst of speed in the air.', 12: 'Strength 3.', 20: 'The Eagle is unlocked. Happy birthday, ' + NAME + '.', 30: 'Level 30! Your lungs are as strong as they will get.', 42: 'Level 42! As high as a bird can go. Look at you.' };
-function gainXP(n) {
+const UNLOCKS = { 3: 'Strength 2: you can carry metal tools now.', 4: 'Quick Flutter unlocked: a burst of speed in the air.', 12: 'Strength 3.', 20: 'The Eagle is unlocked. Happy birthday, ' + NAME + '.',
+  21: 'You can carry one more thing.', 24: 'Quick Flutter lasts longer.', 26: 'What to do now counts your chick to its next stage.', 28: 'What to do now names every signpost with its map square.',   // 641: every gift is TRUE in the code before it is named
+  30: 'Level 30! Your lungs are as strong as they will get.', 36: 'You can carry one more thing.', 42: 'Level 42! As high as a bird can go. Look at you.' };
+/* 641: the next gift, so the number on the pill has somewhere to go */
+function nextGift() { for (const k of Object.keys(UNLOCKS).map(Number).sort((a, b) => a - b)) if (k > S.level) return { lv: k, text: UNLOCKS[k] }; return null; }
+const GIFT_SHORT = { 21: 'carry one more', 24: 'a longer Quick Flutter', 26: 'the chick\'s next stage counted', 28: 'signposts on the map', 30: 'the strongest lungs', 36: 'carry one more', 42: 'as high as a bird can go' };
+/* 642: THE LEVEL-UP IS A MOMENT (Marth: 'a fancier version of when u swap which bird u use'): the bird-swap flash, gold, held longer, with the
+   number and the gift on a card; queued while a cutscene, a talk or another flash runs, never dropped; the toast still says the words after. */
+function levelMoment(n) { S.lvQ = S.lvQ || []; S.lvQ.push(n); }
+function lvTick() {
+  if (!S.lvQ || !S.lvQ.length || S.morph || !bird || S.talking || $('ui').hidden || !(S.mode === 'walk' || S.mode === 'fly' || S.mode === 'swim' || S.mode === 'hover')) return;
+  const n = S.lvQ.shift(), gift = UNLOCKS[n] || '';
+  morphStart(null); if (!S.morph) return; S.morph.levelUp = { n, gift };
+  $('lvNum').textContent = 'Lv ' + n; $('lvGift').textContent = gift || 'Keep flying.'; const c = $('lvCard'); c.hidden = false; c.classList.remove('on'); void c.offsetWidth; c.classList.add('on');
+  [523, 659, 784, 1047, 1319].forEach((f, i) => tone(f, 0.3 + i * 0.09, 0.32, 'triangle', 0.09));
+  toast('Level ' + n + '!' + (gift ? ' ' + gift : ''), 3800);
+}
+/* 641: every paying action says so: '+N XP · why' rises over the pill (the 160 m trickle stays quiet: it passes no reason) */
+function xpPop(n, why) { const el = $('xpPop'); if (!el || !why) return; el.textContent = '+' + n + ' XP \u00b7 ' + why; el.hidden = false; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); clearTimeout(xpPop.t); xpPop.t = setTimeout(() => { el.hidden = true; el.classList.remove('on'); }, 1600); }
+function gainXP(n, why) {
   if (S.level >= LEVEL_MAX) { save(); hud(); return; }   // at the cap it still saves: treats and discoveries lean on this save (Obito)
-  S.xp += n;
+  S.xp += n; xpPop(n, why);   // 641
   while (S.level < LEVEL_MAX && S.xp >= need(S.level)) {
-    S.xp -= need(S.level); S.level++; fanfare();
-    toast('Level ' + S.level + '!' + (UNLOCKS[S.level] ? ' ' + UNLOCKS[S.level] : ''), 3800);
+    S.xp -= need(S.level); S.level++;
+    levelMoment(S.level);   // 642: the moment (and its toast) play on the next plain frame; nothing is dropped
   }
   if (S.level >= LEVEL_MAX) S.xp = 0;
   save(); hud();
@@ -1200,7 +1228,7 @@ function nodeTick(dt) {
     if ((S.mode === 'walk' || S.mode === 'fly') && nd.g.position.distanceTo(S.pos) < 2.8) {
       if (nd.type.heavy && strength() < 2) { warn('Too heavy! ' + nd.type.name[0].toUpperCase() + nd.type.name.slice(1) + ' need Strength 2 (level 3).'); continue; }
       const n = strength() >= 3 ? 2 : 1;   // Strength 3 finally means something: two at a time
-      S.inv[nd.type.id] = (S.inv[nd.type.id] || 0) + n; nd.back = 60; nd.g.visible = false; chirp(); ding(); gainXP(4); save(); hud();
+      S.inv[nd.type.id] = (S.inv[nd.type.id] || 0) + n; nd.back = 60; nd.g.visible = false; chirp(); ding(); gainXP(4, 'gathered'); save(); hud();
       toast((n > 1 ? 'Two ' : 'A ') + nd.type.emoji + '! ' + (haveAll() ? (S.toolIn > 0 ? 'That\'s everything. Back to the village!' : 'That\'s all of them. Now bring a villager their tool.') : recipeText()), 3200);
     }
   }
@@ -1209,7 +1237,7 @@ function nodeTick(dt) {
 function tryBuild(n) {
   if (S.built >= BUILDS.length || S.toolIn <= 0 || !haveAll()) return false;
   const r = recipe(); for (const k in r) S.inv[k] -= r[k];
-  S.toolIn--; const name = BUILDS[S.built].name; construct(S.built, true); S.built++; gainXP(40); save(); hud(); fanfare();
+  S.toolIn--; const name = BUILDS[S.built].name; construct(S.built, true); S.built++; gainXP(40, 'the village built'); save(); hud(); fanfare();
   if (S.built === 1) queueCut('build');
   toast('The village built ' + name + '!' + (S.built < BUILDS.length && Object.keys(recipe()).length ? ' Next, ' + BUILDS[S.built].name + ': ' + recipeText() : ''), 5200);
   return true;
@@ -1775,7 +1803,7 @@ function morphTick(dt) {
   if (t >= 0.3 && !M.swapped) {
     M.swapped = true; if (M.old) { scene.remove(M.old); M.old = null; } bird.visible = true; bird.scale.set(size * 0.05, size, size * 0.05);
     MORPH.column.visible = true; MORPH.column.position.copy(at).add(v3.set(0, 3.5, 0)); MORPH.column.material.opacity = 0.55;
-    const wc = BIRDS[kind].wing || 0xffffff; MORPH.feathers.forEach((f, i) => { const a = i / 10 * Math.PI * 2; f.visible = true; f.material.color.setHex(wc); f.material.opacity = 1; f.position.copy(at); f.userData.v = new THREE.Vector3(Math.cos(a) * 2.6, 1.5 + (i % 3) * 0.4, Math.sin(a) * 2.6); f.userData.r = 3 + (i % 4); });
+    const wc = BIRDS[kind].wing || 0xffffff; MORPH.feathers.forEach((f, i) => { const a = i / 10 * Math.PI * 2; f.visible = true; f.material.color.setHex(M.levelUp && i % 2 ? 0xf2b134 : wc);   /* 642: gold between the wing's own */ f.material.opacity = 1; f.position.copy(at); f.userData.v = new THREE.Vector3(Math.cos(a) * 2.6, 1.5 + (i % 3) * 0.4, Math.sin(a) * 2.6); f.userData.r = 3 + (i % 4); });
     [523, 784, 1047].forEach((hz, i) => tone(hz, i * 0.09, 0.22, 'triangle', 0.06));   // a rising three-tone
   }
   if (M.swapped) {
@@ -1785,12 +1813,13 @@ function morphTick(dt) {
     MORPH.feathers.forEach((f) => { f.userData.v.y -= 3 * dt; f.position.addScaledVector(f.userData.v, dt); f.rotation.x += f.userData.r * dt; f.rotation.y += f.userData.r * 0.7 * dt; f.material.opacity = Math.max(0, 1 - (t - 0.3)); });
     if (t > 1.0 && !M.called) { M.called = true; try { if (window.WFR_SOUND) WFR_SOUND.call(kind, { notes: 1, vol: 0.6 }); } catch (e2) { /* fine */ } }
   }
-  if (t >= 1.3) morphEnd();
+  if (t >= (M.levelUp ? 1.8 : 1.3)) morphEnd();   /* 642: a level-up holds longer */
 }
 function morphEnd() {
   const M = S.morph; if (!M) return; if (M.old) scene.remove(M.old);
   if (bird) { bird.visible = true; bird.scale.setScalar(BIRDS[kind].size); }   // the residue law: nothing of the flash outlives it
   if (MORPH.glow) { MORPH.glow.visible = false; MORPH.column.visible = false; MORPH.feathers.forEach((f) => { f.visible = false; }); }
+  { const c = $('lvCard'); if (c) { c.hidden = true; c.classList.remove('on'); } }   // 642: the card never outlives the flash (the residue law)
   S.morph = null;
 }
 addEventListener('pointerdown', () => { if (S.morph && S.morph.t > 0.15) morphEnd(); }, true);   // any tap skips to the end
@@ -1888,7 +1917,7 @@ function thAct() {
     const t = S.insideTH; fadeFromDark();
     S.clock = 0; SKY.lastPaint = -9; S.insideTH = null; S.noWalk = false;
     S.pos.copy(t.entryW); S.pos.y += standOf(kind); if (bird) bird.position.copy(S.pos);
-    if (!S.sleptTonight) { S.sleptTonight = true; gainXP(10); }
+    if (!S.sleptTonight) { S.sleptTonight = true; gainXP(10, 'a night\'s sleep'); }
     toast('Morning. You slept safe and warm.', 3600); save();   // (it said the villagers left her something; nothing was left - Stark)
   } else if (what === 'Climb') { climbStart(nearLadder());
   } else if (what === 'Up') { climbNext();
@@ -1896,7 +1925,7 @@ function thAct() {
   } else if (what === 'Get up') { S.resting = false;
   } else if (what === 'Nest sleep') {   // 568: sleep at home, until morning
     fadeFromDark(); S.clock = 0; SKY.lastPaint = -9; S.resting = false;
-    if (!S.sleptTonight) { S.sleptTonight = true; gainXP(10); }
+    if (!S.sleptTonight) { S.sleptTonight = true; gainXP(10, 'a night\'s sleep'); }
     toast('Morning. You slept in your own nest.', 3600); save();
   } else {
     const t = S.insideTH; S.insideTH = null; S.noWalk = false; t.openT = 3;
@@ -1917,7 +1946,7 @@ function touchDown() {
 /* Quick Flutter (level 4): a burst of beats and speed, then a short rest */
 function doFlutter() {
   if (S.mode !== 'fly' || !canFlutter() || S.flutCd > 0) return;
-  S.flutT = 1.2; S.flutCd = 4; S.speed = Math.min(MOVES[kind].flutter, S.speed + 9); chirp(); setTimeout(chirp, 120); setTimeout(chirp, 240);
+  S.flutT = S.level >= 24 ? 1.8 : 1.2; S.flutCd = 4;   /* 641: the gift at 24 */ S.speed = Math.min(MOVES[kind].flutter, S.speed + 9); chirp(); setTimeout(chirp, 120); setTimeout(chirp, 240);
 }
 addEventListener('keydown', (e) => { if (e.key.toLowerCase() === 'f') doFlutter(); });
 addEventListener('keydown', (e) => { if (e.key !== 'Escape' && e.key.toLowerCase() !== 'p') return; if (S.mode === 'paused') $('go').click(); else if (!$('ui').hidden) $('birdsBtn').click(); });   // a keyboard's pause
@@ -1927,7 +1956,7 @@ function doSing() {
   let heard = 0; const fresh = S.singCd <= 0;   // the words and the bodies share one gate: when the toast says they stop, they stop
   for (const n of npcs) if (n.g.visible && n.g.position.distanceTo(S.pos) < 16) { n.smileT = Math.max(n.smileT, 2.5); heard++; if (fresh) listen(n); }
   if (fresh && chick && S.nestDone && (S.chick.bond || 0) >= 60 && chick.position.distanceTo(S.pos) < 16) setTimeout(() => { if (window.WFR_SOUND && audio()) WFR_SOUND.call(kind, { vol: 0.35, notes: 1 }); else tone(1568, 0, 0.12, 'triangle', 0.05); S.chickHop = 1; chickFeel(0, 2); }, 650);   // 564: at 60 the chick answers her song
-  if (heard && fresh) { gainXP(5); S.singCd = 8; toast(heard > 1 ? 'The villagers stop to listen.' : 'A villager stops to listen.'); }
+  if (heard && fresh) { gainXP(5, 'a song'); S.singCd = 8; toast(heard > 1 ? 'The villagers stop to listen.' : 'A villager stops to listen.'); }
 }
 /* Jump had NO listener from v5 to v8: only the keyboard's J worked, so on a phone step 1 could never be passed
    (Marth's field recording, Oct 8 22:53). The bench pressed J and stayed green. */
@@ -2224,7 +2253,7 @@ function hatch() {
   scene.add(shellA, shellB);
   makeChick(p); chick.scale.setScalar(0.01);
   S.hatchT = 0; song(); burst(p);
-  S.nestDone = true; gainXP(40);
+  S.nestDone = true; gainXP(40, 'your nest');
 }
 const sparks = [];
 function burst(p, colours, count, size, spread, lift) {   // 619: a feed bursts in the stat's colour (a Chaos Drive going in); without the extra arguments this is the hatch's burst, unchanged
@@ -2371,7 +2400,7 @@ function startMentor(m) {   // 567: one way in, from the walk-up or the Talk but
   if (S.talking) return;
   try { if (window.WFR_SOUND) WFR_SOUND.call(m.kind, { vol: 0.7 }); } catch (e) { /* a call that fails must never stop the lesson */ }
   if (m.id === 'owl') orchCue('owl');   // 547: "The Owl's Hour", 1.2 s after her hoot, until her lesson ends
-  say(m.lines, () => { S.lessons[m.id] = true; save(); ding(); gainXP(30); hud(); leaveStart(m); });   // 601: saved before the leaving starts (a reload mid-fade keeps it)
+  say(m.lines, () => { S.lessons[m.id] = true; save(); ding(); gainXP(30, 'a lesson'); hud(); leaveStart(m); });   // 601: saved before the leaving starts (a reload mid-fade keeps it)
 }
 function mentors(dt) {
   S.nearMentor = null;
@@ -2543,7 +2572,7 @@ const SPLASH = []; let bathWas = false;
 function bathTick(dt) {
   let b = null; try { b = S.built > 4 && builtAt[4]; } catch (e) { b = null; }
   const inBath = !!b && S.mode === 'walk' && !S.inside && Math.hypot(S.pos.x - b.x, S.pos.z - b.z) < 1.2 && Math.abs(S.pos.y - standOf(kind) - (b.y + 1.96)) < 0.3;
-  if (inBath && !bathWas) { chirp(); setTimeout(chirp, 160); S.bathT = 0; if (S.bathDay !== (S.dayCount || 0)) { S.bathDay = S.dayCount || 0; gainXP(5); toast('Splash! A bath, just for you. Your feathers feel brand new.', 3600); } else toast('Splash!', 1600); }
+  if (inBath && !bathWas) { chirp(); setTimeout(chirp, 160); S.bathT = 0; if (S.bathDay !== (S.dayCount || 0)) { S.bathDay = S.dayCount || 0; gainXP(5, 'a bath'); toast('Splash! A bath, just for you. Your feathers feel brand new.', 3600); } else toast('Splash!', 1600); }
   bathWas = inBath; S.inBath = inBath;
   if (inBath) { S.bathT = (S.bathT || 0) + dt; if (SPLASH.length < 6 && S.bathT > 0.18) { S.bathT = 0; const s = emojiSprite('\u{1F4A6}', 0.5); s.position.set(S.pos.x + (Math.random() - 0.5) * 0.9, S.pos.y + 0.3, S.pos.z + (Math.random() - 0.5) * 0.9); s.userData.v = 1.6 + Math.random() * 0.8; s.userData.t = 0; scene.add(s); SPLASH.push(s); }
     bird.rotation.z = Math.sin(S.t * 22) * 0.25; wingL.rotation.z = 0.6 + Math.sin(S.t * 30) * 0.5; wingR.rotation.z = -wingL.rotation.z; }   // a shake and a flutter of wet wings
@@ -2573,7 +2602,7 @@ function bgMusicTick(dt) {
    after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
    music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
    menu, a cutscene), the orchestra bows out. */
-const ORCH_SRC = 'orch-samples.js?v=d9e814e9c4bf';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const ORCH_SRC = 'orch-samples.js?v=5b27ef7361d2';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
 const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
 window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
 const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
@@ -2660,7 +2689,7 @@ function nestTiers(dt) {
       toast(have < need ? 'Got one! ' + (need - have) + ' more ' + next.label + '.' : 'That\'s all of them. Bring them home to your nest.', 3000); } }
   if ((S.mats[next.mat] || 0) >= next.spots.length && S.pos.distanceTo(NEST) < 8) {
     S.nestTier++; if (S.nestTier === 4 && S.eagleFound) S.nestTier = 5;   // blessed early: the treehouse becomes the fifth nest
-    drawNest(); save(); gainXP(50); fanfare(); toast(S.nestTier === 5 ? 'Your nest has become something new.' : next.done, 4200); matsGateWas = null;
+    drawNest(); save(); gainXP(50, 'your nest grew'); fanfare(); toast(S.nestTier === 5 ? 'Your nest has become something new.' : next.done, 4200); matsGateWas = null;
   }
 }
 if (S.nestDone) drawNest();
@@ -2691,7 +2720,7 @@ function careStats() {
 }
 function growCheck() {
   const next = STAGES[S.chick.stage + 1];
-  if (next && chickTotal() >= next.at) { S.chick.stage++; chickLook(); fanfare(); chickFeel(0, 4); gainXP(40); toast('Your chick has grown into a ' + next.name.toLowerCase() + '!', 4200); if (S.chick.stage === 1) queueCut('grown'); }
+  if (next && chickTotal() >= next.at) { S.chick.stage++; chickLook(); fanfare(); chickFeel(0, 4); gainXP(40, 'your chick grew'); toast('Your chick has grown into a ' + next.name.toLowerCase() + '!', 4200); if (S.chick.stage === 1) queueCut('grown'); }
 }
 /* 624: the Dress page. S.chick.held (one id or null) and S.chick.wear (ids) are new save keys; a keepsake item needs its mark. */
 function dressDraw() {
@@ -2713,13 +2742,13 @@ $('feedBtn').addEventListener('click', () => {
   if (chick && Object.keys(gives).length) burst(chick.position.clone().add(new THREE.Vector3(0, 0.5, 0)), Object.keys(gives).map((k) => (CSTATS.find((c) => c[0] === k) || [0, 0, 0xffd94a])[2]), 20, 0.08, 2.2, 1.6);   // 619: the drive goes in, in its stat's colours
   chickLook();   // 619: and its colour drifts toward its strongest stat on every feed, not only when it grows a stage
   S.chick.food = Math.min(100, S.chick.food + (f.keepsake ? 0 : f.food || 25)); if (f.keepsake) (S.chick.marks = S.chick.marks || {})[f.id] = true; S.chick.happy = Math.min(100, S.chick.happy + 8 + (f.happy || 0));
-  if (S.fruit.g.parent) S.fruit.g.parent.remove(S.fruit.g); S.fruit = null; ding(); chirp(); chickFeel(0, 3); S.chickHop = 1; gainXP(5); growCheck(); save(); careStats(); hud();
+  if (S.fruit.g.parent) S.fruit.g.parent.remove(S.fruit.g); S.fruit = null; ding(); chirp(); chickFeel(0, 3); S.chickHop = 1; gainXP(5, 'fed your chick'); growCheck(); save(); careStats(); hud();
   toast((f.keepsake ? 'Your chick keeps ' + f.name + '! ' + (f.happy ? 'Mood +' + f.happy + (Object.keys(gives).length ? ', ' : '') : '') : 'Yum! ') + Object.keys(gives).map((k) => CSTATS.find((c) => c[0] === k)[1] + ' +' + gives[k]).join(', ') + (ups.length ? ' \u2014 ' + ups.join(' ') : ''), ups.length ? 3600 : 2400);
 });
 $('petBtn').addEventListener('click', () => {
   if (S.petCd > 0) return; S.petCd = 1.2;
   S.chick.happy = Math.min(100, S.chick.happy + 6); S.chick.pets++; bond('pet'); chirp(); chickFeel(0, 2.5); S.chickHop = 0.6;
-  if (S.chick.pets % 5 === 0) gainXP(2); save(); careStats();
+  if (S.chick.pets % 5 === 0) gainXP(2, 'petting'); save(); careStats();
 });
 /* 587: the card tucks into a thin tab (Marth, Oct 9: "we should be able to move the 'your chick' bar so you can just 'watch
    you chick'"). Feed and Pet stay on the tab, one tap away; her choice rides in the chick's own save (chick.tucked). */
@@ -2895,7 +2924,7 @@ function catchFish(sc, f, dp) {
   const snatched = S.mode === 'fly' && canDive() && S.pitch < -0.2 && dp < 1.8 && f.g.position.y > WATER - 1.6;
   if (!swimming && !snatched) return;
   f.back = 60; f.g.visible = false;
-  const g = emojiSprite(sc.type.emoji, 0.9); scene.add(g); S.fruit = { type: sc.type, g }; chirp(); ding(); gainXP(sc.type.xp);
+  const g = emojiSprite(sc.type.emoji, 0.9); scene.add(g); S.fruit = { type: sc.type, g }; chirp(); ding(); gainXP(sc.type.xp, 'a fruit');
   S.fishCaught = (S.fishCaught || 0) + 1;
   toast(S.fishCaught === 1 ? 'You caught ' + sc.type.name + '! Your chick will love it.' : 'Caught ' + sc.type.name + '!', 2800); hud(); save(); if (S.fishCaught === 1) queueCut('fish');
 }
@@ -2984,7 +3013,7 @@ $('read').addEventListener('pointerdown', (e) => { e.preventDefault();
   const text = sg.later && !S.eagleFound ? 'The writing has worn away. Maybe it will make sense later.' : (sg.later || sg.text);
   say([['📜 A sign', text]]);
   S.read = S.read || {};
-  if (!S.read[sg.id] && !(sg.later && !S.eagleFound)) { S.read[sg.id] = true; gainXP(15); save(); }
+  if (!S.read[sg.id] && !(sg.later && !S.eagleFound)) { S.read[sg.id] = true; gainXP(15, 'a signpost'); save(); }
 });
 const peakPt = (() => { let best = { x: PEAKS.x, z: PEAKS.z, y: -1 }; for (let dx = -60; dx <= 60; dx += 4) for (let dz = -60; dz <= 60; dz += 4) { const y = H(PEAKS.x + dx, PEAKS.z + dz); if (y > best.y) best = { x: PEAKS.x + dx, z: PEAKS.z + dz, y }; } return best; })();
 const eagleSpot = new THREE.Vector3(peakPt.x, peakPt.y, peakPt.z);
@@ -3170,7 +3199,7 @@ function startEagle() {
           Object.assign(['', 'The dove rises into the clouds and is gone. Far above, for just a moment, you think you see something white and shining…'], { music: 'dove' }),   // 548: "After the Dove" begins here, after her words (option A: nothing under the verses)
         ], () => {
           for (const g of gathered) scene.remove(g); gathered.length = 0;
-          S.eagleFound = true; S.inEagle = false; const grew = S.nestTier >= 4; if (grew) S.nestTier = 5; drawNest(); save(); gainXP(100); fanfare();
+          S.eagleFound = true; S.inEagle = false; const grew = S.nestTier >= 4; if (grew) S.nestTier = 5; drawNest(); save(); gainXP(100, 'the Eagle'); fanfare();
           S.mode = 'walk'; flapBtn.hidden = false; stick.hidden = false; flapBtn.textContent = 'Fly';
           toast(grew ? 'Your nest has become something new. Go and see.' : 'The dove blessed your nest. Finish the treehouse, and see what it becomes.', 4600); hud();
         });
@@ -3262,6 +3291,8 @@ try { if (localStorage.getItem('wfr.debug') === '1') window.__wfr = { eagle: () 
   inside: () => S.inside ? houses.indexOf(S.inside) : null, goInside: (i) => { const h = houses[i], p = toWorld(h, 0, h.d / 2 - 0.9); S.mode = 'walk'; S.pos.set(p.x, groundAt(p.x, p.z) + standOf(kind), p.z); S.inside = h; },
   heldLeft: () => { let n = 0; if (bird) bird.traverse((o) => { if (o !== bird && o.userData && o.userData.slot !== undefined) n++; }); return n; },
   carrying: () => S.fruit ? S.fruit.type.id || S.fruit.type.emoji : null, caught: () => S.fishCaught || 0,
+  xp: (n, why) => gainXP(n, why), missions: () => missionsHtml(),   /* 641 */
+  lv: () => ({ level: S.level, xp: S.xp, need: need(S.level), queue: (S.lvQ || []).slice(), moment: !!(S.morph && S.morph.levelUp), card: $('lvCard').hidden ? null : $('lvCard').textContent, pop: $('xpPop').hidden ? null : $('xpPop').textContent, next: nextGift(), carry: carrySlots(), flutDur: (() => { const m = S.mode, cd = S.flutCd, sp = S.speed; S.mode = 'fly'; S.flutCd = 0; doFlutter(); const d = S.flutT; S.mode = m; S.flutCd = cd; S.speed = sp; S.flutT = 0; return d; })(), birdScale: bird ? +bird.scale.y.toFixed(3) : null, size: BIRDS[kind].size, morph: !!S.morph }),
   nav: () => ({ played: S.played || 0, cell: mapCell(S.pos.x, S.pos.z), text: $('navHud').textContent, shown: !$('ui').hidden && !$('navHud').hidden, rect: (() => { const r = $('navHud').getBoundingClientRect(); return [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)]; })(), font: parseFloat(getComputedStyle($('navHud')).fontSize) }),   /* 631 */
   water: () => ({ mode: S.mode, y: S.pos.y, breath: S.breath, max: S.breathMax, rescue: !!S.rescue, surfCd: S.surfCd, under: wasUnder, bar: !$('breath').hidden, ground: groundAt(S.pos.x, S.pos.z) }) }; } catch (e) { /* no storage: no door */ }
 
@@ -3365,7 +3396,7 @@ function radar() {
 }
 function pickups() {
   for (const t of twigs) if (t.visible && t.position.distanceTo(S.pos) < 3.6) {
-    t.visible = false; S.got++; ding(); gainXP(12); save();
+    t.visible = false; S.got++; ding(); gainXP(12, 'a twig'); save();
     toast(S.got < 5 ? 'A twig! ' + (5 - S.got) + ' to go.' : 'All five! Fly to the glowing ring in the big tree.', 2600);
   }
   for (const it of items) {
@@ -3380,7 +3411,7 @@ function pickups() {
     if (n.hog) { if (HOGS) HOGS.deliver(it); continue; }   // 529
     if (n.g.visible && n.g.position.distanceTo(S.pos) < 4.5) {
       S.carry.splice(S.carry.indexOf(it), 1); it.done = true; receive(n, it); n.need = null; n.house.openT = 25;
-      ding(); gainXP(75);
+      ding(); gainXP(75, 'a tool delivered');
       if (S.built < BUILDS.length) {
         S.toolIn = (S.toolIn || 0) + 1; save();
         if (!tryBuild(n)) toast(n.name + ' thanks you for the ' + it.type.name + '! Their door is open. For ' + BUILDS[S.built].name + ' the village still needs ' + recipeText().replace(/\s*✓ a tool$/, '') + '.', 5200);
@@ -3394,11 +3425,11 @@ function pickups() {
     if (!S.nestDone || !chick) { warn('Something small glints in the old nest.'); continue; }
     if (S.fruit) { warn('Your beak is full. Take that to your chick first.'); continue; }
     n.taken = true; n.treat.visible = false; (S.seen = S.seen || {})['nest:' + n.id] = true;
-    const g = emojiSprite(n.keepsake.emoji, 0.9); scene.add(g); S.fruit = { type: n.keepsake, g }; chirp(); ding(); gainXP(10); save(); hud(); toast('You found ' + n.keepsake.name + ' in ' + n.name + '! A keepsake for your chick.', 3400);
+    const g = emojiSprite(n.keepsake.emoji, 0.9); scene.add(g); S.fruit = { type: n.keepsake, g }; chirp(); ding(); gainXP(10, 'a keepsake'); save(); hud(); toast('You found ' + n.keepsake.name + ' in ' + n.name + '! A keepsake for your chick.', 3400);
   }
   for (const pl of PLACES) {
     if (S.found[pl.id] || S.mode !== 'walk') continue;
-    if (Math.hypot(S.pos.x - pl.x, S.pos.z - pl.z) < pl.r && S.pos.y >= pl.minY) { S.found[pl.id] = true; gainXP(15); toast('Discovered ' + pl.name + '! +15'); }
+    if (Math.hypot(S.pos.x - pl.x, S.pos.z - pl.z) < pl.r && S.pos.y >= pl.minY) { S.found[pl.id] = true; gainXP(15, 'a discovery'); toast('Discovered ' + pl.name + '! +15'); }
   }
 }
 /* 554 (Marth, Oct 9: "Holding an item needs some revision"): what she carries is HELD, not dragged on a string below her.
@@ -3513,8 +3544,8 @@ function walkStep(sx, sy, dt) {
     if (h.cabin) { if (!h.treatTaken && Math.hypot(L.x - h.reach.x, L.z - h.reach.z) < 0.9) {   // 552 section 4: in the drawer's gap (or the cupboard's crack)
         if (!S.nestDone || !chick) warn('Something small glints in there.');
         else if (S.fruit) warn('Your beak is full. Take that to your chick first.');
-        else { h.treatTaken = true; h.treat.visible = false; const g = emojiSprite(h.keepsake.emoji, 0.9); scene.add(g); S.fruit = { type: h.keepsake, g }; chirp(); ding(); gainXP(10); save(); hud(); toast('You found ' + h.keepsake.name + '! A keepsake for your chick.', 3200); } } }
-    else if (!h.treatTaken && Math.hypot(L.x, L.z - (-h.d / 4)) < 0.9) { h.treatTaken = true; h.treat.visible = false; ding(); gainXP(10); toast('A treat inside! +10'); }
+        else { h.treatTaken = true; h.treat.visible = false; const g = emojiSprite(h.keepsake.emoji, 0.9); scene.add(g); S.fruit = { type: h.keepsake, g }; chirp(); ding(); gainXP(10, 'a keepsake'); save(); hud(); toast('You found ' + h.keepsake.name + '! A keepsake for your chick.', 3200); } } }
+    else if (!h.treatTaken && Math.hypot(L.x, L.z - (-h.d / 4)) < 0.9) { h.treatTaken = true; h.treat.visible = false; ding(); gainXP(10, 'a treat'); toast('A treat inside! +10'); }
     return;
   }
   const g0 = groundAt(S.pos.x, S.pos.z), g1 = groundAt(nx, nz);
@@ -3805,7 +3836,7 @@ function frame(now) {
   }
   navHud(dt);   // 631
   if (SKYEND) SKYEND.tick(dt);   // 544: the ending (a no-op until the gate opens)
-  morphTick(dt);   // after the mode block: it writes the bird's turn and size last, and puts them back at the end
+  lvTick(); morphTick(dt);   // after the mode block: it writes the bird's turn and size last, and puts them back at the end (642: a queued level-up starts here)
   arrowTick(dt); S.camCut = false;   // 588: after the camera has moved; 584: a door's camera cut lasts one frame
   sunFollow();
   if (ATMO) ATMO.tick(dt, S.t);   // 613: after sunFollow, before the picture (it never throws: a fault switches the air off, not the game)
@@ -3873,7 +3904,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build d9e814e9c4bf): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build 5b27ef7361d2): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>
