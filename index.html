@@ -175,7 +175,20 @@ html.cine #boot{display:grid}
 .missions h3{margin:8px 0 2px;font-family:var(--display);font-size:13px;letter-spacing:.06em;text-transform:uppercase;color:var(--mute)}
 .missions ul{margin:0;padding-left:18px}.missions li{font-size:14px;line-height:1.45;color:var(--ink)}
 /* 644: the pouch (a smaller What-to-do, same paper); the slow-time vignette under the HUD */
-.quick{width:min(320px,calc(100% - 32px));max-height:calc(100% - 230px);z-index:7}.quick ul{list-style:none;padding-left:0}.quick li{display:grid;grid-template-columns:1fr auto;gap:1px 10px;align-items:center;padding:2px 0}
+/* 650 (Marth, Oct 14: "the x button is poorly placed and the inventory design is just poor"): a GAME inventory. The card is a column: a title, a scrolling
+   body of SLOTS and cards, and a full-width Close bar at its FOOT that never scrolls and that a thumb finds (52px, the Flap's own gold). The × is gone. */
+.quick{width:min(320px,calc(100% - 32px));max-height:calc(100% - 230px);z-index:7;display:flex;flex-direction:column;overflow:hidden;padding:0}.quick .top{padding:10px 16px 2px;flex:none}
+#quickBody{flex:1;min-height:0;overflow:auto;padding:0 14px 8px}
+.quick ul{list-style:none;padding-left:0}.quick li{display:grid;grid-template-columns:1fr auto;gap:1px 10px;align-items:center;padding:2px 0}
+.quick ul.slots{display:grid;grid-template-columns:repeat(3,1fr);gap:7px 6px;margin:4px 0 6px}.quick ul.slots.hold{grid-template-columns:repeat(auto-fit,minmax(56px,1fr))}
+.quick .slot,.quick .held{display:grid;grid-template-columns:1fr;justify-items:center;gap:0;padding:6px 2px 4px;border-radius:12px;background:#fff;border:2px solid #eadfcd;position:relative;min-height:54px;box-sizing:border-box}
+.quick .slot i,.quick .held i{font-style:normal;font-size:24px;line-height:1.1}.quick .slot em,.quick .held em{font-style:normal;font-size:10.5px;color:var(--mute);line-height:1.2;text-align:center}
+.quick .slot b{position:absolute;top:-7px;right:-5px;min-width:20px;height:20px;padding:0 5px;border-radius:999px;background:var(--rouge);color:#fff;font-family:var(--display);font-size:12px;font-weight:700;display:grid;place-items:center;box-shadow:0 2px 6px rgba(34,49,74,.25);box-sizing:border-box}
+.quick .slot.dim{opacity:.5}.quick .slot.dim b{background:#b7bfcc}.quick .held.empty{border-style:dashed;background:transparent}.quick .held.empty i{opacity:.35}
+.quick .card{border-radius:12px;background:#fff;border:2px solid #eadfcd;padding:6px 10px 6px;margin:4px 0}.quick .card.now{border-color:var(--rouge)}.quick .card .name{display:flex;justify-content:space-between;align-items:center;gap:8px;font-weight:700;font-size:14px}.quick .card .name em{font-style:normal;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--rouge);white-space:nowrap}
+.quick .line{font-size:13px;color:var(--mute);padding:2px 0;line-height:1.35}
+#quickClose{flex:none;width:100%;min-height:52px;border-radius:0 0 18px 18px;background:var(--gold);color:var(--ink);font-size:17px;font-weight:700;letter-spacing:.02em;box-shadow:inset 0 2px 0 rgba(255,255,255,.35)}#quickClose:active{background:#f6c35a}
+@media (orientation:portrait){.quick{left:16px;transform:none;width:min(320px,calc(100% - 92px))}}   /* 650: upright, the card keeps clear of the pause and pouch buttons on the right (the shot of Oct 14 showed it covering them) */
 .quick li.now{font-weight:700}.quick li.done{color:var(--mute)}.quick li .bar{grid-column:1/-1;height:5px;border-radius:3px;background:#e4ecf6;overflow:hidden}.quick li .bar i{display:block;height:100%;background:var(--rouge)}
 .quick li .bar i.full{background:#5f9e4a}.quick small{color:var(--mute);font-size:12px}.quick li.rare{color:#8a5a9c}
 #slow{position:fixed;inset:0;pointer-events:none;z-index:1;opacity:0;transition:opacity .4s;background:radial-gradient(ellipse at center,rgba(18,28,58,0) 52%,rgba(18,28,58,.5) 100%)}#slow.on{opacity:1}
@@ -234,6 +247,7 @@ html.cine #boot{display:grid}
   #how{font-size:12px}
   #start .kicker,#start .sheet>p:not(.how){display:none}   /* the title on a phone on its side: the save files and the links must fit without scrolling */
   .file{min-height:44px;padding:3px 4px}
+  .quick{top:calc(env(safe-area-inset-top,0px) + 8px);max-height:calc(100% - 150px);width:min(440px,calc(100% - 32px))}   /* 650: on a phone on its side the pouch rises under the HUD and keeps room for its slots and its Close bar */
 }   /* Ino: in portrait the action buttons sat over the stick's zone */
 .knob-base{position:absolute;width:120px;height:120px;border-radius:50%;border:3px solid rgba(255,248,236,.75);
   background:rgba(255,248,236,.18);transform:translate(-50%,-50%);pointer-events:none}
@@ -386,7 +400,7 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
   <button class="act" id="read" type="button" hidden>📜 Read</button>
   <button class="act" id="home" type="button" aria-label="Go inside nest" hidden>🪺 Nest</button>
   <button class="act" id="thBtn" type="button" hidden>🏡 Go in</button>
-  <div class="missions quick" id="quick" hidden role="dialog" aria-label="Pouch"><div class="top"><span>Pouch</span><button type="button" id="quickClose" aria-label="Close">✕</button></div><div id="quickBody"></div></div>
+  <div class="missions quick" id="quick" hidden role="dialog" aria-label="Pouch"><div class="top"><span>Pouch</span></div><div id="quickBody"></div><button type="button" id="quickClose" aria-label="Close">Close</button></div>
   <div id="breath" hidden><i id="breathFill"></i></div>
   <div id="under"></div>
   <button class="act" id="sing" type="button" hidden>Sing ♪</button>
@@ -452,31 +466,31 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 <div id="fade" aria-hidden="true"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="gltf-loader.js?v=0166e5f8e31e"></script>
-<script src="skeleton-utils.js?v=0166e5f8e31e"></script>
-<script src="meshopt-decoder.js?v=0166e5f8e31e"></script>
-<script src="models.js?v=0166e5f8e31e"></script>
-<script src="people.js?v=0166e5f8e31e"></script>
-<script src="villagers.js?v=0166e5f8e31e"></script>
-<script src="tex-photos.js?v=0166e5f8e31e"></script>
-<script src="textures.js?v=0166e5f8e31e"></script>
-<script src="birds.js?v=0166e5f8e31e"></script>
-<script src="humans.js?v=0166e5f8e31e"></script>
-<script src="folk.js?v=0166e5f8e31e"></script>
-<script src="trees.js?v=0166e5f8e31e"></script>
-<script src="treehouses.js?v=0166e5f8e31e"></script>
-<script src="cabins.js?v=0166e5f8e31e"></script>
-<script src="cave.js?v=0166e5f8e31e"></script>
-<script src="sounds.js?v=0166e5f8e31e"></script>
-<script src="music.js?v=0166e5f8e31e"></script>
-<script src="music-orchestra.js?v=0166e5f8e31e"></script>
-<script src="rhythm.js?v=0166e5f8e31e"></script>
-<script src="pictograms.js?v=0166e5f8e31e"></script>
-<script src="chick-wear.js?v=0166e5f8e31e"></script>
-<script src="hedgehogs.js?v=0166e5f8e31e"></script>
-<script src="opening.js?v=0166e5f8e31e"></script>
-<script src="skypiea.js?v=0166e5f8e31e"></script>
-<script src="atmo.js?v=0166e5f8e31e"></script>
+<script src="gltf-loader.js?v=83cc1c2fc9c0"></script>
+<script src="skeleton-utils.js?v=83cc1c2fc9c0"></script>
+<script src="meshopt-decoder.js?v=83cc1c2fc9c0"></script>
+<script src="models.js?v=83cc1c2fc9c0"></script>
+<script src="people.js?v=83cc1c2fc9c0"></script>
+<script src="villagers.js?v=83cc1c2fc9c0"></script>
+<script src="tex-photos.js?v=83cc1c2fc9c0"></script>
+<script src="textures.js?v=83cc1c2fc9c0"></script>
+<script src="birds.js?v=83cc1c2fc9c0"></script>
+<script src="humans.js?v=83cc1c2fc9c0"></script>
+<script src="folk.js?v=83cc1c2fc9c0"></script>
+<script src="trees.js?v=83cc1c2fc9c0"></script>
+<script src="treehouses.js?v=83cc1c2fc9c0"></script>
+<script src="cabins.js?v=83cc1c2fc9c0"></script>
+<script src="cave.js?v=83cc1c2fc9c0"></script>
+<script src="sounds.js?v=83cc1c2fc9c0"></script>
+<script src="music.js?v=83cc1c2fc9c0"></script>
+<script src="music-orchestra.js?v=83cc1c2fc9c0"></script>
+<script src="rhythm.js?v=83cc1c2fc9c0"></script>
+<script src="pictograms.js?v=83cc1c2fc9c0"></script>
+<script src="chick-wear.js?v=83cc1c2fc9c0"></script>
+<script src="hedgehogs.js?v=83cc1c2fc9c0"></script>
+<script src="opening.js?v=83cc1c2fc9c0"></script>
+<script src="skypiea.js?v=83cc1c2fc9c0"></script>
+<script src="atmo.js?v=83cc1c2fc9c0"></script>
 <script>
 (() => {
 'use strict';
@@ -1077,41 +1091,57 @@ function openMissions(on) { if (on) { $('missionsBody').innerHTML = missionsHtml
 /* 644: THE POUCH (Marth: 'a quick / small menu inside game for the bird (slows da game down for the user like franklin in gta ...) to view
    inventory of sorts, and what you're holding. Also you can see what is needed to build what artifact or building or item for the villagers
    to induce growth'). While it is open frame() runs the island at QUICK_SLOW; she keeps flying. */
-const QUICK_SLOW = 0.35;
+const QUICK_SLOW = 0.35; let QLAST = '';   /* 650: the last body written, so the 1 s refresh rewrites nothing when the words are the same */
 /* a row: 'logs 4 / 12' with a bar; count overrides have() (the nest's own row counts what she has gathered, not the gated leftover: Ino);
    a rare part her nest has not yet earned says so (Obito: a silent dead-end otherwise) */
 function quickRow(k, n, now, count) { const gated = count == null && !STUFF[k] && S.nestTier < (MAT_TIER[k] || 99), h = Math.min(count == null ? have(k) : count, n), full = h >= n, rare = !STUFF[k];
   return '<li class="' + (now ? 'now' : '') + (rare ? ' rare' : '') + '"><span>' + matEmoji(k) + ' ' + esc(matName(k)) + (gated ? ' <small>\u00b7 your nest first</small>' : '') + '</span><span>' + h + ' / ' + n + '</span><span class="bar"><i class="' + (full ? 'full' : '') + '" style="width:' + Math.round(h / n * 100) + '%"></i></span></li>'; }
 function quickHtml() {
-  const hold = []; if (S.fruit) hold.push(S.fruit.type.emoji + ' fruit, in your beak'); for (const c of S.carry) hold.push(c.type.emoji + ' ' + esc(c.type.name) + (c.owner ? ' for ' + esc(c.owner.name) : ''));
-  if (!hold.length) hold.push('Nothing. Your beak is free (' + carrySlots() + ' thing' + (carrySlots() > 1 ? 's' : '') + ' at once).');
-  if (worldOn()) hold.push(worldPill() + (wcave().got >= WORLD_CAVE.n ? '' : ' (the cave, by night)'));   // 643 worlds
-  if (S.toolIn > 0) hold.push('\ud83e\uddf0 ' + S.toolIn + ' tool' + (S.toolIn > 1 ? 's' : '') + ' delivered, waiting to be built with');
-  for (const it of items) if (!it.done && !it.held) hold.push(esc(it.owner.name) + ' needs the ' + esc(it.type.name) + ' ' + it.type.emoji + (S.lessons.crow ? ' (look ' + it.spot.zone + ')' : ''));   // who needs which tool (Obito)
-  const pouch = Object.keys(STUFF).map((k) => '<li><span>' + STUFF[k].emoji + ' ' + esc(STUFF[k].name) + '</span><span>' + (S.inv[k] || 0) + '</span></li>');
-  for (const k of Object.keys(MAT_TIER)) if (have(k) > 0) pouch.push('<li class="rare"><span>' + MAT_EMOJI[k] + ' ' + esc(MAT_NAME[k]) + '</span><span>' + have(k) + '</span></li>');
-  const build = [];
-  if (S.built < BUILDS.length) { const r = recipe() || {}; build.push('<li class="now"><span>Next: ' + esc(BUILDS[S.built].name) + '</span><span></span></li>'); for (const k in r) build.push(quickRow(k, r[k], false)); build.push('<li><span>+ a tool delivered</span><span>' + (S.toolIn > 0 ? '\u2713' : '\u2013') + '</span></li>'); }
-  GROWTH.forEach((G, i) => { const done = i < growI(), now = i === growI() && S.built >= BUILDS.length;
-    build.push('<li class="' + (done ? 'done' : now ? 'now' : '') + '"><span>' + (done ? '\u2713 ' : '') + esc(G.name) + '</span><span>' + (done ? 'built' : now ? 'saving up' : 'later') + '</span></li>');
-    if (!done) for (const k in G.need) build.push(quickRow(k, G.need[k], now)); if (!done) build.push('<li><span>+ a tool delivered</span><span>' + (S.toolIn > 0 ? '\u2713' : '\u2013') + '</span></li>'); });
+  /* 650 (Marth, Oct 14: "the x button is poorly placed and the inventory design is just poor"; Itachi's BRIEF_650): a GAME inventory.
+     Holding: her carry slots, filled or free, the beak when it holds a fruit, then the wayfinding lines. Pouch: six slots with a count
+     badge (nails, logs, stones; the nest's flowers, branches, planks), dim at 0. Building: the build she is saving for as a card with its
+     bars, the done ones one line, the later ones one line. Your nest as before. Markup by concatenation, no line breaks: the guard reads
+     textContent across the rows. */
+  const held = [];
+  if (S.fruit) held.push('<li class="held"><i>' + S.fruit.type.emoji + '</i><em>in your beak</em></li>');
+  for (const c of S.carry) held.push('<li class="held"><i>' + c.type.emoji + '</i><em>' + esc(c.type.name) + (c.owner ? ' for ' + esc(c.owner.name) : '') + '</em></li>');
+  for (let k = S.carry.length; k < carrySlots(); k++) held.push('<li class="held empty"><i>\u00b7</i><em>free</em></li>');
+  const lines = [];
+  if (worldOn()) lines.push(worldPill() + (wcave().got >= WORLD_CAVE.n ? '' : ' (the cave, by night)'));   /* 643 worlds */
+  if (S.toolIn > 0) lines.push('\ud83e\uddf0 ' + S.toolIn + ' tool' + (S.toolIn > 1 ? 's' : '') + ' delivered, waiting to be built with');
+  const wanted = []; for (const it of items) if (!it.done && !it.held) wanted.push('<li class="held" title="' + esc(it.owner.name) + ' needs the ' + esc(it.type.name) + '"><i>' + it.type.emoji + '</i><em>' + esc(it.owner.name) + (S.lessons.crow ? ' · look ' + it.spot.zone : '') + '</em></li>');   /* who needs which tool (Obito, 644): a WANTED row at the end of the body (Obito, 650: quest text sat between the slots and pushed them below the fold on a phone on its side) */
+  const SHORT = { nail: 'nails', log: 'logs', stone: 'stones', flower: 'flowers', branch: 'branches', plank: 'planks' };
+  const slot = (k, n) => '<li class="slot' + (n > 0 ? '' : ' dim') + '" data-k="' + k + '"><i>' + matEmoji(k) + '</i><em>' + (SHORT[k] || esc(matName(k))) + '</em><b>' + n + '</b></li>';
+  const pouch = Object.keys(STUFF).map((k) => slot(k, S.inv[k] || 0)).concat(Object.keys(MAT_TIER).map((k) => slot(k, have(k))));
+  const toolRow = '<li><span>+ a tool delivered</span><span>' + (S.toolIn > 0 ? '\u2713' : '\u2013') + '</span></li>';
+  const card = (name, badge, rows) => '<div class="card now"><div class="name"><span>' + name + '</span><em>' + badge + '</em></div><ul>' + rows.join('') + toolRow + '</ul></div>';
+  const build = [], done = [], later = [];
+  if (S.built < BUILDS.length) { const r = recipe() || {}, rows = []; for (const k in r) rows.push(quickRow(k, r[k], false)); build.push(card('Next: ' + esc(BUILDS[S.built].name), 'the village', rows)); }
+  GROWTH.forEach((G, i) => { const isDone = i < growI(), now = i === growI() && S.built >= BUILDS.length;
+    if (isDone) done.push('\u2713 ' + esc(G.name));
+    else if (now) { const rows = []; for (const k in G.need) rows.push(quickRow(k, G.need[k], true)); build.push(card(esc(G.name), 'saving up', rows)); }
+    else later.push(esc(G.name) + ': ' + Object.keys(G.need).map((k) => matEmoji(k) + ' ' + Math.min(have(k), G.need[k]) + ' / ' + G.need[k] + (!STUFF[k] && S.nestTier < (MAT_TIER[k] || 99) ? ' (your nest first)' : '')).join(' \u00b7 ')); });   /* a later build is one line: its name and its counts, the rare part's gate said (the guard's P12 reads it while she gathers) */
+  if (done.length) build.push('<div class="line">' + done.join(' \u00b7 ') + '</div>');
+  if (later.length) build.push('<div class="line">later: ' + later.join('<br>') + '</div>');
   const nest = []; if (S.nestDone && TIERS[S.nestTier + 1]) { const t = TIERS[S.nestTier + 1]; nest.push(t.gate() ? quickRow(t.mat, t.spots.length, true, S.mats[t.mat] || 0) :'<li><span>' + esc(t.label) + '</span><span>later</span></li>'); }
-  return '<h3>Holding</h3><ul>' + hold.map((x) => '<li><span>' + x + '</span><span></span></li>').join('') + '</ul><h3>Pouch</h3><ul>' + pouch.join('') + '</ul><h3>Building</h3><ul>' + build.join('') + '</ul>' + (nest.length ? '<h3>Your nest</h3><ul>' + nest.join('') + '</ul>' : '') + '<small>The island runs slow while the pouch is open.</small>';
+  return '<h3>Holding</h3><ul class="slots hold">' + held.join('') + '</ul>' + (lines.length ? '<div class="line">' + lines.join('<br>') + '</div>' : '') +
+    '<h3>Pouch</h3><ul class="slots">' + pouch.join('') + '</ul><h3>Building</h3>' + build.join('') + (nest.length ? '<h3>Your nest</h3><ul>' + nest.join('') + '</ul>' : '') + (wanted.length ? '<h3>Wanted</h3><ul class="slots">' + wanted.join('') + '</ul>' : '') + '<small>The island runs slow while the pouch is open.</small>';
 }
 function openQuick(on) {
   if (on && (S.talking || S.tut !== 0 || !(S.mode === 'walk' || S.mode === 'fly' || S.mode === 'swim' || S.mode === 'hover'))) return;   // a pouch, not a pause: never over a talk, a cutscene or a menu
   S.quick = !!on; S.quickT = 0; S.quickAt = 0;
-  if (on) { $('quickBody').innerHTML = quickHtml(); $('missions').hidden = true; }
+  if (on) { $('quickBody').innerHTML = QLAST = quickHtml(); $('quickBody').scrollTop = 0; $('missions').hidden = true; }
   $('quick').hidden = !on; $('slow').classList.toggle('on', !!on); $('quickBtn').setAttribute('aria-expanded', on ? 'true' : 'false');
 }
 function quickTick(real) {
   if (!S.quick) return; S.quickT += real;
   if (S.talking || S.tut !== 0 || !(S.mode === 'walk' || S.mode === 'fly' || S.mode === 'swim' || S.mode === 'hover') || S.quickT > 12) { openQuick(false); return; }   // the slow can never leak into a cutscene; a thumb forgets
-  if (S.quickT - S.quickAt > 1) { S.quickAt = S.quickT; $('quickBody').innerHTML = quickHtml(); }
+  if (S.quickT - S.quickAt > 1) { S.quickAt = S.quickT; const h = quickHtml(); if (h !== QLAST) { QLAST = h; $('quickBody').innerHTML = h; } }   /* 650: a rewrite only when the words changed */
 }
 $('quickBtn').addEventListener('click', () => openQuick(!S.quick));
 $('quickClose').addEventListener('pointerdown', (e) => { e.preventDefault(); openQuick(false); });
 $('quick').addEventListener('pointerdown', () => { S.quickT = 0; });   // a touch keeps it open
+addEventListener('pointerdown', (e) => { if (S.quick && !(e.target.closest && e.target.closest('#quick,#quickBtn,#stick,#flap'))) openQuick(false); }, true);   /* 650: a tap anywhere ELSE closes it. The stick and Flap are not 'else' (she keeps flying, 644); the button is not (its own click would reopen it); no preventDefault, nothing is stolen from the stick or the pan */
 /* 631: the map square (letters across, numbers down, 72 m each over the whole 1440 m sea: the island sits about F-O / 6-15) and the
    play clock, on the level pill's second line; refreshed twice a second, and only when the words change */
 const NAV = { t: 9, last: '' }, NAV_CELL = 72, NAV_ORIGIN = -720;
@@ -1897,8 +1927,9 @@ function leaveSwim() {
   if (rescued) { S.surfCd = 4; toast('You come up gasping. The sky is right where you left it.', 3600); } else S.surfCd = 0.8;
 }
 const splashes = [];
+const SPLASH_GEO = new THREE.RingGeometry(0.4, 0.75, 20), SPLASH_MAT = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthWrite: false });   /* 651: one geometry and one material for every splash (a fresh material per splash compiled its shader on every entry and exit, and its dispose threw the program away) */
 function splash() {
-  const r = new THREE.Mesh(new THREE.RingGeometry(0.4, 0.75, 20), new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85, side: THREE.DoubleSide, depthWrite: false }));
+  const r = new THREE.Mesh(SPLASH_GEO, SPLASH_MAT.clone());
   r.rotation.x = -Math.PI / 2; r.position.set(S.pos.x, WATER + 0.06, S.pos.z); r.userData.t = 0; scene.add(r); splashes.push(r); chirp();
 }
 const BUB = 40, bubGeo = new THREE.BufferGeometry(), bubPos = new Float32Array(BUB * 3).fill(-999);
@@ -1914,9 +1945,16 @@ function underBubbles(dt, frac) {   // more of them as the breath runs low (618:
 function waterTick(dt) {
   S.surfCd = Math.max(0, (S.surfCd || 0) - dt);
   for (let i = splashes.length - 1; i >= 0; i--) { const r = splashes[i]; r.userData.t += dt; r.scale.setScalar(1 + r.userData.t * 5); r.material.opacity = Math.max(0, 0.85 - r.userData.t * 1.1);
-    if (r.userData.t > 0.8) { scene.remove(r); r.geometry.dispose(); r.material.dispose(); splashes.splice(i, 1); } }
+    if (r.userData.t > 0.8) { scene.remove(r); splashes.splice(i, 1); } }   /* 651: nothing is disposed: the geometry is shared, and r128 counts a program's users per material, so disposing the clone threw the shared program away (measured: +1 program per splash) and the next splash compiled it again; the clone is a few bytes for the collector */
 }
-const AIR = { fog: null, bg: null }, WATERFOG = new THREE.FogExp2(0x1f6f8f, 0.03), WATERBG = new THREE.Color(0x1f6f8f);
+/* 651 (Marth, Oct 14: "entering the water and exiting almost always lags and is buggy (it's been like this since oct 9)"): the water's fog
+   was a FogExp2 while the air's is a Fog (since v8, Oct 8). The fog TYPE is part of every shader's cache key in three.js, so the first dive
+   compiled every program in the scene again (tests/water651.js measured it on a copy). Same colour, a linear fog of the same reach
+   (55% at 30 m, 89% at 50 m: within 0.07 of the exp2 0.03 curve out to 45 m, opaque at 56; Obito checked it): no shader is rebuilt at the surface. */
+const AIR = { fog: null, bg: null }, WATERFOG = new THREE.Fog(0x1f6f8f, 4, 56), WATERBG = new THREE.Color(0x1f6f8f);
+/* 651: every frame's RAW length (the clamp in frame() hides a stall from the play clock), for the water bench; 900 frames kept */
+const FRAMES = { log: [], n: 0 };
+function frameLog(raw, real) { const L = FRAMES.log; L.push({ i: FRAMES.n++, ms: +raw.toFixed(2), real: +(real * 1000).toFixed(2), mode: S.mode, played: +(S.played || 0).toFixed(3), under: wasUnder, pg: renderer.info.programs.length }); if (L.length > 900) L.splice(0, L.length - 900); }
 let wasUnder = false;
 function underLook(under) {
   if (under === wasUnder) return; wasUnder = under;
@@ -2750,7 +2788,7 @@ function bgMusicTick(dt) {
    after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
    music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
    menu, a cutscene), the orchestra bows out. */
-const ORCH_SRC = 'orch-samples.js?v=0166e5f8e31e';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const ORCH_SRC = 'orch-samples.js?v=83cc1c2fc9c0';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
 const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
 window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
 const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
@@ -3638,12 +3676,13 @@ try { if (localStorage.getItem('wfr.debug') === '1') window.__wfr = { eagle: () 
   heldLeft: () => { let n = 0; if (bird) bird.traverse((o) => { if (o !== bird && o.userData && o.userData.slot !== undefined) n++; }); return n; },
   carrying: () => S.fruit ? S.fruit.type.id || S.fruit.type.emoji : null, caught: () => S.fishCaught || 0,
   xp: (n, why) => gainXP(n, why), missions: () => missionsHtml(),   /* 641 */
-  quick: () => ({ open: !!S.quick, slow: QUICK_SLOW, hidden: $('quick').hidden, vignette: $('slow').classList.contains('on'), body: $('quickBody').textContent, t: S.t, played: S.played || 0, mode: S.mode, grown: S.grown || 0, built: S.built, recipe: recipe() ? Object.assign({}, recipe()) : null, haveAll: haveAll(), toolIn: S.toolIn || 0, inv: Object.assign({}, S.inv), mats: Object.assign({}, S.mats), nestTier: S.nestTier, growth: GROWTH.map((g) => ({ name: g.name, need: Object.assign({}, g.need) })), grownAt: grownAt.slice(), marks: (S.marks || []).slice(), markMeshes: markGroup.children.length, shining: nodes.filter((nd) => nd.g.visible).map((nd) => nd.type.id) }),   /* 644 + 641 U1 */
+  quick: () => ({ open: !!S.quick, slow: QUICK_SLOW, hidden: $('quick').hidden, vignette: $('slow').classList.contains('on'), body: $('quickBody').textContent, t: S.t, played: S.played || 0, mode: S.mode, grown: S.grown || 0, built: S.built, recipe: recipe() ? Object.assign({}, recipe()) : null, haveAll: haveAll(), toolIn: S.toolIn || 0, inv: Object.assign({}, S.inv), mats: Object.assign({}, S.mats), nestTier: S.nestTier, growth: GROWTH.map((g) => ({ name: g.name, need: Object.assign({}, g.need) })), grownAt: grownAt.slice(), marks: (S.marks || []).slice(), markMeshes: markGroup.children.length, slots: [...document.querySelectorAll('#quickBody .slot')].map((s) => ({ k: s.dataset.k, n: +s.querySelector('b').textContent, dim: s.classList.contains('dim') })), /* 650 */ shining: nodes.filter((nd) => nd.g.visible).map((nd) => nd.type.id) }),   /* 644 + 641 U1 */
   openQuick: (on) => openQuick(on), grow: () => tryBuild(null), markNow: (i, act) => mark(act, npcs[i]), setInv: (o) => { Object.assign(S.inv, o); save(); hud(); }, setMats: (o) => { Object.assign(S.mats, o); save(); }, setTool: (n) => { S.toolIn = n; save(); hud(); },
   npcGive: (i, id) => { const n = npcs[i], t = TOOLS.find((x) => x.id === id); n.tool = { type: t, g: new THREE.Group() }; }, npcActT: (i, t) => { npcs[i].actT = t; }, talk: (lines) => say(lines, null),   /* 641 U1 guard: a tool act through the shipped gate; a talk while the pouch is open */
   lv: () => ({ level: S.level, xp: S.xp, need: need(S.level), queue: (S.lvQ || []).slice(), moment: !!(S.morph && S.morph.levelUp), card: $('lvCard').hidden ? null : $('lvCard').textContent, pop: $('xpPop').hidden ? null : $('xpPop').textContent, next: nextGift(), carry: carrySlots(), flutDur: (() => { const m = S.mode, cd = S.flutCd, sp = S.speed; S.mode = 'fly'; S.flutCd = 0; doFlutter(); const d = S.flutT; S.mode = m; S.flutCd = cd; S.speed = sp; S.flutT = 0; return d; })(), birdScale: bird ? +bird.scale.y.toFixed(3) : null, size: BIRDS[kind].size, morph: !!S.morph }),
   nav: () => ({ played: S.played || 0, cell: mapCell(S.pos.x, S.pos.z), text: $('navHud').textContent, shown: !$('ui').hidden && !$('navHud').hidden, rect: (() => { const r = $('navHud').getBoundingClientRect(); return [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)]; })(), font: parseFloat(getComputedStyle($('navHud')).fontSize) }),   /* 631 */
-  water: () => ({ mode: S.mode, y: S.pos.y, breath: S.breath, max: S.breathMax, rescue: !!S.rescue, surfCd: S.surfCd, under: wasUnder, bar: !$('breath').hidden, ground: groundAt(S.pos.x, S.pos.z) }) }; } catch (e) { /* no storage: no door */ }
+  frames: () => FRAMES.log.slice(), gl: () => ({ programs: renderer.info.programs.length, keys: renderer.info.programs.map((q) => q.id + ':' + q.name + '|' + q.cacheKey), calls: renderer.info.render.calls, tris: renderer.info.render.triangles, fog: scene.fog === FOG_AIR ? 'air' : scene.fog === WATERFOG ? 'water' : 'other', exp2: !!(scene.fog && scene.fog.isFogExp2) }),   /* 651 */
+  water: () => ({ /* 651: frames and gl beside it */ splashes: splashes.length, mode: S.mode, y: S.pos.y, breath: S.breath, max: S.breathMax, rescue: !!S.rescue, surfCd: S.surfCd, under: wasUnder, bar: !$('breath').hidden, ground: groundAt(S.pos.x, S.pos.z) }) }; } catch (e) { /* no storage: no door */ }
 
 /* ---------- discoveries: places worth landing on ---------- */
 const PLACES = [
@@ -3917,6 +3956,7 @@ function walkStep(sx, sy, dt) {
 const ATMO = (() => { try { return window.WFR_ATMO ? WFR_ATMO.create(THREE, scene, { renderer, camera, canvas, H, WATER, LAKE, VILLAGE, MOUND, NEST, trees, sun, HEMI, S, night: () => nightAmt(S.clock), clock: () => S.clock, under: () => wasUnder, bird: () => S.pos }) : null; } catch (e) { return null; } })();   // 613: the air - light by the clock, one wind, butterflies, dragonflies, fireflies (atmo.js)
 function frame(now) {
   const real = Math.max(0, Math.min(0.05, (now - last) / 1000)), dt = S.quick ? real * QUICK_SLOW : real;   // 644: the pouch slows the whole island
+  frameLog(now - last, real);   /* 651: the raw frame, for the water bench */
   S.real = real; last = now; musicDuckTick(); S.t += dt; if (window.WFR_TREES) WFR_TREES.update(S.t);
   if (S.mode !== 'fly' && S.hold) { S.hold = false; S.holdT = 0; }   // a hold belongs to flight
   S.warnCd = Math.max(0, S.warnCd - dt); S.singCd = Math.max(0, S.singCd - dt); S.turnBack = Math.max(0, S.turnBack - dt); S.bonkCd = Math.max(0, S.bonkCd - dt);
@@ -4255,7 +4295,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build 0166e5f8e31e): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build 83cc1c2fc9c0): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>
