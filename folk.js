@@ -58,7 +58,7 @@ window.WFR_FOLK = (function () {
 
   const CYCLE = 2700, HOME_AT = 2040;                     // the game's day; villagers go in at > 2040
   const CAST = 1.0, RELEASE = 0.5, BITE = 1.2, REEL = 1.5, SHOW = 2.0, TIN = 5.0, GIVE = 2.0;
-  const WALK = 1.6;                                        // m per clock unit: the villagers' pace
+  const WALK = 1.6;                                        // m per real second (652; it was per clock unit): the villagers' pace
   const JUMP = 30;                                         // a clock step bigger than this is a jump, not time passing
   const DIP = 0.12, BOB = 0.025, REST = 0.04;              // bobber: dip depth, swell, rest height over WATER
   const CATCH_MIN = 70, CATCH_SPAN = 40;                   // a catch every 70–110 (design)
@@ -315,7 +315,7 @@ window.WFR_FOLK = (function () {
         if (h.act === 'home' || h.act === 'walk') { atSpot(); to('tin'); h.actT = TIN * 0.6; }
         h.leaving = false;
       }
-    } else step = dc > 1e-6 ? dc : dt;                      // a frozen clock (the tutorial's 1799): life goes on in real time
+    } else step = dc > 1e-6 ? dc / (C.pace || 1) : dt;     /* 652: the clock runs DAY_SPEED x (648); his legs and hands live in real seconds (a frozen clock: dt) */
     h.lt += dt;
     h.giveT = Math.max(0, h.giveT - step); h.tugCd = Math.max(0, h.tugCd - step);
     if (h.tugT > 0) h.tugT = Math.max(0, h.tugT - step);
@@ -832,10 +832,10 @@ window.WFR_FOLK = (function () {
     if (dc > JUMP) {                                          // slept, or the bench set the clock: where the new hour has them
       if (night) toInside(); else if (kid.ph.k === 'inside' || kid.ph.k === 'home' || kid.ph.k === 'out') snapField();
     } else {
-      step = dc > 1e-6 ? dc : dt;                              // a frozen clock (the tutorial's 1799): play goes on in real time
+      step = dc > 1e-6 ? dc / (K.pace || 1) : dt;             /* 652: the clock runs DAY_SPEED x (648); their legs live in real seconds (a frozen clock: dt) */
       /* the hour turns INSIDE this step: the old phase runs to the boundary, the new one from it (so any frame rate lands alike) */
-      if (night && kid.ph.k !== 'home' && kid.ph.k !== 'inside') { go = startHome; if (dc > 1e-6 && !wrapped && prev <= HOME_AT) pre = Math.min(step, HOME_AT - prev); }
-      else if (!night && kid.ph.k === 'inside') { go = startOut; if (dc > 1e-6 && !wrapped && prev < OUT_AT) pre = Math.min(step, OUT_AT - prev); }
+      if (night && kid.ph.k !== 'home' && kid.ph.k !== 'inside') { go = startHome; if (dc > 1e-6 && !wrapped && prev <= HOME_AT) pre = Math.min(step, (HOME_AT - prev) / (K.pace || 1)); }   /* 652: the boundary in seconds too (Obito) */
+      else if (!night && kid.ph.k === 'inside') { go = startOut; if (dc > 1e-6 && !wrapped && prev < OUT_AT) pre = Math.min(step, (OUT_AT - prev) / (K.pace || 1)); }
     }
     kid.lt += dt;
     for (const k of kid.list) k.laughT = Math.max(0, k.laughT - step);
@@ -883,7 +883,7 @@ window.WFR_FOLK = (function () {
     if (!kid) return null;
     const ph = kid.ph, V = K.VILLAGE, L = kid.list, nm = (i) => (i == null ? null : L[i].name);
     return {
-      phase: ph.k, t: +kid.pt.toFixed(4), end: ph.end === Infinity ? null : +ph.end.toFixed(4),
+      pace: K.pace || 1,   /* 652 */ phase: ph.k, t: +kid.pt.toFixed(4), end: ph.end === Infinity ? null : +ph.end.toFixed(4),
       it: ph.k === 'tag' ? nm(ph.chaser) : null, runner: ph.k === 'tag' ? nm(ph.runner) : null, digger: ph.digger != null ? nm(ph.digger) : null,
       tags: kid.tags, rounds: kid.rounds, digs: kid.digs, found: kid.found, dugLive: kid.dugLive, day: kid.day,
       holes: kid.holes.map((h) => [+h.x.toFixed(4), +K.H(h.x, h.z).toFixed(4), +h.z.toFixed(4)]),

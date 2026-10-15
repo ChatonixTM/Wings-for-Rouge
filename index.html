@@ -205,7 +205,7 @@ html.cine #boot{display:grid}
 #callCap.cry b{font-family:var(--display);font-weight:800;font-size:clamp(40px,12vw,76px);line-height:1;color:#c8314a;-webkit-text-stroke:2px #111;text-shadow:0 6px 18px rgba(0,0,0,.35);animation:cryIn .35s cubic-bezier(.2,1.4,.4,1) both}@keyframes cryIn{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:scale(1)}}
 #callCap.black p{font-family:var(--body);font-weight:700;font-size:18px;line-height:1.55;color:#fff8ec;max-width:30ch;margin:0;min-height:3.2em}
 #muteTop{position:fixed;top:calc(env(safe-area-inset-top,0px) + 12px);right:calc(env(safe-area-inset-right,0px) + 12px);z-index:20}   /* the song plays where the HUD is covered (board 543) */
-.toast{position:fixed;left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 84px);
+.toast{position:fixed;z-index:8;/* 656: above the chick's card (no z) and the lanes (7); under the fades */left:50%;transform:translateX(-50%);top:calc(env(safe-area-inset-top,0px) + 84px);
   background:var(--ink);color:var(--paper);font-family:var(--display);font-weight:500;font-size:15px;border-radius:14px;
   padding:9px 16px;max-width:calc(100% - 32px);text-align:center;transition:opacity .4s;pointer-events:none}
 .hint{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 286px);
@@ -452,31 +452,31 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 <div id="fade" aria-hidden="true"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="gltf-loader.js?v=64a4db7f6f6c"></script>
-<script src="skeleton-utils.js?v=64a4db7f6f6c"></script>
-<script src="meshopt-decoder.js?v=64a4db7f6f6c"></script>
-<script src="models.js?v=64a4db7f6f6c"></script>
-<script src="people.js?v=64a4db7f6f6c"></script>
-<script src="villagers.js?v=64a4db7f6f6c"></script>
-<script src="tex-photos.js?v=64a4db7f6f6c"></script>
-<script src="textures.js?v=64a4db7f6f6c"></script>
-<script src="birds.js?v=64a4db7f6f6c"></script>
-<script src="humans.js?v=64a4db7f6f6c"></script>
-<script src="folk.js?v=64a4db7f6f6c"></script>
-<script src="trees.js?v=64a4db7f6f6c"></script>
-<script src="treehouses.js?v=64a4db7f6f6c"></script>
-<script src="cabins.js?v=64a4db7f6f6c"></script>
-<script src="cave.js?v=64a4db7f6f6c"></script>
-<script src="sounds.js?v=64a4db7f6f6c"></script>
-<script src="music.js?v=64a4db7f6f6c"></script>
-<script src="music-orchestra.js?v=64a4db7f6f6c"></script>
-<script src="rhythm.js?v=64a4db7f6f6c"></script>
-<script src="pictograms.js?v=64a4db7f6f6c"></script>
-<script src="chick-wear.js?v=64a4db7f6f6c"></script>
-<script src="hedgehogs.js?v=64a4db7f6f6c"></script>
-<script src="opening.js?v=64a4db7f6f6c"></script>
-<script src="skypiea.js?v=64a4db7f6f6c"></script>
-<script src="atmo.js?v=64a4db7f6f6c"></script>
+<script src="gltf-loader.js?v=0166e5f8e31e"></script>
+<script src="skeleton-utils.js?v=0166e5f8e31e"></script>
+<script src="meshopt-decoder.js?v=0166e5f8e31e"></script>
+<script src="models.js?v=0166e5f8e31e"></script>
+<script src="people.js?v=0166e5f8e31e"></script>
+<script src="villagers.js?v=0166e5f8e31e"></script>
+<script src="tex-photos.js?v=0166e5f8e31e"></script>
+<script src="textures.js?v=0166e5f8e31e"></script>
+<script src="birds.js?v=0166e5f8e31e"></script>
+<script src="humans.js?v=0166e5f8e31e"></script>
+<script src="folk.js?v=0166e5f8e31e"></script>
+<script src="trees.js?v=0166e5f8e31e"></script>
+<script src="treehouses.js?v=0166e5f8e31e"></script>
+<script src="cabins.js?v=0166e5f8e31e"></script>
+<script src="cave.js?v=0166e5f8e31e"></script>
+<script src="sounds.js?v=0166e5f8e31e"></script>
+<script src="music.js?v=0166e5f8e31e"></script>
+<script src="music-orchestra.js?v=0166e5f8e31e"></script>
+<script src="rhythm.js?v=0166e5f8e31e"></script>
+<script src="pictograms.js?v=0166e5f8e31e"></script>
+<script src="chick-wear.js?v=0166e5f8e31e"></script>
+<script src="hedgehogs.js?v=0166e5f8e31e"></script>
+<script src="opening.js?v=0166e5f8e31e"></script>
+<script src="skypiea.js?v=0166e5f8e31e"></script>
+<script src="atmo.js?v=0166e5f8e31e"></script>
 <script>
 (() => {
 'use strict';
@@ -2329,6 +2329,7 @@ const RH = { on: false, out: 0 };
 /* 623: the row (Easy / Hard / Expert) is picked beside the Sing buttons and remembered on this device; the notes fall for the row's time */
 let rhRow = 'easy'; try { const r0 = localStorage.getItem('wfr.row'); if (r0 && window.WFR_RHYTHM && WFR_RHYTHM.ROWS[r0]) rhRow = r0; } catch (e) { /* private mode */ }
 const FALL_OF = () => (window.WFR_RHYTHM ? WFR_RHYTHM.rowOf(rhRow).fall : 2.0);
+function rhGlue(n) { const nx = RH.st && RH.st.notes.find((o) => o.b > n.b); return (RH.mel || []).filter((e) => e.b > n.b && (!nx || e.b < nx.b)); }   /* 657: the melody notes that hang off a charted note (Easy's half-beat pickups): her tap plays them too */
 const RANK_SAY = {"WFR":"WFR RANK! Every note perfect. The whole island heard that.","SS":"SS rank! Flawless.","S":"S rank! What a song!","A":"A rank. A lovely song.","B":"B rank. It heard every note you sang.","C":"C rank. It still loved it; try again."};
 function rhRowSet(r) { rhRow = r; try { localStorage.setItem('wfr.row', r); } catch (e) { /* fine */ } [...document.querySelectorAll('.rowPick b')].forEach((b) => b.classList.toggle('on', b.dataset.row === r)); }
 function rhT() {   // the round's clock: the song's own (audio) when it runs, else the page's (a bench may set it by hand)
@@ -2343,9 +2344,9 @@ function rhythmStart(forChick) {
   if ((!kid && (S.mode !== 'nest' || !egg)) || RH.on || !window.WFR_RHYTHM) return;
   RH.chick = kid;
   audio(); const mel = window.WFR_MUSIC && WFR_MUSIC.melody ? WFR_MUSIC.melody(9, 24) : [];
-  const notes = WFR_RHYTHM.chart(mel, { startBar: 7, row: rhRow }); if (!notes.length) return;   // 623: the row's notes
+  const notes = WFR_RHYTHM.chart(mel, { startBar: 7, row: rhRow }); if (!notes.length) return; RH.mel = mel;   // 623: the row's notes; 657: the whole melody, for the glue
   RH.st = WFR_RHYTHM.round(notes, rhRow); RH.on = true; RH.pose = null; RH.lastT = null; RH.lastPerf = 0; RH.perf0 = performance.now(); RH.endAt = notes[notes.length - 1].t + 1.4;
-  RH.clock = window.WFR_MUSIC && ac && WFR_MUSIC.play({ variant: 'home', restart: true, startBar: 7, fadeIn: 0.25, muteMel: notes.map((n) => n.b) }) ? 'audio' : 'perf';
+  RH.clock = window.WFR_MUSIC && ac && WFR_MUSIC.play({ variant: 'home', restart: true, startBar: 7, fadeIn: 0.25, muteMel: 'all' }) ? 'audio' : 'perf';   /* 657: only tapped notes sound, tail and fade included */
   RH.els = notes.map((n) => { const e = document.createElement('i'); e.className = 'note'; $('rhythm').children[n.lane].appendChild(e); return e; });
   $('warm').hidden = true; $('singEgg').hidden = true; $('rhythm').hidden = false; document.body.classList.add('rhythmOn'); rhythmHud();
 }
@@ -2354,7 +2355,7 @@ function rhythmTap(lane) {
   if (!RH.on) return null; const r = WFR_RHYTHM.tap(RH.st, lane, rhT()); const L = $('rhythm').children[lane];
   L.querySelector('.ring').classList.add('on'); setTimeout(() => L.querySelector('.ring').classList.remove('on'), 110);
   if (!r) return null;
-  RH.els[r.note.i].classList.add('hit'); if (RH.clock === 'audio') WFR_MUSIC.note(r.note.m, r.note.d); else tone(440 * Math.pow(2, (r.note.m - 69) / 12), 0, 0.25, 'triangle', 0.06);
+  RH.els[r.note.i].classList.add('hit'); if (window.WFR_MUSIC && WFR_MUSIC.playing) { WFR_MUSIC.note(r.note.m, r.note.d); rhGlue(r.note).forEach((e) => WFR_MUSIC.note(e.m, e.d, e.b - r.note.b)); } else tone(440 * Math.pow(2, (r.note.m - 69) / 12), 0, 0.25, 'triangle', 0.06);
   if (RH.chick) { S.chickHop = Math.max(S.chickHop || 0, 0.55); chickFeel(0, 0.6); } else egg.userData.wob = 0.6;   // 598: the chick hops, a heart in its bubble (after a reload there is no egg at all)
   RH.pose = { lane: lane, at: S.t };
   const g = L.querySelector('.grade'); g.textContent = r.grade === 'perfect' ? 'Perfect!' : 'Good'; g.classList.add('on'); setTimeout(() => g.classList.remove('on'), 60);
@@ -2362,7 +2363,7 @@ function rhythmTap(lane) {
 }
 function rhythmEnd(stopped) {
   if (!RH.on) return; RH.on = false; $('rhythm').hidden = true; document.body.classList.remove('rhythmOn'); (RH.els || []).forEach((e) => e.remove()); RH.els = [];
-  if (window.WFR_MUSIC) { if (WFR_MUSIC.clearMute) WFR_MUSIC.clearMute(); WFR_MUSIC.stop({ fade: 2.5 }); }
+  if (window.WFR_MUSIC) WFR_MUSIC.stop({ fade: 2.5 });   /* 657: the melody stays hers through the fade (clearMute would hand the tail back to the song) */
   if (RH.chick) { chickSongEnd(stopped); return; }   // 598: sung to the hatched chick - never the egg's warmth, never a hatch
   if (stopped) { if (S.mode === 'nest' && egg) { $('warm').hidden = false; $('singEgg').hidden = false; } return; }
   const st = WFR_RHYTHM.stars(RH.st); RH.stars = st; RH.out = 1.2;   // three wide beats, then back to the rim
@@ -2749,7 +2750,7 @@ function bgMusicTick(dt) {
    after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
    music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
    menu, a cutscene), the orchestra bows out. */
-const ORCH_SRC = 'orch-samples.js?v=64a4db7f6f6c';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const ORCH_SRC = 'orch-samples.js?v=0166e5f8e31e';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
 const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
 window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
 const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
@@ -3009,7 +3010,7 @@ else if (window.WFR_PEOPLE && window.WFR_MODELS && WFR_MODELS.fish) setTimeout((
 } catch (e) { fishModel.err = String((e && e.message) || e); } }, 0);
 /* ---------- FOLK (board 552): Hal fishes the lake's south-west shore (folk.js) ---------- */
 const FOLK = window.WFR_FOLK ? WFR_FOLK.create(THREE, scene, { H, WATER, LAKE, humans: window.WFR_HUMANS, renderer, landNear, ground: groundAt, emojiSprite, home: (() => { const c = CABINS.find((x) => x.who === 'Hal'); return c ? doorFront(c, 0.6) : undefined; })(),
-  getClock: () => S.clock, birdPos: () => S.pos,
+  getClock: () => S.clock, birdPos: () => S.pos, pace: DAY_SPEED,   /* 652 */
   onCatch: () => { const sc = schools.find((s) => s.type === FISH.perch), f = sc && sc.fish.find((x) => x.back === 0); if (f) { f.back = 60; f.g.visible = false; } } }) : null;   // his catch thins the shoal, as hers does
 /* 550: WORMS - three on the green at dawn (fixed bare spots, never the island's dice), one by Hal's bait tin while he is out */
 (function plantWorms() {
@@ -3020,7 +3021,7 @@ const FOLK = window.WFR_FOLK ? WFR_FOLK.create(THREE, scene, { H, WATER, LAKE, h
    A dug worm is a treat like any other (fruitTrees); two at most lie on the green, and a picked one never grows back. */
 const DUG = [0, 1].map(() => { const s = emojiSprite(WORM.emoji, 0.8); s.visible = false; scene.add(s); const f = { t: null, type: WORM, s, back: 0, src: 'dig', live: false }; f.when = () => f.live; fruitTrees.push(f); return f; });
 const KIDS = window.WFR_FOLK && WFR_FOLK.createKids ? WFR_FOLK.createKids(THREE, scene, { H, VILLAGE, humans: window.WFR_HUMANS, renderer, emojiSprite,
-  getClock: () => S.clock, birdPos: () => S.pos, door: doorFront(houses[0], 0.2), doorOut: doorFront(houses[0], 1.4), openDoor: (t) => { houses[0].openT = Math.max(houses[0].openT, t); },
+  getClock: () => S.clock, birdPos: () => S.pos, pace: DAY_SPEED,   /* 652 */ door: doorFront(houses[0], 0.2), doorOut: doorFront(houses[0], 1.4), openDoor: (t) => { houses[0].openT = Math.max(houses[0].openT, t); },
   onDig: (at) => { const f = DUG.find((x) => !x.live); if (!f) return false; f.live = true; f.back = 0; f.s.position.set(at[0], at[1] + 0.45, at[2]); return true; },
   dugLive: () => { let n = 0; for (const f of DUG) { if (f.live && f.back > 0) f.live = false; if (f.live) n++; } return n; } }) : null;   // picked (back > 0): gone for good
 /* 618: the children wear the model people too (Pim a small man1, Tess a small woman2, heads a quarter bigger), unless Classic */
@@ -3593,7 +3594,7 @@ try { if (localStorage.getItem('wfr.debug') === '1') window.__wfr = { eagle: () 
   npcActs: () => npcs.map((n) => n.state === 'inside' ? 'inside' : n.act),
   npcs: () => npcs.map((n) => ({ name: n.name, state: n.state, before: n.before || null, act: n.act, phase: n.phase, x: n.g.position.x, z: n.g.position.z, yaw: n.yaw, target: n.target ? [n.target.x, n.target.z] : null, actT: n.actT, bodyY: n.body.position.y, legL: n.legL.rotation.x, waistX: n.waist ? n.waist.rotation.x : null, visible: n.g.visible, seated: !!n.seated, tool: n.tool ? n.tool.type.id : null, armRx: n.armR.rotation.x, stateT: n.stateT || 0 })),
   groundAt: (x, z) => groundAt(x, z), climb: () => ({ active: !!S.climb, k: S.climb ? S.climb.k : null, n: S.climb ? S.climb.n : null, hopping: !!S.mantle, y: S.pos.y, mode: S.mode, offered: thOffered() }), ladder: (j) => { const t = TREEHOUSES[j]; return t && t.climb ? { foot: t.climb.footW.toArray(), top: t.climb.topW.toArray(), n: t.climb.rungsW.length, deck: t.y + t.th.platformTop, kind: t.climb.kind } : null; }, morph: () => ({ active: !!S.morph, t: S.morph ? S.morph.t : null, players: scene.children.filter((o) => o.userData && o.userData.player).length, scale: bird ? bird.scale.x : null, kind: bird ? bird.userData.kind : null, size: BIRDS[kind].size, pos: S.pos.toArray(), mode: S.mode }), worms: () => fruitTrees.filter((f) => f.type.id === 'worm').map((f) => ({ src: f.src, at: f.s.position.toArray(), visible: f.s.visible })),
-  toEgg: () => { S.got = 5; arriveAtNest(); }, rhythmStart: (row) => { if (row) rhRowSet(row); rhythmStart(); }, rhythmRow: (r) => { if (r) rhRowSet(r); return rhRow; }, rhythmRank: () => RH.rank || null, rhythmClock: (t) => { RH.clockWas = RH.clockWas || RH.clock; RH.clock = 'manual'; RH.manualT = t; },
+  toEgg: () => { S.got = 5; arriveAtNest(); }, rhythmStart: (row) => { if (row) rhRowSet(row); rhythmStart(); }, rhythmRow: (r) => { if (r) rhRowSet(r); return rhRow; }, rhythmRank: () => RH.rank || null, rhGlue: (b) => rhGlue({ b }).map((e) => e.b), rhT: () => rhT(), toast: (t, ms) => toast(t, ms), /* 657 + 656 */ rhythmClock: (t) => { RH.clockWas = RH.clockWas || RH.clock; RH.clock = 'manual'; RH.manualT = t; },
   rhythm: () => (RH.st ? { on: RH.on, clock: RH.clockWas || RH.clock, t: RH.on ? rhT() : null, notes: RH.st.notes.map((n) => [n.t, n.lane, n.b]), score: RH.st.score, hits: RH.st.hits, misses: RH.st.misses, stars: RH.stars || null, mode: S.mode } : { on: false, mode: S.mode }),
   wings: () => { const v = new THREE.Vector3(), w = (o) => { o.updateWorldMatrix(true, false); v.set(0, 0, 0).applyMatrix4(o.matrixWorld); const q = v.clone().project(camera); return q.x; }; bird.updateWorldMatrix(true, true); return { bird: w(bird), l: w(wingL), r: w(wingR), lz: wingL.rotation.z, rz: wingR.rotation.z }; },   // where each wing's root is on the screen
   nestHome: () => ({ on: onNest(), resting: !!S.resting, btn: $('thBtn').hidden ? null : $('thBtn').textContent, clock: S.clock }),
@@ -4254,7 +4255,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build 64a4db7f6f6c): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build 0166e5f8e31e): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>

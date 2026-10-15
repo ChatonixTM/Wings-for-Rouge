@@ -35,7 +35,7 @@
   var LOOKAHEAD = 0.12, TICK = 25, MAX_VOICES = 30, HARD_CAP = 40;
 
   var ctx = null, bus = null, busHp = null, busLp = null, muteG = null, noise = null, isMuted = null, cosWave = null;
-  var volume = 1, timer = null, sess = null, active = [], stats = { scheduled: 0, dropped: 0, maxActive: 0 };
+  var volume = 1, timer = null, sess = null, active = [], stats = { scheduled: 0, dropped: 0, maxActive: 0, mel: 0, tapped: 0 };   /* 657: mel = melody events the song itself played; tapped = notes her taps played */
   var only = null;            /* offline bench: render only these kinds */
 
   function db(x) { return Math.pow(10, x / 20); }
@@ -155,7 +155,7 @@
 
   function harpLike(e, t, out, spb, melody) {
     var f = hz(e.m), att = 0.004, dec, peak;
-    if (melody) { dec = Math.max(0.9, 0.85 * e.d * spb); peak = REF * db(4) * e.v; }
+    if (melody) { dec = Math.max(0.9, 0.85 * e.d * spb); peak = REF * db(4) * e.v; stats.lastMelAt = t; }   /* 657: the guard reads when a melody note was scheduled */
     else { dec = 0.55; peak = REF * e.v; }
     var end = t + att + dec + 0.04, v = voice(t, end, melody ? 'mel' : 'harp'); if (!v) return;
     var o = keep(v, ctx.createOscillator()); o.type = 'triangle'; o.frequency.value = f;
@@ -248,7 +248,7 @@
       var out = s.strips[e.k];
       switch (e.k) {
         case 'harp': harpLike(e, t, out, s.spb, false); break;
-        case 'mel': if (s.muteMel && s.muteMel[e.b]) break; harpLike(e, t, out, s.spb, true); break;   /* 562: her taps play these */
+        case 'mel': if (s.muteMel && (s.muteMel === 'all' || s.muteMel[e.b])) break; stats.mel++; harpLike(e, t, out, s.spb, true); break;   /* 562: her taps play these; 657: 'all' = the whole melody is hers, tail and fade included */
         case 'bass': bass(e, t, out); break;
         case 'pad': pad(e, t, out, s.spb); break;
         case 'bell': bell(e, t, out); break;
@@ -275,16 +275,16 @@
     if (isMuted) setMuted(!!isMuted());
     if (!o.restart && sess && sess.variant === variant && !sess.stopping) return true;   /* restart: from startBar, even if already playing (562) */
     if (!o.restart && sess && sess.variant === variant && sess.stopping) {   /* came back while fading out: fade back up, keep the place */
-      ramp(sess.gain.gain, 1, Math.max(0.05, fadeIn)); sess.stopping = false; startTimer(); return true;
+      ramp(sess.gain.gain, 1, Math.max(0.05, fadeIn)); sess.stopping = false; sess.muteMel = null; startTimer(); return true;   /* 657: the round's mute never outlives the round */
     }
     if (sess) { retire(sess, 0.6); stopTimer(); }
     sess = newSession(variant, ctx.currentTime + 0.06, o.startBar, fadeIn);
-    if (o.muteMel) { sess.muteMel = {}; o.muteMel.forEach(function (b) { sess.muteMel[b] = true; }); }   /* 562: the charted notes are hers to play */
+    if (o.muteMel === 'all') sess.muteMel = 'all'; else if (o.muteMel) { sess.muteMel = {}; o.muteMel.forEach(function (b) { sess.muteMel[b] = true; }); }   /* 562: the charted notes are hers to play; 657: or every melody note */
     startTimer();
     return true;
   }
   /* 562: one melody note NOW, through the session's melody strip (so Mute still reaches it) */
-  function note(m, beats) { if (!sess || !ctx) return false; harpLike({ b: 0, k: 'mel', m: m, d: beats || 1, v: 1 }, ctx.currentTime + 0.005, sess.strips.mel, sess.spb, true); return true; }
+  function note(m, beats, afterBeats) { if (!sess || !ctx) return false; stats.tapped++; stats.tapNow = ctx.currentTime; harpLike({ b: 0, k: 'mel', m: m, d: beats || 1, v: 1 }, ctx.currentTime + 0.005 + (afterBeats || 0) * sess.spb, sess.strips.mel, sess.spb, true); return true; }   /* 657: afterBeats = a pickup glued to her tap, at its own offset */
   function clearMute() { if (sess) sess.muteMel = null; }
   /* 562: the melody's events, bars from..to inclusive, in beats from bar 1 (the game must not reach into _test) */
   function melody(from, to) { return build('home').filter(function (e) { return e.k === 'mel' && e.b >= (from - 1) * BEATS && e.b < to * BEATS; }).map(function (e) { return { b: e.b, m: e.m, d: e.d }; }); }
@@ -355,8 +355,8 @@
     get playing() { return !!(sess && !sess.stopping); },
     get variant() { return sess ? sess.variant : null; },
     position: function () { if (!sess || !ctx) return null; var p = (ctx.currentTime - sess.loopStart) % sess.loopLen; return p < 0 ? p + sess.loopLen : p; },
-    LOOP_SECONDS: BARS * BEATS * 60 / 132,
+    LOOP_SECONDS: BARS * BEATS * 60 / TEMPO.home,   /* 657: derived, never a second copy of the tempo */
     muteLevel: function () { return muteG ? muteG.gain.value : null; },   /* the bench: does the game's mute button reach this bus */
-    _test: { render: render, score: function (v) { return build(v || 'home'); }, stats: function () { return stats; } }
+    _test: { render: render, score: function (v) { return build(v || 'home'); }, stats: function () { return stats; }, session: function () { return sess ? { variant: sess.variant, muteMel: sess.muteMel, spb: sess.spb, tempo: TEMPO[sess.variant], stopping: !!sess.stopping } : null; } }   /* 657: the guard reads the session */
   };
 })();
