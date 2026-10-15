@@ -305,7 +305,7 @@ window.WFR_FOLK = (function () {
     const clock = getClock ? getClock() : 600;
     let dc = clock - h.lastClock; const wrapped = clock < h.lastClock; if (wrapped) { dc += CYCLE; h.day++; }
     h.lastClock = clock;
-    const night = clock > HOME_AT;
+    const night = clock > HOME_AT || !!(C.rest && C.rest(clock));   // 632 U2: a rainy day keeps him in, but for its middle
     let step;
     if (dc > JUMP) {                                       // slept, or the bench set the clock: be where the new hour has him
       step = 0;
@@ -826,7 +826,7 @@ window.WFR_FOLK = (function () {
     const prev = kid.lastClock;
     let dc = clock - prev; const wrapped = clock < prev; if (wrapped) { dc += CYCLE; kid.day++; }
     kid.lastClock = clock;
-    const night = clock > HOME_AT || clock < OUT_AT;
+    const night = clock > HOME_AT || clock < OUT_AT || !!(K.rest && K.rest(clock));   // 632 U2
     kid.dugLive = typeof K.dugLive === 'function' ? K.dugLive() | 0 : 0;
     let step = 0, pre = 0, go = null;
     if (dc > JUMP) {                                          // slept, or the bench set the clock: where the new hour has them

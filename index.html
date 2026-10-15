@@ -468,31 +468,32 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 <div id="fade" aria-hidden="true"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="gltf-loader.js?v=4233bd99f905"></script>
-<script src="skeleton-utils.js?v=4233bd99f905"></script>
-<script src="meshopt-decoder.js?v=4233bd99f905"></script>
-<script src="models.js?v=4233bd99f905"></script>
-<script src="people.js?v=4233bd99f905"></script>
-<script src="villagers.js?v=4233bd99f905"></script>
-<script src="tex-photos.js?v=4233bd99f905"></script>
-<script src="textures.js?v=4233bd99f905"></script>
-<script src="birds.js?v=4233bd99f905"></script>
-<script src="humans.js?v=4233bd99f905"></script>
-<script src="folk.js?v=4233bd99f905"></script>
-<script src="trees.js?v=4233bd99f905"></script>
-<script src="treehouses.js?v=4233bd99f905"></script>
-<script src="cabins.js?v=4233bd99f905"></script>
-<script src="cave.js?v=4233bd99f905"></script>
-<script src="sounds.js?v=4233bd99f905"></script>
-<script src="music.js?v=4233bd99f905"></script>
-<script src="music-orchestra.js?v=4233bd99f905"></script>
-<script src="rhythm.js?v=4233bd99f905"></script>
-<script src="pictograms.js?v=4233bd99f905"></script>
-<script src="chick-wear.js?v=4233bd99f905"></script>
-<script src="hedgehogs.js?v=4233bd99f905"></script>
-<script src="opening.js?v=4233bd99f905"></script>
-<script src="skypiea.js?v=4233bd99f905"></script>
-<script src="atmo.js?v=4233bd99f905"></script>
+<script src="gltf-loader.js?v=6b85f336b67f"></script>
+<script src="skeleton-utils.js?v=6b85f336b67f"></script>
+<script src="meshopt-decoder.js?v=6b85f336b67f"></script>
+<script src="models.js?v=6b85f336b67f"></script>
+<script src="people.js?v=6b85f336b67f"></script>
+<script src="villagers.js?v=6b85f336b67f"></script>
+<script src="tex-photos.js?v=6b85f336b67f"></script>
+<script src="textures.js?v=6b85f336b67f"></script>
+<script src="birds.js?v=6b85f336b67f"></script>
+<script src="humans.js?v=6b85f336b67f"></script>
+<script src="folk.js?v=6b85f336b67f"></script>
+<script src="trees.js?v=6b85f336b67f"></script>
+<script src="treehouses.js?v=6b85f336b67f"></script>
+<script src="cabins.js?v=6b85f336b67f"></script>
+<script src="cave.js?v=6b85f336b67f"></script>
+<script src="sounds.js?v=6b85f336b67f"></script>
+<script src="music.js?v=6b85f336b67f"></script>
+<script src="music-orchestra.js?v=6b85f336b67f"></script>
+<script src="rhythm.js?v=6b85f336b67f"></script>
+<script src="pictograms.js?v=6b85f336b67f"></script>
+<script src="chick-wear.js?v=6b85f336b67f"></script>
+<script src="hedgehogs.js?v=6b85f336b67f"></script>
+<script src="opening.js?v=6b85f336b67f"></script>
+<script src="skypiea.js?v=6b85f336b67f"></script>
+<script src="atmo.js?v=6b85f336b67f"></script>
+<script src="weather.js?v=6b85f336b67f"></script>
 <script>
 (() => {
 'use strict';
@@ -594,6 +595,17 @@ function skyMix(c) {   // -> [keyA, keyB, f]
 const nightAmt = (c) => c < 2040 ? 0 : c < 2160 ? smooth01(2040, 2160, c) : c < 2640 ? 1 : 1 - smooth01(2640, 2700, c);
 const phaseOf = (c) => c < 150 ? 'dawn' : c < 1800 ? 'day' : c < 2100 ? 'dusk' : 'night';
 const SKY = { sunI: 1.0, lastPaint: -9, ca: new THREE.Color(), cb: new THREE.Color() };
+/* 632 U1 (Marth, Oct 15): the weather. k = how rainy the sky is now (0..1), eased toward the day's kind at ~1/8 a real second.
+   The day's kind is a pure function of the SAVED S.dawns (never S.dayCount, which is not saved): no save key, the same every reload. */
+const WX = { k: 0, pk: -1, force: null, tilt: 0.34, heaven: null, grey: new THREE.Color(), flash: 0, sunV: new THREE.Vector3(), moonV: new THREE.Vector3(), sd: new THREE.Vector3(), sl: new THREE.Vector3(), sunEl: 0, moonEl: 0, wasMenu: false };
+const wxDay = () => (S.dawns || 0) + (S.clock < 150 ? 1 : 0);   // the day she is in, or waking into (a sleep sets the clock to 0: the coming day)
+const wxOf = (d) => window.WFR_WX ? WFR_WX.roll(d) : 'clear';
+const wxGated = () => S.mode === 'menu' || S.tut !== 0 || !S.nestDone || (S.dawns || 0) < 2;   // the opening days stay sunny, and the title screen's flight (Obito: rain and its sound under the opening song)
+const wxKind = () => WX.force || (wxGated() ? 'clear' : wxOf(wxDay()));
+const rainy = () => wxKind() !== 'clear';
+SKYKEYS.rain = ['#6f7b88', '#8b96a2', '#a7b0b9', '#b4bbc2', '#aab2ba'];   // overcast greys (his eye rules)
+SKYKEYS.storm = ['#3e4652', '#58616d', '#737c87', '#80888f', '#7a838c'];
+const slerpTo = (out, a, b, t) => { const d = Math.max(-1, Math.min(1, a.dot(b))), th = Math.acos(d); if (th < 1e-4) return out.copy(a); const s = Math.sin(th); return out.copy(a).multiplyScalar(Math.sin((1 - t) * th) / s).addScaledVector(b, Math.sin(t * th) / s); };
 const camera = new THREE.PerspectiveCamera(62, 1, 0.1, 900);
 const HEMI = new THREE.HemisphereLight(0xe4efff, 0x4f6a3c, 0.62); scene.add(HEMI);   // less flat fill, a cooler sky, so the sun gives form and the shadows read (was 0xffffff/0x6a8f4a 0.85)
 const sun = new THREE.DirectionalLight(0xfff0d2, 1.0); sun.position.set(60, 90, 30); scene.add(sun); scene.add(sun.target);
@@ -614,17 +626,21 @@ const stars = (() => { const n = 420, p = new Float32Array(n * 3); let s7 = 11; 
 const WINDOW_MATS = [];   // house windows glow at night (filled once the village is built)
 function skyTick() {
   const c = S.clock, na = nightAmt(c), day = c < DAYLEN;
-  // the arcs: the sun rises in the east (x+) and sets in the west; the moon rides the night
-  const u = day ? c / DAYLEN : (c - DAYLEN) / (CYCLE - DAYLEN), el = Math.sin(Math.PI * u), az = Math.PI * u;
-  SKY_DIR.set(Math.cos(az), el, 0.35).normalize();
-  sunDisc.visible = day && el > -0.02; moonDisc.visible = !day && el > -0.02;
-  (day ? sunDisc : moonDisc).position.copy(SKY_DIR).multiplyScalar(790);
-  SUN_DIR.set(SKY_DIR.x, Math.max(0.25, SKY_DIR.y), SKY_DIR.z).normalize();   // the shadow light never drops below ~14 deg
-  stars.material.opacity = na;
+  { const tgt = wxKind() === 'clear' ? 0 : 1, st = Math.min(0.25, S.real || 0.016) / 8; const snap = WX.pk === -1 || (WX.wasMenu && S.mode !== 'menu'); WX.wasMenu = S.mode === 'menu'; WX.k = snap ? tgt : WX.k < tgt ? Math.min(tgt, WX.k + st) : Math.max(tgt, WX.k - st); }   // 632: the rain comes in over ~8 s; play begun (the title screen is held clear) or a sleep woken on a rain day starts rainy (Obito)
+  // the arcs (632 U1): ONE orbit plane tilted south; the sun rises in the east (x+) and sets in the west on today's timing; the MOON keeps its own, slower clock
+  const us = c < DAYLEN ? c / DAYLEN : 1 + (c - DAYLEN) / (CYCLE - DAYLEN), um = ((c - 1800 + CYCLE) % CYCLE) / 1350, ct = Math.cos(WX.tilt), stl = Math.sin(WX.tilt);
+  WX.sunV.set(Math.cos(Math.PI * us), Math.sin(Math.PI * us) * ct, Math.sin(Math.PI * us) * stl); WX.moonV.set(Math.cos(Math.PI * um), Math.sin(Math.PI * um) * ct, Math.sin(Math.PI * um) * stl);
+  WX.sunEl = WX.sunV.y; WX.moonEl = WX.moonV.y; SKY_DIR.copy(day ? WX.sunV : WX.moonV);
+  sunDisc.visible = WX.sunEl > -0.02; moonDisc.visible = WX.moonEl > -0.02;
+  sunDisc.position.copy(WX.sunV).multiplyScalar(790); moonDisc.position.copy(WX.moonV).multiplyScalar(790); moonDisc.material.opacity = (0.35 + 0.65 * na) * (1 - WX.k);   // a pale moon by day
+  { const tt = c < 1000 ? c + CYCLE : c, w = smooth01(2060, 2400, tt) * (1 - smooth01(2450, 2700, tt)); WX.sl.set(WX.sunV.x, Math.max(0.25, WX.sunV.y), WX.sunV.z).normalize(); slerpTo(WX.sd, WX.sl, WX.moonV, w); }   // the shadow light: the sun's own (held at ~14 deg) by day, turning to the moon only once the light is low (Obito: across 1600-2250 the shadows came from the EAST under a western sunset)
+  SUN_DIR.set(WX.sd.x, Math.max(0.25, WX.sd.y), WX.sd.z).normalize();   // the shadow light never drops below ~14 deg
+  stars.material.opacity = na * (1 - WX.k);
   // ramps, repainted at most once per game-second (a 64x512 canvas)
-  if (Math.abs(c - SKY.lastPaint) >= 1) {
+  if (Math.abs(c - SKY.lastPaint) >= 1 || Math.abs(WX.k - WX.pk) > 0.01) {
     SKY.lastPaint = c;
-    const [ka, kb, fk] = skyMix(c), A = SKYKEYS[ka], B = SKYKEYS[kb], col = A.map((h, i) => '#' + SKY.ca.set(h).lerp(SKY.cb.set(B[i]), fk).getHexString());
+    const WK = SKYKEYS[wxKind() === 'storm' ? 'storm' : 'rain'];
+    const [ka, kb, fk] = skyMix(c), A = SKYKEYS[ka], B = SKYKEYS[kb], col = A.map((h, i) => '#' + SKY.ca.set(h).lerp(SKY.cb.set(B[i]), fk).lerp(WX.grey.set(WK[i]).multiplyScalar(1 - 0.8 * na), WX.k).getHexString());
     const { g, t, ring } = skyDome.userData, gr = g.createLinearGradient(0, 0, 0, 512);
     if (window.WFR_TEX && WFR_TEX.skyStops) WFR_TEX.skyStops(gr, col); else { gr.addColorStop(0, col[0]); gr.addColorStop(0.32, col[1]); gr.addColorStop(0.47, col[2]); gr.addColorStop(0.5, col[3]); gr.addColorStop(0.53, col[4]); gr.addColorStop(1, col[4]); }   // 578 pass 2: the same stops, eased (textures.js)
     g.fillStyle = gr; g.fillRect(0, 0, 64, 512); t.needsUpdate = true;
@@ -635,6 +651,11 @@ function skyTick() {
     HEMI.color.set(0xe4efff).lerp(SKY.ca.set(0x1b2540), na); HEMI.groundColor.set(0x4f6a3c).lerp(SKY.cb.set(0x101a14), na); HEMI.intensity = 0.62 - 0.34 * na; if (S.lessons && S.lessons.owl) { HEMI.intensity += 0.16 * na; FOG_AIR.near += 15 * na; FOG_AIR.far += 60 * na; if (S.world && S.world.cave && S.world.cave.done) { HEMI.intensity += 0.08 * na; FOG_AIR.far += 40 * na; } }   /* 589: the Owl's eyes; 643 worlds: wider after the cave */
     sun.color.set(0xfff0d2).lerp(SKY.ca.set(0xffb070), dusky * (1 - na)).lerp(SKY.cb.set(0x9fb4ff), na);
     SKY.sunI = (1.0 - 0.3 * dusky) * (1 - na) + 0.25 * na;
+    { const k = WX.k; FOG_AIR.near *= 1 - 0.5 * k; FOG_AIR.far *= 1 - 0.4 * k; HEMI.intensity = HEMI.intensity * (1 - 0.3 * k) + WX.flash; SKY.sunI *= 1 - 0.55 * k; sunDisc.material.opacity = 1 - k;   // 632: overcast by intensity and fog (ATMO repaints colours)
+      ring.material.color.lerp(SKY.ca.set(0x8c949e), k);
+      for (const cl of clouds) { const cm = cl.children[0] && cl.children[0].material; if (!cm) continue; if (!cm.userData.c0) cm.userData.c0 = cm.color.clone(); cm.color.copy(cm.userData.c0).lerp(SKY.cb.set(0x8a929c), 0.85 * k); }
+      if (WX.heaven) { if (!WX.heaven.userData.c0) WX.heaven.userData.c0 = WX.heaven.color.clone(); WX.heaven.color.copy(WX.heaven.userData.c0).lerp(SKY.cb.set(0x9aa3ad), k); WX.heaven.opacity = 0.85 + 0.1 * k; }
+      WX.pk = k; }
     if (!wasUnder) sun.intensity = SKY.sunI;
     for (const m of WINDOW_MATS) m.emissive.setRGB(1, 0.82, 0.48).multiplyScalar(0.9 * na);
     for (const t of TREEHOUSES) t.g.userData.setLit(na);
@@ -662,6 +683,31 @@ function nightRule() {
    (sleeping is what pays); nothing lost. At two minutes, one gentle word first. */
 const NIGHT_OUT = 180, NIGHT_WARN = 120;
 function fadeFromDark() { const el = $('fade'); if (!el) return; el.style.transition = 'none'; el.style.opacity = '1'; void el.offsetWidth; el.style.transition = 'opacity 1.4s ease'; el.style.opacity = '0'; }
+/* 661 (Marth, Oct 15 ~05:00): every sleep is a MOMENT, not a cut. 'out': 1.2 s to black, the world held (mode 'event'); at full black the
+   night's work (the clock to morning, where she wakes, the XP once); the line types on the black and knows the day she wakes INTO (632);
+   'in': a slow 3 s unfade; then the morning's word. All in real seconds. */
+const SLEEP = { ph: null, t: 0, work: null, own: null, after: null, line: '', n: 0, done: null };
+const SLEEP_LINES = { clear: 'The sun light rises and falls on your sleeping feathers…', rain: 'The gentle sound of rain rises you from your sleep.', storm: 'Thunder rolls far off. The rain has come to stay today.' };   // clear and rain: his words; storm: DRAFT for Marth
+function sleepStart(work, own, after) {
+  if (SLEEP.ph) return false; Object.assign(SLEEP, { ph: 'out', t: 0, work, own: own || null, after: after || null, line: '', n: SLEEP.n + 1, done: null }); S.mode = 'event'; S.speed = 0;
+  const el = $('fade'); if (el) { el.style.transition = 'opacity 1.2s ease'; el.style.opacity = '1'; } return true;
+}
+function sleepTick(dt) {
+  if (!SLEEP.ph) return; SLEEP.t += dt; const el = $('fade'), cap = $('callCap');
+  if (SLEEP.ph === 'out' && SLEEP.t >= 1.25) {
+    SLEEP.ph = 'black'; SLEEP.t = 0; try { if (SLEEP.work) SLEEP.work(); } catch (e) { /* the morning still comes */ }
+    if (S.mode === 'walk' || S.mode === 'fly' || S.mode === 'hover') S.mode = 'event';   // carried in's work sets 'walk': the moment holds 'event' to its end (a level card waits for walk/fly: lvTick)
+    WX.k = wxKind() === 'clear' ? 0 : 1; WX.pk = -1; SKY.lastPaint = -9;   // 632: the day she wakes into is already there behind the black
+    SLEEP.line = SLEEP.own || SLEEP_LINES[wxKind()] || SLEEP_LINES.clear;
+    if (cap) { cap.className = 'black'; cap.innerHTML = '<p></p>'; cap.hidden = false; TYPER.start(cap.firstChild, SLEEP.line); }
+  } else if (SLEEP.ph === 'black') {
+    if (SLEEP.done == null && !TYPER.active()) SLEEP.done = SLEEP.t;   // the line has typed out
+    if ((SLEEP.done != null && SLEEP.t - SLEEP.done >= 1.5) || SLEEP.t >= 6) {   // read, then it fades WITH the unfade (Obito: at a fixed 2.8 s it vanished 0.8 s after it was typed)
+      SLEEP.ph = 'in'; SLEEP.t = 0; if (cap) { TYPER.finish(); cap.style.transition = 'opacity 3s ease'; cap.style.opacity = '0'; } if (el) { el.style.transition = 'opacity 3s ease'; el.style.opacity = '0'; } }
+  } else if (SLEEP.ph === 'in' && SLEEP.t >= 3.0) {
+    SLEEP.ph = null; TYPER.stop(); if (cap) { cap.hidden = true; cap.className = ''; cap.style.transition = ''; cap.style.opacity = ''; } if (S.mode === 'event') S.mode = 'walk'; if (SLEEP.after) toast(SLEEP.after, 3600); hud();
+  }
+}
 function nightOut(g) {
   const out = S.clock >= 2100 && S.tut === 0 && beginner() && !S.insideTH && !onNest() && (S.mode === 'fly' || S.mode === 'walk') && !S.talking;   // her own nest is home, not the cold (568)
   if (out && owlCalling()) return;   // 589: the Owl's night
@@ -673,11 +719,11 @@ function nightOut(g) {
 function carriedIn() {
   let b = null, bd = 1e9; for (const t of TREEHOUSES) { const d = t.entryW.distanceTo(S.pos); if (d < bd) { bd = d; b = t; } }
   if (!b) return;
-  S.nightOut = 0; S.nightWarned = false; fadeFromDark();
+  S.nightOut = 0; S.nightWarned = false; sleepStart(() => {   // 661: the moment, with its own words on the black
   S.clock = 0; SKY.lastPaint = -9; S.mode = 'walk'; S.speed = 0; S.pitch = 0; S.landTo = null; flapBtn.textContent = 'Fly';
   S.inside = null;   // carried out of a villager's house too (the assay, Oct 9: she woke on a deck still "inside", unable to walk or fly)
   S.pos.copy(b.entryW); S.pos.y += standOf(kind); if (bird) bird.position.copy(S.pos);
-  toast('You fell asleep out in the cold. Someone carried you in.', 4800); save();
+  save(); }, 'You fell asleep out in the cold. Someone carried you in.', 'Someone carried you in.');
 }
 function clockTick(dt) {   // only while the world is live; the tutorial never meets the dusk (Itachi)
   const live = !['menu', 'paused', 'event', 'nest', 'hatch', 'card', 'debugcam'].includes(S.mode) && !S.talking;
@@ -1512,7 +1558,7 @@ const ACTS = {
 };
 function chooseAct(n) {
   n.walks = (n.walks || 0) + 1;
-  if (n.walks % 5 === 0 || S.clock > 2040) { n.act = 'home'; n.phase = 'go'; const f = doorFront(n.house, 0.2); n.target = { x: f.x, z: f.z }; n.house.openT = Math.max(n.house.openT, 6); return; }   // every fifth walk - and every walk once evening comes (board 540)
+  if (n.walks % (rainy() && !S.carry.some((it) => it.owner === n) ? 2 : 5) === 0 || S.clock > 2040) { n.act = 'home'; n.phase = 'go'; const f = doorFront(n.house, 0.2); n.target = { x: f.x, z: f.z }; n.house.openT = Math.max(n.house.openT, 6); return; }   // every fifth walk - and every walk once evening comes (board 540)
   if (n.tool) { n.act = 'home'; n.phase = 'go'; const f = doorFront(n.house, 0.2); n.target = { x: f.x, z: f.z }; n.house.openT = Math.max(n.house.openT, 6); return; }   // work done: the tool goes home with them (559)
   const open = Object.keys(ACTS).filter((k) => !ACTS[k].tool && (ACTS[k].need === undefined || builtAt[ACTS[k].need]));
   const pool = []; for (const k of open) { const w = k === n.fav ? 4 : k === 'stroll' ? 3 : 1; for (let j = 0; j < w; j++) pool.push(k); }
@@ -1654,7 +1700,7 @@ function updateNPC(n, dt) {
   if (n.phase === 'go') {
     const dx = n.target.x - p.x, dz = n.target.z - p.z, d = Math.hypot(dx, dz);
     if (d < 0.5) {
-      if (n.act === 'home') { putAway(n); n.g.visible = false; n.state = 'inside'; n.t = 7 + Math.random() * 6; n.house.openT = Math.max(n.house.openT, 2.5); return; }
+      if (n.act === 'home') { putAway(n); n.g.visible = false; n.state = 'inside'; n.t = rainy() && !S.carry.some((it) => it.owner === n) ? 30 + Math.random() * 20 : 7 + Math.random() * 6; n.house.openT = Math.max(n.house.openT, 2.5); return; }
       if (n.act === 'stroll') { chooseAct(n); return; }
       if (n.act === 'visit' && n.visiting) n.visiting.openT = Math.max(n.visiting.openT, 8);   // someone answers the door
       n.phase = 'do'; n.actT = ACTS[n.act].dur; return;
@@ -2087,6 +2133,25 @@ function landTarget() {
 /* GO INSIDE NEST (board 536) */
 const perchAt = () => new THREE.Vector3(NEST.x + 1.6, groundAt(NEST.x + 1.6, NEST.z) + standOf(kind), NEST.z);
 const onNest = () => S.mode === 'walk' && S.nestDone && !S.inside && !S.insideTH && S.pos.distanceTo(perchAt()) < 1.6;   // 568: home
+/* 632 U3 (Marth, Oct 15): rain and more than 2 minutes off the nest = a cold; 10% slower, 25% after a second untreated night; 5 apples +
+   2 blueberries mend it (or the healer, U5). The counter is CONTINUOUS and resets on the nest: she goes home and covers her chick. */
+const COLD = { wet: 0, warned: false, sneeze: 0 };
+const coldOf = () => (S.chick.cold = S.chick.cold || { stage: 0, at: -1, a: 0, b: 0 });
+const chickPaceK = () => { const c = S.chick && S.chick.cold; return !c ? 1 : c.stage >= 2 ? 0.75 : c.stage === 1 ? 0.9 : 1; };   // 621 reads it: her pace is bounded by the chick's
+function coldTick(dt) {
+  if (!S.chick || !chick || !S.nestDone || S.tut !== 0) return; const cd = coldOf(); if (ORB[5] == null) ORB[5] = '🤧';
+  if (cd.stage) { COLD.sneeze += dt; if (COLD.sneeze > 12) { COLD.sneeze = 0; chickFeel(5, 2); } }   // a sneeze in its thought bubble now and then
+  const live = !['menu', 'paused', 'event', 'nest', 'hatch', 'card', 'debugcam'].includes(S.mode) && !S.talking;
+  if (!live) return;
+  if (cd.stage === 1 && wxDay() - cd.at >= 2) { cd.stage = 2; save(); careStats(); toast('Your chick\'s cold is worse: 25% slower now. 5 apples and 2 blueberries will mend it.', 4600); }   // a second night untreated (after the live gate: raised in the menu its word was lost: Obito 7); DRAFT
+  if (rainy() && WX.k > 0.5 && !(S.seen && S.seen.rain) && $('toast').hidden) { S.seen = S.seen || {}; S.seen.rain = true; save(); toast('Rain! A chick left alone in it can catch cold. Stay close to your nest.', 4600); }   // the rule, said once, the first time it rains (Obito); DRAFT
+  if (cd.stage === 0 && rainy() && WX.k > 0.5 && !onNest() && (S.sky && S.sky.where) !== 'temple') {
+    COLD.wet += dt;
+    if (COLD.wet >= 90 && !COLD.warned && $('toast').hidden) { COLD.warned = 1; toast('Your chick is shivering in the rain. Go home and cover it.', 4200); }   // when the slot is free (any later word wiped it: Obito); DRAFT
+    if (COLD.wet >= 110 && COLD.warned === 1 && $('toast').hidden) { COLD.warned = 2; toast('Your chick is shivering! Get back to the nest, quick.', 3600); }   // once more; DRAFT
+    if (COLD.wet >= 120) { Object.assign(cd, { stage: 1, at: wxDay(), a: 0, b: 0 }); COLD.wet = 0; COLD.warned = false; save(); careStats(); toast('Your chick caught a cold: 10% slower. 5 apples and 2 blueberries will mend it.', 4600); }   // DRAFT
+  } else { COLD.wet = 0; COLD.warned = false; }
+}
 function homeOffered() {
   if (!S.nestDone || S.talking || S.tut !== 0 || S.inside || !(S.mode === 'walk' || S.mode === 'fly')) return false;
   const d = Math.hypot(S.pos.x - NEST.x, S.pos.z - NEST.z);
@@ -2128,25 +2193,26 @@ function thOffered() {
   return nearTH() ? 'Go in' : null;
 }
 function thAct() {
+  if (SLEEP.ph || S.talking) return;   // 661: one moment at a time (thOffered keeps 'Sleep' live while she is inside, before it checks a talk)
   const what = thOffered(); if (!what) return;
   if (what === 'Go in') {
     const t = nearTH(); S.insideTH = t; S.noWalk = true; t.openT = 3;
     S.pos.copy(t.insideW); S.pos.y += standOf(kind); if (bird) bird.position.copy(S.pos);
     toast(isEvening() ? 'Safe inside. When you are ready, sleep until morning.' : 'A cosy little room. Come back when it gets dark.', 3200); chirp();
   } else if (what === 'Sleep') {
-    const t = S.insideTH; fadeFromDark();
+    const t = S.insideTH; sleepStart(() => {   // 661: a moment, not a cut
     S.clock = 0; SKY.lastPaint = -9; S.insideTH = null; S.noWalk = false;
     S.pos.copy(t.entryW); S.pos.y += standOf(kind); if (bird) bird.position.copy(S.pos);
     if (!S.sleptTonight) { S.sleptTonight = true; gainXP(10, 'a night\'s sleep'); }
-    toast('Morning. You slept safe and warm.', 3600); save();   // (it said the villagers left her something; nothing was left - Stark)
+    save(); }, null, 'Morning. You slept safe and warm.');   // (it said the villagers left her something; nothing was left - Stark)
   } else if (what === 'Climb') { climbStart(nearLadder());
   } else if (what === 'Up') { climbNext();
   } else if (what === 'Rest') { S.resting = true; chirp(); toast('You settle into your nest. Stay as long as you like.', 3000);
   } else if (what === 'Get up') { S.resting = false;
   } else if (what === 'Nest sleep') {   // 568: sleep at home, until morning
-    fadeFromDark(); S.clock = 0; SKY.lastPaint = -9; S.resting = false;
+    sleepStart(() => { S.clock = 0; SKY.lastPaint = -9; S.resting = false;   // 661
     if (!S.sleptTonight) { S.sleptTonight = true; gainXP(10, 'a night\'s sleep'); }
-    toast('Morning. You slept in your own nest.', 3600); save();
+    save(); }, null, 'Morning. You slept in your own nest.');
   } else {
     const t = S.insideTH; S.insideTH = null; S.noWalk = false; t.openT = 3;
     S.pos.copy(t.entryW); S.pos.y += standOf(kind); if (bird) bird.position.copy(S.pos);
@@ -2725,7 +2791,7 @@ function leaveTick(dt) {
 /* ---------- the easter egg: a soft, wet ceiling far above (Oct 8, Marth's words) ---------- */
 const CEILING = 166;
 (function heavenLayer() {
-  const m = lam(0xffffff, { flatShading: true, transparent: true, opacity: 0.85 });
+  const m = lam(0xffffff, { flatShading: true, transparent: true, opacity: 0.85 }); WX.heaven = m;   // 632: greyed under rain
   for (let i = 0; i < 9; i++) {
     const c = new THREE.Group();
     for (let k = 0; k < 6; k++) { const b = new THREE.Mesh(new THREE.IcosahedronGeometry(9 + rnd() * 6, 0), m); b.position.set(k * 13 - 32, rnd() * 3, rnd() * 10 - 5); b.scale.y = 0.45; c.add(b); }
@@ -2827,7 +2893,7 @@ function bgMusicTick(dt) {
    after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
    music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
    menu, a cutscene), the orchestra bows out. */
-const ORCH_SRC = 'orch-samples.js?v=4233bd99f905';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const ORCH_SRC = 'orch-samples.js?v=6b85f336b67f';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
 const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
 window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
 const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
@@ -2937,6 +3003,7 @@ function careStats() {
     '<span>Bond</span><span class="hearts">' + (() => { bondSeed(); const h = Math.round((c.bond || 0) / 20); return '\u2764\ufe0f'.repeat(h) + '\u2661'.repeat(5 - h); })() + '</span><span class="lv"></span>' +
     CSTATS.map(([k, label, col]) => { const v = Math.min(STAT_MAX, c.stats[k] || 0); return row(label, v >= STAT_MAX ? 100 : (v % STAT_STEP) * (100 / STAT_STEP), '#' + col.toString(16).padStart(6, '0'), statLevel(v)); }).join('') +
     (() => { const n = Object.keys(c.marks || {}).length; return n ? '<span>Keepsakes</span><span class="hearts">' + n + '/' + (window.WFR_CABINS ? WFR_CABINS.TOTAL : 7) + '</span><span class="lv"></span>' : ''; })();   // 552 section 4
+  if (c.cold && c.cold.stage) $('careStats').insertAdjacentHTML('beforeend', '<span>Cold</span><span class="hearts">🤧 ' + (c.cold.stage >= 2 ? '25%' : '10%') + ' slower · 🍎 ' + c.cold.a + '/5 🫐 ' + c.cold.b + '/2</span><span class="lv"></span>');   // 632 U3
   for (const [k, label] of CSTATS) { const cell = [...$('careStats').children].find((x) => x.textContent === label); if (cell) cell.dataset.k = FRUITS.filter((f) => f.stat === k).map((f) => f.emoji).join('') + (typeof SONG_GAIN !== 'undefined' && SONG_GAIN[k] ? '\u{1F3B5}' : ''); }   // 619: the treats that raise it, beside the name (not in its text)
   if (c.log && c.log.length) { const lg = document.createElement('span'); lg.className = 'clog'; lg.textContent = c.log.slice(0, 4).map(([s, k, n]) => s + ' ' + ((CSTATS.find((x) => x[0] === k) || [0, k])[1]) + ' ' + (n > 0 ? '+' : '') + n).join(' \u00b7 '); $('careStats').appendChild(lg); }   // 619: the ledger, newest first
   $('careStage').textContent = STAGES[c.stage].name;
@@ -2967,8 +3034,10 @@ $('feedBtn').addEventListener('click', () => {
   if (chick && Object.keys(gives).length) burst(chick.position.clone().add(new THREE.Vector3(0, 0.5, 0)), Object.keys(gives).map((k) => (CSTATS.find((c) => c[0] === k) || [0, 0, 0xffd94a])[2]), 20, 0.08, 2.2, 1.6);   // 619: the drive goes in, in its stat's colours
   chickLook();   // 619: and its colour drifts toward its strongest stat on every feed, not only when it grows a stage
   S.chick.food = Math.min(100, S.chick.food + (f.keepsake ? 0 : f.food || 25)); if (f.keepsake) (S.chick.marks = S.chick.marks || {})[f.id] = true; S.chick.happy = Math.min(100, S.chick.happy + 8 + (f.happy || 0));
+  let coldCured = false; { const cd = S.chick.cold; if (cd && cd.stage) { if (f.id === 'apple') cd.a++; if (f.id === 'blueberry') cd.b++; if (cd.a >= 5 && cd.b >= 2) { Object.assign(cd, { stage: 0, at: -1, a: 0, b: 0 }); coldCured = true; } } }   // 632 U3: 5 apples and 2 blueberries mend a cold
   if (S.fruit.g.parent) S.fruit.g.parent.remove(S.fruit.g); S.fruit = null; ding(); chirp(); chickFeel(0, 3); S.chickHop = 1; gainXP(5, 'fed your chick'); growCheck(); save(); careStats(); hud();
   toast((f.keepsake ? 'Your chick keeps ' + f.name + '! ' + (f.happy ? 'Mood +' + f.happy + (Object.keys(gives).length ? ', ' : '') : '') : 'Yum! ') + Object.keys(gives).map((k) => CSTATS.find((c) => c[0] === k)[1] + ' +' + gives[k]).join(', ') + (ups.length ? ' \u2014 ' + ups.join(' ') : ''), ups.length ? 3600 : 2400);
+  if (coldCured) toast('Your chick\'s cold is gone! It feels much better.', 3600);   // 632 U3; DRAFT
 });
 $('petBtn').addEventListener('click', () => {
   if (S.petCd > 0) return; S.petCd = 1.2;
@@ -3087,7 +3156,7 @@ else if (window.WFR_PEOPLE && window.WFR_MODELS && WFR_MODELS.fish) setTimeout((
 } catch (e) { fishModel.err = String((e && e.message) || e); } }, 0);
 /* ---------- FOLK (board 552): Hal fishes the lake's south-west shore (folk.js) ---------- */
 const FOLK = window.WFR_FOLK ? WFR_FOLK.create(THREE, scene, { H, WATER, LAKE, humans: window.WFR_HUMANS, renderer, landNear, ground: groundAt, emojiSprite, home: (() => { const c = CABINS.find((x) => x.who === 'Hal'); return c ? doorFront(c, 0.6) : undefined; })(),
-  getClock: () => S.clock, birdPos: () => S.pos, pace: DAY_SPEED,   /* 652 */
+  getClock: () => S.clock, birdPos: () => S.pos, pace: DAY_SPEED,   /* 652 */ rest: (c) => rainy() && (c < 700 || c > 1300),   /* 632 U2: a rainy day keeps him in, but for its middle */
   onCatch: () => { const sc = schools.find((s) => s.type === FISH.perch), f = sc && sc.fish.find((x) => x.back === 0); if (f) { f.back = 60; f.g.visible = false; } } }) : null;   // his catch thins the shoal, as hers does
 /* 550: WORMS - three on the green at dawn (fixed bare spots, never the island's dice), one by Hal's bait tin while he is out */
 (function plantWorms() {
@@ -3098,7 +3167,7 @@ const FOLK = window.WFR_FOLK ? WFR_FOLK.create(THREE, scene, { H, WATER, LAKE, h
    A dug worm is a treat like any other (fruitTrees); two at most lie on the green, and a picked one never grows back. */
 const DUG = [0, 1].map(() => { const s = emojiSprite(WORM.emoji, 0.8); s.visible = false; scene.add(s); const f = { t: null, type: WORM, s, back: 0, src: 'dig', live: false }; f.when = () => f.live; fruitTrees.push(f); return f; });
 const KIDS = window.WFR_FOLK && WFR_FOLK.createKids ? WFR_FOLK.createKids(THREE, scene, { H, VILLAGE, humans: window.WFR_HUMANS, renderer, emojiSprite,
-  getClock: () => S.clock, birdPos: () => S.pos, pace: DAY_SPEED,   /* 652 */ door: doorFront(houses[0], 0.2), doorOut: doorFront(houses[0], 1.4), openDoor: (t) => { houses[0].openT = Math.max(houses[0].openT, t); },
+  getClock: () => S.clock, birdPos: () => S.pos, pace: DAY_SPEED,   /* 652 */ rest: (c) => rainy() && (c < 700 || c > 1300), door: doorFront(houses[0], 0.2), doorOut: doorFront(houses[0], 1.4), openDoor: (t) => { houses[0].openT = Math.max(houses[0].openT, t); },
   onDig: (at) => { const f = DUG.find((x) => !x.live); if (!f) return false; f.live = true; f.back = 0; f.s.position.set(at[0], at[1] + 0.45, at[2]); return true; },
   dugLive: () => { let n = 0; for (const f of DUG) { if (f.live && f.back > 0) f.live = false; if (f.live) n++; } return n; } }) : null;   // picked (back > 0): gone for good
 /* 618: the children wear the model people too (Pim a small man1, Tess a small woman2, heads a quarter bigger), unless Classic */
@@ -3180,7 +3249,7 @@ function chickTick(dt) {
   let goal = U.home;
   if (close && (bd >= 30 || S.resting)) { const to = new THREE.Vector3(S.pos.x - U.home.x, 0, S.pos.z - U.home.z), dd = to.length(), reach = (bd >= 60 && U.stillT > 1) || S.resting ? dd - 0.45 : Math.min(0.9, dd - 0.7);
     if (dd > 0.01 && reach > 0) goal = U.home.clone().add(to.multiplyScalar(reach / dd)); }
-  const was = chick.position.clone(); chick.position.lerp(goal, Math.min(1, dt * 2.2)); if (was.distanceTo(chick.position) > 0.004) S.chickHop = Math.max(S.chickHop || 0, 0.35);   // it hops as it goes
+  const was = chick.position.clone(); chick.position.lerp(goal, Math.min(1, dt * 2.2 * chickPaceK())); if (was.distanceTo(chick.position) > 0.004) S.chickHop = Math.max(S.chickHop || 0, 0.35);   // it hops as it goes
   if (close && $('feedBtn').disabled === !!S.fruit) careStats();   // fruit picked while the card is open: Feed wakes up (found by the chick bench)
   if (d < 12) { const want = Math.atan2(S.pos.x - chick.position.x, S.pos.z - chick.position.z); chick.rotation.y += (Math.atan2(Math.sin(want - chick.rotation.y), Math.cos(want - chick.rotation.y))) * Math.min(1, dt * 3); }
   else chick.rotation.y = Math.sin(S.t * 0.6) * 0.8;
@@ -3189,7 +3258,7 @@ function chickTick(dt) {
   S.chickHop = Math.max(0, (S.chickHop || 0) - dt * 1.6);
   const cSc = STAGES[S.chick.stage].scale; U.body.position.y = -0.4 * (1 - cSc) + (Math.abs(Math.sin(S.t * 9)) * 0.25 * S.chickHop + Math.sin(S.t * 2.4) * 0.02) * cSc;   // 619: feet stay on the nest floor at every size
   /* 619: it sleeps at night and while she rests with it: eyes shut, head tucked, slow breaths; a feed, a pet or a hop wakes it a while */
-  const sleepy = (nightAmt(S.clock) > 0.5 || !!S.resting) && !(S.chickFeelT > 0) && !(S.chickHop > 0.05) && !(RH && RH.on);
+  const sleepy = (nightAmt(S.clock) > 0.5 || !!S.resting || (rainy() && (S.t % 40) < 28)) && !(S.chickFeelT > 0) && !(S.chickHop > 0.05) && !(RH && RH.on);
   U.sleepK = (U.sleepK || 0) + ((sleepy ? 1 : 0) - (U.sleepK || 0)) * Math.min(1, dt * 2);
   for (const e of U.body.userData.eyes || []) e.scale.y = 1 - 0.85 * U.sleepK;
   for (const e of U.body.userData.shines || []) e.visible = U.sleepK < 0.5;
@@ -3732,7 +3801,12 @@ try { if (localStorage.getItem('wfr.debug') === '1') window.__wfr = { eagle: () 
   homeState: () => ({ offered: !$('home').hidden, mode: S.mode, onNest: S.pos.distanceTo(perchAt()) < 1.2, careCard: !$('care').hidden }),
   landing: () => ({ to: S.landTo || null, aim: S.aim || null, mode: S.mode, pos: [S.pos.x, S.pos.y, S.pos.z], ground: groundAt(S.pos.x, S.pos.z) }),
   clock: () => ({ t: S.clock, phase: phaseOf(S.clock), night: nightAmt(S.clock), sunEl: SKY_DIR.y, shadowEl: SUN_DIR.y, sunI: sun.intensity, fog: scene.fog === FOG_AIR ? FOG_AIR.color.getHex() : -1, bg: scene.background === BG_AIR ? BG_AIR.getHex() : -1, hemi: HEMI.intensity, stars: stars.material.opacity, win: WINDOW_MATS.length ? WINDOW_MATS[0].emissive.getHex() : -1 }),
-  setClock: (t) => { S.clock = t; SKY.lastPaint = -9; skyTick(); }, timeScale: (k) => { S.timeScale = k; }, save: () => save(), pos: () => S.pos.toArray(), ground: (x, z) => H(x, z),
+  setClock: (t) => { S.clock = t; SKY.lastPaint = -9; skyTick(); },
+  wx: () => { const p = WXR ? WXR.peek() : {}, lum = (m) => m ? +(0.2126 * m.color.r + 0.7152 * m.color.g + 0.0722 * m.color.b).toFixed(4) : null, cm = clouds.map((c) => c.children[0] && c.children[0].material).filter(Boolean);
+    return { ready: !!WXR, dead: !!p.dead, day: wxDay(), kind: wxKind(), gated: wxGated(), k: WX.k, tilt: WX.tilt, rainVis: !!p.rainVis, rainVerts: p.rainVerts || 0, flashes: p.flashes || 0, minGap: p.minGap == null ? null : p.minGap, maxFlashFrames: p.maxFlashFrames || 0, maxFlashLen: p.maxFlashLen || 0, rumbles: p.rumbles || 0, sound: !!p.sound,
+      sunOp: sunDisc.material.opacity, moonOp: moonDisc.material.opacity, sunEl: WX.sunEl, moonEl: WX.moonEl, sunVis: sunDisc.visible, moonVis: moonDisc.visible, sunV: WX.sunV.toArray(), moonV: WX.moonV.toArray(), shadow: SUN_DIR.toArray(),
+      fogNear: FOG_AIR.near, fogFar: FOG_AIR.far, fogSame: scene.fog === FOG_AIR || scene.fog === WATERFOG, hemi: HEMI.intensity, sunI: SKY.sunI, stars: stars.material.opacity, cloudLum: cm.length ? +(cm.reduce((a, m) => a + lum(m), 0) / cm.length).toFixed(4) : null, heavenLum: lum(WX.heaven), heavenOp: WX.heaven ? WX.heaven.opacity : null, played: S.played || 0 }; },
+  wxForce: (k) => { WX.force = k || null; SKY.lastPaint = -9; }, cold: () => Object.assign({}, coldOf(), { wet: COLD.wet, warned: COLD.warned, pace: chickPaceK() }), coldSet: (o) => { Object.assign(coldOf(), o); save(); careStats(); }, sleep: () => ({ ph: SLEEP.ph, t: SLEEP.t, line: SLEEP.line, n: SLEEP.n, fade: +getComputedStyle($('fade')).opacity, cap: $('callCap').hidden ? '' : $('callCap').textContent, mode: S.mode }), wxRoll: (a, b) => { const o = []; for (let d = a; d < b; d++) o.push(wxOf(d)); return o; }, /* 632 U1: no line comment here, the anchor line goes on (timeScale, save, pos, ground) */ timeScale: (k) => { S.timeScale = k; }, save: () => save(), pos: () => S.pos.toArray(), ground: (x, z) => H(x, z),
   homeSet: (t) => { S.homeT = ((t % 1) + 1) % 1; },
   skyRing: () => { const m = skyDome.userData.ring.material, tex = m.alphaMap || m.map, cv = tex && tex.image, px = cv && cv.getContext ? cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data : null; let minA = 255; if (px) for (let i = 3; i < px.length; i += 4) minA = Math.min(minA, px[i]); return { alphaMap: !!m.alphaMap, map: !!m.map, minAlpha: minA }; },
   clouds: () => clouds.map((c) => ({ at: c.position.toArray(), d: c.position.distanceTo(camera.position), o: c.children[0].material.opacity, v: c.visible })),
@@ -3811,7 +3885,7 @@ const PLACES = [
 /* ---------- THE ENDING (board 544, Marth's design; the 546 temple placeholder): skypiea.js. Gated after the Eagle, at dawn,
    above the highest peak; once per save file (S.sky). Everything she says is in skypiea.js's one line table. ---------- */
 const SKYEND = window.WFR_SKY ? WFR_SKY.create(THREE, scene, { S, camera, renderer, canvas, BIRDS, NAME, $, flapBtn, stick, peak: peakPt,
-  kind: () => kind, bird: () => bird, wings: () => [wingL, wingR], perchAt, standOf, say, toast, hint, save, tone, audio, music }) : null;
+  shut: () => (rainy() ? 'rain' : null), kind: () => kind, bird: () => bird, wings: () => [wingL, wingR], perchAt, standOf, say, toast, hint, save, tone, audio, music }) : null;
 SKY_GROUND = SKYEND && SKYEND.ground ? SKYEND.ground : null;   // 610
 /* ---------- the loop ---------- */
 const fwd = new THREE.Vector3(), camPos = new THREE.Vector3(), look = new THREE.Vector3(), tmp = new THREE.Vector3(), v3 = new THREE.Vector3();
@@ -4070,6 +4144,7 @@ function walkStep(sx, sy, dt) {
   S.pos.x = nx; S.pos.z = nz;
 }
 const ATMO = (() => { try { return window.WFR_ATMO ? WFR_ATMO.create(THREE, scene, { renderer, camera, canvas, H, WATER, LAKE, VILLAGE, MOUND, NEST, trees, sun, HEMI, S, night: () => nightAmt(S.clock), clock: () => S.clock, under: () => wasUnder, bird: () => S.pos }) : null; } catch (e) { return null; } })();   // 613: the air - light by the clock, one wind, butterflies, dragonflies, fireflies (atmo.js)
+const WXR = (() => { try { return window.WFR_WX ? WFR_WX.create(THREE, scene, { camera, S, k: () => WX.k, kind: () => wxKind(), night: () => nightAmt(S.clock), indoors: () => !!(S.inside || S.insideTH || wasUnder), played: () => S.played || 0, ac: () => ac, muted: () => muted, flash: (v) => { WX.flash = v; SKY.lastPaint = -9; }, phone: innerWidth <= 900 }) : null; } catch (e) { return null; } })();   // 632 U1: the rain, the thunder, the rain's sound (weather.js)
 function frame(now) {
   const real = Math.max(0, Math.min(0.05, (now - last) / 1000)), dt = S.quick ? real * QUICK_SLOW : real;   // 644: the pouch slows the whole island
   frameLog(now - last, real);   /* 651: the raw frame, for the water bench */
@@ -4341,12 +4416,13 @@ function frame(now) {
     const m = sparks[i]; m.userData.v.y -= 9 * dt; m.position.addScaledVector(m.userData.v, dt); m.rotation.x += m.userData.r * dt; m.rotation.y += m.userData.r * dt;
     if (m.position.y < NEST.y - 14) { scene.remove(m); sparks.splice(i, 1); }
   }
-  navHud(S.real || dt); quickTick(S.real || dt); TYPER.tick(S.real || dt); callTick(S.real || dt); worldTick(S.real || dt); lightTick(S.real || dt);   // 631; 644; 638; 625; 643 worlds (one, two)
+  navHud(S.real || dt); quickTick(S.real || dt); TYPER.tick(S.real || dt); callTick(S.real || dt); worldTick(S.real || dt); lightTick(S.real || dt); sleepTick(S.real || dt); coldTick(S.real || dt);   // 631; 644; 638; 625; 643 worlds (one, two)
   if (SKYEND) SKYEND.tick(dt);   // 544: the ending (a no-op until the gate opens)
   lvTick(); morphTick(dt);   // after the mode block: it writes the bird's turn and size last, and puts them back at the end (642: a queued level-up starts here)
   arrowTick(dt); S.camCut = false;   // 588: after the camera has moved; 584: a door's camera cut lasts one frame
   sunFollow();
-  if (ATMO) ATMO.tick(dt, S.t);   // 613: after sunFollow, before the picture (it never throws: a fault switches the air off, not the game)
+  if (ATMO) ATMO.tick(dt, S.t);
+  if (WXR) WXR.tick(dt, S.real || dt);   // 632 U1: the streaks on the game's dt, the ease/sound/thunder on real seconds; never throws   // 613: after sunFollow, before the picture (it never throws: a fault switches the air off, not the game)
   renderer.render(scene, camera);
   requestAnimationFrame(frame);
 }
@@ -4411,7 +4487,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build 4233bd99f905): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build 6b85f336b67f): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>

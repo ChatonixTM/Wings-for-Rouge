@@ -71,7 +71,8 @@ window.WFR_SKY = (function () {
     woke: 'You wake up in your nest. The sun is just coming up.',   // OURS (closing, allowed by Marth ~16:20)
     gateAsk: 'Enter the sky island?',   // 610 (Marth: the game asks you if you want to 'enter the sky island'); OURS
     gateYes: 'Yes', gateNo: 'Not now',   // 610, OURS
-    gateCrow: 'The Crow can\'t fly this high yet. The Falcon could teach it.',   // 610 (Marth: "all but crow, needs to learn from falcon"); OURS
+    gateCrow: 'The Crow can\'t fly this high yet. The Falcon could teach it.',
+    gateRain: 'Heavy rain clouds hide the sky island today. Come back when the sky clears.',   // 632 U2 (Marth, Oct 15: "When it rains it blocks the temple. Or the sky area due to its clouds"); DRAFT   // 610 (Marth: "all but crow, needs to learn from falcon"); OURS
     gateIn: 'The sky island. A bare stone for now; more is coming.',   // 610, OURS (what stands up here is 625/621)
     gateEdge: 'The edge. Fly to leave the sky island.',   // 610, OURS
     gateHome: 'Back over the island.',   // 610, OURS
@@ -664,7 +665,8 @@ window.WFR_SKY = (function () {
       st.wallFrom = S.pos.clone(); st.yaw0 = S.yaw; st.crow = k === 'crow'; st.armed = false;
       S.mode = 'event'; S.inSky = true; S.speed = 0; S.flapT = 0; controls(false); camLook.copy(S.pos);
       [330, 262].forEach(function (f, i) { api.tone(f, i * 0.05, 0.25, 'sine', 0.05); });
-      if (st.crow) { api.toast(UI.gateCrow, 3600); turnBack(); return; }
+      var shut = !st.crow && api.shut && api.shut();   // 632 U2: rain closes the sky island
+      if (st.crow || shut) { api.toast(st.crow ? UI.gateCrow : UI.gateRain, 3600); turnBack(); return; }
       go('gate'); gate.hidden = false;
     }
     function gateAnswer(yes) {
