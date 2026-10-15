@@ -468,32 +468,32 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 <div id="fade" aria-hidden="true"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="gltf-loader.js?v=6b85f336b67f"></script>
-<script src="skeleton-utils.js?v=6b85f336b67f"></script>
-<script src="meshopt-decoder.js?v=6b85f336b67f"></script>
-<script src="models.js?v=6b85f336b67f"></script>
-<script src="people.js?v=6b85f336b67f"></script>
-<script src="villagers.js?v=6b85f336b67f"></script>
-<script src="tex-photos.js?v=6b85f336b67f"></script>
-<script src="textures.js?v=6b85f336b67f"></script>
-<script src="birds.js?v=6b85f336b67f"></script>
-<script src="humans.js?v=6b85f336b67f"></script>
-<script src="folk.js?v=6b85f336b67f"></script>
-<script src="trees.js?v=6b85f336b67f"></script>
-<script src="treehouses.js?v=6b85f336b67f"></script>
-<script src="cabins.js?v=6b85f336b67f"></script>
-<script src="cave.js?v=6b85f336b67f"></script>
-<script src="sounds.js?v=6b85f336b67f"></script>
-<script src="music.js?v=6b85f336b67f"></script>
-<script src="music-orchestra.js?v=6b85f336b67f"></script>
-<script src="rhythm.js?v=6b85f336b67f"></script>
-<script src="pictograms.js?v=6b85f336b67f"></script>
-<script src="chick-wear.js?v=6b85f336b67f"></script>
-<script src="hedgehogs.js?v=6b85f336b67f"></script>
-<script src="opening.js?v=6b85f336b67f"></script>
-<script src="skypiea.js?v=6b85f336b67f"></script>
-<script src="atmo.js?v=6b85f336b67f"></script>
-<script src="weather.js?v=6b85f336b67f"></script>
+<script src="gltf-loader.js?v=18f53460d030"></script>
+<script src="skeleton-utils.js?v=18f53460d030"></script>
+<script src="meshopt-decoder.js?v=18f53460d030"></script>
+<script src="models.js?v=18f53460d030"></script>
+<script src="people.js?v=18f53460d030"></script>
+<script src="villagers.js?v=18f53460d030"></script>
+<script src="tex-photos.js?v=18f53460d030"></script>
+<script src="textures.js?v=18f53460d030"></script>
+<script src="birds.js?v=18f53460d030"></script>
+<script src="humans.js?v=18f53460d030"></script>
+<script src="folk.js?v=18f53460d030"></script>
+<script src="trees.js?v=18f53460d030"></script>
+<script src="treehouses.js?v=18f53460d030"></script>
+<script src="cabins.js?v=18f53460d030"></script>
+<script src="cave.js?v=18f53460d030"></script>
+<script src="sounds.js?v=18f53460d030"></script>
+<script src="music.js?v=18f53460d030"></script>
+<script src="music-orchestra.js?v=18f53460d030"></script>
+<script src="rhythm.js?v=18f53460d030"></script>
+<script src="pictograms.js?v=18f53460d030"></script>
+<script src="chick-wear.js?v=18f53460d030"></script>
+<script src="hedgehogs.js?v=18f53460d030"></script>
+<script src="opening.js?v=18f53460d030"></script>
+<script src="skypiea.js?v=18f53460d030"></script>
+<script src="atmo.js?v=18f53460d030"></script>
+<script src="weather.js?v=18f53460d030"></script>
 <script>
 (() => {
 'use strict';
@@ -2609,11 +2609,13 @@ function eagleGoalLine() {   // What to do keeps the Eagle in sight until she me
   const have = ['you are level ' + S.level]; if (S.lessons.owl) have.push('the Owl has taught you');
   return '🦅 ' + head + ' (' + have.join(', and ') + ').';
 }
+function skyWorthy() { const st = (S.chick && S.chick.stats) || {}; return (S.level || 0) >= 24 || ((S.built || 0) >= 6 && Object.keys(st).some((k) => (st[k] || 0) >= 100)); }   // 627: skypiea's worthy(), read here for What to do and the compass
 function storyTarget() {   // the compass between the teachers: a villager's tool before the Crow (non-metal: metal shines only after her); the peak after the Owl
   if (S.nestDone && !S.lessons.crow && givenN() < 1) { let best = null, bd = Infinity;
     for (const it of items) { if (it.held || it.done || !it.g.visible || !it.owner || it.owner.hog) continue; const d = it.g.position.distanceTo(S.pos); if (d < bd) { bd = d; best = it.g.position; } }
     if (best) return best; }
   if (eagleReady() && !S.eagleFound) return eagleSpot;   // 602: the peak once he will meet her (level 15 and the Owl)
+  if (S.eagleFound && S.sky && !S.sky.seen && skyWorthy() && S.clock < 270) return eagleSpot;   // 627: while the sky calls, the arrow points at the peak
   return null;
 }
 function storyLines() {   // What to do: every step done so far, and the NEXT one only (what comes after stays a surprise)
@@ -2630,6 +2632,7 @@ function storyLines() {   // What to do: every step done so far, and the NEXT on
   let next = true;
   for (const [done, yes, todo] of steps) { if (done) L.push('✓ ' + yes); else if (next) { L.push('→ ' + todo); next = false; } }
   if (!S.eagleFound) L.push(eagleGoalLine());   // 602: the Eagle stays in sight, at every step (no arrow of its own)
+  if (S.eagleFound && S.sky && !S.sky.seen) L.push(!skyWorthy() ? '→ Next: the sky. Reach level 24 (or build the bell tower and raise your chick to level 2 in any stat), and at dawn the sky will call.' : S.clock < 270 ? '→ The sky is calling NOW: fly up above the highest peak and follow the lights. Follow the arrow.' : '→ Next: the sky island. At dawn the sky calls above the highest peak. Tip: sleep in your nest at night and you wake at dawn.');   // 627 (Marth, Oct 15: "nothing signifying her next step"); DRAFT
   if (S.eagleFound && S.sky && S.sky.ended) L.push((S.seen || {}).prologue ? '\u2713 The Eagle told you where it began. Train: he will come back.' : '\u2192 The Eagle is home on the peak again. Fly up and sit with him.');   // 643 ch1
   if (S.sky && S.sky.ended) L.push((S.seen || {}).call625up ? '\u2713 Your chick came up to the sky island with you. It goes where you go now.' : (S.seen || {}).call625 ? '\u2192 Your chick asked to come with you. Fly up to the sky island together.' : '\u2192 Fly up under the floating temple. Something is waiting on the sky island.');   // 625 (three states: the phone may close between the word and the climb)
   if (S.world && S.world.cave) L.push(S.world.cave.done ? '\u2713 The Owl\'s twelve glow-caps: your eyes are wider in the dark.' : S.world.cave.on ? '\u2192 ' + worldPill() + '. The cave on the far side of the mountain, by night; then back to the Owl.' : '\u2192 At dusk the Owl is calling. Go and sit with it.');   // 643 worlds
@@ -2893,7 +2896,7 @@ function bgMusicTick(dt) {
    after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
    music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
    menu, a cutscene), the orchestra bows out. */
-const ORCH_SRC = 'orch-samples.js?v=6b85f336b67f';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const ORCH_SRC = 'orch-samples.js?v=18f53460d030';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
 const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
 window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
 const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
@@ -4487,7 +4490,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build 6b85f336b67f): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build 18f53460d030): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>

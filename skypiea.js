@@ -119,7 +119,7 @@ window.WFR_SKY = (function () {
   ];
 
   /* ---------- numbers (design, not measurement) ---------- */
-  var DAWN_END = 150;        // phaseOf(): dawn is clock 0-150
+  var DAWN_END = 270;        // 627 (Marth, Oct 15): the sky calls for one real minute of a ten-minute day (was 150, the sky's colour dawn: ~33 s)
   var N_DIA = 12, HELIX_R = 13, HELIX_TURNS = 2.25, HELIX_TOP = 150;   // the last diamond sits under the ceiling (166)
   var SHELF_Y = 230, TEMPLE_Y = 216;
   var WALL_Y = 150, WALL_R = 40, DISC_R = 15, DISC_TOP = TEMPLE_Y + 0.6, SKY_CAP = TEMPLE_Y + 40;   // 610: the wall under the temple; the disc is ground; the air above it is thin
@@ -552,7 +552,7 @@ window.WFR_SKY = (function () {
       if (ph === 'idle') {
         var open = gateOpen();
         /* 627: the signal. The evening before: once per save, when all but the dawn is met and night has come. At dawn: once per dawn, when the gems are out. */
-        if (!open && !S.sky.seen && S.eagleFound && worthy() && S.clock > 2040 && !S.sky.told && S.mode !== 'paused' && !S.talking) { S.sky.told = true; api.toast(UI.tonight, 4200); if (api.save) api.save(); }
+        if (!open && !S.sky.seen && S.eagleFound && worthy() && S.clock > 2040 && S.sky.toldDay !== (S.dawns || 0) && S.mode !== 'paused' && !S.talking) { S.sky.toldDay = (S.dawns || 0); S.sky.told = true; api.toast(UI.tonight, 4200); if (api.save) api.save(); }
         if (open && !st.called && (S.mode === 'fly' || S.mode === 'walk') && !S.talking) { st.called = true; api.toast(UI.calling, 4200); }
         if (!open) st.called = false;
         if (open && !dia) buildDiamonds();
