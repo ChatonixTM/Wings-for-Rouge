@@ -466,31 +466,31 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 <div id="fade" aria-hidden="true"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="gltf-loader.js?v=83cc1c2fc9c0"></script>
-<script src="skeleton-utils.js?v=83cc1c2fc9c0"></script>
-<script src="meshopt-decoder.js?v=83cc1c2fc9c0"></script>
-<script src="models.js?v=83cc1c2fc9c0"></script>
-<script src="people.js?v=83cc1c2fc9c0"></script>
-<script src="villagers.js?v=83cc1c2fc9c0"></script>
-<script src="tex-photos.js?v=83cc1c2fc9c0"></script>
-<script src="textures.js?v=83cc1c2fc9c0"></script>
-<script src="birds.js?v=83cc1c2fc9c0"></script>
-<script src="humans.js?v=83cc1c2fc9c0"></script>
-<script src="folk.js?v=83cc1c2fc9c0"></script>
-<script src="trees.js?v=83cc1c2fc9c0"></script>
-<script src="treehouses.js?v=83cc1c2fc9c0"></script>
-<script src="cabins.js?v=83cc1c2fc9c0"></script>
-<script src="cave.js?v=83cc1c2fc9c0"></script>
-<script src="sounds.js?v=83cc1c2fc9c0"></script>
-<script src="music.js?v=83cc1c2fc9c0"></script>
-<script src="music-orchestra.js?v=83cc1c2fc9c0"></script>
-<script src="rhythm.js?v=83cc1c2fc9c0"></script>
-<script src="pictograms.js?v=83cc1c2fc9c0"></script>
-<script src="chick-wear.js?v=83cc1c2fc9c0"></script>
-<script src="hedgehogs.js?v=83cc1c2fc9c0"></script>
-<script src="opening.js?v=83cc1c2fc9c0"></script>
-<script src="skypiea.js?v=83cc1c2fc9c0"></script>
-<script src="atmo.js?v=83cc1c2fc9c0"></script>
+<script src="gltf-loader.js?v=14f22e711257"></script>
+<script src="skeleton-utils.js?v=14f22e711257"></script>
+<script src="meshopt-decoder.js?v=14f22e711257"></script>
+<script src="models.js?v=14f22e711257"></script>
+<script src="people.js?v=14f22e711257"></script>
+<script src="villagers.js?v=14f22e711257"></script>
+<script src="tex-photos.js?v=14f22e711257"></script>
+<script src="textures.js?v=14f22e711257"></script>
+<script src="birds.js?v=14f22e711257"></script>
+<script src="humans.js?v=14f22e711257"></script>
+<script src="folk.js?v=14f22e711257"></script>
+<script src="trees.js?v=14f22e711257"></script>
+<script src="treehouses.js?v=14f22e711257"></script>
+<script src="cabins.js?v=14f22e711257"></script>
+<script src="cave.js?v=14f22e711257"></script>
+<script src="sounds.js?v=14f22e711257"></script>
+<script src="music.js?v=14f22e711257"></script>
+<script src="music-orchestra.js?v=14f22e711257"></script>
+<script src="rhythm.js?v=14f22e711257"></script>
+<script src="pictograms.js?v=14f22e711257"></script>
+<script src="chick-wear.js?v=14f22e711257"></script>
+<script src="hedgehogs.js?v=14f22e711257"></script>
+<script src="opening.js?v=14f22e711257"></script>
+<script src="skypiea.js?v=14f22e711257"></script>
+<script src="atmo.js?v=14f22e711257"></script>
 <script>
 (() => {
 'use strict';
@@ -993,6 +993,7 @@ const standOf = (k) => (0.58 + BIRDS[k].legLen) * BIRDS[k].size;
 const MOVES = { cardinal: { alt: 70, flutter: 34, dive: 38 }, bluejay: { alt: 75, flutter: 35, dive: 39 }, crow: { alt: 95, flutter: 36, dive: 40 },
   falcon: { alt: 140, flutter: 40, dive: 50 }, owl: { alt: 100, flutter: 33, dive: 37 }, eagle: { alt: 150, flutter: 38, dive: 46 } };
 const canFlutter = () => S.level >= 4, canDive = () => !!S.lessons.falcon;   // the Peregrine teaches the dive
+const diveK = () => (S.world && S.world.light && S.world.light.done ? 1.15 : 1);   // 643 world two: the Peregrine's gift, a faster dive (the top AND the pull: the top alone is never reached)
 const altCap = () => S.lessons.falcon ? 175 : MOVES[kind].alt;                  // ...and how to fly high
 /* BREATH, seconds under water. Varying by the bird she picks (Marth: "varying timelenghs") - the two starters differ -
    and growing a little with every level, so the same dive gets longer as she does. Numbers are design, not measurement:
@@ -1108,6 +1109,7 @@ function quickHtml() {
   for (let k = S.carry.length; k < carrySlots(); k++) held.push('<li class="held empty"><i>\u00b7</i><em>free</em></li>');
   const lines = [];
   if (worldOn()) lines.push(worldPill() + (wcave().got >= WORLD_CAVE.n ? '' : ' (the cave, by night)'));   /* 643 worlds */
+  if (lightOn()) lines.push(lightPill() + (wlight().got >= WORLD_LIGHT.n ? '' : ' (round the lighthouse, no landing)'));   /* 643 world two */
   if (S.toolIn > 0) lines.push('\ud83e\uddf0 ' + S.toolIn + ' tool' + (S.toolIn > 1 ? 's' : '') + ' delivered, waiting to be built with');
   const wanted = []; for (const it of items) if (!it.done && !it.held) wanted.push('<li class="held" title="' + esc(it.owner.name) + ' needs the ' + esc(it.type.name) + '"><i>' + it.type.emoji + '</i><em>' + esc(it.owner.name) + (S.lessons.crow ? ' · look ' + it.spot.zone : '') + '</em></li>');   /* who needs which tool (Obito, 644): a WANTED row at the end of the body (Obito, 650: quest text sat between the slots and pushed them below the fold on a phone on its side) */
   const SHORT = { nail: 'nails', log: 'logs', stone: 'stones', flower: 'flowers', branch: 'branches', plank: 'planks' };
@@ -1158,6 +1160,7 @@ function hud() {
   let q;
   if (S.inside) q = S.inside.cabin ? 'Inside ' + S.inside.name : 'Inside a villager\'s home';
   else if (S.carry.length) q = 'Carrying ' + S.carry.map((c) => c.type.emoji).join(' ');
+  else if (lightLive() && (LT.n > 0 || (lightOn() && wlight().got >= WORLD_LIGHT.n))) q = lightPill();   // 643 world two: a timed trail speaks while she is in it
   else if (!S.nestDone) q = 'Twigs ' + S.got + ' / 5 for the nest';
   else if (typeof mentorWaiting === 'function' && mentorWaiting()) q = 'Someone is waiting for you';
   else if (S.fruit) q = 'Carrying ' + S.fruit.type.emoji + ' for your chick';
@@ -2529,6 +2532,7 @@ function storyLines() {   // What to do: every step done so far, and the NEXT on
   if (S.eagleFound && S.sky && S.sky.ended) L.push((S.seen || {}).prologue ? '\u2713 The Eagle told you where it began. Train: he will come back.' : '\u2192 The Eagle is home on the peak again. Fly up and sit with him.');   // 643 ch1
   if (S.sky && S.sky.ended) L.push((S.seen || {}).call625up ? '\u2713 Your chick came up to the sky island with you. It goes where you go now.' : (S.seen || {}).call625 ? '\u2192 Your chick asked to come with you. Fly up to the sky island together.' : '\u2192 Fly up under the floating temple. Something is waiting on the sky island.');   // 625 (three states: the phone may close between the word and the climb)
   if (S.world && S.world.cave) L.push(S.world.cave.done ? '\u2713 The Owl\'s twelve glow-caps: your eyes are wider in the dark.' : S.world.cave.on ? '\u2192 ' + worldPill() + '. The cave on the far side of the mountain, by night; then back to the Owl.' : '\u2192 At dusk the Owl is calling. Go and sit with it.');   // 643 worlds
+  if (S.world && S.world.cave && S.world.cave.done) L.push(S.world.light && S.world.light.done ? '✓ The Peregrine\'s twelve rings, best ' + mmss(S.world.light.best) + '. Your dive is faster.' : lightOn() ? '→ ' + lightPill() + '. Twelve gold rings climb round the lighthouse: fly them in order without touching down, then land by the Peregrine.' : '→ The Peregrine is back on the lighthouse. Fly to him.');   // 643 world two
   return L;
 }
 function nestLines() {   // Marth, 21:20: the nest's next step and its gate, in plain words (TIERS and their gates are read, never copied)
@@ -2788,7 +2792,7 @@ function bgMusicTick(dt) {
    after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
    music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
    menu, a cutscene), the orchestra bows out. */
-const ORCH_SRC = 'orch-samples.js?v=83cc1c2fc9c0';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const ORCH_SRC = 'orch-samples.js?v=14f22e711257';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
 const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
 window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
 const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
@@ -3388,7 +3392,8 @@ function callTick(dt) {
 const WORLD_CAVE = { n: 12, label: 'Glow-caps', emoji: '\ud83c\udf44',
   ask: [['Owl', 'Hoo. You have heard where it began, then. Good. Now hear what I need.'], ['Owl', 'In the cave on the far side of the mountain, glow-caps grow in the dark. Six a night. Bring me twelve.'], ['Owl', 'Two nights, little one. The island is long in the dark. Go.']],
   back: [['Owl', 'Twelve. You crossed the island twice in the dark for an old bird.'], ['Owl', 'This is what a level is, little one. Not a number. Your body remembering every night it did not turn back.'], ['Owl', 'Here. Eyes a little wider.']] };   // DRAFT for Marth
-const WC = { caps: null, nearT: 0, told: false, toldDay: -1, calmT: 0 };
+const WC = { caps: null, nearT: 0, told: false, toldDay: -1, calmT: 0, why: false };
+const CAP_REACH = 1.25;   // Oct 15 (Marth's thumb): on the FLOOR. A cap floats over its cluster's solid centre; a walking bird stands 0.97-1.09 m off it (measured with freeIn), so the old 3D 1.0 was out of reach for every kind; the nearest two pools are 1.40 m apart
 const wcave = () => (S.world.cave = S.world.cave || { on: false, got: 0, picked: 0, day: -1, done: false });
 const worldOn = () => !!(S.world && S.world.cave && S.world.cave.on && !S.world.cave.done);
 const owlM = () => MENTORS.find((m) => m.id === 'owl');
@@ -3413,8 +3418,13 @@ function worldTick(dt) {
   for (const [i, s] of worldCaps().entries()) {   // the caps show at night while the world is on, each until it is picked
     const want = c.on && night && !(c.picked & (1 << i)); if (s.visible !== want) s.visible = want; if (!want) continue;
     s.position.y = CAVE.y + 0.1 + 0.7 + Math.sin(S.t * 2 + i) * 0.06;
-    if (S.mode === 'walk' && s.position.distanceTo(S.pos) < 1.0) { /* on it: the closest two pools stand 1.40 m apart (measured); 1.6 took both at once (Ino) */ c.picked |= (1 << i); c.got = Math.min(WORLD_CAVE.n, c.got + 1); chirp(); ding(); save(); hud();
+    if (S.mode === 'walk' && S.inside === CAVE && Math.hypot(s.position.x - S.pos.x, s.position.z - S.pos.z) < CAP_REACH && Math.abs(s.position.y - S.pos.y) < 1.5) { /* at it, on the floor: the closest two pools stand 1.40 m apart (measured); 1.6 took both at once (Ino) */ c.picked |= (1 << i); WC.why = true; c.got = Math.min(WORLD_CAVE.n, c.got + 1); chirp(); ding(); save(); hud();
       toast(c.got >= WORLD_CAVE.n ? 'Twelve. Take them to the Owl.' : 'A glow-cap! ' + c.got + ' of ' + WORLD_CAVE.n + (c.got % 6 === 0 ? '. The rest grow back at dawn.' : '.'), 3200); }
+  }
+  const inCave = S.inside === CAVE && S.mode === 'walk'; if (!inCave) WC.why = false;   // Oct 15: the mushrooms looked pickable and said nothing; now a cluster that gives nothing says why, once a visit
+  if (inCave && !WC.why && !S.talking && $('toast').hidden) for (const s of worldCaps()) {
+    if (s.visible || Math.hypot(s.position.x - S.pos.x, s.position.z - S.pos.z) >= CAP_REACH + 0.35) continue;
+    WC.why = true; toast(!c.on ? 'Glow-caps grow here at night, once the Owl asks for them. He sits in the forest after dark.' : !night ? 'Glow-caps only open at night. Come back after dark.' : 'You took this one tonight. It grows back at dawn.', 4200); break;   // DRAFT for Marth
   }
   if (!c.on && night && plain && WC.toldDay !== day && !S.inside) { WC.calmT = $('toast').hidden ? WC.calmT + dt : 0; if (WC.calmT >= 2) { WC.toldDay = day; WC.calmT = 0; toast('The Owl is calling from the forest. It wants something from the dark.', 4200); } }   // once a night, until she goes
   const d = m.g.position.distanceTo(S.pos); if (d > EAGLE_AWAY) WC.told = false;
@@ -3425,6 +3435,73 @@ function worldTick(dt) {
   if (c.got >= WORLD_CAVE.n) { WC.told = true; WC.nearT = 0; try { if (window.WFR_SOUND) WFR_SOUND.call('owl', { vol: 0.6 }); } catch (e) {}
     say(WORLD_CAVE.back, () => { c.done = true; c.on = false; save(); for (const s of worldCaps()) s.visible = false; gainXP(need(S.level), 'the Owl\'s thanks'); hud(); toast('Your eyes are wider in the dark now.', 4200); }); return; }
   WC.told = true; WC.nearT = 0; say([['Owl', 'Twelve, little one. ' + wcave().got + ' is not twelve. The dark is patient; so am I.']]);   // DRAFT
+}
+/* 643 WORLD TWO, THE LIGHTHOUSE (Itachi's BRIEF_643_LIGHTHOUSE): the Peregrine's height trail. Twelve gold rings climb round the tower in a
+   helix (r 14 m, lightY + 22 to + 77, 1.5 turns), flown IN ORDER without touching down; a timer in seconds of play from ring 1; a landing (walk,
+   landing, swim) or a miss over 25 m from the next ring resets the trail (a talk, a pause, a cutscene HOLD it); twelve pay exactly one level and
+   a faster dive (diveK). After his thanks the rings stay, for a best time. Keys: S.world.light = { on, got, best, whole, done }; gate: the cave
+   done. The pass is a SEGMENT test (last frame to this one within 2 m of the ring's centre): on a phone a dive moves 1.5 m a frame. */
+const WORLD_LIGHT = { n: 12, label: 'Rings', emoji: '⭕', r: 14, y0: 22, dy: 5,
+  ask: [['Peregrine', 'The Owl says you crossed the night. Good. Now cross the sky.'], ['Peregrine', 'Twelve gold rings climb round this tower. Fly them in order, low to high, and do not touch down. Not once.'], ['Peregrine', 'Then come back to me. I will be watching every one.']],
+  notYet: [['Peregrine', 'Twelve rings, in order, no landing. The sky keeps count even when you lose it.']],
+  back: [['Peregrine', 'Twelve, and you never touched down. That is what a level buys: wings that do not ask permission.'], ['Peregrine', 'Here. Fold tighter when you fall. You will drop like I do now.']] };   // DRAFT for Marth
+const LT = { rings: null, mats: null, n: 0, t: 0, shown: -1, prev: new THREE.Vector3(), seg: new THREE.Line3(), tmp: new THREE.Vector3(), wasFly: false, nearT: 0, told: false, toldDay: -1, calmT: 0 };
+const wlight = () => (S.world.light = S.world.light || { on: false, got: 0, best: null, whole: false, done: false });
+const lightGate = () => !!(S.world && S.world.cave && S.world.cave.done);
+const lightOn = () => lightGate() && wlight().on && !wlight().done;
+const lightLive = () => lightGate() && (wlight().on || wlight().done);
+const falconM = () => MENTORS.find((m) => m.id === 'falcon');
+const mmss = (t) => { const s = Math.max(0, Math.floor(t || 0)); return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2); };
+function lightPill() { const c = wlight(); return WORLD_LIGHT.emoji + ' ' + WORLD_LIGHT.label + ' ' + (LT.n > 0 ? LT.n : c.got) + ' / ' + WORLD_LIGHT.n + (LT.n > 0 ? ' · ' + mmss(LT.t) : c.got >= WORLD_LIGHT.n && !c.done ? ' · to the Peregrine' : c.best != null ? ' · best ' + mmss(c.best) : ''); }
+function lightRings() {   // the twelve, once, hidden: one torus, two unlit gold materials (next / dim), each ring facing the next
+  if (LT.rings) return LT.rings;
+  const geo = new THREE.TorusGeometry(1.6, 0.14, 6, 18), STEP = 3 * Math.PI / 11, r = WORLD_LIGHT.r;
+  LT.mats = [new THREE.MeshBasicMaterial({ color: 0xffe680 }), new THREE.MeshBasicMaterial({ color: 0xc9962a, transparent: true, opacity: 0.45, depthWrite: false })];
+  LT.rings = []; for (let k = 0; k < WORLD_LIGHT.n; k++) { const a = -Math.PI / 2 + k * STEP, m = new THREE.Mesh(geo, LT.mats[1]); m.position.set(LIGHT.x + r * Math.sin(a), lightY + WORLD_LIGHT.y0 + WORLD_LIGHT.dy * k, LIGHT.z + r * Math.cos(a)); m.visible = false; scene.add(m); LT.rings.push(m); }
+  for (let k = 0; k < WORLD_LIGHT.n; k++) LT.rings[k].lookAt(LT.rings[k < WORLD_LIGHT.n - 1 ? k + 1 : k - 1].position);
+  return LT.rings;
+}
+function lightReset(word) { LT.n = 0; LT.t = 0; LT.shown = -1; for (const r of lightRings()) r.visible = lightLive(); if (word) toast(word, 3200); hud(); }
+function lightGoal() {   // the compass: the sender; then the NEXT ring; with twelve, the Peregrine; after done, nothing (the trail is hers to re-fly)
+  if (!lightGate()) return null; const c = wlight(), m = falconM(); if (!m) return null;
+  if (!c.on && !c.done) return S.carry.length ? null : m.g.position;   // the sender, unless she is carrying a tool to someone (Obito: goalTarget's carry block sits below this call)
+  if (LT.n > 0) return lightRings()[LT.n].position;
+  if (c.on && !c.done) return c.got >= WORLD_LIGHT.n ? m.g.position : lightRings()[0].position;
+  return null;
+}
+function lightTick(dt) {
+  const m = falconM(); if (!m || !lightGate()) return;
+  const c = wlight(), rings = lightRings(), live = lightLive();
+  m.g.visible = true; m.g.rotation.y = Math.atan2(S.pos.x - m.g.position.x, S.pos.z - m.g.position.z);   // a resident now (the mentor loop hides him each frame once his lesson is done; this runs after it: trap 149)
+  for (const [i, r] of rings.entries()) { const want = live && (LT.n === 0 || i >= LT.n), mat = LT.mats[live && i === LT.n ? 0 : 1], sc = live && i === LT.n ? 1.25 : 1; if (r.visible !== want) r.visible = want; if (r.material !== mat) r.material = mat; if (r.scale.x !== sc) r.scale.setScalar(sc); }
+  const fly = S.mode === 'fly';
+  if (live && !(c.got >= WORLD_LIGHT.n && !c.done)) {   // while twelve are OWED the trail sleeps: a brush of ring 1 on the dive home must not restart it, steal the arrow or say "you touched down" before his thanks (Obito)
+    if (fly) {
+      if (!LT.wasFly) LT.prev.copy(S.pos);   // a talk (hover) or a pause held the trail: the segment starts again from here
+      if (LT.n > 0) { LT.t += dt; const sec = Math.floor(LT.t); if (sec !== LT.shown) { LT.shown = sec; hud(); }
+        if (S.pos.distanceTo(rings[LT.n].position) > 25) lightReset('Too far from the next ring. The rings begin again.'); }
+      const c0 = rings[LT.n].position; LT.seg.set(LT.prev, S.pos);
+      if (LT.seg.closestPointToPoint(c0, true, LT.tmp).distanceTo(c0) < 2) {
+        if (LT.n === 0) { LT.t = 0; LT.shown = 0; }
+        LT.n++; chirp(); ding();
+        if (LT.n >= WORLD_LIGHT.n) { c.got = WORLD_LIGHT.n; c.whole = true; if (c.best == null || LT.t < c.best) c.best = +LT.t.toFixed(2); LT.n = 0; LT.shown = -1; fanfare(); save(); toast(c.done ? 'Twelve! ' + mmss(c.best) + ' is your best.' : 'Twelve! Now land by the Peregrine.', 3600); }
+        hud();
+      }
+      LT.prev.copy(S.pos);
+    } else if (LT.n > 0 && (S.mode === 'walk' || S.mode === 'landing' || S.mode === 'swim')) lightReset('You touched down. The rings begin again.');   // a swim is a touch-down; a hover / pause / event HOLDS
+  }
+  LT.wasFly = fly;
+  if (c.done) return;
+  const day = S.dawns || 0, plain = (S.mode === 'walk' || S.mode === 'fly') && !S.talking && $('story').hidden && !cutQ.length && S.tut === 0 && !S.quick && !CALL.ph && !S.inside;
+  if (!c.on && plain && LT.toldDay !== day) { LT.calmT = $('toast').hidden ? LT.calmT + dt : 0; if (LT.calmT >= 2) { LT.toldDay = day; LT.calmT = 0; toast('The Peregrine is back on the lighthouse. He has something for you to try.', 4200); } }   // once a day, until she goes
+  const d = m.g.position.distanceTo(S.pos); if (d > EAGLE_AWAY) LT.told = false;
+  const here = plain && S.mode === 'walk' && d < EAGLE_NEAR; LT.nearT = here ? LT.nearT + dt : 0;   // in WALK on the cap, never in the air (the dive home with twelve passes within 9 m of him)
+  if (LT.told || LT.nearT < EAGLE_PAUSE) return;
+  if (!c.on) { LT.told = true; LT.nearT = 0; try { if (window.WFR_SOUND) WFR_SOUND.call('falcon', { vol: 0.6 }); } catch (e) {}
+    say(WORLD_LIGHT.ask, () => { c.on = true; save(); for (const r of lightRings()) r.visible = true; hud(); toast('Twelve gold rings, in order, without touching down. Then back to the Peregrine.', 4200); }); return; }
+  if (c.got >= WORLD_LIGHT.n) { LT.told = true; LT.nearT = 0; try { if (window.WFR_SOUND) WFR_SOUND.call('falcon', { vol: 0.6 }); } catch (e) {}
+    say(WORLD_LIGHT.back, () => { c.done = true; c.on = false; save(); gainXP(need(S.level), 'the Peregrine\'s thanks'); hud(); toast('Your dive is faster now.', 4200); }); return; }
+  LT.told = true; LT.nearT = 0; say(WORLD_LIGHT.notYet);
 }
 /* 643: what is said once a cutscene has played (the Eagle's own line after the prologue; 625: the reunion on the nest, then up together) */
 const CUT_AFTER = {
@@ -3608,7 +3685,10 @@ try { if (localStorage.getItem('wfr.debug') === '1') window.__wfr = { eagle: () 
   prologue: () => ({ t: S.t, homeSaid: !!EG.homeSaid, toast: $('toast').hidden ? '' : $('toast').textContent, eagle: eagleBird.visible, mark: eagleMark.visible, seen: !!(S.seen || {}).prologue, queued: cutQ.includes('prologue'), showing: !$('story').hidden, at: storyPanels ? storyAt : -1, n: storyPanels ? storyPanels.length : 0, caption: $('caption').textContent, typing: TYPER.active(), full: TYPER.text, next: $('next').textContent, talking: !!S.talking, who: $('talkWho').textContent, line: $('talkText').textContent, mode: S.mode, homeTold: !!EG.homeTold, what: storyLines(), spot: eagleSpot.toArray() }),   /* 643 ch1 */
   call625: () => { const st = (typeof SKYEND !== 'undefined' && SKYEND) ? SKYEND.state() : null; return { ph: CALL.ph, pht: CALL.pt, starts: CALL.n, endIn: !!CALL.endIn, cam: camera.position.toArray(), marks: !!(CALL.marks && CALL.marks[0].visible), q: !!(CALL.q && CALL.q.visible), cap: $('callCap').hidden ? '' : $('callCap').textContent, capCls: $('callCap').className, ui: !$('ui').hidden, hop: S.chickHop || 0, seen: !!(S.seen || {}).call625, up: !!(S.seen || {}).call625up, pend: (chick && chick.userData.pendWord) || null, queued: cutQ.includes('call625'), showing: !$('story').hidden, at: storyPanels ? storyAt : -1, n: storyPanels ? storyPanels.length : 0, caption: $('caption').textContent, typing: TYPER.active(), full: TYPER.text, next: $('next').textContent, where: (S.sky && S.sky.where) || 'home', ended: !!(S.sky && S.sky.ended), chickAt: chick ? chick.position.toArray() : null, chickWhere: chick ? chick.userData.where : null, herAt: S.pos.toArray(), nestAt: NEST.toArray(), discAt: st && st.shelfAt ? [st.shelfAt[0], st.discTop, st.shelfAt[2]] : null, toast: $('toast').hidden ? '' : $('toast').textContent, talking: !!S.talking, who: $('talkWho').textContent, line: $('talkText').textContent, feel: S.chickFeelT > 0 ? S.chickFeel : null, mode: S.mode, calm: CALL.t, fade: $('fade') ? +$('fade').style.opacity || 0 : 0, what: storyLines() }; },   /* 625 */
   world: () => { const c = wcave(), m = owlM(); return { on: c.on, got: c.got, picked: c.picked, day: c.day, done: c.done, dawns: S.dawns || 0, caps: worldCaps().map((s) => [s.visible, +s.position.x.toFixed(2), +s.position.y.toFixed(2), +s.position.z.toFixed(2)]), caveAt: CAVE ? [CAVE.x, CAVE.y, CAVE.z] : null, caveIndex: CAVE ? houses.indexOf(CAVE) : -1, inside: S.inside === CAVE, glowGap: (() => { const gm = CAVE && CAVE.parts && CAVE.parts.near && CAVE.parts.near.getObjectByName('cave:glow'); if (!gm) return null; const P = gm.geometry.attributes.position, v = new THREE.Vector3(); return worldCaps().map((s) => { let best = 1e9; for (let i = 0; i < P.count; i += 2) { v.fromBufferAttribute(P, i); gm.localToWorld(v); const d = Math.hypot(v.x - s.position.x, v.z - s.position.z); if (d < best) best = d; } return +best.toFixed(2); }); })(), owlAt: m ? m.g.position.toArray() : null, owlShown: m ? m.g.visible : null, me: S.pos.toArray(), pill: $('quest').textContent, talking: !!S.talking, who: $('talkWho').textContent, line: $('talkText').textContent, level: S.level, xp: S.xp, hemi: HEMI.intensity, fogFar: FOG_AIR.far, evening: isEvening(), clock: S.clock, toast: $('toast').hidden ? '' : $('toast').textContent, what: storyLines(), arrow: (goalTarget() || { toArray: () => null }).toArray() }; },   /* 643 worlds */
-  worldSet: (o) => { Object.assign(wcave(), o); save(); hud(); }, perchOwl: () => { const m = owlM(); if (!m) return false; S.mode = 'walk'; S.speed = 0; S.pos.set(m.at.x + 0.4, m.at.y + standOf(kind), m.at.z + 0.4); if (bird) bird.position.copy(S.pos); S.inside = null; S.landTo = null; hud(); return true; },   /* on his tree top, inside its radius (groundAt holds a walker there) */ standAt: (x, y, z) => { S.mode = 'walk'; S.speed = 0; S.pos.set(x, y, z); if (bird) bird.position.copy(S.pos); hud(); },
+  worldSet: (o) => { Object.assign(wcave(), o); save(); hud(); }, faceTo: (x, z) => { S.yaw = Math.atan2(x - S.pos.x, z - S.pos.z); S.camYaw = S.yaw; }, free: () => { if (!S.inside) return true; const L = toLocal(S.inside, S.pos.x, S.pos.z); return freeIn(S.inside, roomOf(S.inside), L.x, L.z); }, perchOwl: () => { const m = owlM(); if (!m) return false; S.mode = 'walk'; S.speed = 0; S.pos.set(m.at.x + 0.4, m.at.y + standOf(kind), m.at.z + 0.4); if (bird) bird.position.copy(S.pos); S.inside = null; S.landTo = null; hud(); return true; },   /* on his tree top, inside its radius (groundAt holds a walker there) */ standAt: (x, y, z) => { S.mode = 'walk'; S.speed = 0; S.pos.set(x, y, z); if (bird) bird.position.copy(S.pos); hud(); },
+  light: () => { const c = wlight(), m = falconM(), R = lightRings(); return { on: c.on, got: c.got, best: c.best, whole: c.whole, done: c.done, n: LT.n, t: +LT.t.toFixed(2), lightY, axis: [LIGHT.x, LIGHT.z], rings: R.map((r) => [r.visible, +r.position.x.toFixed(2), +r.position.y.toFixed(2), +r.position.z.toFixed(2), r.material === LT.mats[0]]), falconAt: m ? m.g.position.toArray() : null, falconShown: m ? m.g.visible : null, me: S.pos.toArray(), mode: S.mode, speed: S.speed, diveTop: MOVES[kind].dive * diveK(), stand: standOf(kind), pill: $('quest').textContent, talking: !!S.talking, who: $('talkWho').textContent, line: $('talkText').textContent, level: S.level, xp: S.xp, toast: $('toast').hidden ? '' : $('toast').textContent, what: storyLines(), arrow: (goalTarget() || { toArray: () => null }).toArray() }; },   /* 643 world two */
+  lightSet: (o) => { Object.assign(wlight(), o); save(); hud(); }, stick: (sx, sy) => { input.sx = sx; input.sy = sy; },   /* 643 world two: a guard holds a dive through the stick the game reads */
+  lightFly: (x, y, z, pitch, yaw) => { S.mode = 'fly'; S.pos.set(x, y, z); S.pitch = pitch; S.speed = 14; S.yaw = yaw == null ? Math.atan2(-x, -z) : yaw; S.camYaw = S.yaw; if (bird) bird.position.copy(S.pos); LT.prev.copy(S.pos); LT.wasFly = true; },   /* 643 world two: fly() with the trail's segment restarted here (a teleport is not a flight: its segment must not pass a ring) */
   toastNow: (t, ms) => toast(t, ms),   /* 625 guard: a word on screen, to prove the call waits behind it */
   toDisc: () => { const st = (typeof SKYEND !== 'undefined' && SKYEND) ? SKYEND.state() : null; if (!st || !st.shelfAt) return false; S.sky.where = 'temple'; S.pos.set(st.shelfAt[0] - 4, st.discTop + standOf(kind), st.shelfAt[2] + 4); if (bird) bird.position.copy(S.pos); S.mode = 'walk'; S.speed = 0; S.landTo = null; S.camCut = true; save(); return true; },   /* 625 guard: the island as the game leaves her there */
   perch: () => { S.mode = 'walk'; S.speed = 0; S.pos.copy(eagleSpot).add(new THREE.Vector3(-3, standOf(kind), 3)); if (bird) bird.position.copy(S.pos); }, queue: (id) => queueCut(id),
@@ -3705,6 +3785,7 @@ addEventListener('resize', resize); resize();
 let last = performance.now(), mumbleT = 0;
 function goalTarget() {
   { const w = worldGoal(); if (w) return w; }   // 643 worlds: a live world owns the arrow
+  { const l = lightGoal(); if (l) return l; }   // 643 world two
   { const ow = owlCalling(); if (ow && !S.insideTH) return ow.g.position; }   // 589: the Owl's call outranks the night's tree house
   if (S.clock >= 2100 && beginner() && !S.insideTH && S.tut === 0 && TREEHOUSES.length) { let b = null, bd = 1e9; for (const t of TREEHOUSES) { const d = t.entryW.distanceTo(S.pos); if (d < bd) { bd = d; b = t; } } return b.entryW; }   // night: the nearest tree house
   { let best = null, bd = Infinity, door = false;   // 588: the arrow used to drop to some OTHER tool while the owner was indoors
@@ -4061,8 +4142,8 @@ function frame(now) {
     else if (S.tut === 4) { if (sy > 0.4) S.tutUp += dt; if (sy < -0.4) S.tutDown += dt; if (S.tutUp > 0.5 && S.tutDown > 0.5) tutNext(); }
     const M = MOVES[kind], diving = canDive() && S.pitch < -0.35;
     S.flutT = Math.max(0, S.flutT - dt); S.flutCd = Math.max(0, S.flutCd - dt);
-    const top = S.flutT > 0 ? M.flutter : diving ? M.dive : 30;
-    S.speed += -Math.sin(S.pitch) * (diving ? 16 : 11) * dt; if (S.flutT <= 0) S.speed += (15 * B.speed - S.speed) * dt * 0.35 * (1 - (S.hoverK || 0));   // a hover is not pulled back to cruising
+    const top = S.flutT > 0 ? M.flutter : diving ? M.dive * diveK() : 30;   // 643 world two
+    S.speed += -Math.sin(S.pitch) * (diving ? 16 * diveK() : 11) * dt; if (S.flutT <= 0) S.speed += (15 * B.speed - S.speed) * dt * 0.35 * (1 - (S.hoverK || 0));   // a hover is not pulled back to cruising
     if (S.longK > 0.01) S.speed += (18 * B.speed - S.speed) * dt * 0.7 * S.longK;   // 565: a little faster than cruising
     if (S.hoverK > 0.01) S.speed += (0 - S.speed) * dt * 2.5 * S.hoverK;   // 566: the hover sheds its speed
     S.speed = Math.max(7 * (1 - (S.hoverK || 0)), Math.min(top, S.speed));   // the floor of 7 fades out in a hover and back in after
@@ -4225,7 +4306,7 @@ function frame(now) {
     const m = sparks[i]; m.userData.v.y -= 9 * dt; m.position.addScaledVector(m.userData.v, dt); m.rotation.x += m.userData.r * dt; m.rotation.y += m.userData.r * dt;
     if (m.position.y < NEST.y - 14) { scene.remove(m); sparks.splice(i, 1); }
   }
-  navHud(S.real || dt); quickTick(S.real || dt); TYPER.tick(S.real || dt); callTick(S.real || dt); worldTick(S.real || dt);   // 631; 644; 638; 625; 643 worlds
+  navHud(S.real || dt); quickTick(S.real || dt); TYPER.tick(S.real || dt); callTick(S.real || dt); worldTick(S.real || dt); lightTick(S.real || dt);   // 631; 644; 638; 625; 643 worlds (one, two)
   if (SKYEND) SKYEND.tick(dt);   // 544: the ending (a no-op until the gate opens)
   lvTick(); morphTick(dt);   // after the mode block: it writes the bird's turn and size last, and puts them back at the end (642: a queued level-up starts here)
   arrowTick(dt); S.camCut = false;   // 588: after the camera has moved; 584: a door's camera cut lasts one frame
@@ -4295,7 +4376,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build 83cc1c2fc9c0): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build 14f22e711257): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>
