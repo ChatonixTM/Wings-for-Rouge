@@ -470,33 +470,33 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 <div id="fade" aria-hidden="true"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="gltf-loader.js?v=e71ff8697063"></script>
-<script src="skeleton-utils.js?v=e71ff8697063"></script>
-<script src="meshopt-decoder.js?v=e71ff8697063"></script>
-<script src="models.js?v=e71ff8697063"></script>
-<script src="people.js?v=e71ff8697063"></script>
-<script src="villagers.js?v=e71ff8697063"></script>
-<script src="tex-photos.js?v=e71ff8697063"></script>
-<script src="textures.js?v=e71ff8697063"></script>
-<script src="birds.js?v=e71ff8697063"></script>
-<script src="humans.js?v=e71ff8697063"></script>
-<script src="folk.js?v=e71ff8697063"></script>
-<script src="trees.js?v=e71ff8697063"></script>
-<script src="treehouses.js?v=e71ff8697063"></script>
-<script src="cabins.js?v=e71ff8697063"></script>
-<script src="cave.js?v=e71ff8697063"></script>
-<script src="sounds.js?v=e71ff8697063"></script>
-<script src="music.js?v=e71ff8697063"></script>
-<script src="music-orchestra.js?v=e71ff8697063"></script>
-<script src="rhythm.js?v=e71ff8697063"></script>
-<script src="pictograms.js?v=e71ff8697063"></script>
-<script src="chick-wear.js?v=e71ff8697063"></script>
-<script src="hedgehogs.js?v=e71ff8697063"></script>
-<script src="opening.js?v=e71ff8697063"></script>
-<script src="skypiea.js?v=e71ff8697063"></script>
-<script src="atmo.js?v=e71ff8697063"></script>
-<script src="weather.js?v=e71ff8697063"></script>
-<script src="runes.js?v=e71ff8697063"></script>
+<script src="gltf-loader.js?v=5253dc37e634"></script>
+<script src="skeleton-utils.js?v=5253dc37e634"></script>
+<script src="meshopt-decoder.js?v=5253dc37e634"></script>
+<script src="models.js?v=5253dc37e634"></script>
+<script src="people.js?v=5253dc37e634"></script>
+<script src="villagers.js?v=5253dc37e634"></script>
+<script src="tex-photos.js?v=5253dc37e634"></script>
+<script src="textures.js?v=5253dc37e634"></script>
+<script src="birds.js?v=5253dc37e634"></script>
+<script src="humans.js?v=5253dc37e634"></script>
+<script src="folk.js?v=5253dc37e634"></script>
+<script src="trees.js?v=5253dc37e634"></script>
+<script src="treehouses.js?v=5253dc37e634"></script>
+<script src="cabins.js?v=5253dc37e634"></script>
+<script src="cave.js?v=5253dc37e634"></script>
+<script src="sounds.js?v=5253dc37e634"></script>
+<script src="music.js?v=5253dc37e634"></script>
+<script src="music-orchestra.js?v=5253dc37e634"></script>
+<script src="rhythm.js?v=5253dc37e634"></script>
+<script src="pictograms.js?v=5253dc37e634"></script>
+<script src="chick-wear.js?v=5253dc37e634"></script>
+<script src="hedgehogs.js?v=5253dc37e634"></script>
+<script src="opening.js?v=5253dc37e634"></script>
+<script src="skypiea.js?v=5253dc37e634"></script>
+<script src="atmo.js?v=5253dc37e634"></script>
+<script src="weather.js?v=5253dc37e634"></script>
+<script src="runes.js?v=5253dc37e634"></script>
 <script>
 (() => {
 'use strict';
@@ -2123,6 +2123,7 @@ function doFlap() {
     return;
   }
   if (S.mode === 'swim') { if (!S.rescue) { S.strokeT = 0.45; S.speed = Math.min(14, S.speed + 3); } return; }
+  if (S.mode === 'fly' && RUNES && RUNES.railed()) { if (RUNES.burst()) { S.flapT = 0.35; chirp(); } return; }   // 632 U4b: on the rail, Flap is a burst
   if (S.mode !== 'fly') return; S.flapT = 0.35; S.speed = Math.min(30, S.speed + 3.2); S.pitch = Math.min(0.75, S.pitch + 0.18); chirp();
 }
 /* Land: shown, not skipped (Oct 8: "the land button is a bit too 'immediate'") - a glide down, wings flared, then feet */
@@ -2170,6 +2171,7 @@ function stayDraw() { const b = $('stayBtn'); if (!b) return; b.hidden = !S.chic
 const followLvl = () => statLevel(S.chick.stats[followAir() ? 'fly' : 'run'] || 0);
 function followK() {   // her pace while it is with her: on distance moved, never on S.speed (lift reads S.speed)
   if (!FOLLOW.with || S.inside || S.insideTH || !(S.mode === 'walk' || followAir())) return 1;
+  if (FOLLOW.force == null && comeGuest() && !(S.chick.follows && !S.chick.stay)) return Math.min(1, FOLLOW.paceForce != null ? FOLLOW.paceForce : chickPaceK());   // 621 V2: a guest is slowed by its cold, never its level
   return Math.min(1, PACE[Math.min(PACE.length - 1, followLvl())] * (FOLLOW.paceForce != null ? FOLLOW.paceForce : chickPaceK()));
 }
 function followTick(dt) {   // true when the follow moved the chick this frame (chickTick's own lerp then stands aside)
@@ -2177,23 +2179,25 @@ function followTick(dt) {   // true when the follow moved the chick this frame (
   const calm = !S.talking && !CALL.ph && (S.mode === 'walk' || S.mode === 'fly');   // never inside 625's call or a talk (Obito)
   if (!S.chick.follows && FOLLOW.force == null && followOk() && !night && calm && chick.position.distanceTo(S.pos) < 12) { S.chick.follows = true; S.chick.stay = true; save(); stayDraw(); }
   if (S.chick.follows && !(S.seen && S.seen.follow621) && calm && $('toast').hidden) { S.seen = S.seen || {}; S.seen.follow621 = true; save(); toast('Your chick is strong enough to come with you now. Tap Come along on its card.', 4200); }   // DRAFT; the word waits for a free slot (one toast slot)
+  comeBeat();   // 621 V2: her first run on the course brings it
   const can = (FOLLOW.force != null ? FOLLOW.force : (!!S.chick.follows && !S.chick.stay)) && !night;   // at night it flies home to sleep (the old lerp takes it)
-  if (!can) { if (FOLLOW.with) { FOLLOW.with = false; FOLLOW.ring.length = 0; } return false; }
-  if (!FOLLOW.with) { if (FOLLOW.force || chick.position.distanceTo(S.pos) < 12) { FOLLOW.with = true; FOLLOW.ring.length = 0; FOLLOW.last = null; } else return false; }
+  if (!can && !(FOLLOW.force == null && comeGuest())) { if (FOLLOW.with) { FOLLOW.with = false; FOLLOW.ring.length = 0; } return false; }   // 621 V2: a guest stays with her on the island
+  if (!FOLLOW.with) { FOLLOW.with = true; FOLLOW.ring.length = 0; FOLLOW.last = null; COME.herLast = null; COME.herV.set(0, 0, 0); }   // 621 V2: from anywhere (the fetch brings it); her old speed sample forgotten
   const air = followAir();
-  if (S.inside || S.insideTH || S.mode === 'swim' || S.mode === 'event' || S.talking || !(S.mode === 'walk' || air)) { FOLLOW.ring.length = 0; FOLLOW.last = null; return true; }   // it waits where it is: at the door, over the water, through a talk; her path starts afresh after (Home, a lift)
+  const swim = S.mode === 'swim'; if (S.inside || S.insideTH || S.mode === 'event' || S.talking || !(S.mode === 'walk' || air || swim)) { FOLLOW.ring.length = 0; FOLLOW.last = null; if (S.mode === 'landing' && !S.inside && !S.insideTH && !S.talking) comeLandWait(dt); return true; }   // it waits where it is: at the door, through a talk; her path starts afresh after (Home, a lift). 621 V2: the water is no longer a wait; her landing glide holds it behind its slot (comeLandWait)
   if (FOLLOW.last && FOLLOW.last.distanceTo(S.pos) > 6) { FOLLOW.ring.length = 0; FOLLOW.last = null; }   // a jump (toNest, carried in, the disc): the old path is gone (Obito)
   if (!FOLLOW.last || FOLLOW.last.distanceTo(S.pos) >= 0.25) { const q = S.pos.clone(); q.g = groundAt(q.x, q.z); FOLLOW.ring.unshift(q); if (FOLLOW.ring.length > 120) FOLLOW.ring.pop(); FOLLOW.last = S.pos.clone(); }
   const lv = followLvl(), sc = STAGES[S.chick.stage].scale / 0.3, fx = Math.sin(S.yaw), fz = Math.cos(S.yaw); FOLLOW.lvl = lv;
   let tx, tz;
-  if (lv <= 1) { const back = (air ? 3.5 : 1.6) * sc; let acc = 0, pt = null;   // behind her, on her own path
+  if (lv <= 1) { const back = (air ? 2.5 : 1.6) * sc; let acc = 0, pt = null;   // behind her, on her own path
     for (let i = 1; i < FOLLOW.ring.length; i++) { acc += FOLLOW.ring[i].distanceTo(FOLLOW.ring[i - 1]); if (acc >= back) { pt = FOLLOW.ring[i]; break; } }
     if (pt) { tx = pt.x; tz = pt.z; } else { tx = S.pos.x - fx * back; tz = S.pos.z - fz * back; } }
   else if (lv === 2) { tx = S.pos.x - fz * 1.2; tz = S.pos.z + fx * 1.2; }   // beside her
   else { const a = Math.min(3, 1.5 + 0.5 * (lv - 3)); tx = S.pos.x + fx * a; tz = S.pos.z + fz * a; }   // ahead of her
   if (!air) { const gMe = groundAt(S.pos.x, S.pos.z); if (Math.abs(groundAt(tx, tz) - gMe) > 1.5) { const pt = FOLLOW.ring.find((q, i) => i > 0 && q.distanceTo(S.pos) > 0.5 && Math.abs(q.g - gMe) <= 1.5); if (pt) { tx = pt.x; tz = pt.z; } else { tx = S.pos.x; tz = S.pos.z; } } }   // never off the disc's rim or a deck's edge: back on her path, or at her feet (Obito)
   const gy = groundAt(tx, tz); FOLLOW.slot.set(tx, air ? Math.max(S.pos.y - 0.3, gy + 1) : gy + 0.3, tz);
-  if (chick.position.distanceTo(FOLLOW.slot) > 30) chick.position.copy(FOLLOW.slot);   // a sleep, a lift, a teleport: at her side at once
+  comeSlot(dt, air, sc);   // 621 V2
+  if (comeFetch(dt)) return true;   // 621 V2: far away it flies to her (was a snap)
   const was = chick.position.clone(); chick.position.lerp(FOLLOW.slot, 1 - Math.exp(-6 * dt));
   const mv = chick.position.clone().sub(was); if (mv.lengthSq() > 1e-6) chick.rotation.y = Math.atan2(mv.x, mv.z);
   if (air || mv.length() > 0.004) S.chickHop = Math.max(S.chickHop || 0, air ? 0.9 : 0.35);   // it hops as it goes; it flaps in the air
@@ -2202,6 +2206,92 @@ function followTick(dt) {   // true when the follow moved the chick this frame (
   if (lv <= 1 && k < 1 && !FOLLOW.said[slowKey] && $('toast').hidden) { FOLLOW.said[slowKey] = true; toast('Your chick can\'t keep up yet. Feed it ' + (air ? 'blueberries to help it fly faster.' : 'apples to help it run faster.'), 3600); }   // DRAFT
   if (lv >= 3 && !FOLLOW.said.ahead && $('toast').hidden) { FOLLOW.said.ahead = true; toast('Your chick is pulling ahead of you!', 3200); }   // DRAFT
   return true;
+}
+/* 621 V2 (Marth, Oct 16 ~02:25): "i want it to hop and fly around me once i try the course, and then after u leave the sky island area, u
+   fprever more have the option to bring the chich with you. it needs to be have flying, flutter, zoom, swim all those animations". One key,
+   S.seen.chickComes621: 1 = her first run brought it (a guest on the sky island), 2 = down off the island the follow is hers (word owed), 3 = said. */
+const COME = { live: false, wasLive: false, word: null, came: false, fetch: null, n: 0, ang: 0, herLast: null, herV: new THREE.Vector3(), v: new THREE.Vector3(), cf: new THREE.Vector3(),
+  last: null, vs: 0, vsWas: 0, vy: 0, acc: 0, yawWas: null, yr: 0, phF: 0, phS: 0, w: { air: 0, flut: 0, zoom: 0, swim: 0 }, ws: -1,   // ws: the wing sign, 664's (its flare drives wings[1].z to -1.1)
+  base: new THREE.Vector3(), baseT: -9, wait: null, pl: 0 };   // base: 621 V1's slot this frame (before comeSlot); wait: where it holds in the air while she glides down (comeLandWait)
+const sst = (a, b, x) => { const u = Math.min(1, Math.max(0, (x - a) / (b - a))); return u * u * (3 - 2 * u); };
+const runLive = () => !!(typeof RUNES !== 'undefined' && RUNES && RUNES.railPose && RUNES.railPose(0));
+const comeGuest = () => !!(chick && S.seen && S.seen.chickComes621 === 1 && S.sky && S.sky.where === 'temple');
+function comeBeat() {   // from followTick: the first run she flies after 625's call brings the chick, wherever it is
+  const live = runLive(), first = live && !COME.wasLive; COME.wasLive = live; COME.live = live; S.seen = S.seen || {};
+  if (!first || S.seen.chickComes621 || !S.seen.call625 || S.tut !== 0) return;
+  S.seen.chickComes621 = 1; save(); FOLLOW.with = true; FOLLOW.ring.length = 0; FOLLOW.last = null; chirp(); chickFeel(0, 2.5);
+  COME.word = 'Your chick flew all the way up to fly with you!';   // DRAFT
+}
+function comeUnlock(U) {   // from chickTick: off the sky island after her first run, the follow is hers for good (a STATE: a reload cannot skip it)
+  S.seen = S.seen || {};
+  if (S.seen.chickComes621 === 1 && ((S.sky && S.sky.where) || 'home') !== 'temple') {
+    COME.came = FOLLOW.with && nightAmt(S.clock) <= 0.5;   // Su 32 (his "it just stays there"; V1 left saves at Stay): the unlock always brings it along
+    S.seen.chickComes621 = 2; S.seen.follow621 = true; S.chick.follows = true; S.chick.stay = false; save(); stayDraw();
+  }
+  if ((COME.word || S.seen.chickComes621 === 2) && !U.pendWord && $('toast').hidden && !S.talking && !CALL.ph) {   // the word is built only when the slot is free
+    const say = COME.word || (S.chick.stay ? 'Now your chick can come anywhere with you. Tap Come along on its card.' : (COME.came ? 'Your chick came down with you. ' : '') + 'Now it can come anywhere with you. Tap Stay on its card to leave it at the nest.');   // DRAFT
+    toast(say, 4600); if (say === COME.word) COME.word = null; else { S.seen.chickComes621 = 3; save(); } }
+}
+function comeSlot(dt, air, sc) {   // after 621's slot: round her on the course and as a guest; afloat in the water; led by her velocity in the air
+  const C = COME, me = S.pos, fs = FOLLOW.slot; C.base.copy(fs); C.baseT = S.t; C.wait = null;   // V1's slot kept for her landing glide (comeLandWait)
+  if (C.herLast && dt > 0) { C.v.copy(me).sub(C.herLast).divideScalar(dt); if (C.v.length() < 80) C.herV.lerp(C.v, Math.min(1, dt * 8)); }   // measured, never S.speed; a jump is not a flight
+  C.herLast = (C.herLast || new THREE.Vector3()).copy(me);
+  if (S.mode === 'swim') { const cSc = STAGES[S.chick.stage].scale, tx = me.x - Math.sin(S.yaw) * 2 * sc, tz = me.z - Math.cos(S.yaw) * 2 * sc;
+    fs.set(tx, Math.max(WATER + 0.4 * (1 - cSc) + 0.1 * cSc, groundAt(tx, tz) + 0.3), tz); return; }   // afloat behind her, never in the sea floor or a shore
+  const rp = C.live ? RUNES.railPose(3) : null, R = Math.max(0.8, 2 * sc * Math.min(1, camera.aspect / 1.3));   // on her upright phone (aspect ~0.46) the circle shrinks to 0.8-1.2 m: in view (Jiraiya, RISK 1); wide screens keep 2 m x stage
+  if (rp || comeGuest()) { C.ang += dt * (1.6 + 0.6 * Math.sin(S.t * 0.7)); const c = Math.cos(C.ang), s = Math.sin(C.ang);
+    if (rp) fs.set(rp.p.x - rp.dir.z * R * c, rp.p.y + 0.6 * R * s, rp.p.z + rp.dir.x * R * c);   // round the line, 3 m behind her
+    else if (air) fs.set(me.x - Math.sin(S.yaw) * 1.5 + R * c, me.y - 0.3 + 0.6 * Math.sin(2 * C.ang), me.z - Math.cos(S.yaw) * 1.5 + R * s);
+    else { const r = (0.8 + 0.35 * Math.sin(C.ang * 0.5)) * 0.6 * R, tx = me.x + r * c, tz = me.z + r * s, g = groundAt(tx, tz); if (Math.abs(g - groundAt(me.x, me.z)) <= 1.5) fs.set(tx, g + 0.3, tz); } }   // hopping round her; past the rim 621's slot stands
+  if (air || rp) { fs.addScaledVector(C.herV, dt > 0 ? dt / (1 - Math.exp(-6 * dt)) : 1 / 6); fs.y = Math.max(fs.y, Math.max(groundAt(fs.x, fs.z), WATER) + 1); }   // the lerp's lag AND her own move after chickTick, cancelled at THIS frame's dt (-> 1/6 as dt -> 0; 1/6 left it 0.026 x speed short of its spot as drawn at 20 fps)
+}
+function comeLandWait(dt) {   // her landing glide (664): the chick holds in the air and lands AFTER her (land664Chick reads its arrival); one still coming in (a fetch, a guest's circle, ahead of its slot) first drops back behind its slot, then faces her way
+  const C = COME, p = chick.position, fx = Math.sin(S.yaw), fz = Math.cos(S.yaw);
+  if (!C.wait) { const fresh = S.t - C.baseT < 0.5, ahead = (p.x - C.base.x) * fx + (p.z - C.base.z) * fz;
+    if (fresh && (C.fetch || comeGuest() || ahead > 1)) { const wx = C.base.x - fx * 1.5, wz = C.base.z - fz * 1.5; C.wait = new THREE.Vector3(wx, Math.max(C.base.y, Math.max(groundAt(wx, wz), WATER) + 1), wz); }
+    if (!C.wait || C.wait.distanceTo(p) > 40) C.wait = p.clone(); C.fetch = null; }   // far off it holds: after her touchdown a fresh fetch brings it (placed behind the camera past 60 m)
+  const to = C.v.copy(C.wait).sub(p), L = to.length();
+  if (L > 0.05) p.addScaledVector(to, Math.min(L, Math.max(30, C.herV.length() + 14) * dt) / L);
+  if (L > 1.5) chick.rotation.y = Math.atan2(to.x, to.z); else chick.rotation.y += Math.atan2(Math.sin(S.yaw - chick.rotation.y), Math.cos(S.yaw - chick.rotation.y)) * Math.min(1, dt * 6);   // flying back it faces its flight; holding, it turns to her heading
+  S.chickHop = Math.max(S.chickHop || 0, 0.9);
+}
+function comeFetch(dt) {   // > 12 m from its slot it flies to her (6-40 m was a jump, not a flight: Obito); from > 60 m it sets off from behind the camera (out of view by construction)
+  const C = COME, p = chick.position, d = p.distanceTo(FOLLOW.slot);
+  if (!C.fetch) { if (d <= 12) return false; C.fetch = { t: 0, place: true, wait: 0 }; C.n++; }
+  if (S.camCut) { C.fetch.place = true; return true; }   // a cut (a teleport), even mid-fetch: the camera moves after chickTick, so it sets off again next frame from behind the NEW camera
+  if (C.fetch.place) { if (camera.position.distanceTo(S.pos) > 30 && (C.fetch.wait += dt) < 1.5) return true;   // a teleport without a cut leaves the camera behind for a moment: wait for it (never set off from behind an old camera)
+    C.fetch.place = false; if (d > 60) { camera.getWorldDirection(C.cf); p.copy(camera.position).addScaledVector(C.cf, -10); p.y = Math.max(p.y - 5, Math.max(groundAt(p.x, p.z), WATER) + 2); C.pl++; } }
+  C.fetch.t += dt; const to = C.v.copy(FOLLOW.slot).sub(p), L = to.length(), sp = Math.max(30, C.herV.length() + 14);   // prompt (his thumb): closes 14 m/s on her at any speed
+  if (L > 1e-3) { p.addScaledVector(to, Math.min(L, sp * dt) / L); chick.rotation.y = Math.atan2(to.x, to.z); }
+  p.y = Math.max(p.y, Math.max(groundAt(p.x, p.z), WATER) + 0.5); S.chickHop = Math.max(S.chickHop || 0, 0.9);
+  if (p.distanceTo(FOLLOW.slot) < 6 || C.fetch.t > 10) C.fetch = null;   // 621's own lerp from here
+  return true;
+}
+function chickPose(dt, U) {   // its OWN motion picks the pose: FLYING, FLUTTER (climb, speed-up, hover), ZOOM (fast: tucked), SWIM; blended
+  const C = COME, p = chick.position, cSc = STAGES[S.chick.stage].scale, W = C.w, T = S.t;
+  if (!C.last) C.last = p.clone();
+  if (dt > 0) { const v = Math.hypot(p.x - C.last.x, p.z - C.last.z) / dt;
+    if (v < 80) { const k = Math.min(1, dt * 8); C.vs += (v - C.vs) * k; C.vy += ((p.y - C.last.y) / dt - C.vy) * k; C.acc += ((C.vs - C.vsWas) / dt - C.acc) * Math.min(1, dt * 5); }   // a placement is never a flight
+    const yr = C.yawWas == null ? 0 : Math.atan2(Math.sin(chick.rotation.y - C.yawWas), Math.cos(chick.rotation.y - C.yawWas)) / dt; C.yr += (yr - C.yr) * Math.min(1, dt * 6); }
+  C.last.copy(p); C.vsWas = C.vs; C.yawWas = chick.rotation.y;
+  const swim = FOLLOW.with && S.mode === 'swim' && !C.fetch, h = p.y - Math.max(groundAt(p.x, p.z), WATER) - 0.3, air = !swim && (!!C.fetch || (FOLLOW.with && (followAir() || h > 0.5)));
+  const cr = 15 * BIRDS[kind].speed; let tf = 0, tz = 0;
+  if (air) { tf = Math.max(sst(1, 3, C.vy), sst(4, 8, C.acc), 1 - sst(3, 6, C.vs)); tz = sst(1.3 * cr, 1.6 * cr, C.vs) * (1 - tf); }
+  const e = Math.min(1, dt * 5); W.air += ((air ? 1 : 0) - W.air) * e; W.swim += ((swim ? 1 : 0) - W.swim) * e; W.flut += (tf - W.flut) * e; W.zoom += (tz - W.zoom) * e;
+  const fly = Math.max(0, 1 - W.flut - W.zoom);
+  C.phF += dt * (7 + 5 * W.flut); C.phS += dt * Math.min(4, 1.2 + 0.2 * C.vs);
+  const bF = Math.sin(2 * Math.PI * C.phF), bS = Math.sin(2 * Math.PI * C.phS);
+  const openAir = fly * (0.75 + 0.55 * bF) + W.flut * (1.05 + 0.35 * bF) + W.zoom * (-0.12 + 0.03 * Math.sin(T * 113));
+  const g0 = C.ws * U.wings[1].rotation.z; let open = g0 + (openAir - g0) * W.air; open += (0.45 + 0.4 * bS - open) * W.swim;
+  U.wings[1].rotation.z = C.ws * open; U.wings[0].rotation.z = -C.ws * open;
+  U.body.rotation.x += W.air * (fly * (0.12 - Math.max(-0.6, Math.min(0.6, C.vy / Math.max(4, C.vs))) * 0.4) - 0.35 * W.flut + 0.45 * W.zoom) - 0.12 * W.swim;
+  U.body.rotation.z = -Math.max(-0.45, Math.min(0.45, C.yr * 0.3)) * W.air;
+  U.body.position.y += (W.air * (fly * 0.05 * Math.cos(2 * Math.PI * C.phF) + W.flut * 0.04 * bF) + W.swim * 0.03 * Math.sin(T * 3)) * cSc;
+  if (W.zoom > 0.01) { U.body.scale.z *= 1 + 0.12 * W.zoom; U.body.scale.y *= 1 - 0.08 * W.zoom; }
+  const F = U.body.userData.feet; if (F) for (let i = 0; i < F.length; i++) { const f = F[i], q = i * Math.PI, a = W.air * (1 - W.swim);   // written every frame: on the ground they are home (the residue law)
+    const ay = fly * -0.3 + W.flut * -0.44 + W.zoom * -0.26, az = fly * -0.05 + W.flut * 0.06 + W.zoom * -0.16, ar = fly * 0.9 + W.flut * (-0.2 + 0.25 * Math.sin(T * 9 + q)) + W.zoom * 1.3;
+    const sz = -0.05 + 0.08 * Math.sin(2 * Math.PI * C.phS + q), sr = 0.5 * Math.sin(2 * Math.PI * C.phS + q);
+    f.position.y = -0.4 + (ay + 0.4) * a + (-0.42 + 0.4) * W.swim; f.position.z = 0.1 + (az - 0.1) * a + (sz - 0.1) * W.swim; f.rotation.x = ar * a + sr * W.swim; }
 }
 const coldOf = () => (S.chick.cold = S.chick.cold || { stage: 0, at: -1, a: 0, b: 0 });
 const chickPaceK = () => { const c = S.chick && S.chick.cold; return !c ? 1 : c.stage >= 2 ? 0.75 : c.stage === 1 ? 0.9 : 1; };   // 621 reads it: her pace is bounded by the chick's
@@ -2286,6 +2376,7 @@ function thAct() {
   }
 }
 function doLand() {
+  if (S.mode === 'fly' && RUNES && RUNES.railed()) { RUNES.leave(); return; }   // 632 U4b: the Land button reads Leave
   if (S.mode !== 'fly' || $('land').hidden) return;
   S.mode = 'landing'; S.landT = 0; S.landY = S.pos.y; S.landDone = false; $('land').hidden = true; chirp();
   S.landTo = landTarget();   // the aim-assist: the nest, a tree top, a roof ridge, the lighthouse, the peak (Marth, board 534)
@@ -2575,7 +2666,7 @@ function makeChick(p) {
   for (const s of [-1, 1]) {
     const e = new THREE.Mesh(new THREE.SphereGeometry(0.055, 8, 6), new THREE.MeshBasicMaterial({ color: 0x111111 })); e.position.set(0.12 * s, 0.53, 0.38); body.add(e); (body.userData.eyes = body.userData.eyes || []).push(e);
     const shine = new THREE.Mesh(new THREE.SphereGeometry(0.018, 6, 4), new THREE.MeshBasicMaterial({ color: 0xffffff })); shine.position.set(0.13 * s, 0.56, 0.43); body.add(shine); (body.userData.shines = body.userData.shines || []).push(shine);
-    const foot = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.04, 0.18), lam(0xf28c28)); foot.position.set(0.15 * s, -0.4, 0.1); body.add(foot);
+    const foot = new THREE.Mesh(new THREE.BoxGeometry(0.14, 0.04, 0.18), lam(0xf28c28)); foot.position.set(0.15 * s, -0.4, 0.1); body.add(foot); (body.userData.feet = body.userData.feet || []).push(foot);   // 621 V2
   }
   const wings = [-1, 1].map((s) => { const piv = new THREE.Group(); piv.position.set(0.38 * s, 0.05, 0); const w = new THREE.Mesh(new THREE.SphereGeometry(0.2, 10, 8), m); w.scale.set(0.5, 1, 1.3); w.position.x = 0.06 * s; piv.add(w); body.add(piv); return piv; });
   /* 586: the thought bubble over its head (it was an orb with a standing '?'): one sprite, anchored at its little tail */
@@ -3093,7 +3184,7 @@ function bgMusicTick(dt) {
    after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
    music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
    menu, a cutscene), the orchestra bows out. */
-const ORCH_SRC = 'orch-samples.js?v=e71ff8697063';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const ORCH_SRC = 'orch-samples.js?v=5253dc37e634';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
 const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
 window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
 const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
@@ -3443,6 +3534,7 @@ function chickTick(dt) {
       if (!first) U.pendWord = w === 'temple' ? 'Your chick follows you up.' : 'Your chick hops back to its nest.';   // said once the island's own word has gone (Obito: toast() replaces, two words at once eat each other)
       if (w === 'temple' && !S.seen.call625up) { S.seen.call625up = true; save(); } }   // a phone closed mid-word: the chick comes up the first time she does
     if (U.pendWord && $('toast').hidden && !S.talking) { toast(U.pendWord, 3200); U.pendWord = null; } }   // 625
+  comeUnlock(U);   // 621 V2: the forever unlock and its word
   bondSeed(); const bd = c.bond || 0; if (!U.home) U.home = chick.position.clone();
   const card = close && !S.resting;   // resting: the card folds away so she can just be there (568)
   if ($('care').hidden === card) { $('care').hidden = !card; if (card) { careStats(); chickFeel(1, 1.8); if (bd >= 10) { S.chickHop = 1; chickFeel(0, 2.4); chirp(); } } }   // 564: at 10, a hop and a heart when she arrives
@@ -3458,7 +3550,7 @@ function chickTick(dt) {
   S.chickFeelT = Math.max(0, S.chickFeelT - dt);
   mindTick(U, dt, d);   // 586: the thought bubble (was the orb and its standing '?')
   S.chickHop = Math.max(0, (S.chickHop || 0) - dt * 1.6);
-  const cSc = STAGES[S.chick.stage].scale; U.body.position.y = -0.4 * (1 - cSc) + (Math.abs(Math.sin(S.t * 9)) * 0.25 * S.chickHop + Math.sin(S.t * 2.4) * 0.02) * cSc;   // 619: feet stay on the nest floor at every size
+  const cSc = STAGES[S.chick.stage].scale; U.body.position.y = -0.4 * (1 - cSc) + (Math.abs(Math.sin(S.t * 9)) * 0.25 * S.chickHop * (1 - Math.max(COME.w.air, COME.w.swim)) + Math.sin(S.t * 2.4) * 0.02) * cSc;   // 621 V2: no hop-bounce in flight   // 619: feet stay on the nest floor at every size
   /* 619: it sleeps at night and while she rests with it: eyes shut, head tucked, slow breaths; a feed, a pet or a hop wakes it a while */
   const sleepy = (nightAmt(S.clock) > 0.5 || !!S.resting || (rainy() && (S.t % 40) < 28)) && !(S.chickFeelT > 0) && !(S.chickHop > 0.05) && !(RH && RH.on);
   U.sleepK = (U.sleepK || 0) + ((sleepy ? 1 : 0) - (U.sleepK || 0)) * Math.min(1, dt * 2);
@@ -3467,6 +3559,7 @@ function chickTick(dt) {
   U.body.rotation.x = 0.25 * U.sleepK; U.body.scale.setScalar(STAGES[c.stage].scale * (1 + (U.sleepK > 0.5 ? Math.sin(S.t * 1.6) * 0.03 : 0)));
   const flap = S.chickHop > 0 ? Math.sin(S.t * 30) * 0.9 : Math.sin(S.t * 1.7) * 0.08;
   U.wings[0].rotation.z = flap; U.wings[1].rotation.z = -flap;
+  chickPose(dt, U);   // 621 V2: flying, flutter, zoom, swim
   land664Chick(dt, U);   // 664: its own landing from flight while it follows (621)
   chickSong(dt, U);   // 598: after its own bob is set, so the beat's bob rides on top
 }
@@ -4014,7 +4107,14 @@ try { if (localStorage.getItem('wfr.debug') === '1') window.__wfr = { eagle: () 
     return { ready: !!WXR, dead: !!p.dead, day: wxDay(), kind: wxKind(), gated: wxGated(), k: WX.k, tilt: WX.tilt, rainVis: !!p.rainVis, rainVerts: p.rainVerts || 0, flashes: p.flashes || 0, minGap: p.minGap == null ? null : p.minGap, maxFlashFrames: p.maxFlashFrames || 0, maxFlashLen: p.maxFlashLen || 0, rumbles: p.rumbles || 0, sound: !!p.sound,
       sunOp: sunDisc.material.opacity, moonOp: moonDisc.material.opacity, sunEl: WX.sunEl, moonEl: WX.moonEl, sunVis: sunDisc.visible, moonVis: moonDisc.visible, sunV: WX.sunV.toArray(), moonV: WX.moonV.toArray(), shadow: SUN_DIR.toArray(),
       fogNear: FOG_AIR.near, fogFar: FOG_AIR.far, fogSame: scene.fog === FOG_AIR || scene.fog === WATERFOG, hemi: HEMI.intensity, sunI: SKY.sunI, stars: stars.material.opacity, cloudLum: cm.length ? +(cm.reduce((a, m) => a + lum(m), 0) / cm.length).toFixed(4) : null, heavenLum: lum(WX.heaven), heavenOp: WX.heaven ? WX.heaven.opacity : null, played: S.played || 0 }; },
-  wxForce: (k) => { WX.force = k || null; SKY.lastPaint = -9; }, follow: () => ({ ok: followOk(), follows: !!S.chick.follows, with: FOLLOW.with, lvl: FOLLOW.lvl, k: followK(), slot: FOLLOW.slot.toArray(), chick: chick ? chick.position.toArray() : null, me: S.pos.toArray(), yaw: S.yaw, mode: S.mode, care: !$('care').hidden, hop: S.chickHop || 0, up: !!(S.seen || {}).call625up, stay: !!S.chick.stay, stayBtn: $('stayBtn').hidden ? null : $('stayBtn').textContent }), followForce: (on) => { FOLLOW.force = on == null ? null : !!on; }, paceForce: (k) => { FOLLOW.paceForce = k == null ? null : k; }, cold: () => Object.assign({}, coldOf(), { wet: COLD.wet, warned: COLD.warned, pace: chickPaceK() }), coldSet: (o) => { Object.assign(coldOf(), o); save(); careStats(); }, sleep: () => ({ ph: SLEEP.ph, t: SLEEP.t, line: SLEEP.line, n: SLEEP.n, fade: +getComputedStyle($('fade')).opacity, cap: $('callCap').hidden ? '' : $('callCap').textContent, mode: S.mode }), wxRoll: (a, b) => { const o = []; for (let d = a; d < b; d++) o.push(wxOf(d)); return o; }, /* 632 U1: no line comment here, the anchor line goes on (timeScale, save, pos, ground) */ timeScale: (k) => { S.timeScale = k; }, save: () => save(), pos: () => S.pos.toArray(), ground: (x, z) => H(x, z),
+  wxForce: (k) => { WX.force = k || null; SKY.lastPaint = -9; }, chick621: () => { const U = chick ? chick.userData : null, W = COME.w, fly = Math.max(0, 1 - W.flut - W.zoom), rp = COME.live && RUNES && RUNES.railPose ? RUNES.railPose(3) : null;
+   const top = W.swim > 0.5 ? 'swim' : W.air < 0.5 ? 'ground' : [['fly', fly], ['flutter', W.flut], ['zoom', W.zoom]].sort((a, b) => b[1] - a[1])[0][0];
+   return { comes: (S.seen || {}).chickComes621 || 0, guest: comeGuest(), live: COME.live, fetch: COME.fetch ? +COME.fetch.t.toFixed(2) : null, fetches: COME.n, placed: COME.pl, top, w: { air: W.air, fly, flut: W.flut, zoom: W.zoom, swim: W.swim }, vs: COME.vs, vy: COME.vy, acc: COME.acc,
+     chick: chick ? chick.position.toArray() : null, me: S.pos.toArray(), yaw: S.yaw, centre: rp ? [rp.p.x, rp.p.y, rp.p.z] : null, dir: rp ? [rp.dir.x, rp.dir.z] : null,
+     open: U ? COME.ws * U.wings[1].rotation.z : null, openR: U ? -COME.ws * U.wings[0].rotation.z : null, pitch: U ? U.body.rotation.x : null, bodyY: U ? U.body.position.y : null, scale: U ? U.body.scale.toArray() : null,
+     feet: U && U.body.userData.feet ? U.body.userData.feet.map((f) => [f.position.y, f.position.z, f.rotation.x]) : null, water: WATER, stage: STAGES[S.chick.stage].scale,
+     t: S.t, phF: COME.phF, phS: COME.phS, played: S.played || 0, programs: renderer.info.programs.length, k: followK(), stay: !!S.chick.stay, follows: !!S.chick.follows, mode: S.mode, where: (S.sky && S.sky.where) || 'home', word: COME.word, wait: COME.wait ? COME.wait.toArray() : null }; },
+ follow: () => ({ ok: followOk(), follows: !!S.chick.follows, with: FOLLOW.with, lvl: FOLLOW.lvl, k: followK(), slot: FOLLOW.slot.toArray(), chick: chick ? chick.position.toArray() : null, me: S.pos.toArray(), yaw: S.yaw, mode: S.mode, care: !$('care').hidden, hop: S.chickHop || 0, up: !!(S.seen || {}).call625up, stay: !!S.chick.stay, stayBtn: $('stayBtn').hidden ? null : $('stayBtn').textContent }), followForce: (on) => { FOLLOW.force = on == null ? null : !!on; }, paceForce: (k) => { FOLLOW.paceForce = k == null ? null : k; }, cold: () => Object.assign({}, coldOf(), { wet: COLD.wet, warned: COLD.warned, pace: chickPaceK() }), coldSet: (o) => { Object.assign(coldOf(), o); save(); careStats(); }, sleep: () => ({ ph: SLEEP.ph, t: SLEEP.t, line: SLEEP.line, n: SLEEP.n, fade: +getComputedStyle($('fade')).opacity, cap: $('callCap').hidden ? '' : $('callCap').textContent, mode: S.mode }), wxRoll: (a, b) => { const o = []; for (let d = a; d < b; d++) o.push(wxOf(d)); return o; }, /* 632 U1: no line comment here, the anchor line goes on (timeScale, save, pos, ground) */ timeScale: (k) => { S.timeScale = k; }, save: () => save(), pos: () => S.pos.toArray(), ground: (x, z) => H(x, z),
   homeSet: (t) => { S.homeT = ((t % 1) + 1) % 1; },
   skyRing: () => { const m = skyDome.userData.ring.material, tex = m.alphaMap || m.map, cv = tex && tex.image, px = cv && cv.getContext ? cv.getContext('2d').getImageData(0, 0, cv.width, cv.height).data : null; let minA = 255; if (px) for (let i = 3; i < px.length; i += 4) minA = Math.min(minA, px[i]); return { alphaMap: !!m.alphaMap, map: !!m.map, minAlpha: minA }; },
   clouds: () => clouds.map((c) => ({ at: c.position.toArray(), d: c.position.distanceTo(camera.position), o: c.children[0].material.opacity, v: c.visible })),
@@ -4075,6 +4175,8 @@ try { if (localStorage.getItem('wfr.debug') === '1') window.__wfr = { eagle: () 
   xp: (n, why) => gainXP(n, why), missions: () => missionsHtml(),   /* 641 */
   runes: () => RUNES ? Object.assign(RUNES.peek(), { programs: renderer.info.programs.length, sceneObjects: (() => { let n = 0; scene.traverse(() => { n++; }); return n; })(), geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, toast: $('toast').hidden ? '' : $('toast').textContent, quest: $('quest').textContent, rainy: rainy(), where: (S.sky && S.sky.where) || 'home', smode: S.mode, played: S.played || 0, err: window.WFR_RUNES ? WFR_RUNES.error : 'no module' }) : { ready: false, err: window.WFR_RUNES ? WFR_RUNES.error : 'no module' },
   runesStart: (k) => !!(RUNES && RUNES.start(k)), runesForce: (f) => (RUNES ? RUNES.force(f) : null),
+  runesRail: () => { if (!RUNES) return null; const R = RUNES.peek(), d = camera.getWorldDirection(new THREE.Vector3()), q = RUNES.railPose(4); return { rail: R.rail, railed: RUNES.railed(), next: R.next, W: R.W, pillars: R.pillars, statues: R.statues, gatesAt: R.gatesAt, pose: q ? { p: q.p.toArray(), t: q.t.toArray(), dir: [q.dir.x, q.dir.z] } : null, camFwd: [d.x, d.y, d.z], camPos: camera.position.toArray(), me: S.pos.toArray(), yaw: S.yaw, speed: S.speed, off: S.camOff || 0, land: $('land').textContent, landHidden: $('land').hidden, flapOp: flapBtn.style.opacity, smode: S.mode, played: S.played || 0, seenRail: !!(S.seen && S.seen.rail632), programs: renderer.info.programs.length }; },   /* 632 U4b (bench only) */
+  runesLine: (n) => (RUNES ? RUNES.line(n) : null),   /* 632 U4b (bench only) */
   quick: () => ({ open: !!S.quick, slow: QUICK_SLOW, hidden: $('quick').hidden, vignette: $('slow').classList.contains('on'), body: $('quickBody').textContent, t: S.t, played: S.played || 0, mode: S.mode, grown: S.grown || 0, built: S.built, recipe: recipe() ? Object.assign({}, recipe()) : null, haveAll: haveAll(), toolIn: S.toolIn || 0, inv: Object.assign({}, S.inv), mats: Object.assign({}, S.mats), nestTier: S.nestTier, growth: GROWTH.map((g) => ({ name: g.name, need: Object.assign({}, g.need) })), grownAt: grownAt.slice(), marks: (S.marks || []).slice(), markMeshes: markGroup.children.length, slots: [...document.querySelectorAll('#quickBody .slot')].map((s) => ({ k: s.dataset.k, n: +s.querySelector('b').textContent, dim: s.classList.contains('dim') })), /* 650 */ shining: nodes.filter((nd) => nd.g.visible).map((nd) => nd.type.id) }),   /* 644 + 641 U1 */
   openQuick: (on) => openQuick(on), grow: () => tryBuild(null), markNow: (i, act) => mark(act, npcs[i]), setInv: (o) => { Object.assign(S.inv, o); save(); hud(); }, setMats: (o) => { Object.assign(S.mats, o); save(); }, setTool: (n) => { S.toolIn = n; save(); hud(); },
   npcGive: (i, id) => { const n = npcs[i], t = TOOLS.find((x) => x.id === id); n.tool = { type: t, g: new THREE.Group() }; }, npcActT: (i, t) => { npcs[i].actT = t; }, talk: (lines) => say(lines, null),   /* 641 U1 guard: a tool act through the shipped gate; a talk while the pouch is open */
@@ -4097,7 +4199,7 @@ const PLACES = [
 const SKYEND = window.WFR_SKY ? WFR_SKY.create(THREE, scene, { S, camera, renderer, canvas, BIRDS, NAME, $, flapBtn, stick, peak: peakPt,
   shut: () => (rainy() ? 'rain' : null), kind: () => kind, bird: () => bird, wings: () => [wingL, wingR], perchAt, standOf, say, toast, hint, save, tone, audio, music }) : null;
 SKY_GROUND = SKYEND && SKYEND.ground ? SKYEND.ground : null;   // 610
-var RUNES = (() => { try { const st = SKYEND ? SKYEND.state() : null; return window.WFR_RUNES && st && st.shelfAt ? WFR_RUNES.create(THREE, scene, { S, O: st.shelfAt, camera, renderer, BIRDS, closed: () => rainy(), cruise: () => 15 * BIRDS[kind].speed, pace: () => (typeof followK === 'function' ? followK() : 1), level: () => S.level, toast, hud, save, tone, ding, fanfare, calm: () => !S.talking && $('toast').hidden && $('story').hidden }) : null; } catch (e) { console.warn('runes: ' + (e && e.message)); return null; } })();   // 632 U4: the cloud course (runes.js); a var, so hud() may ask before it exists
+var RUNES = (() => { try { const st = SKYEND ? SKYEND.state() : null; return window.WFR_RUNES && st && st.shelfAt ? WFR_RUNES.create(THREE, scene, { S, O: st.shelfAt, camera, renderer, BIRDS, closed: () => rainy(), cruise: () => 15 * BIRDS[kind].speed, zoom: () => (HOGS && HOGS.air ? HOGS.air() : 0), /* 632 U4b */ pace: () => (typeof followK === 'function' ? followK() : 1), level: () => S.level, toast, hud, save, tone, ding, fanfare, calm: () => !S.talking && $('toast').hidden && $('story').hidden }) : null; } catch (e) { console.warn('runes: ' + (e && e.message)); return null; } })();   // 632 U4: the cloud course (runes.js); a var, so hud() may ask before it exists
 /* ---------- the loop ---------- */
 const fwd = new THREE.Vector3(), camPos = new THREE.Vector3(), look = new THREE.Vector3(), tmp = new THREE.Vector3(), v3 = new THREE.Vector3();
 function resize() { const w = innerWidth, h = innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }
@@ -4357,6 +4459,29 @@ function walkStep(sx, sy, dt) {
 }
 const ATMO = (() => { try { return window.WFR_ATMO ? WFR_ATMO.create(THREE, scene, { renderer, camera, canvas, H, WATER, LAKE, VILLAGE, MOUND, NEST, trees, sun, HEMI, S, night: () => nightAmt(S.clock), clock: () => S.clock, under: () => wasUnder, bird: () => S.pos }) : null; } catch (e) { return null; } })();   // 613: the air - light by the clock, one wind, butterflies, dragonflies, fireflies (atmo.js)
 const WXR = (() => { try { return window.WFR_WX ? WFR_WX.create(THREE, scene, { camera, S, k: () => WX.k, kind: () => wxKind(), night: () => nightAmt(S.clock), indoors: () => !!(S.inside || S.insideTH || wasUnder), played: () => S.played || 0, ac: () => ac, muted: () => muted, flash: (v) => { WX.flash = v; SKY.lastPaint = -9; }, phone: innerWidth <= 900 }) : null; } catch (e) { return null; } })();   // 632 U1: the rain, the thunder, the rain's sound (weather.js)
+let skyWarm632 = false;   // Obito R3: the sky island's programs compiled once on arrival (E8)
+function railFly(dt, B) {   // 632 U4b: the run's train track. Her speed, side and camera come from the rail; the pose is free flight's own lines
+  const st0 = steer(), sq = Math.max(Math.abs(st0.sx), Math.abs(st0.sy)), kq = sq > 1e-6 ? Math.hypot(st0.sx, st0.sy) / sq : 1;   // Jiraiya: the thumb's stick is a circle (a push caps at 1), so on the rail it is stretched to a square along its own direction: a 45 deg push is full speed AND full side; straight pushes are unchanged
+  const sx = Math.max(-1, Math.min(1, st0.sx * kq)), sy = Math.max(-1, Math.min(1, st0.sy * kq));
+  S.camOff = 0; S.hold = false; S.holdT = 0; S.hoverK = 0; S.longK = 0;   // the camera is locked: a sideways pan does not turn it (camLift, her height drag, still does)
+  S.flapT = Math.max(0, S.flapT - dt); S.flutT = Math.max(0, S.flutT - dt); S.flutCd = Math.max(0, S.flutCd - dt);
+  const R = RUNES.rail(dt, sx, sy); if (!R) return;   // a fault: the next frame is free flight
+  S.distAcc += S.speed * dt; if (S.distAcc > 160) { S.distAcc = 0; gainXP(1); }
+  const turn = Math.max(-1, Math.min(1, S.yawV / B.turn));
+  bird.position.copy(S.pos); bird.rotation.y = S.yaw; bird.rotation.x = -S.pitch * 0.8; bird.rotation.z += (turn * 0.6 - bird.rotation.z) * Math.min(1, dt * 4);
+  if (window.WFR_BIRDS && WFR_BIRDS.fly && birdRig) { const fo = WFR_BIRDS.fly(birdRig, dt, { t: S.t, flap: S.flapT > 0 || R.burst, hover: 0, long: 0, flutter: S.flutT > 0, dive: false, speed: S.speed, turn, legsDown: false, body: bird.rotation.x, roll: bird.rotation.z }); bird.position.y += fo.y * B.size; bird.rotation.x += fo.pitch; }
+  else { const fl = S.flapT > 0 || R.burst ? Math.sin(S.t * 26) * 0.9 : Math.sin(S.t * 2.2) * 0.08; wingL.rotation.z = fl; wingR.rotation.z = -fl; }
+  pickups(); carryFollow(); pointCompass();
+  const lb = $('land'), w = R.armed ? 'Leave?' : 'Leave'; if (lb.hidden) lb.hidden = false; if (lb.textContent !== w) lb.textContent = w;   // DRAFT words
+  const op = R.cd > 0 ? '0.55' : ''; if (flapBtn.style.opacity !== op) flapBtn.style.opacity = op;   // Flap shows its rest
+  if (S.camYaw === undefined) S.camYaw = S.yaw;
+  S.camYaw += Math.atan2(Math.sin(R.camYaw - S.camYaw), Math.cos(R.camYaw - S.camYaw)) * Math.min(1, dt * (2 + 4 * R.jt));   // Trunks: 6 (brief 5) and 10 below (free flight 3.5, brief 4): at 27 m/s through P9 (a ~6 m bend) a dt*4 camera trails ~7 m and swings the view 21-27 deg off the line (node sim); 6/10 holds every run under 15 deg at 20-60 fps. Obito R2: both rates blend in from free flight's (2, 3.5) over the join, so the bird does not jump bigger as the run starts. DRAFT
+  tmp.set(Math.sin(S.camYaw), 0, Math.cos(S.camYaw));   // no orbit(): the camera is locked to the line
+  camPos.copy(S.pos).addScaledVector(tmp, -(6 + 8 * B.size)).add(v3.set(0, 2 + 3 * B.size + (S.camLift || 0), 0));
+  camPos.y = Math.max(camPos.y, Math.max(groundAt(camPos.x, camPos.z), WATER) + 2);
+  camera.position.lerp(camPos, Math.min(1, dt * (3.5 + 6.5 * R.jt)));
+  look.copy(S.pos).addScaledVector(tmp, 6).add(v3.set(0, 1, 0)); camera.lookAt(look);
+}
 function frame(now) {
   const real = Math.max(0, Math.min(0.05, (now - last) / 1000)), dt = S.quick ? real * QUICK_SLOW : real;   // 644: the pouch slows the whole island
   frameLog(now - last, real);   /* 651: the raw frame, for the water bench */
@@ -4445,6 +4570,8 @@ function frame(now) {
     camPos.y = Math.max(camPos.y, groundAt(camPos.x, camPos.z) + 1.2);
     camera.position.lerp(camPos, Math.min(1, dt * 3)); camera.lookAt(S.pos);
     if (LS ? S.landDone : (Math.abs(S.pos.y - target) < 0.08 || S.landT > 2.4)) { S.pos.y = target; bird.rotation.x = 0; bird.position.y = target; touchDown(); }
+  } else if (S.mode === 'fly' && bird && RUNES && RUNES.railed()) {   // 632 U4b: a run rides the rail; free flight below is untouched
+    railFly(dt, B);
   } else if (S.mode === 'fly' && bird) {
     if (window.WFR_BIRDS && birdRig && !WFR_BIRDS.fly) WFR_BIRDS.tuck(birdRig, 1);   // legs folded back in flight (the landing starts tucked); 611: WFR_BIRDS.fly tucks them itself, trailing up after a takeoff
     let { sx, sy } = steer();
@@ -4615,6 +4742,7 @@ function frame(now) {
   teachWord();   // 610(a)
   nvBtnDraw();   // 663
   if ((S.mode === 'walk' || S.mode === 'swim') && !$('land').hidden) $('land').hidden = true;
+  if (!(RUNES && RUNES.railed())) { if ($('land').textContent !== 'Land') $('land').textContent = 'Land'; if (flapBtn.style.opacity) flapBtn.style.opacity = ''; }   // 632 U4b: the residue law
   /* wings fold back along the body on the ground (Oct 8: a bird standing with its wings out flat looked like a plane) */
   if (bird && wingL) {
     const folded = (S.mode === 'walk' && !airborne()) || (S.mode === 'nest' && !RH.on && !(RH.out > 0)) || S.mode === 'hatch' || S.mode === 'card' || S.mode === 'event' || S.mode === 'debugcam';
@@ -4640,6 +4768,7 @@ function frame(now) {
   sunFollow();
   if (ATMO) ATMO.tick(dt, S.t);
   if (RUNES) RUNES.tick(dt, S.real || dt);   // 632 U4: the cloud course; timed in seconds of play inside; never throws
+  if (RUNES && !skyWarm632 && S.sky && S.sky.where === 'temple') { skyWarm632 = true; try { renderer.compile(scene, camera); } catch (e) { /* a warm-up is optional */ } }   // Obito R3: r128's compile reaches hidden objects too (the runes between runs): one hitch at the arrival, never one mid-run
   land664Track(dt);   /* 664 */
   if (WXR) WXR.tick(dt, S.real || dt);   // 632 U1: the streaks on the game's dt, the ease/sound/thunder on real seconds; never throws   // 613: after sunFollow, before the picture (it never throws: a fault switches the air off, not the game)
   renderer.render(scene, camera);
@@ -4706,7 +4835,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build e71ff8697063): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build 5253dc37e634): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>

@@ -22,6 +22,7 @@ window.WFR_RUNES = (function () {
   var N = 200, LIMIT = 50, RACE_MAX = 120, GATES = 8, PICK_R = 2.4, ARCH_R = 4.2, COOL = 4;
   var RARE = 0.08, BONUS = 0.5, GOOD = 0.9;   /* a feather hides between the runes in 8% of runs; 50% at the end for 90%+ collected or a beaten Falcon */
   var INWARD = 110, BASE_Y = 212, PLAT_Y = 190;
+  var RAIL_W = 2.5, LAT_K = 7, SPD_K = 1.5, V_UP = 0.5, V_DOWN = 0.4, V_MAX = 2.4, BURST = 0.4, BURST_T = 1.0, BURST_CD = 2.5, ZOOM_ADD = 0.8, JOIN_MIN = 0.6, JOIN_V = 8, JOIN_MAX = 20, LOOK = 8, LANE = 3.6, WAVES = 7, FAL0 = 1.294, FAL_LV = 0.006;   /* 632 U4b the rail: DRAFT, his thumb decides */
   /* the line, (a: inward from the temple, b: sideways, dy) about the course centre; P0 is the start and the finish, heading inward */
   var COURSE = [[-50, -14, 0], [-20, -22, -6], [12, -34, -12], [40, -30, -8], [54, -4, 0], [44, 24, 6], [16, 36, 10], [-16, 30, 6], [-44, 20, 2], [-62, 4, 0]];
   var API = null;
@@ -124,7 +125,9 @@ window.WFR_RUNES = (function () {
 
     /* the runes: 200 on the line (~1.5 m apart), one draw call; a taken rune is scaled to nothing, never removed */
     var runeGeo = new T.OctahedronGeometry(0.42, 0); runeGeo.scale(0.75, 1.0, 0.3);
-    var RUNE = []; for (k = 0; k < N; k++) RUNE.push(curve.getPointAt(0.03 + 0.94 * k / (N - 1)));
+    var RUNE = [], RLINE = [], RS = [], RLAT = [], AS = []; for (k = 0; k <= GATES; k++) AS.push(k * L / GATES);   /* 632 U4b: the arches' places */
+    var weave = function (s) { var d = 1e9; for (var a = 0; a < AS.length; a++) d = Math.min(d, Math.abs(s - AS[a])); var x = Math.max(0, Math.min(1, (d - 2) / 5)); return LANE * Math.sin(2 * Math.PI * WAVES * s / L) * x * x * (3 - 2 * x); };   /* 0 through every arch, a smooth weave between */
+    for (k = 0; k < N; k++) { var tk = 0.03 + 0.94 * k / (N - 1), lp = curve.getPointAt(tk), dk = flat(tk); RLINE.push(lp); RS.push(tk * L); RLAT.push(weave(tk * L)); RUNE.push(lp.clone().add(new T.Vector3(-dk.z, 0, dk.x).multiplyScalar(RLAT[k]))); }   /* right is (-d.z, 0, d.x) */
     var runes = inst(runeGeo, M.rune, N, 'runes632:runes'); runes.instanceMatrix.setUsage(T.DynamicDrawUsage);
     var alive = new Uint8Array(N);
 
@@ -147,10 +150,16 @@ window.WFR_RUNES = (function () {
       vf: 0, fs: 0, fdone: false, tf: 0, fback: 1, fFrom: new T.Vector3(), rare: false, rareGot: false, gift: 0, last: null, refT: -99, said: false,
       force: { roll: null, falconK: null, pickR: null }, rolls: [], pill: '', fOff: 0 };
     var seg = new T.Line3(), tmp = new T.Vector3(), tmp2 = new T.Vector3(), q = new T.Quaternion(), e3 = new T.Euler(), one = new T.Vector3(1, 1, 1), zero = new T.Vector3(0.0001, 0.0001, 0.0001), mx = new T.Matrix4();
+    /* 632 U4b: the rail's state and its scratch vectors, made once (the tick allocates nothing) */
+    var RL = { on: false, s: 0, lat: 0, v: 0, jt: 1, jdur: JOIN_MIN, burstT: 0, cd: 0, age: 0, armT: -1, wrongT: -99,
+      off: new T.Vector3(), P: new T.Vector3(), D: new T.Vector3(), Rt: new T.Vector3(), Q: new T.Vector3(), Pa: new T.Vector3(), Pb: new T.Vector3(), prev: new T.Vector3() };
+    var RET = { camYaw: 0, v: 0, cd: 0, burst: false, armed: false, jt: 1 }, POSE = { on: false, s: 0, p: new T.Vector3(), t: new T.Vector3(), dir: { x: 0, z: 1 }, lat: 0, v: 0 };
+    var D0 = flat(0), clamp = function (x, a, b) { return x < a ? a : x > b ? b : x; }, wrapA = function (a) { return Math.atan2(Math.sin(a), Math.cos(a)); };
+    function cruise() { return (o.cruise && o.cruise()) || 15; }
 
     function roll() { var r = st.force.roll != null ? st.force.roll : Math.random(); st.rolls.push(+r.toFixed(4)); if (st.rolls.length > 20) st.rolls.shift(); return r; }
     function pickR() { return st.force.pickR != null ? st.force.pickR : PICK_R; }
-    function falconK() { return st.force.falconK != null ? st.force.falconK : 0.70 + 0.006 * Math.min(25, (o.level && o.level()) || 1); }   /* her cruise x 0.71 at level 1, x 0.85 at level 25: DRAFT */
+    function falconK() { return st.force.falconK != null ? st.force.falconK : FAL0 + FAL_LV * Math.min(25, (o.level && o.level()) || 1); }   /* 632 U4b: her cruise x 1.30 at level 1, x 1.444 at level 25 (was 0.70 + 0.006 x level): DRAFT */
     function say(t, ms) { try { o.toast(t, ms || 3200); } catch (e) { /* the slot is the game's */ } }
     function tone(f, d, v) { try { if (o.tone) o.tone(f, 0, d || 0.08, 'triangle', v || 0.035); } catch (e) { /* sound is optional */ } }
     function setAlpha(a) {
@@ -164,14 +173,16 @@ window.WFR_RUNES = (function () {
       st.mode = kind; st.t0 = played; st.el = 0; st.got = 0; st.gate = 0; st.rare = false; st.rareGot = false; st.last = null;
       for (var i = 0; i < N; i++) alive[i] = 1;
       runes.visible = true; feather.visible = false; st.gift = 0;
-      if (roll() < RARE) { var j = 20 + Math.floor(Math.random() * 160); feather.position.copy(RUNE[j]).lerp(RUNE[j + 1], 0.5); st.rare = true; feather.visible = true; }
+      if (roll() < RARE) { var j = 20 + Math.floor(Math.random() * 160); feather.position.copy(RLINE[j]).lerp(RLINE[j + 1], 0.5); st.rare = true; feather.visible = true; }
       if (kind === 'race') { var pace = (o.pace && o.pace()) || 1; st.vf = Math.max(4, ((o.cruise && o.cruise()) || 15) * falconK() * pace); st.tf = L / st.vf; st.fs = 0; st.fdone = false; st.fback = 1; }
       say(kind === 'race' ? 'Go! Fly the eight arches before the Falcon does.' : '200 runes, 50 seconds. Go!', 2200);   /* DRAFT */
       tone(988, 0.12, 0.06); tone(1319, 0.18, 0.05);
+      if (S.mode === 'fly' && railStart(S.pos) && !(S.seen && S.seen.rail632)) { S.seen = S.seen || {}; S.seen.rail632 = true; try { o.save(); } catch (e) { /* fine */ } say((kind === 'race' ? 'Go! Fly the eight arches before the Falcon does.' : '200 runes, 50 seconds. Go!') + ' Stick up: faster. Flap: a burst.', 2600); }   /* 632 U4b: a run started on foot (the bench's door) stays unrailed. Obito R4: on her first railed run the tip rides in the Go line (one toast; DRAFT words) */
       if (o.hud) o.hud();
       return true;
     }
     function end(why) {
+      if (RL.on) release();   /* 632 U4b */
       var k = st.mode, el = st.el, got = st.got, rec = S.runeRec = (S.runeRec && typeof S.runeRec === 'object') ? S.runeRec : {};
       var R = { kind: k, why: why, got: got, t: +el.toFixed(2), tf: k === 'race' ? +st.tf.toFixed(2) : null, win: false, rare: st.rareGot, bonus: false, newBest: false, eligible: false };
       S.runes = (S.runes || 0) + got;
@@ -205,6 +216,7 @@ window.WFR_RUNES = (function () {
       }
       var up = ((S.sky && S.sky.where) || 'home') === 'temple', closed = !!(o.closed && o.closed()), played = S.played || 0;
       var dp = st.lastPlayed == null ? 0 : Math.max(0, Math.min(0.25, played - st.lastPlayed)); st.lastPlayed = played;
+      if (dp > dt) dp = dt;   /* Obito R1 (Jiraiya): the pouch slows the island to 0.35x while S.played counts real seconds: the run's clock and the Falcon follow the game's dt, slowing with her (a pause still holds them) */
       var want = S.mode === 'menu' ? 0 : up ? (closed ? 0.28 : 1) : 0;   /* semi-invisible: seen only from the sky island; rain all but hides it */
       st.alpha += (want - st.alpha) * Math.min(1, dt * 1.5); if (Math.abs(want - st.alpha) < 0.003) st.alpha = want;
       root.visible = st.alpha > 0.01 || st.mode !== 'idle';
@@ -218,7 +230,7 @@ window.WFR_RUNES = (function () {
       if (st.mode === 'idle') {
         if (fly && up && played >= st.cool && st.alpha > 0.2) {
           var hitRace = nearArch(RACE_AT), hitRunes = !hitRace && nearArch(RUNES_AT);
-          if (hitRace || hitRunes) { if (closed) { if (played - st.refT > 6) { st.refT = played; say('Rain clouds hide the runes course today. Come back when the sky clears.', 3600); } } else begin(hitRace ? 'race' : 'runes'); }   /* DRAFT */
+          if (hitRace || hitRunes) { if (closed) { if (played - st.refT > 6) { st.refT = played; say('Rain clouds hide the runes course today. Come back when the sky clears.', 3600); } } else if (Math.sin(S.yaw) * D0.x + Math.cos(S.yaw) * D0.z > 0.3) begin(hitRace ? 'race' : 'runes'); else if (played - RL.wrongT > 6) { RL.wrongT = played; say('Fly through the arch the other way to start.', 2600); } }   /* DRAFT; 632 U4b: the heading rule */
         }
         if (up && !st.said && st.alpha > 0.9 && !closed && (S.mode === 'walk' || S.mode === 'fly') && (!o.calm || o.calm())) {
           S.seen = S.seen || {}; st.said = true;
@@ -229,6 +241,7 @@ window.WFR_RUNES = (function () {
         if (!up) { end('left'); }
         else if (closed) { end('rain'); }
         else if (st.mode === 'race' && (S.mode === 'walk' || S.mode === 'landing' || S.mode === 'swim')) { end('down'); }
+        else if (RL.on && S.mode !== 'fly' && S.mode !== 'paused') { end('left'); }   /* 632 U4b */
         else {
           if (fly) { var r = pickR(); for (var i = 0; i < N; i++) if (alive[i] && near(RUNE[i], r)) { alive[i] = 0; st.got++; tone(1568 + (st.got % 5) * 110, 0.06, 0.03); } }
           if (st.rare && !st.rareGot && fly && near(feather.position, pickR() + 0.6)) { st.rareGot = true; st.rare = false; feather.visible = false; S.huethers = (S.huethers || 0) + 1; try { o.save(); } catch (e) { /* fine */ } say('A white feather! You have ' + S.huethers + '.', 3000); tone(1760, 0.2, 0.06); tone(2349, 0.25, 0.05); }   /* DRAFT */
@@ -282,6 +295,58 @@ window.WFR_RUNES = (function () {
       }
     }
 
+    /* RAIL-TICK BEGIN: nothing between these markers allocates (tests/rail632.js reads this text) */
+    function lineAt(s, outP, outD) {   /* the line at arc length s into outP (and its unit tangent into outD, from two points: r128's getTangent makes two vectors) */
+      var uu = (((s % L) + L) % L) / L, e = 0.5 / L; curve.getPointAt(uu, outP);
+      if (outD) { curve.getPointAt((uu + e) % 1, RL.Pa); curve.getPointAt((uu - e + 1) % 1, RL.Pb); outD.subVectors(RL.Pa, RL.Pb).normalize(); }
+      return outP;
+    }
+    function railStep(dt, sx, sy) {
+      var c = cruise(), pace = (o.pace && o.pace()) || 1, zk = o.zoom ? o.zoom() : 0;
+      RL.age += dt; RL.cd = Math.max(0, RL.cd - dt); RL.burstT = Math.max(0, RL.burstT - dt);
+      var want = c * (1 + V_UP * Math.max(0, sy) - V_DOWN * Math.max(0, -sy));
+      if (RL.burstT > 0 || S.flutT > 0) want += BURST * c;
+      if (zk > 0) want += ZOOM_ADD * c * zk;
+      RL.v += (want - RL.v) * Math.min(1, dt * SPD_K); RL.v = clamp(RL.v, (1 - V_DOWN) * c, V_MAX * c);
+      RL.s = (RL.s + RL.v * pace * dt) % L;
+      RL.lat += (clamp(sx, -1, 1) * RAIL_W - RL.lat) * Math.min(1, dt * LAT_K); RL.lat = clamp(RL.lat, -RAIL_W, RAIL_W);
+      RL.jt = Math.min(1, RL.jt + dt / RL.jdur); var e = 1 - RL.jt * RL.jt * (3 - 2 * RL.jt);
+      lineAt(RL.s, RL.P, RL.D); RL.Rt.set(-RL.D.z, 0, RL.D.x).normalize();
+      RL.prev.copy(S.pos); S.pos.copy(RL.P).addScaledVector(RL.Rt, RL.lat).addScaledVector(RL.off, e);
+      var dx = S.pos.x - RL.prev.x, dy = S.pos.y - RL.prev.y, dz = S.pos.z - RL.prev.z, h = Math.hypot(dx, dz);
+      if (h > 1e-4 && dt > 0) { var tn = wrapA(Math.atan2(dx, dz) - S.yaw) * Math.min(1, dt * 12); S.yaw += tn;
+        S.yawV = (S.yawV || 0) + (-tn / dt - (S.yawV || 0)) * Math.min(1, dt * 6);   /* the game's sign: S.yaw -= S.yawV * dt */
+        S.pitch += (clamp(Math.atan2(dy, h), -0.5, 0.5) - S.pitch) * Math.min(1, dt * 6); }
+      S.speed = RL.v;   /* for the wings, the chick and the lift readers; never fed back */
+      curve.getPointAt(((RL.s + LOOK) % L) / L, RL.Q);
+      RET.camYaw = Math.atan2(RL.Q.x - RL.P.x, RL.Q.z - RL.P.z); RET.v = RL.v; RET.cd = RL.cd; RET.burst = RL.burstT > 0; RET.armed = RL.armT > (S.played || 0); RET.jt = RL.jt;
+      return RET;
+    }
+    /* RAIL-TICK END */
+    function kill(err) { dead = true; RL.on = false; root.visible = false; st.mode = 'idle'; API.error = String(err && err.message || err); try { console.warn('runes stopped: ' + API.error); if (o.hud) o.hud(); } catch (e) { /* fine */ } }
+    function railed() { return !dead && RL.on && st.mode !== 'idle'; }
+    function rail(dt, sx, sy) {   /* the html's railFly calls this once a frame while railed(); a fault stops the course, never the game */
+      if (!railed()) return null;
+      try { return railStep(dt, sx, sy); } catch (err) { kill(err); return null; }   /* the first run's tip rides in its Go line (begin) */
+    }
+    function railStart(me) {
+      var s0 = nearest(me) * L / SPN; lineAt(s0, RL.P, null);
+      if (RL.P.distanceTo(me) > JOIN_MAX) { RL.on = false; return false; }   /* a bench start far off the line rides free */
+      var c = cruise(); RL.on = true; RL.s = s0; RL.lat = 0; RL.off.copy(me).sub(RL.P); RL.jt = 0; RL.jdur = Math.max(JOIN_MIN, RL.off.length() / JOIN_V);
+      RL.v = clamp(S.speed || c, (1 - V_DOWN) * c, V_MAX * c); RL.burstT = 0; RL.cd = 0; RL.age = 0; RL.armT = -1;
+      S.hold = false; S.holdT = 0; S.hoverK = 0; S.longK = 0; if (S.camYaw === undefined) S.camYaw = S.yaw; return true;
+    }
+    function release() { RL.on = false; RL.armT = -1; S.speed = clamp(RL.v, 7, 30); S.yawV = 0; S.hold = false; S.holdT = 0; S.pitch = clamp(S.pitch, -0.3, 0.3); }   /* her momentum along the line; S.camYaw is kept: no camera cut */
+    function burst() { if (!railed() || RL.cd > 0) return false; RL.burstT = BURST_T; RL.cd = BURST_CD; tone(1175, 0.08, 0.04); return true; }
+    function leave() { if (!railed()) return false; var now = S.played || 0; if (!(RL.armT > now)) { RL.armT = now + 2; return false; } try { end('left'); } catch (err) { kill(err); } return true; }   /* two taps inside 2 s: Land sits beside Flap */
+    function railPose(back) {   /* 621 V2's hook: the line point back m behind her, at her side offset; t its unit tangent, dir its flat unit tangent. ONE shared object: copy it, never keep it */
+      if (!railed()) return null; lineAt(RL.s - (back == null ? 4 : back), POSE.p, POSE.t);
+      var fl = Math.hypot(POSE.t.x, POSE.t.z) || 1; POSE.dir.x = POSE.t.x / fl; POSE.dir.z = POSE.t.z / fl; POSE.p.x += -POSE.dir.z * RL.lat; POSE.p.z += POSE.dir.x * RL.lat;
+      POSE.on = true; POSE.s = RL.s; POSE.lat = RL.lat; POSE.v = RL.v; return POSE;
+    }
+    function line(n) { return curve.getSpacedPoints(n || 2400).map(function (p) { return p.toArray(); }); }   /* bench only */
+    function nextLat() { var best = -1, bd = 1e9; for (var i = 0; i < N; i++) if (alive[i]) { var d = ((RS[i] - RL.s) % L + L) % L; if (d < bd) { bd = d; best = i; } } return best < 0 ? null : RLAT[best]; }   /* bench only: the pilot's eyes */
+
     function pill() {   /* the ONE line of HUD (the game's quest line); DRAFT words */
       if (dead) return '';
       if (st.mode === 'runes') return '✦ ' + st.got + ' / ' + N + ' · ' + Math.max(0, Math.ceil(LIMIT - st.el)) + ' s';
@@ -308,9 +373,11 @@ window.WFR_RUNES = (function () {
         rare: st.rare, rareGot: st.rareGot, feather: feather.visible ? feather.position.toArray() : null, gift: st.gift > 0, last: st.last, rolls: st.rolls.slice(), force: Object.assign({}, st.force), pickR: pickR(), cool: st.cool,
         raceArch: RACE_AT.toArray(), runesArch: RUNES_AT.toArray(), gatesAt: GATE.map(function (p) { return p.toArray(); }), ahead: ahead.toArray(), centre: C.toArray(), temple: [O.x, O.z], check: chk,
         runeAt: [RUNE[0].toArray(), RUNE[N - 1].toArray()], me: me.toArray(), yaw: S.yaw, objects: objs, pill: pill(), haloGold: haloGold.visible, haloBlue: haloBlue.visible,
-        runes: S.runes || 0, huethers: S.huethers || 0, rec: Object.assign({}, S.runeRec || {}) };
+        runes: S.runes || 0, huethers: S.huethers || 0, rec: Object.assign({}, S.runeRec || {}),
+        rail: { on: RL.on, s: RL.s, lat: RL.lat, v: RL.v, jt: RL.jt, jdur: RL.jdur, cd: RL.cd, burstT: RL.burstT, armed: RL.armT > (S.played || 0) }, W: RAIL_W, lane: LANE, D0: [D0.x, D0.z],   /* 632 U4b (bench only) */
+        pillars: PIL.map(function (c) { return c.p.toArray(); }), statues: STAT.map(function (p) { return p.toArray(); }), next: nextLat() };
     }
-    return { tick: tick, peek: peek, pill: pill, goal: goal, start: start, force: force, root: root };
+    return { tick: tick, peek: peek, pill: pill, goal: goal, start: start, force: force, root: root, rail: rail, railed: railed, railPose: railPose, burst: burst, leave: leave, line: line };   /* 632 U4b: rail .. line */
   }
 
   API = { create: create, last: null, error: null, N: N, LIMIT: LIMIT, RARE: RARE, BONUS: BONUS, GOOD: GOOD };

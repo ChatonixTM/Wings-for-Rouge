@@ -394,7 +394,7 @@ window.WFR_SKY = (function () {
     function collect(i) { if (!dia || dia.got[i]) return; dia.got[i] = true; var f = [392, 440, 494, 587, 659, 784, 880, 988, 1175, 1319, 1568, 1760][i] || 1568; api.tone(f, 0, 0.5, 'sine', 0.07); api.tone(f * 2, 0.02, 0.35, 'triangle', 0.02); }
     function arrive() {
       st.focus = 'her'; standOnShelf(); controls(false); buildFlock(false); api.music('legend'); if ($('hint')) $('hint').style.opacity = '0';
-      st.beat = 'arrive'; go('talk'); talk([LINES.arrive], hi);
+      cine668Start(); st.beat = 'reveal'; go('reveal');   // 668: a 2.5 s wide from behind Rouge first; cine668Tick then says LINES.arrive, as it was
     }
     function hi() { st.beat = 'hi'; go('talk'); talk([LINES.hi, LINES.proud], duetIn); }
     function duetIn() { st.beat = 'duet'; go('talk'); talk([LINES.duetIn], function () { st.duet = 0; st.sung = 0; st.duetQ = 0; st.duetCd = 0; go('duet'); singBtn.hidden = false; }); }
@@ -415,7 +415,7 @@ window.WFR_SKY = (function () {
     function flowers() { st.focus = 'her'; st.beat = 'flowers'; go('talk'); talk([LINES.flowers, LINES.close1, LINES.close2], function () { st.beat = 'linger'; go('linger'); }); }
     function fadeAway() {
       S.sky.seen = true; api.save();   // BEFORE the fade: a reload from here on never replays her (brief section 4)
-      st.beat = 'fade'; go('fade'); api.music(null); if (flock) flock.g.visible = false;
+      st.beat = 'fade'; go('fade'); api.music(null); cine668End(); if (flock) flock.g.visible = false;
     }
     function freezeNow() {
       closeGap(); lensReset();
@@ -523,7 +523,154 @@ window.WFR_SKY = (function () {
     }
     function closeGap() { (st.gaps || []).forEach(function (o) { o.visible = true; }); st.gaps = null; }
     function aim(pos, look, k) { camera.position.lerp(pos, k); camLook.lerp(look, k); camera.lookAt(camLook); }
+    /* ---------- 668 GRANDMA'S SCENE, A LITTLE MORE CINEMA (Marth, Oct 16 ~00:45: "maybe slightly upgrade the cinematics for the cutscene with
+       the grandma also, the playable song want available.. just saying."; his answer ~01:55: her hop toward Rouge and her wings half open at
+       her "I love you" line, yes). Only how the camera, the music and the light treat her scene: not a word of LINES, FREEZE, CARD or UI
+       changes; no halo, never white; no light is added; duetIn and duetOut are left as they are (620 U2's).
+         C1 a shot per beat: the reveal (a wide from behind Rouge), the push in (hi, proud), the low duet arc, over Rouge's shoulder (flowers),
+            closer on her (close1, close2), the ease back out (linger). Every shot keeps BOTH birds in the frame (fit668); every move eases.
+         C2 the music rises and falls (WFR_MUSIC.setVolume, eased each frame); exactly 1 again at fadeAway (cine668End)
+         C3 warmer light, Standard only (Classic is frozen): the glow 0.35 to 0.55 from flowers on, a little gold on the shelf at close2
+         C4 the duet as a song: Sing pulses on the harp's beat, two notes rise from whoever sings, three pips count the exchanges
+         C5 at "I love you": one small hop toward Rouge (to 1.6 m), her wings half open, then folded again
+       Every number is a DRAFT for his phone; a shot that is too much there is cut, not argued for. ---------- */
+    var REVEAL668 = 2.5, HOP668 = 1.6, HOP_S668 = 0.9, WING668 = 0.5, SPB668 = 60 / 80;   // seconds; metres from Rouge; half open; 'legend' is 80 to the beat (music.js TEMPO) where info() is absent
+    var SHOT668 = {   // a direction from the look point (b: toward Rouge's side, s: the side, sP: the side on an upright screen, u: up); d metres (d1 where a slow move ends, over its seconds); fov 0 = the game's lens; toHer: the look point leans to her
+      reveal:  { b: 1, s: 0.25, u: 0.34, d: 13, fov: 0, toHer: 0.15, k: 1.8 },
+      hi:      { b: 0.35, s: 1, u: 0.34, d: 9.5, d1: 7, over: 8, fov: 0, toHer: 0.05, k: 1.4 },
+      duet:    { b: 0.35, s: 1, u: 0.1, d: 8, fov: 0, toHer: 0, arc: 15, k: 1.2 },
+      flowers: { b: 1, s: 0.45, u: 0.3, d: 5.2, fov: 50, toHer: 0.25, k: 1.2 },
+      close1:  { b: 0.7, s: 0.75, sP: 0.22, u: 0.22, d: 4.6, fov: 50, toHer: 0.35, k: 1 },
+      close2:  { b: 0.55, s: 0.85, sP: 0.3, u: 0.16, d: 4.2, fov: 48, toHer: 0.4, k: 0.9 },
+      linger:  { b: 0.35, s: 1, u: 0.3, d: 4.2, d1: 11, over: 5, fov: 0, toHer: 0, orbit: 0.12, k: 1.2 }
+    };
+    var VOL668 = { reveal: 0.6, arrive: 0.6, hi: 0.8, proud: 1, duet: 0.45, duetOut: 0.45, ask: 0.8, yes: 0.9, notYet: 0.9, pans: 0.9, flowers: 1, linger: 1 };   // the brief's DRAFT levels, by beat
+    var SCENE668 = ['reveal', 'talk', 'duet', 'ask', 'pans', 'linger'];
+    var cn = { classic: null, vol: null, glow: 0.35, gold: 0, hop: null, wo: 0, arc: 0, sung: 0, duet: 0, notes: null, pulse: 0, shot: null, shotAt: 0 };
+    var EM0 = cloudMat.emissive.clone(), GOLD668 = col(0x8a6a2e), NOTE_R668 = col(0xff8fa3), NOTE_G668 = col(0xffe2a0);
+    var c668 = { a: new THREE.Vector3(), b: new THREE.Vector3(), c: new THREE.Vector3(), d: new THREE.Vector3(), w: new THREE.Vector3(), u: new THREE.Vector3(), p: [new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3()], fr: new THREE.Vector3(), fu: new THREE.Vector3(), fo: new THREE.Vector3() };
+    var pips668 = el('span', { id: 'skyPips', 'aria-hidden': 'true' }, singBtn); [0, 1, 2].forEach(function () { el('i', {}, pips668); });   // empty spans: the button's words stay UI.sing
+    var css668 = document.createElement('style'); css668.textContent = '#skyPips{position:absolute;left:50%;top:-15px;transform:translateX(-50%);display:flex;gap:7px;pointer-events:none}#skyPips i{display:block;width:8px;height:8px;border-radius:50%;background:rgba(255,248,236,.75);box-shadow:0 0 0 1.5px rgba(200,49,74,.6)}#skyPips i.on{background:#c8314a}'; document.head.appendChild(css668);
+    function classic668() { try { return localStorage.getItem('wfr.look') === 'classic'; } catch (e) { return false; } }   // the look switch (622) where the html keeps it: its classicLook lives inside the html's wrapper, never visible here (trap 187: G10 caught it, Su 32)
+    function line668() { var w = $('talk'), x = $('talkText'); return w && !w.hidden && x ? x.textContent : ''; }
+    function isLine668(key) { return line668() === name(LINES[key][1]); }   // which of her lines is on screen (LINES read, never written)
+    function head668(out) { if (sky.gHead) return sky.gHead.getWorldPosition(out); return out.copy(sky.grandma.position).add(c668.u.set(0, 0.6, 0)); }
+    function riseTop668(x, z) {   // the top of her rise under (x, z): the three blobs buildSky lays (rr(22 + i, 7) their turn, rr(22 + i, 8) their depth), or the shelf's floor
+      var top = FLOOR;
+      for (var i = 0; i < 3; i++) {
+        var j = 22 + i, cx = Gpos.x + side.x * (i - 1) * 2.2, cz = Gpos.z + side.z * (i - 1) * 2.2, a = rr(j, 7) * 3, dx = x - cx, dz = z - cz;
+        var lx = dx * Math.cos(a) - dz * Math.sin(a), lz = dx * Math.sin(a) + dz * Math.cos(a), sz = 2.6 * (0.8 + rr(j, 8) * 0.4), q = (lx / 2.6) * (lx / 2.6) + (lz / sz) * (lz / sz);
+        if (q < 1) top = Math.max(top, RISE - 1.4 + 1.6 * Math.sqrt(1 - q));
+      }
+      return top;
+    }
+    function wings668(o) { var w = sky && sky.grandma.userData.wings; if (!w || !w[0]) return; var f = 1 - WING668 * o; w[0].rotation.y = 1.3 * f; w[1].rotation.y = -1.3 * f; }   // birds.js folds a wing by its y turn (1.3 folded), as the html's own unfolding does (the mentors' landing)
+    function notes668() {   // four sprites, one shared texture, made at the reveal so the sprite program is drawn before the duet (no stutter)
+      if (cn.notes || !sky) return cn.notes;
+      var cv = document.createElement('canvas'); cv.width = cv.height = 64; var g = cv.getContext('2d');
+      g.beginPath(); g.ellipse(25, 47, 11, 8, -0.45, 0, Math.PI * 2); g.moveTo(32, 46); g.lineTo(32, 9); g.lineTo(37, 9); g.quadraticCurveTo(40, 22, 53, 29); g.quadraticCurveTo(44, 27, 37, 20); g.lineTo(37, 46); g.closePath();   // an eighth note, drawn (no font needed)
+      g.lineWidth = 5; g.lineJoin = 'round'; g.strokeStyle = 'rgba(70,45,25,0.45)'; g.stroke(); g.fillStyle = '#ffffff'; g.fill();
+      var tex = new THREE.CanvasTexture(cv), list = [];
+      for (var i = 0; i < 4; i++) { var sp = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, color: 0xffffff, transparent: true, opacity: 0, depthWrite: false })); sp.scale.set(0.3, 0.3, 1); sp.position.copy(Gpos).add(c668.u.set(0, 1.4, 0)); sky.g.add(sp); list.push({ sp: sp, age: 9, x: 0, y: 0, z: 0, ph: i * 1.7 }); }
+      cn.notes = { tex: tex, list: list }; return cn.notes;
+    }
+    function sing668(at, colr, n) { var N = notes668(); if (!N) return; for (var i = 0; i < n; i++) { var o = N.list[0]; N.list.forEach(function (x) { if (x.age > o.age) o = x; }); o.age = -i * 0.12; o.x = at.x; o.y = at.y; o.z = at.z; o.sp.material.color.copy(colr); } }   // the oldest note sings next
+    function notesTick668(dt) {
+      var N = cn.notes; if (!N) return;
+      N.list.forEach(function (o) { o.age += dt; var a = o.age, sp = o.sp; if (a < 0 || a > 1.5) { sp.material.opacity = 0; return; }
+        sp.position.set(o.x, o.y + a * 0.9, o.z).addScaledVector(side, Math.sin(a * 4 + o.ph) * 0.14); var s = 0.3 * (1 + a * 0.35); sp.scale.set(s, s, 1);
+        sp.material.opacity = 0.95 * Math.min(1, a / 0.15) * Math.min(1, (1.5 - a) / 0.6); });
+    }
+    function notesDrop668() { var N = cn.notes; if (!N) return; N.list.forEach(function (o) { if (o.sp.parent) o.sp.parent.remove(o.sp); o.sp.material.dispose(); }); N.tex.dispose(); cn.notes = null; }
+    function portrait668() { return (camera.aspect || 1) < 1; }   // Jiraiya: Rouge plays upright (~390x844); the bench was 880x680
+    function fit668(look, dir, pts, fov) {   // the least distance from the look point, along dir, at which every point sits inside 80% of the frame (90% of its width upright)
+      var tn = Math.tan(fov * Math.PI / 360), tv = tn * 0.8, th = tn * (portrait668() ? 0.9 : 0.8) * (camera.aspect || 1), r = c668.fr.crossVectors(up, dir).normalize(), u = c668.fu.crossVectors(dir, r), need = 0;
+      pts.forEach(function (p) { var o = c668.fo.copy(p).sub(look), z0 = o.dot(dir); need = Math.max(need, z0 + Math.abs(o.dot(r)) / th, z0 + Math.abs(o.dot(u)) / tv); });
+      return need;
+    }
+    function cine668Cam(dt) {   // C1: true when 668 framed this frame; false hands it to today's two-shot (ask, the answers, the pans, the glide)
+      if (!sky || st.ph === 'glide' || st.focus === 'birds' || st.focus === 'marth') return false;
+      var bt = st.beat, ph = st.ph;
+      var key = ph === 'reveal' || bt === 'arrive' ? 'reveal' : ph === 'linger' ? 'linger' : bt === 'hi' ? 'hi' : bt === 'duet' || bt === 'duetOut' ? 'duet' : bt === 'flowers' ? (isLine668('close2') ? 'close2' : isLine668('close1') ? 'close1' : 'flowers') : null;
+      if (key !== cn.shot) { cn.shot = key; cn.shotAt = st.clk; }
+      if (!key) return false;
+      var P = SHOT668[key], b = api.bird(), age = st.clk - cn.shotAt, gA = c668.a.copy(sky.grandma.position), rA = c668.b.copy(b ? b.position : Ppos);
+      var look = c668.c.set((gA.x + rA.x) / 2, FLOOR + 0.9, (gA.z + rA.z) / 2).lerp(gA, P.toHer);
+      var dir = c668.d.copy(back).multiplyScalar(-P.b).addScaledVector(side, portrait668() && P.sP != null ? P.sP : P.s), turn = 0;   // upright, the close shots come round behind Rouge: the two birds stand in depth, not across a narrow screen (fitsim: close1 8.6 m > 4.6, close2 6.3 > 4.2 without it)
+      if (P.arc) { cn.arc += (Math.min(1, (st.duet || 0) / 3) - cn.arc) * Math.min(1, dt * 0.8); turn = (cn.arc - 0.5) * P.arc * Math.PI / 180; }   // the duet's arc, one third per exchange
+      if (P.orbit) turn = age * P.orbit;
+      if (turn) dir.applyAxisAngle(up, turn);
+      dir.normalize().multiplyScalar(Math.sqrt(1 - P.u * P.u)).add(c668.u.set(0, P.u, 0)).normalize();
+      var d = P.d1 != null ? P.d + (P.d1 - P.d) * (function (e) { return e * e * (3 - 2 * e); })(Math.min(1, age / P.over)) : P.d;
+      var fovWant = P.fov || BASE_FOV, pts = c668.p;
+      pts[0].copy(rA); pts[1].copy(rA).y += 0.45; pts[2].copy(gA); head668(pts[3]);
+      d = Math.max(d, P.fit === 0 ? 0 : fit668(look, dir, pts, Math.min(fovWant, camera.fov)));
+      if (st.gaps) closeGap();
+      aim(camWant.copy(look).addScaledVector(dir, d), lookWant.copy(look), Math.min(1, dt * P.k)); lens(fovWant, dt * 1.6);
+      if (b && st.ph !== 'fade') b.position.y = FLOOR + api.standOf(api.kind());
+      return true;
+    }
+    function cine668Start() {   // the reveal begins: everything of 668 starts from today's look
+      cn.classic = classic668(); cn.vol = 1; cn.glow = 0.35; cn.gold = 0;   /* Obito N3: the look read once here, not every frame */ cn.hop = null; cn.wo = 0; cn.arc = 0; cn.sung = 0; cn.duet = 0; cn.pulse = 0; cn.shot = null;
+      cloudMat.emissive.copy(EM0);
+      if (sky) { if (sky.gy0668 == null) sky.gy0668 = sky.gy; sky.gy = sky.gy0668; sky.grandma.position.x = Gpos.x; sky.grandma.position.z = Gpos.z; wings668(0); notes668(); }
+    }
+    function cine668End() { cn.vol = null; if (window.WFR_MUSIC && window.WFR_MUSIC.setVolume) window.WFR_MUSIC.setVolume(1); notesDrop668(); singBtn.style.scale = ''; }   // at fadeAway: the dove's duck writes only on its own change, so a level left low would stay low for the rest of her game
+    function cine668Tick(dt, t, ph) {
+      if (SCENE668.indexOf(ph) < 0) { if (ph !== 'fade') { if (cn.vol != null || cn.notes) cine668End(); if (cn.gold) { cn.gold = 0; cloudMat.emissive.copy(EM0); } } return; }   // a beat jump past the fade (the bench) still leaves the level at 1
+      if (ph === 'reveal') { flockAroundShelf(S.t); shelfCam(dt, t); if (t >= REVEAL668) { st.beat = 'arrive'; go('talk'); talk([LINES.arrive], hi); } }
+      var bt = st.beat;
+      /* C2 the music: the level by beat, eased (about a second), written only when it moves */
+      var vw = VOL668[bt] != null ? VOL668[bt] : 1; if (bt === 'hi' && isLine668('proud')) vw = VOL668.proud; if (ph === 'linger') vw = VOL668.linger;
+      var v = cn.vol == null ? 1 : cn.vol; v += (vw - v) * Math.min(1, dt * 1.2); if (Math.abs(vw - v) < 0.004) v = vw;
+      if (v !== cn.vol) { cn.vol = v; if (window.WFR_MUSIC && window.WFR_MUSIC.setVolume) window.WFR_MUSIC.setVolume(v); }
+      /* C4 the duet as a song. The tap rule is duetTap's, unchanged: this only reads st.sung (her taps) and st.duet (Grandma's answers).
+         620 U2 (not V1): her duet graded on her harp ('legend', Marth ~01:55) runs inside this same duet shot; its end, per his later ask (the
+         rank, a slight fade, then "Madame Shirley tweets gleefully", then her dialogue), goes in duetOut (:408), which 668 leaves as it is. */
+      var inDuet = ph === 'duet' && !singBtn.hidden;
+      cn.sung = Math.min(cn.sung, st.sung || 0); cn.duet = Math.min(cn.duet, st.duet || 0);
+      if ((st.sung || 0) > cn.sung) { cn.sung = st.sung; var rb = api.bird(); if (rb) sing668(c668.w.copy(rb.position).add(c668.u.set(0, 0.45, 0)), NOTE_R668, 2); }
+      if ((st.duet || 0) > cn.duet) { cn.duet = st.duet; if (sky) sing668(head668(c668.w), NOTE_G668, 2); }
+      notesTick668(dt);
+      var M = window.WFR_MUSIC, pos = inDuet && M && M.playing && M.variant === 'legend' && M.position ? window.WFR_MUSIC.position() : null;
+      var inf = M && M.info ? M.info('legend') : null, spb = inf && inf.spb ? inf.spb : SPB668;
+      cn.pulse = pos == null ? 0 : Math.exp(-((pos % spb) / spb) * 7);   // 1 on the beat, gone by the next
+      var sc = inDuet ? String(+(1 + 0.07 * cn.pulse).toFixed(3)) : ''; if (singBtn.style.scale !== sc) singBtn.style.scale = sc;
+      for (var pi = 0; pi < 3; pi++) { var pc = pi < (st.duet || 0) ? 'on' : ''; if (pips668.children[pi].className !== pc) pips668.children[pi].className = pc; }
+      if (!sky) return;
+      /* C5 at "I love you": one small hop toward Rouge (the rise's own surface under her feet), her wings half open, then folded again */
+      if (sky.gy0668 == null) sky.gy0668 = sky.gy;
+      var at2 = bt === 'flowers' && isLine668('close2');
+      if (at2 && cn.hop == null) {
+        var off = riseTop668(Gpos.x, Gpos.z) - Gpos.y, tw = c668.w.copy(Gpos).sub(Ppos).setY(0).normalize().multiplyScalar(HOP668).add(Ppos);
+        cn.hop = 0; cn.hopFrom = new THREE.Vector3(sky.grandma.position.x, Gpos.y + (sky.gy - sky.gy0668), sky.grandma.position.z); cn.hopTo = new THREE.Vector3(tw.x, Math.max(FLOOR, riseTop668(tw.x, tw.z) - off), tw.z);
+      }
+      if (cn.hop != null && cn.hop < 1) {
+        cn.hop = Math.min(1, cn.hop + dt / HOP_S668); var he = cn.hop * cn.hop * (3 - 2 * cn.hop), hp = c668.w.copy(cn.hopFrom).lerp(cn.hopTo, he);
+        sky.grandma.position.x = hp.x; sky.grandma.position.z = hp.z; sky.gy = sky.gy0668 + (hp.y - Gpos.y) + Math.sin(cn.hop * Math.PI) * 0.45;   // the breathing below writes her y from sky.gy
+      }
+      var wt = at2 && cn.hop != null && cn.hop > 0.5 ? 1 : 0; cn.wo = wt > cn.wo ? Math.min(1, cn.wo + dt / 0.6) : Math.max(0, cn.wo - dt / 1.4); wings668(cn.wo);
+      /* C3 warmer light, Standard only (Classic is frozen); the fade starts from where the glow stands (userData.op) */
+      if (!(cn.classic != null ? cn.classic : classic668())) {
+        var gw = bt === 'flowers' || ph === 'linger' ? 0.55 : 0.35; cn.glow += (gw - cn.glow) * Math.min(1, dt * 0.6); if (Math.abs(gw - cn.glow) < 0.002) cn.glow = gw;
+        sky.glow.material.opacity = cn.glow; sky.glow.material.userData.op = cn.glow;
+        var gd = at2 || ph === 'linger' ? 1 : 0; cn.gold += (gd - cn.gold) * Math.min(1, dt * 0.5); if (Math.abs(gd - cn.gold) < 0.002) cn.gold = gd;
+        cloudMat.emissive.copy(EM0).lerp(GOLD668, 0.4 * cn.gold);
+      }
+    }
+    function cine668() {   // the bench's read (state().cine): what the camera, the lens, the music and her light are doing this frame
+      var o = { clk: st.clk, ph: st.ph, beat: st.beat, shot: cn.shot, cam: camera.position.toArray(), look: camLook.toArray(), fov: camera.fov, base: BASE_FOV, aspect: camera.aspect, vol: cn.vol, pulse: cn.pulse, pips: pips668.querySelectorAll('i.on').length,
+        line: line668(), classic: classic668(), programs: api.renderer && api.renderer.info && api.renderer.info.programs ? api.renderer.info.programs.length : null, lights: 0,
+        notes: cn.notes ? cn.notes.list.filter(function (x) { return x.age >= 0 && x.age <= 1.5; }).length : 0, sky: !!sky };
+      scene.children.forEach(function (x) { if (x.isLight) o.lights++; }); if (sky) sky.g.traverse(function (x) { if (x.isLight) o.lights++; });
+      if (sky) { var b = api.bird(), w = sky.grandma.userData.wings;
+        o.gAt = sky.grandma.getWorldPosition(new THREE.Vector3()).toArray(); o.rAt = b ? b.position.toArray() : null; o.gHead = head668(new THREE.Vector3()).toArray();
+        o.glowAt = sky.glow.getWorldPosition(new THREE.Vector3()).toArray(); o.glowOp = sky.glow.material.opacity; o.shelfEm = cloudMat.emissive.getHexString();
+        o.wings = w && w[0] ? +(1 - Math.abs(w[0].rotation.y) / 1.3).toFixed(4) : null; o.dist = +Math.hypot(sky.grandma.position.x - Ppos.x, sky.grandma.position.z - Ppos.z).toFixed(4); }
+      return o;
+    }
     function shelfCam(dt, t) {
+      if (cine668Cam(dt)) return;   // 668: a shot per beat (the camera, so Classic too); false = today's two-shot below
       var b = api.bird(), mid = v1.copy(Gpos).add(Ppos).multiplyScalar(0.5); mid.y = FLOOR + 0.9;
       var focus = st.focus, k = Math.min(1, dt * 2.2);
       if (focus === 'birds' && flock) { var f = flock.by.falcon.position, o = flock.by.owl.position; lookWant.copy(f).add(o).multiplyScalar(0.5); camWant.copy(mid).addScaledVector(back, -6).add(v2.set(0, 3, 0)); aim(camWant, lookWant, Math.min(1, dt * 1.6)); return; }
@@ -593,6 +740,7 @@ window.WFR_SKY = (function () {
         shelfCam(dt, t); if (g >= 1) arrive();
         return;
       }
+      cine668Tick(dt, t, ph);   // 668: the reveal, the shots' music and light, the song's notes and pips, her hop and wings (the breathing below still writes her y last)
       if (sky) {   // Grandma breathes; her head moves a little; a small hop when she answers
         st.hop = Math.max(0, (st.hop || 0) - dt * 2.2);
         sky.grandma.position.y = sky.gy + Math.sin(Math.min(1, st.hop || 0) * Math.PI) * 0.35;
@@ -747,7 +895,7 @@ window.WFR_SKY = (function () {
         ctlSizes: [rewBtn, playBtn, ffBtn, doneBtn].map(function (b) { var r = b.getBoundingClientRect(); return [b.id, Math.round(r.width), Math.round(r.height)]; }), playIcon: playBtn.getAttribute('aria-label'),
         gameT: S.t,
         himAt: flock && flock.by.marth ? flock.by.marth.position.toArray() : null, shelfAt: [O.x, FLOOR, O.z], fov: camera.fov, gaps: st.gaps ? st.gaps.length : 0, heavenVisible: scene.children.filter(function (o) { return o.isGroup && o.visible && o.position.y >= 168 && o.position.y <= 180 && o.children.length === 6; }).length, camDown: camera.position.y - camLook.y,
-        him: other(), flock: flock ? Object.keys(flock.by) : [], LINES: LINES, FREEZE: FREEZE, CARD: CARD, GRANDMA: GRANDMA };
+        cine: cine668(), him: other(), flock: flock ? Object.keys(flock.by) : [], LINES: LINES, FREEZE: FREEZE, CARD: CARD, GRANDMA: GRANDMA };
     }
     function open() {   // the gate, for a bench: dawn, and her flying just short of the first diamond, straight at it
       S.clock = 20; var f = helix(0), from = v1.set(f.x, f.y, f.z).add(v2.set(-Math.sin(th0 + 0.4), 0, -Math.cos(th0 + 0.4)).multiplyScalar(9));
