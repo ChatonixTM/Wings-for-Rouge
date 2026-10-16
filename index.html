@@ -276,6 +276,7 @@ html.cine #boot{display:grid}
 #flutter{right:calc(env(safe-area-inset-right,0px) + 22px);bottom:calc(env(safe-area-inset-bottom,0px) + 142px);background:#eef6ff;color:#2f5fb0}
 #jump{right:calc(env(safe-area-inset-right,0px) + 22px);bottom:calc(env(safe-area-inset-bottom,0px) + 142px);background:#f2fbef;color:#3f7a2e}
 #nightBtn{bottom:calc(env(safe-area-inset-bottom,0px) + 238px);background:#1f2a48;color:#ffd9a0}   /* 663: above Zoom (DRAFT colours) */
+@media (orientation:portrait){#nightBtn,#zoom{right:calc(env(safe-area-inset-right,0px) + 16px)!important;bottom:auto!important;min-width:0!important;width:56px!important;height:56px!important;padding:0!important;border-radius:50%!important;font-size:0!important}#nightBtn{top:calc(env(safe-area-inset-top,0px) + 252px)!important}#zoom{top:calc(env(safe-area-inset-top,0px) + 316px)!important}#nightBtn::after{content:'🦉';font-size:26px}#zoom::after{content:'💨';font-size:26px}body:has(#care:not([hidden])) #nightBtn,body:has(#care:not([hidden])) #zoom{visibility:hidden!important}}   /* 663/621 hotfix (Su 32, Oct 16; Marth: "still in da way ... the chic is like completely hidden"): upright, Night and Zoom become round icons at the far right edge, above her bird and below the words, where the chick never walks (behind her at Lv 0-1, beside her at 2+); hidden while the chick's card is open. V3 (663) restyles Night when it lands: drop the Night half of this rule then */
 /* a mentor's words, and the narrator's */
 .talk{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 24px);
   width:min(520px,calc(100% - 32px));background:var(--paper);border-radius:18px;padding:14px 16px 12px;
@@ -470,33 +471,33 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 <div id="fade" aria-hidden="true"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="gltf-loader.js?v=5253dc37e634"></script>
-<script src="skeleton-utils.js?v=5253dc37e634"></script>
-<script src="meshopt-decoder.js?v=5253dc37e634"></script>
-<script src="models.js?v=5253dc37e634"></script>
-<script src="people.js?v=5253dc37e634"></script>
-<script src="villagers.js?v=5253dc37e634"></script>
-<script src="tex-photos.js?v=5253dc37e634"></script>
-<script src="textures.js?v=5253dc37e634"></script>
-<script src="birds.js?v=5253dc37e634"></script>
-<script src="humans.js?v=5253dc37e634"></script>
-<script src="folk.js?v=5253dc37e634"></script>
-<script src="trees.js?v=5253dc37e634"></script>
-<script src="treehouses.js?v=5253dc37e634"></script>
-<script src="cabins.js?v=5253dc37e634"></script>
-<script src="cave.js?v=5253dc37e634"></script>
-<script src="sounds.js?v=5253dc37e634"></script>
-<script src="music.js?v=5253dc37e634"></script>
-<script src="music-orchestra.js?v=5253dc37e634"></script>
-<script src="rhythm.js?v=5253dc37e634"></script>
-<script src="pictograms.js?v=5253dc37e634"></script>
-<script src="chick-wear.js?v=5253dc37e634"></script>
-<script src="hedgehogs.js?v=5253dc37e634"></script>
-<script src="opening.js?v=5253dc37e634"></script>
-<script src="skypiea.js?v=5253dc37e634"></script>
-<script src="atmo.js?v=5253dc37e634"></script>
-<script src="weather.js?v=5253dc37e634"></script>
-<script src="runes.js?v=5253dc37e634"></script>
+<script src="gltf-loader.js?v=981d4618aa23"></script>
+<script src="skeleton-utils.js?v=981d4618aa23"></script>
+<script src="meshopt-decoder.js?v=981d4618aa23"></script>
+<script src="models.js?v=981d4618aa23"></script>
+<script src="people.js?v=981d4618aa23"></script>
+<script src="villagers.js?v=981d4618aa23"></script>
+<script src="tex-photos.js?v=981d4618aa23"></script>
+<script src="textures.js?v=981d4618aa23"></script>
+<script src="birds.js?v=981d4618aa23"></script>
+<script src="humans.js?v=981d4618aa23"></script>
+<script src="folk.js?v=981d4618aa23"></script>
+<script src="trees.js?v=981d4618aa23"></script>
+<script src="treehouses.js?v=981d4618aa23"></script>
+<script src="cabins.js?v=981d4618aa23"></script>
+<script src="cave.js?v=981d4618aa23"></script>
+<script src="sounds.js?v=981d4618aa23"></script>
+<script src="music.js?v=981d4618aa23"></script>
+<script src="music-orchestra.js?v=981d4618aa23"></script>
+<script src="rhythm.js?v=981d4618aa23"></script>
+<script src="pictograms.js?v=981d4618aa23"></script>
+<script src="chick-wear.js?v=981d4618aa23"></script>
+<script src="hedgehogs.js?v=981d4618aa23"></script>
+<script src="opening.js?v=981d4618aa23"></script>
+<script src="skypiea.js?v=981d4618aa23"></script>
+<script src="atmo.js?v=981d4618aa23"></script>
+<script src="weather.js?v=981d4618aa23"></script>
+<script src="runes.js?v=981d4618aa23"></script>
 <script>
 (() => {
 'use strict';
@@ -3184,7 +3185,7 @@ function bgMusicTick(dt) {
    after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
    music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
    menu, a cutscene), the orchestra bows out. */
-const ORCH_SRC = 'orch-samples.js?v=5253dc37e634';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const ORCH_SRC = 'orch-samples.js?v=981d4618aa23';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
 const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
 window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
 const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
@@ -4835,7 +4836,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build 5253dc37e634): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build 981d4618aa23): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>
