@@ -243,7 +243,7 @@ window.WFR_RUNES = (function () {
         else if (st.mode === 'race' && (S.mode === 'walk' || S.mode === 'landing' || S.mode === 'swim')) { end('down'); }
         else if (RL.on && S.mode !== 'fly' && S.mode !== 'paused') { end('left'); }   /* 632 U4b */
         else {
-          if (fly) { var r = pickR(); for (var i = 0; i < N; i++) if (alive[i] && near(RUNE[i], r)) { alive[i] = 0; st.got++; tone(1568 + (st.got % 5) * 110, 0.06, 0.03); } }
+          if (fly) { var r = pickR() + (o.magnet ? 0.5 * Math.max(0, o.magnet() - PICK_R) : 0); /* 673 U3: the Crow's pull at half strength (2.4 + 1.2 = 3.6 m); the feather keeps plain pickR() */ for (var i = 0; i < N; i++) if (alive[i] && near(RUNE[i], r)) { alive[i] = 0; st.got++; tone(1568 + (st.got % 5) * 110, 0.06, 0.03); } }
           if (st.rare && !st.rareGot && fly && near(feather.position, pickR() + 0.6)) { st.rareGot = true; st.rare = false; feather.visible = false; S.huethers = (S.huethers || 0) + 1; try { o.save(); } catch (e) { /* fine */ } say('A white feather! You have ' + S.huethers + '.', 3000); tone(1760, 0.2, 0.06); tone(2349, 0.25, 0.05); }   /* DRAFT */
           if (st.mode === 'race') {
             if (!st.fdone) { st.fs += st.vf * dp; if (st.fs >= L) { st.fdone = true; st.fback = 0; st.fFrom.copy(RACE_AT); } }

@@ -56,6 +56,7 @@ window.WFR_SKY = (function () {
     close2:  [DEPART, 'I love you, {name}.'],   // OURS (closing, allowed by Marth ~16:20) - he wrote "you can say I love you Rouge if you want"
   };
   var FREEZE = 'It looks like the reunion with your loved caretaker was finished. It appears some things aren\'t meant for right now... With that, {name} gracefully falls down.';   // HIS (typing fixed per answer 2)
+  var BRIDGE = ['', DEPART + ' tweets gleefully.'];   // HIS (Marth, Oct 16 ~01:55: "a slight bridging statement like 'Madamme Shirley tweets gleefully'"; "Madame" is his ruled spelling, DEPART): after the graded duet's rank
   var CARD = 'MISSION COMPLETE.';   // HIS; then two more dots, slowly (his "two more dots slowly appear")
   var UI = {
     yes: 'Yes', notYet: 'Not yet',   // the two answers (Marth's decision via Su: Rouge's own tap)
@@ -119,7 +120,7 @@ window.WFR_SKY = (function () {
   ];
 
   /* ---------- numbers (design, not measurement) ---------- */
-  var DAWN_END = 270;        // 627 (Marth, Oct 15): the sky calls for one real minute of a ten-minute day (was 150, the sky's colour dawn: ~33 s)
+  var DAWN_END = 810;   /* 627 dawn3 (Marth, Oct 17: "we need the dawn and gems time to be longer"): three real minutes (DRAFT; was 270, one minute) */        // 627 (Marth, Oct 15): the sky calls for one real minute of a ten-minute day (was 150, the sky's colour dawn: ~33 s)
   var N_DIA = 12, HELIX_R = 13, HELIX_TURNS = 2.25, HELIX_TOP = 150;   // the last diamond sits under the ceiling (166)
   var SHELF_Y = 230, TEMPLE_Y = 216;
   var WALL_Y = 150, WALL_R = 40, DISC_R = 15, DISC_TOP = TEMPLE_Y + 0.6, SKY_CAP = TEMPLE_Y + 40;   // 610: the wall under the temple; the disc is ground; the air above it is thin
@@ -405,6 +406,16 @@ window.WFR_SKY = (function () {
       if (!call(k, { vol: 0.7 })) [0, 0.12, 0.24].forEach(function (t, i) { api.tone([784, 880, 1047][i], t, 0.14, 'triangle', 0.07); });
       var n = st.duet; st.calls.push({ at: st.clk + 0.6, fn: function () { if (!call(sky ? sky.gk : start(), { vol: 0.55, distance: 0.15, pan: 0.2, variant: n % 2 })) [0, 0.14, 0.28].forEach(function (t, i) { api.tone([659, 784, 880][i], t, 0.16, 'triangle', 0.06); }); st.hop = 1; st.duet++; } });
     }
+    /* 620 U2b: after the three calls and answers, her harp ('legend', the scene's own song) as a graded round on the game's lanes, at the row
+       Rouge picked. The scene stays in its 'duet' phase meanwhile (no new beat in st.seq: 668's G2 list holds). The game shows the rank, lets it
+       fade a little, then calls back: his bridging line, then her own words go on (duetOut). A round quit from the pause: no rank, no bridge.
+       No rhythm game on the page: duetOut at once, as before. Once per duet (st.seq's length marks it, so a replayed beat sings again). */
+    function duetSong() {
+      if (st.songAt === st.seq.length) return; st.songAt = st.seq.length; singBtn.hidden = true;
+      if (api.song && api.song({ song: 'legend', who: 'duet' }, duetSung)) return;
+      duetOut();
+    }
+    function duetSung(res) { st.graded = res || null; if (res && res.rank) talk([BRIDGE], duetOut); else duetOut(); }
     function duetOut() { singBtn.hidden = true; st.beat = 'duetOut'; go('talk'); talk([LINES.duetOut], ask); }
     function ask() { st.beat = 'ask'; go('talk'); talk([LINES.ask], function () { go('ask'); choice.hidden = false; }); }
     function answer(yes) {
@@ -749,7 +760,7 @@ window.WFR_SKY = (function () {
       }
       if (ph === 'talk' || ph === 'duet' || ph === 'ask' || ph === 'pans' || ph === 'linger') {
         flockAroundShelf(S.t);
-        if (ph === 'duet' && st.duet >= 3 && !st.calls.length && st.duetCd <= 0) duetOut();
+        if (ph === 'duet' && st.duet >= 3 && !st.calls.length && st.duetCd <= 0) duetSong();   /* 620 U2b: the graded round first */
         if (ph === 'pans') { st.focus = t < 4 ? 'birds' : t < 8 ? 'marth' : 'her'; if (t >= 9.4) flowers(); }   // answer 1: the Falcon showing off and the Owl smiling, then HIM for a bit, then back to her
         if (ph === 'linger') { st.focus = 'linger'; if (t >= LINGER_S) fadeAway(); }
         shelfCam(dt, t); return;
@@ -810,7 +821,7 @@ window.WFR_SKY = (function () {
     function dropColumn() { if (st.column) { scene.remove(st.column); st.column.geometry.dispose(); st.column.material.dispose(); st.column = null; } }
     function controlsBack(mode) { S.mode = mode; S.inSky = false; S.speed = mode === 'fly' ? 9 : 0; S.landTo = null; if (api.flapBtn) api.flapBtn.textContent = mode === 'walk' ? 'Fly' : 'Flap'; uiLayer.hidden = false; controls(true); }
     function wall(k) {   // the invisible wall: she stops in the air; the ask, or the Crow's line and the turn
-      st.wallFrom = S.pos.clone(); st.yaw0 = S.yaw; st.crow = k === 'crow'; st.armed = false;
+      st.wallFrom = S.pos.clone(); st.yaw0 = S.yaw; st.crow = k === 'crow' && !(S.lessons && S.lessons.falcon); st.armed = false;   /* 673 (Marth, Oct 16: "Yes the crow should be able once the crow teaches her"): taught by the Peregrine, the Crow is asked like any bird */
       S.mode = 'event'; S.inSky = true; S.speed = 0; S.flapT = 0; controls(false); camLook.copy(S.pos);
       [330, 262].forEach(function (f, i) { api.tone(f, i * 0.05, 0.25, 'sine', 0.05); });
       var shut = !st.crow && api.shut && api.shut();   // 632 U2: rain closes the sky island

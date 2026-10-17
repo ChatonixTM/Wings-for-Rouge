@@ -44,7 +44,7 @@
 
   const DUNES = { x: 40, z: -215, r: 45 };          // BRIEF_528_530 section C; checked against the island (H 8.7 at the centre)
   const WATER = 1.2;                                // the game's sea level (the bench checks it against landmarks().WATER)
-  const ZOOM = { hold: 0.6, full: 0.97, mult: 3.5, dur: 3.0, cd: 2.5, fov0: 62, fov1: 72, legRate: 60 };
+  const ZOOM = { hold: 0.6, full: 0.97, mult: 3.5, dur: 3.0, cd: 2.5, cdFast: 0.2, fov0: 62, fov1: 72, legRate: 60 };
   const CURL_R = 3, TALK_R = 3.2, GIVE_R = 4.5;
   const SAND = 0xe3cf9a, ROCK = 0x8a8f78;
 
@@ -395,11 +395,12 @@
     zoomBtn.style.cssText = 'right:calc(env(safe-area-inset-right,0px) + 132px);bottom:calc(env(safe-area-inset-bottom,0px) + 176px);background:#fff6df;color:#8b5e34';
     const ui = $('ui'); if (ui) ui.appendChild(zoomBtn);
     const zoomable = () => (S.mode === 'walk' || S.mode === 'fly') && !S.talking && !S.inside && !S.insideTH && !S.climb && S.tut === 0 && !S.noWalk && !S.resting && !S.morph && !S.inSky && !S.inEagle;   // 592: in the air too (a flight burst)
+    const fast = () => !!(api.zoomFast && api.zoomFast());   // 673: the Peregrine (his Zoom cool-down is near nothing; a tap during it refreshes it)
     function startZoom(by) {
-      if (!S.lessons.zoom || !zoomable() || Z.t > 0 || Z.cd > 0) return false;
+      if (!S.lessons.zoom || !zoomable() || (Z.t > 0 && !fast()) || Z.cd > 0) return false;
       Z.t = ZOOM.dur; Z.hold = 0; Z.by = by; Z.starts++; api.chirp(); return true;
     }
-    function endZoom() { Z.t = 0; Z.cd = ZOOM.cd; }
+    function endZoom() { Z.t = 0; Z.cd = fast() ? ZOOM.cdFast : ZOOM.cd; }
     on(zoomBtn, 'pointerdown', (e) => { e.preventDefault(); startZoom('button'); });
     on(window, 'keydown', (e) => { if (e.key === 'Shift' && !e.repeat) startZoom('shift'); });
     // the look: a ghost pair of legs, streaks, dust
@@ -506,7 +507,7 @@
       zoomLook(dt);
       const zOn = !!S.lessons.zoom && zoomable() && !(ui && ui.hidden);
       if (zoomBtn.hidden === zOn) zoomBtn.hidden = !zOn;
-      if (zOn) { const o = Z.t > 0 || Z.cd > 0 ? '0.5' : '1'; if (zoomBtn.style.opacity !== o) zoomBtn.style.opacity = o; }
+      if (zOn) { const o = (Z.t > 0 && !fast()) || Z.cd > 0 ? '0.5' : '1'; if (zoomBtn.style.opacity !== o) zoomBtn.style.opacity = o; }
       const rb = BOOK_PAGES_OK && !!root.WFR_PICTO && !!S.seen.hogsBook && !!pauseRow && !pauseRow.hidden;
       if (bookRow.hidden === rb) bookRow.hidden = !rb;
       const bk = bookOpen && api.panels.at() > 0; if (back.hidden === bk) back.hidden = !bk;

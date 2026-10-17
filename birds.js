@@ -415,7 +415,7 @@ window.WFR_BIRDS = (function () {
         arm.rotation.set(-1.35 * fold, s * 0.17 * fold, 0);
         arm.position.set(s * flank * fold, 0.08 * fold, -0.04 * fold); arm.scale.set(1, 1, 1 - 0.45 * fold);   // the flight feathers slide under the coverts
         hand.rotation.set(0, live ? s * (ud.handSweep || 0) : 0, s * (whip + (live ? ud.bend || 0 : 0) + 0.14 * fold));
-        hand.scale.x = 1 - 0.38 * fold;
+        hand.scale.x = 1 - 0.38 * fold; hand.scale.z = 1 + (live ? ud.splay || 0 : 0);   /* 673 U2: the splay (no new, no clone) */
         base.call(this, force);
       };
       g.add(pivot); return pivot;
@@ -481,7 +481,7 @@ window.WFR_BIRDS = (function () {
     [rig.wingL, rig.wingR].forEach(function (w, i) {
       if (!w) return; var s = i ? -1 : 1;
       w.rotation.x = P.x || 0; w.rotation.y = s * (P.y || 0); w.rotation.z = s * (P.z || 0);
-      w.userData.bend = P.bend || 0; w.userData.handSweep = P.hs || 0; w.userData.bendAt = now;
+      w.userData.splay = 0; /* 673 U2: a pose closes the splay */ w.userData.bend = P.bend || 0; w.userData.handSweep = P.hs || 0; w.userData.bendAt = now;
     });
     if (rig.tail) { rig.tail.rotation.x = 0.08 + (P.tail || 0); rig.tail.scale.x = P.fan || 1; rig.tail.rotation.y = 0; rig.tail.rotation.z = 0; }   // (611: the flight's tail twist never outlives it)
     var tk = P.tuck || 0;
@@ -687,7 +687,7 @@ window.WFR_BIRDS = (function () {
     crow: { f: 3.3, amp: 0.8, mid: 0.12, D: 0.43, bout: 5, gap: 0.8, glide: [0.07, 0.05, 0.12], up: 0.36, heave: 0.06 },
     falcon: { f: 4.2, amp: 0.74, mid: 0.1, D: 0.42, bout: 4, gap: 1.6, glide: [0.02, 0.28, -0.04], up: 0.34, heave: 0.05 },
     owl: { f: 2.5, amp: 0.92, mid: 0.16, D: 0.45, bout: 3, gap: 1.5, glide: [0.12, -0.04, 0.06], up: 0.4, heave: 0.08 },
-    eagle: { f: 1.8, amp: 0.7, mid: 0.12, D: 0.45, bout: 2, gap: 4.5, glide: [0.13, 0.0, 0.2], up: 0.3, heave: 0.05 }
+    eagle: { f: 1.5, amp: 0.86, mid: 0.12, D: 0.38, bout: 2, gap: 5.5, glide: [0.16, -0.06, 0.26], up: 0.4, heave: 0.09, splay: 0.2 }   /* 673 U2 (was f 1.8, amp 0.7, D 0.45, gap 4.5, glide [0.13, 0, 0.2], up 0.3, heave 0.05). DRAFT */
   };
   API.FLY = FLY;
 
@@ -698,7 +698,7 @@ window.WFR_BIRDS = (function () {
     if (!fs || t - fs.lastT > 0.25 || t < fs.lastT) {   // a fresh start in the air (a takeoff, out of the sea, after a pause): the burst
       fs = rig.fs = { ph: 0, f: F.f * 1.45, amp: 0.3, mid: F.mid, sw: 0, bend: 0, boutLeft: 0, gap: F.gap, burst: 0.6, tk: 0, pow: true, wraps: 0, t: t, lastT: t,
         leg0: legs.map(function (l) { return l.rotation.x; }), foot0: legs.map(function (l) { return l.userData.foot ? l.userData.foot.rotation.x : 0; }),
-        v: o.speed || 0, brake: 0, fan: 1, tp: 0, tw: 0 };
+        v: o.speed || 0, brake: 0, fan: 1, tp: 0, tw: 0, spl: 0 };   /* 673 U2: spl, the splayed hand */
     }
     fs.lastT = t; fs.t = t; rig.settle = SETTLE; if (rig.gs) rig.gs.g = 0;   // the flight owns the legs: the next walk starts from standing, never mid-stride
     var spd = o.speed || 0, turn = clamp(o.turn || 0, -1, 1), hov = clamp(o.hover || 0, 0, 1), lng = clamp(o.long || 0, 0, 1);
@@ -726,6 +726,7 @@ window.WFR_BIRDS = (function () {
     fs.mid = ease(fs.mid, tm, Math.min(1, dt * 8));
     fs.sw = ease(fs.sw, bs, Math.min(1, dt * 9));
     fs.bend = ease(fs.bend, bb, Math.min(1, dt * 8));
+    fs.spl = ease(fs.spl || 0, !powered && !o.dive && !(fs.boutLeft > 0) ? (F.splay || 0) : 0, Math.min(1, dt * 4));   /* 673 U2: the hand's feathers spread in a glide */
     /* the beat: +1 at the top, -1 at the bottom; the downstroke takes D of it and reaches, the upstroke is slower and folds */
     var ph = fs.ph, down = ph < D, s = down ? ph / D : (ph - D) / (1 - D), sn = Math.sin(Math.PI * s);
     var wv = down ? Math.cos(Math.PI * s) : -Math.cos(Math.PI * s), A = fs.amp;
@@ -736,7 +737,7 @@ window.WFR_BIRDS = (function () {
     [rig.wingL, rig.wingR].forEach(function (wg, i) {
       if (!wg) return; var sd = i ? -1 : 1, inner = clamp(-turn * sd, 0, 1), outer = clamp(turn * sd, 0, 1);
       wg.rotation.x = 0; wg.rotation.y = sd * (sweep + 0.22 * inner); wg.rotation.z = sd * (z - 0.08 * inner + 0.06 * outer);
-      wg.userData.bend = bend - 0.12 * inner; wg.userData.handSweep = hs + 0.12 * inner; wg.userData.bendAt = now;
+      wg.userData.splay = fs.spl; /* 673 U2 */ wg.userData.bend = bend - 0.12 * inner; wg.userData.handSweep = hs + 0.12 * inner; wg.userData.bendAt = now;
     });
     /* the tail: fanned and pressed down when she slows (or hovers, or bursts off), closed for speed, twisted into a turn */
     if (dt > 0) fs.brake = ease(fs.brake, clamp((fs.v - spd) / dt / 8, 0, 1), Math.min(1, dt * 5));

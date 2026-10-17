@@ -64,10 +64,13 @@
   ];
   var SCALE = [7, 9, 11, 0, 2, 4, 6];        /* G major = E natural minor */
   var BEATS = 3, BARS = 48;
+  /* 658: each variant's own bar and length (BRIEF_620_658 §2); 620 U2: 'gem' is Gem Cut (4/4, 16 bars, quarter = 120: 32.0 s), its own score. */
+  var BEATS_OF = { home: 3, legend: 3, gem: 4 }, BARS_OF = { home: 48, legend: 48, gem: 16 }, READY = { home: true, legend: true, gem: true };
 
   /* events in beats from bar 1 beat 1: { b, k, m, d, v } sorted by b */
   function build(variant) {
     var ev = [], full = variant !== 'legend', bar, i;
+    if (variant === 'gem') return buildGem();   /* 620 U2 */
     for (bar = 1; bar <= BARS; bar++) {
       var c = CH[chordOf(bar)], r3 = 48 + c[0], b0 = (bar - 1) * BEATS;
       var arp = [r3, r3 + 7, r3 + 12, r3 + 12 + c[1], r3 + 19, r3 + 12];
@@ -91,6 +94,7 @@
         if (bar === 25 || bar === 29 || bar === 33 || bar === 37) ev.push({ b: b0, k: 'bell', m: 72 + c[0], d: 3, v: 1 });
       }
       if (bar >= 9 && bar <= 40) {
+        if (variant === 'home' && ORN[bar]) ev.push({ b: b0 + 1, k: 'orn', m: midi(ORN[bar]), d: 1, v: 0.8 });   /* 658 U6: a soft answer on beat 2 */
         var tok = MEL[bar - 9].split(/\s+/), at = b0;
         for (i = 0; i < tok.length; i += 2) {
           var d = parseFloat(tok[i + 1]);
@@ -103,7 +107,7 @@
     return ev;
   }
   var SCORES = {};
-  var TEMPO = { home: 132, legend: 80 };
+  var TEMPO = { home: 132, legend: 80, gem: 120 };   /* 620 U2: Gem Cut */
 
   /* ---------- the bus ---------- */
   function init(c, dest, opts) {
@@ -219,15 +223,21 @@
     s.connect(bp); bp.connect(g); g.connect(out); run(v, s, t, end);
   }
 
+  /* 620 U2: 'tek', a 25 ms pitched click (a triangle near 2.5 kHz), Gem Cut's off-beat: pitched, never noise (Marth hears noise as scratches) */
+  function tek(e, t, out) {
+    var end = t + 0.04, v = voice(t, end, 'brush'); if (!v) return;
+    var o = keep(v, ctx.createOscillator()); o.type = 'triangle'; o.frequency.value = e.v >= 1 ? 2500 : 2800;
+    var g = keep(v, ctx.createGain()); pluck(g, t, REF * db(-20) * e.v, 0.002, 0.022); o.connect(g); g.connect(out); run(v, o, t, end);
+  }
   /* ---------- the scheduler (two clocks) ---------- */
-  var PAN = { harp: -0.18, mel: 0.06, bass: 0, pad: 0.12, bell: 0.25, thump: 0, brush: 0.2 };
+  var PAN = { harp: -0.18, mel: 0.06, bass: 0, pad: 0.12, bell: 0.25, thump: 0, brush: 0.2, tek: 0.3, brass: -0.08, orn: 0.1 };   /* 658 U6: orn */   /* 620 U2: tek, brass */
   function newSession(variant, t0, startBar, fadeIn) {
-    var spb = 60 / TEMPO[variant], s = { variant: variant, spb: spb, loopLen: BARS * BEATS * spb, ev: SCORES[variant] || (SCORES[variant] = build(variant)) };
+    var spb = 60 / TEMPO[variant], s = { variant: variant, spb: spb, loopLen: (BARS_OF[variant] || BARS) * (BEATS_OF[variant] || BEATS) * spb, ev: SCORES[variant] || (SCORES[variant] = build(variant)) };
     s.gain = ctx.createGain(); s.gain.connect(bus);
     if (fadeIn > 0) { s.gain.gain.setValueAtTime(0, t0); s.gain.gain.linearRampToValueAtTime(1, t0 + fadeIn); } else s.gain.gain.value = 1;
     s.strips = {};
     for (var k in PAN) { var p = ctx.createStereoPanner ? ctx.createStereoPanner() : ctx.createGain(); if (p.pan) p.pan.value = PAN[k]; p.connect(s.gain); s.strips[k] = p; }
-    var off = (Math.max(1, Math.min(BARS, startBar || 1)) - 1) * BEATS;
+    var bars = BARS_OF[variant] || BARS, beats = BEATS_OF[variant] || BEATS, off = (Math.max(1, Math.min(bars, startBar || 1)) - 1) * beats;   /* 658: the variant's own bar */
     s.loopStart = t0 - off * spb; s.idx = 0;
     while (s.idx < s.ev.length && s.ev[s.idx].b < off) s.idx++;
     return s;
@@ -254,6 +264,9 @@
         case 'bell': bell(e, t, out); break;
         case 'thump': thump(e, t, out); break;
         case 'brush': brush(e, t, out); break;
+        case 'orn': if (s.muteMel === 'all' && s.muteOrn) break; stats.orn = (stats.orn || 0) + 1; harpLike(e, t, out, s.spb, false); break;   /* 658 U6: the island's answers */
+        case 'tek': stats.tek = (stats.tek || 0) + 1; tek(e, t, out); break;   /* 620 U2 */
+        case 'brass': stats.brass = (stats.brass || 0) + 1; for (var bi = 0; bi < e.m.length; bi++) brass(e.m[bi], t, e.d * s.spb, REF * db(-8) * 0.7 * e.v, out); break;   /* 620 U2: the stabs */
       }
     }
   }
@@ -271,7 +284,7 @@
   function play(o) {
     o = o || {};
     if (!ctx || !bus) return false;
-    var variant = o.variant === 'legend' ? 'legend' : 'home', fadeIn = o.fadeIn != null ? o.fadeIn : 1.5;
+    var variant = o.variant === 'legend' || o.variant === 'gem' ? o.variant : 'home', fadeIn = o.fadeIn != null ? o.fadeIn : 1.5;
     if (isMuted) setMuted(!!isMuted());
     if (!o.restart && sess && sess.variant === variant && !sess.stopping) return true;   /* restart: from startBar, even if already playing (562) */
     if (!o.restart && sess && sess.variant === variant && sess.stopping) {   /* came back while fading out: fade back up, keep the place */
@@ -279,7 +292,8 @@
     }
     if (sess) { retire(sess, 0.6); stopTimer(); }
     sess = newSession(variant, ctx.currentTime + 0.06, o.startBar, fadeIn);
-    if (o.muteMel === 'all') sess.muteMel = 'all'; else if (o.muteMel) { sess.muteMel = {}; o.muteMel.forEach(function (b) { sess.muteMel[b] = true; }); }   /* 562: the charted notes are hers to play; 657: or every melody note */
+    if (o.muteMel === 'all') sess.muteMel = 'all'; else if (o.muteMel) { sess.muteMel = {}; o.muteMel.forEach(function (b) { sess.muteMel[b] = true; }); }
+    sess.muteOrn = !!o.muteOrn;   /* 658 U6: an Expert round charts the island's answers: the song leaves them to her (only while the round's mute holds) */   /* 562: the charted notes are hers to play; 657: or every melody note */
     startTimer();
     return true;
   }
@@ -287,7 +301,69 @@
   function note(m, beats, afterBeats) { if (!sess || !ctx) return false; stats.tapped++; stats.tapNow = ctx.currentTime; harpLike({ b: 0, k: 'mel', m: m, d: beats || 1, v: 1 }, ctx.currentTime + 0.005 + (afterBeats || 0) * sess.spb, sess.strips.mel, sess.spb, true); return true; }   /* 657: afterBeats = a pickup glued to her tap, at its own offset */
   function clearMute() { if (sess) sess.muteMel = null; }
   /* 562: the melody's events, bars from..to inclusive, in beats from bar 1 (the game must not reach into _test) */
-  function melody(from, to) { return build('home').filter(function (e) { return e.k === 'mel' && e.b >= (from - 1) * BEATS && e.b < to * BEATS; }).map(function (e) { return { b: e.b, m: e.m, d: e.d }; }); }
+  function melody(from, to, variant) { var v = variant || 'home', B = BEATS_OF[v] || BEATS; if (!READY[v]) return [];   /* 658: in the variant's own bar; a variant with no score has no melody */
+    return build(v).filter(function (e) { return e.k === 'mel' && e.b >= (from - 1) * B && e.b < to * B; }).map(function (e) { var o = { b: e.b, m: e.m, d: e.d }; if (e.tier) o.tier = e.tier; return o; }); }
+  /* 658: a song's clock, for the game (never through _test) */
+  function info(variant) { var v = variant || 'home'; if (!TEMPO[v]) return null; return { id: v, tempo: TEMPO[v], beats: BEATS_OF[v], bars: BARS_OF[v], spb: 60 / TEMPO[v], loop: BARS_OF[v] * BEATS_OF[v] * 60 / TEMPO[v], ready: !!READY[v] }; }
+  /* 658 U3: Expert's held notes, in beats from bar 1: the bar's chord root low (E2..D#3), held two bars and let go half a beat early (the brief's
+     rule). A song with a score of its own (Gem Cut, 620 U2) adds its own to HOLDS_OF. */
+  /* 658 U6: The Island Wakes' answers (Marth, Oct 16 ~01:55: "beautify the song and make it have slightly more notes on expert"): beat 2 of each
+     section-A bar whose melody holds, a tone of that bar's chord (C: bars 10, 14, 18, 22; D: bars 12, 16, 20, 24). OURS/DRAFT, for his ear. */
+  var ORN = { 10: 'E5', 12: 'A4', 14: 'G5', 16: 'F#5', 18: 'C5', 20: 'A4', 22: 'G4', 24: 'F#4' };
+  function ornaments(from, to, variant) { if ((variant || 'home') !== 'home') return []; return build('home').filter(function (e) { return e.k === 'orn' && e.b >= (from - 1) * BEATS && e.b < to * BEATS; }).map(function (e) { return { b: e.b, m: e.m, d: e.d, orn: true }; }); }
+  var HOLDS_OF = {};
+  /* 620 U2 "GEM CUT" (Marth, Oct 15 ~23:55: "make it sound like the sand level in sonic or some egeyption shi"). ORIGINAL: composed here; no
+     melody, riff or hook from any game's song. E Phrygian dominant (E F G# A B C D): the home chord is E major and the tune leans on the half
+     step F to E; the step F up to G# is the desert colour. 4/4, quarter = 120, 16 bars = 32.0 s, a seamless loop; it shares The Island Wakes'
+     E, so the two sound like one game.
+       1-2   intro: the drone and the drum (not charted)
+       3-6   A: the hook, a rising snake E-F-G#-A to a held B, and back down
+       7-10  A': the answer, up to E5, closing F to E
+       11-12 B: over F major, quick turns (most are Expert's)
+       13-16 A'': the hook an octave up; the F-to-E cadence; the last beat leads back to bar 1
+     Under it: the bass (root and fifth in eighths), the drone (root, fifth, octave on the pad), the deep drum on beat 1 and the and-of-2, a
+     pitched click on every off-beat ('tek'), a finger-cymbal shimmer every 4th bar (bell), and brass stabs, F major then E major, at bars 6,
+     10 and 16. The melody is the harp-pluck, played only by her taps in a round. Each note carries its tier (1 Normal, 2 Hard, 3 Expert):
+     MEL tokens are note, beats, tier. Expert's held notes are the drone's root, two bars each (7). OURS/DRAFT: every note, for his ear. */
+  var GEM = [
+    'E4 1 1 F4 .5 2 G#4 .5 3 A4 1 1 B4 1 1', 'B4 3 1 A4 .5 2 G#4 .5 3', 'G#4 1 1 A4 .5 2 G#4 .5 3 F4 1 1 G#4 1 2', 'E4 3 1 B4 .5 2 C5 .5 3',
+    'B4 1 1 C5 .5 2 D5 .5 3 E5 2 1', 'D5 .5 1 C5 .5 3 B4 1 2 C5 1 1 B4 1 2', 'A4 1 1 B4 .5 2 C5 .5 3 B4 1 1 A4 .5 2 G#4 .5 3', 'F4 2 1 E4 2 1',
+    'A4 .5 1 C5 .5 3 F5 .5 2 E5 .5 3 D5 .5 1 C5 .5 3 A4 1 1', 'C5 .5 1 D5 .5 2 C5 .5 2 A4 .5 3 G#4 1 1 B4 1 2',
+    'E5 1 1 F5 .5 2 G#5 .5 3 A5 1 1 B5 1 1', 'B5 3 1 A5 .5 2 G#5 .5 2', 'A5 1 1 G#5 .5 2 F5 .5 3 E5 1 1 F5 1 2', 'E5 3 1 B4 1 2'
+  ];
+  function gemRoot(bar) { return bar === 11 || bar === 12 ? 5 : 4; }   /* the pitch class under the bar: E, but F major under B */
+  function buildGem() {
+    var ev = [], bar, i, B = 4, b0, rb, bs, tok, at, d;
+    for (bar = 1; bar <= 16; bar++) {
+      b0 = (bar - 1) * B; rb = 36 + gemRoot(bar);   /* E2 = 40 */
+      bs = [rb, rb, rb + 7, rb, rb, rb + 7, rb + 12, rb + 7]; for (i = 0; i < 8; i++) ev.push({ b: b0 + i * 0.5, k: 'bass', m: bs[i], d: 0.5, v: i % 4 === 0 ? 1 : 0.75 });
+      ev.push({ b: b0, k: 'pad', m: [rb, rb + 7, rb + 12], d: B, v: 1 });
+      ev.push({ b: b0, k: 'thump', m: 0, d: 0.2, v: 1 }); ev.push({ b: b0 + 1.5, k: 'thump', m: 0, d: 0.2, v: 0.8 });
+      for (i = 0; i < 4; i++) ev.push({ b: b0 + i + 0.5, k: 'tek', m: 0, d: 0.1, v: i % 2 ? 1 : 0.7 });
+      if (bar % 4 === 1) ev.push({ b: b0, k: 'bell', m: 76, d: 3, v: 1 });
+      if (bar === 6 || bar === 10 || bar === 16) { ev.push({ b: b0 + 2, k: 'brass', m: [65, 69, 72], d: 0.5, v: 1 }); ev.push({ b: b0 + 3, k: 'brass', m: [64, 68, 71], d: 1, v: 1 }); }
+      if (bar >= 3) { tok = GEM[bar - 3].split(/\s+/); at = b0; for (i = 0; i < tok.length; i += 3) { d = parseFloat(tok[i + 1]); ev.push({ b: at, k: 'mel', m: midi(tok[i]), d: d, v: 1, tier: +tok[i + 2] }); at += d; } }
+    }
+    ev.sort(function (a, b) { return a.b - b.b; }); return ev;
+  }
+  HOLDS_OF.gem = function (from, to) { var out = [], bar; for (bar = from; bar + 1 <= to; bar += 2) out.push({ b: (bar - 1) * 4, m: 36 + gemRoot(bar), d: 7.5 }); return out; };   /* two bars, let go half a beat early */
+  function holds(from, to, variant) { var v = variant || 'home', B = BEATS_OF[v] || BEATS, out = [], bar, c; if (!READY[v]) return out;
+    if (HOLDS_OF[v]) return HOLDS_OF[v](from, to);
+    if (v !== 'home' && v !== 'legend') return out;
+    for (bar = from; bar + 1 <= to; bar += 2) { c = CH[chordOf(bar)]; out.push({ b: (bar - 1) * B, m: 40 + ((c[0] + 8) % 12), d: 2 * B - 0.5 }); }
+    return out; }
+  /* 658 U3: the held note's sound, only while she holds it (657's law: only what she plays sounds). A soft pad (root + fifth, two saws each
+     +-6 ct through a 700 Hz lowpass) on the session's pad strip, so Mute and the volume reach it; droneOff ramps it to 0 in 60 ms. */
+  var drones = 0, lastDrone = null;
+  function drone(m, secs) { if (!sess || !ctx) return null; var t = ctx.currentTime + 0.005, end = t + Math.max(0.3, secs || 4) + 0.4, v = voice(t, end, 'pad'); if (!v) return null;
+    var lp = keep(v, ctx.createBiquadFilter()); lp.type = 'lowpass'; lp.frequency.value = 700; lp.Q.value = 0.4;
+    var g = keep(v, ctx.createGain()), pk = REF * db(-24) * 4.5, ms = [m, m + 7], i, s, o, og;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(pk, t + 0.06);
+    for (i = 0; i < 2; i++) for (s = -1; s <= 1; s += 2) { o = keep(v, ctx.createOscillator()); o.type = 'sawtooth'; o.frequency.value = hz(ms[i]); o.detune.value = 6 * s; og = keep(v, ctx.createGain()); og.gain.value = 1 / 4; o.connect(og); og.connect(lp); run(v, o, t, end); }
+    lp.connect(g); g.connect(sess.strips.pad); drones++; stats.drone = (stats.drone || 0) + 1; lastDrone = { g: g, on: true }; return lastDrone;
+  }
+  function droneOff(h) { if (!h || !h.on || !ctx) return false; h.on = false; drones = Math.max(0, drones - 1); var t = ctx.currentTime; h.g.gain.cancelScheduledValues(t); h.g.gain.setValueAtTime(h.g.gain.value, t); h.g.gain.linearRampToValueAtTime(0, t + 0.06); return true; }
+  function droneInfo() { return { count: drones, level: lastDrone ? lastDrone.g.gain.value : null, on: !!(lastDrone && lastDrone.on), made: stats.drone || 0 }; }
   function latency() { return ctx ? (ctx.outputLatency || 0) + (ctx.baseLatency || 0) : 0; }
   function stop(o) {
     if (!sess || !ctx) return;
@@ -351,7 +427,7 @@
 
   window.WFR_MUSIC = {
     cue: cue, cueCount: function () { return cueN; },
-    init: init, play: play, stop: stop, setMuted: setMuted, setVolume: setVolume, note: note, clearMute: clearMute, melody: melody, latency: latency,
+    init: init, play: play, stop: stop, setMuted: setMuted, setVolume: setVolume, note: note, clearMute: clearMute, melody: melody, info: info, holds: holds, ornaments: ornaments, drone: drone, droneOff: droneOff, droneInfo: droneInfo, latency: latency,
     get playing() { return !!(sess && !sess.stopping); },
     get variant() { return sess ? sess.variant : null; },
     position: function () { if (!sess || !ctx) return null; var p = (ctx.currentTime - sess.loopStart) % sess.loopLen; return p < 0 ? p + sess.loopLen : p; },

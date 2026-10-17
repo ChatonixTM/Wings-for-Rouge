@@ -185,7 +185,7 @@ window.WFR_FOLK = (function () {
 
   /* ── HAL ── */
   function create(THREE, scene, ctx) {
-    T = THREE; C = Object.assign({}, ctx || {});
+    T = THREE; C = Object.assign({}, ctx || {}); if (ctx && typeof ctx.paceNow === 'function') Object.defineProperty(C, 'pace', { get: ctx.paceNow, enumerable: true, configurable: true });   /* 674: the pace is LIVE (the rain-rest hurries the day clock; his legs stay in real seconds) */
     if (hal) dispose();
     const HUM = C.humans || window.WFR_HUMANS;
     if (!HUM || typeof C.H !== 'function' || C.WATER == null || !C.LAKE) throw new Error('WFR_FOLK.create: ctx needs H, WATER, LAKE and WFR_HUMANS');
@@ -607,7 +607,7 @@ window.WFR_FOLK = (function () {
   }
 
   function createKids(THREE, scene, ctx) {
-    T = THREE; K = Object.assign({}, ctx || {});
+    T = THREE; K = Object.assign({}, ctx || {}); if (ctx && typeof ctx.paceNow === 'function') Object.defineProperty(K, 'pace', { get: ctx.paceNow, enumerable: true, configurable: true });   /* 674: the pace is LIVE (the rain-rest hurries the day clock; their legs stay in real seconds) */
     if (kid) disposeKids();
     const HUM = K.humans || window.WFR_HUMANS, V = K.VILLAGE;
     if (!HUM || typeof K.H !== 'function' || !V || !K.door) throw new Error('WFR_FOLK.createKids: ctx needs H, VILLAGE, door and WFR_HUMANS');
