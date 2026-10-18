@@ -32,6 +32,7 @@ window.WFR_VILLAGERS = (function () {
   /* the game's act kinds -> the donor's clips; kinds with no clip of their own borrow the nearest gesture */
   const CLIP = { talk: 'interact', stretch: 'idle_neutral', pull: 'interact', sweep: 'interact', kneel: 'interact', shop: 'idle_neutral', look: 'idle', wave: 'wave',
     listen: 'idle_neutral', listenSit: 'idle_neutral', receive: 'wave', hammer: 'interact', paint: 'interact', turn: 'interact', sit: 'idle_neutral' };
+  const bone = (root, nm) => root.getObjectByName(nm) || root.getObjectByName(nm.replace(/[\[\]\.:\/]/g, ''));   /* Su 33 (Oct 17): r128's GLTFLoader strips . : / [ ] from node names ('Wrist.R' -> 'WristR'): without this the hand socket was never attached (held things never drawn) and the sit never bent a knee */
   const SIT = { 'UpperLeg.L': [-1.45, 0, 0], 'UpperLeg.R': [-1.45, 0, 0], 'LowerLeg.L': [1.5, 0, 0], 'LowerLeg.R': [1.5, 0, 0] };   // a sit by hand: hips bent, knees bent
 
   function paint(THREE, body, name, pal) {
@@ -90,9 +91,9 @@ window.WFR_VILLAGERS = (function () {
       n.g.remove(n.body); n.g.add(p.g); n.g.updateMatrixWorld(true);
       /* ⚠ a bone's world scale is NOT the body's scale (the armature carries its own); assume it and a prop or a hairpiece comes out
          fifty times too big (ship #15, Oct 12: Go and Eli wore a mountain). Read it. */
-      const wrist = p.body.getObjectByName('Wrist.R') || p.body.getObjectByName('LowerArm.R'), ws = wrist ? wrist.getWorldScale(new THREE.Vector3()).x / (n.g.getWorldScale(new THREE.Vector3()).x || 1) : 1;
-      const hand = new THREE.Object3D(); hand.position.set(0, -0.72 / ws, 0); hand.rotation.x = Math.PI; hand.scale.setScalar(1 / ws);   // the old rig's armR frame: (0, -0.72, 0) lands on the wrist, in the group's units
-      if (wrist) wrist.add(hand);
+      const wrist = bone(p.body, 'Wrist.R') || bone(p.body, 'LowerArm.R'), ws = wrist ? wrist.getWorldScale(new THREE.Vector3()).x / (n.g.getWorldScale(new THREE.Vector3()).x || 1) : 1;
+      const hand = new THREE.Object3D(); n.wristBone = wrist; n.wv = new THREE.Vector3(); void ws;   /* Su 33 (Oct 18): the bone's own frame twisted every prop (a broom's centre 2.6 m up and out from the wrist, measured); the hand now sits in the villager's frame and follows the wrist each frame (pose), 0.72 above it as the old armR pivot was, so props land at the wrist */   // the old rig's armR frame: (0, -0.72, 0) lands on the wrist, in the group's units
+      n.g.add(hand);
       for (const k of ['broom']) if (n.broom) { hand.add(n.broom); }
       if (n.props) for (const k in n.props) hand.add(n.props[k]);
       if (n.tool && n.tool.g) hand.add(n.tool.g);
@@ -118,8 +119,9 @@ window.WFR_VILLAGERS = (function () {
     if (kind === 'receive' && bt > 1.6) p.play('interact'); else p.play(clip);
     if (p.actions.walk) p.actions.walk.setEffectiveTimeScale(walkAmt > 0.15 ? Math.max(0.6, Math.min(1.6, walkAmt)) : 1);
     p.tick(dt);
+    if (n.wristBone && n.hand && n.wv) { n.wristBone.getWorldPosition(n.wv); n.g.worldToLocal(n.wv); n.hand.position.set(n.wv.x, n.wv.y + 0.72, n.wv.z); }   /* Su 33 (Oct 18): the hand follows the wrist (props hang as the old rig drew them) */
     const sitting = kind === 'sit' || kind === 'listenSit', s = p.body.scale.x;
-    if (sitting) { for (const b in SIT) { const bone = p.body.getObjectByName(b); if (bone) bone.rotation.set(SIT[b][0], SIT[b][1], SIT[b][2]); } }
+    if (sitting) { for (const b in SIT) { const bn = bone(p.body, b); if (bn) bn.rotation.set(SIT[b][0], SIT[b][1], SIT[b][2]); } }
     /* the body's height while seated is the game's own ease of n.body.position.y (n.body is this model's root), the same path the
        hand-built body takes; writing it here too made two hands fight on one knob (the bench's "listens sitting down" caught it) */
   }

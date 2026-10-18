@@ -535,37 +535,37 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 <div class="rhRes" id="rhRes" hidden aria-live="polite"><b id="resRank"></b><span id="resLine"></span><small id="resTime"></small><small id="resNew" hidden></small></div>   <!-- 672 OURS/DRAFT words: Paused, Resume, Quit song -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="gltf-loader.js?v=6df6ddb0c859"></script>
-<script src="skeleton-utils.js?v=6df6ddb0c859"></script>
-<script src="meshopt-decoder.js?v=6df6ddb0c859"></script>
-<script src="models.js?v=6df6ddb0c859"></script>
-<script src="people.js?v=6df6ddb0c859"></script>
-<script src="villagers.js?v=6df6ddb0c859"></script>
-<script src="tex-photos.js?v=6df6ddb0c859"></script>
-<script src="textures.js?v=6df6ddb0c859"></script>
-<script src="birds.js?v=6df6ddb0c859"></script>
-<script src="humans.js?v=6df6ddb0c859"></script>
-<script src="folk.js?v=6df6ddb0c859"></script>
-<script src="trees.js?v=6df6ddb0c859"></script>
-<script src="treehouses.js?v=6df6ddb0c859"></script>
-<script src="cabins.js?v=6df6ddb0c859"></script>
-<script src="cave.js?v=6df6ddb0c859"></script>
-<script src="sounds.js?v=6df6ddb0c859"></script>
-<script src="music.js?v=6df6ddb0c859"></script>
-<script src="music-orchestra.js?v=6df6ddb0c859"></script>
-<script src="rhythm.js?v=6df6ddb0c859"></script>
-<script src="pictograms.js?v=6df6ddb0c859"></script>
-<script src="chick-wear.js?v=6df6ddb0c859"></script>
-<script src="hedgehogs.js?v=6df6ddb0c859"></script>
-<script src="opening.js?v=6df6ddb0c859"></script>
-<script src="skypiea.js?v=6df6ddb0c859"></script>
-<script src="pirate.js?v=6df6ddb0c859"></script>
-<script src="atmo.js?v=6df6ddb0c859"></script>
-<script src="boat.js?v=6df6ddb0c859"></script>
-<script src="weather.js?v=6df6ddb0c859"></script>
-<script src="village-build.js?v=6df6ddb0c859"></script>
-<script src="runes.js?v=6df6ddb0c859"></script>
-<script src="orchard.js?v=6df6ddb0c859"></script>
+<script src="gltf-loader.js?v=71c16ae40f67"></script>
+<script src="skeleton-utils.js?v=71c16ae40f67"></script>
+<script src="meshopt-decoder.js?v=71c16ae40f67"></script>
+<script src="models.js?v=71c16ae40f67"></script>
+<script src="people.js?v=71c16ae40f67"></script>
+<script src="villagers.js?v=71c16ae40f67"></script>
+<script src="tex-photos.js?v=71c16ae40f67"></script>
+<script src="textures.js?v=71c16ae40f67"></script>
+<script src="birds.js?v=71c16ae40f67"></script>
+<script src="humans.js?v=71c16ae40f67"></script>
+<script src="folk.js?v=71c16ae40f67"></script>
+<script src="trees.js?v=71c16ae40f67"></script>
+<script src="treehouses.js?v=71c16ae40f67"></script>
+<script src="cabins.js?v=71c16ae40f67"></script>
+<script src="cave.js?v=71c16ae40f67"></script>
+<script src="sounds.js?v=71c16ae40f67"></script>
+<script src="music.js?v=71c16ae40f67"></script>
+<script src="music-orchestra.js?v=71c16ae40f67"></script>
+<script src="rhythm.js?v=71c16ae40f67"></script>
+<script src="pictograms.js?v=71c16ae40f67"></script>
+<script src="chick-wear.js?v=71c16ae40f67"></script>
+<script src="hedgehogs.js?v=71c16ae40f67"></script>
+<script src="opening.js?v=71c16ae40f67"></script>
+<script src="skypiea.js?v=71c16ae40f67"></script>
+<script src="pirate.js?v=71c16ae40f67"></script>
+<script src="atmo.js?v=71c16ae40f67"></script>
+<script src="boat.js?v=71c16ae40f67"></script>
+<script src="weather.js?v=71c16ae40f67"></script>
+<script src="village-build.js?v=71c16ae40f67"></script>
+<script src="runes.js?v=71c16ae40f67"></script>
+<script src="orchard.js?v=71c16ae40f67"></script>
 <script>
 (() => {
 'use strict';
@@ -1659,6 +1659,15 @@ function makeHuman(i) {
   body.traverse((o) => { if (o.isMesh && o.material.color && [SHIRTS[i], PANTS[i]].includes(o.material.color.getHex())) tex(o, 'cloth', 2, 2); });   // woven clothes
   g.scale.setScalar(1.35);
   return { g, body, legL, legR, armL, armR, head, broom };
+}
+if (window.WFR_HUMANS && !WFR_HUMANS.__reg676) { const mk676 = WFR_HUMANS.make; WFR_HUMANS.make = function () { const m = mk676.apply(this, arguments); try { if (m && m.g) (window.WFR_PEOPLE_ALL = window.WFR_PEOPLE_ALL || []).push(m.g); } catch (e) {} return m; }; WFR_HUMANS.__reg676 = 1; }   /* 676 (a) (Marth, Oct 18: "wherever a villager is in the map ... we can sing to them"): every person, remembered */
+const TMP676 = new THREE.Vector3();
+function nearPeople676(r) {   /* 676 (a): every visible person within r of her: the six first, then everyone the builder made (Wren, Hal, the kids, the hermits, newcomers) */
+  const out = [], seen = new Set();
+  for (const n of npcs) if (n.g.visible && n.g.position.distanceTo(S.pos) < r) { out.push({ g: n.g, npc: true }); seen.add(n.g); }
+  for (const g of (window.WFR_PEOPLE_ALL || [])) { if (seen.has(g) || !g.parent) continue; let v = true; for (let o = g; o; o = o.parent) if (!o.visible) { v = false; break; }
+    if (!v) continue; g.getWorldPosition(TMP676); if (TMP676.distanceTo(S.pos) < r) { out.push({ g }); seen.add(g); } }
+  return out;
 }
 const npcs = NAMES.map((name, i) => {
   const m = makeHuman(i), house = houses[i * 2], start = toWorld(house, 0, house.d / 2 + 1.4);
@@ -3075,6 +3084,7 @@ function doSing() {
   if (!(window.WFR_SOUND && audio() && WFR_SOUND.call(kind, { vol: 0.7 }))) [0, 0.12, 0.24, 0.42].forEach((t, i) => tone(PENTA[(i * 2 + Math.floor(Math.random() * 2)) % 6] * 2, t, 0.14, 'triangle', 0.08));
   let heard = 0; const fresh = S.singCd <= 0;   // the words and the bodies share one gate: when the toast says they stop, they stop
   for (const n of npcs) if (n.g.visible && n.g.position.distanceTo(S.pos) < 16) { n.smileT = Math.max(n.smileT, 2.5); heard++; if (fresh) listen(n); }
+  for (const q of nearPeople676(16)) if (!q.npc) { heard++; if (fresh && typeof VG !== 'undefined' && VG && VG.npc && q.g === VG.npc.g) { VG.npc.waveT = 2.6; VG.wrenSung = (VG.wrenSung || 0) + 1; } }   /* 676 (a): Wren waves from his porch; Hal, the kids, the hermits count */
   if (fresh && chick && S.nestDone && (S.chick.bond || 0) >= 60 && chick.position.distanceTo(S.pos) < 16) setTimeout(() => { if (window.WFR_SOUND && audio()) WFR_SOUND.call(kind, { vol: 0.35, notes: 1 }); else tone(1568, 0, 0.12, 'triangle', 0.05); S.chickHop = 1; chickFeel(0, 2); }, 650);   // 564: at 60 the chick answers her song
   if (heard && fresh) { gainXP(5, 'a song'); S.singCd = 8; toast(heard > 1 ? 'The villagers stop to listen.' : 'A villager stops to listen.'); }
 }
@@ -3947,7 +3957,7 @@ function bgMusicTick(dt) {
    after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
    music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
    menu, a cutscene), the orchestra bows out. */
-const ORCH_SRC = 'orch-samples.js?v=6df6ddb0c859';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const ORCH_SRC = 'orch-samples.js?v=71c16ae40f67';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
 const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
 window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
 const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
@@ -5130,6 +5140,7 @@ try { if (localStorage.getItem('wfr.debug') === '1') window.__wfr = { eagle: () 
   teach: () => ({ kind, birdKind: bird && bird.userData ? bird.userData.kind || null : null, mode: S.mode, y: +S.pos.y.toFixed(2), played: S.played || 0, ended: !!(S.sky && S.sky.ended), where: S.sky ? S.sky.where : null, open: { crow: isOpen(BIRDS.crow), falcon: isOpen(BIRDS.falcon), owl: isOpen(BIRDS.owl) }, cards: Array.from(document.querySelectorAll('#birdCards .bird')).map((b) => [b.dataset.bird, b.getAttribute('aria-pressed') === 'true', b.textContent]), sheet: $('start').hidden ? '' : $('start').innerText, lines: storyLines(), toast: $('toast').hidden ? '' : $('toast').textContent, word: !!(S.seen || {}).teach610, saved: teachSaved() }),
   teachMorph: () => (S.morph ? [S.morph.t, !!S.morph.swapped] : null), teachToast: () => ($('toast').hidden ? '' : $('toast').textContent),
   teachEnd: () => { S.sky = S.sky || { seen: false, ended: false, where: 'home' }; S.sky.seen = true; S.sky.ended = true; save(); return isOpen(BIRDS.crow); },   /* the ending's own write (skypiea.js:501/644), nothing else of it */
+  wren676: () => ({ waveT: VG && VG.npc ? VG.npc.waveT : null, sung: VG ? VG.wrenSung || 0 : 0, near: nearPeople676(16).length }),   /* 676 (a) bench: Wren's wave, the songs he heard, people near her */
   vg: () => { const on = vgOn(), P = on ? vgPlot() : null, n = VG && VG.npc, dm = VG && VG.door ? VG.door.getWorldPosition(new THREE.Vector3()).toArray() : null; let saved = null; try { saved = (JSON.parse(localStorage.getItem('wfr.save') || 'null') || {}).village || null; } catch (e) { saved = 'bad'; }
     return { open: vgOpen(), on, err: VG ? VG.err : 'unbuilt', x: VG ? VG.x : null, z: VG ? VG.z : null, y: VG ? VG.y : null, R: VG_R, stage: P ? P.stage : null, got: P ? Object.assign({}, P.got) : null, moved: S.village ? S.village.moved : null, saved, inv: Object.assign({}, S.inv),
       parts: { npcs: npcs.length, hal: FOLK ? 1 : 0, kids: KIDS && WFR_FOLK.children ? WFR_FOLK.children.list.length : 0 }, count: on ? vgCount().text : null, groups: VG ? [0, 1, 2, 3].map((i) => VG.g[i] ? [VG.g[i].visible, +VG.g[i].scale.x.toFixed(3), VG.g[i].children[0].children.length] : null) : [], sign: !!(VG && VG.sign && VG.sign.visible),
@@ -6013,7 +6024,7 @@ function frame(now) {
   for (const t of TREEHOUSES) { t.openT = Math.max(0, t.openT - dt); const want = t.openT > 0 || S.insideTH === t ? 1.4 : 0; t.th.door.rotation.y += (want - t.th.door.rotation.y) * Math.min(1, dt * 4); t.g.userData.update(S.t); }
   nightRule(); muteTopTick();
   const homeOn = !S.insideTH && homeOffered(); if ($('home').hidden === homeOn) $('home').hidden = !homeOn;
-  const songbird = !homeOn && !!B.sings && S.tut === 0 && (S.mode === 'walk' || S.mode === 'fly') && npcs.some((n) => n.g.visible && n.g.position.distanceTo(S.pos) < 16);
+  const songbird = !homeOn && !!B.sings && S.tut === 0 && (S.mode === 'walk' || S.mode === 'fly') && nearPeople676(16).length > 0;   /* 676 (a): everyone, not only the six */
   if ($('sing').hidden === songbird) $('sing').hidden = !songbird;
   const flutterOn = S.mode === 'fly' && canFlutter();
   if ($('flutter').hidden === flutterOn) $('flutter').hidden = !flutterOn;
@@ -6119,7 +6130,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build 6df6ddb0c859): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build 71c16ae40f67): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>
