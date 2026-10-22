@@ -434,6 +434,7 @@ window.WFR_TREEHOUSES = (function () {
     const pivot = new T.Group(); pivot.position.set(-D.doorW / 2 + 0.02, PT, HINGE_Z); g.add(pivot);
     add(G.door(), mDoor, pivot);
     const roof = add(G.roof(V.roof), mRoof, cab); roof.position.y = D.eave;
+    if (V.roof === 'shingle') { const k = new T.Mesh(roof.geometry, mRoof); k.position.y = D.eave; k.scale.setScalar(0.0001); k.frustumCulled = false; k.castShadow = roof.castShadow; k.receiveShadow = roof.receiveShadow; k.name = 'keeper:shingle'; cab.add(k); }   // 675b: the keeper: the one flat-shaded tiled roof (Eli's) has a program of its own; it compiles at boot, never the first time a low camera faces his treehouse (ship #41: attack614 A6). Not in meshes[]: setLit never touches it
     if (twig) { const ch = add(G.chimney(), mStone, cab); ch.position.set(-0.95, 2.4, -1.1); }
 
     /* windows */

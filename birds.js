@@ -706,7 +706,7 @@ window.WFR_BIRDS = (function () {
     var bk = fs.burst > 0 ? smooth(0, 0.25, fs.burst) : 0;
     /* the stroke this state asks for */
     var tf = F.f, ta = 0, tm = F.mid, D = F.D, bs = 0, bb = 0, powered = true;
-    if (o.dive) { ta = 0; tm = 0.05; bs = 0.95; bb = -0.05; powered = false; }   // the dive bomb: wings swept back, tight
+    if (o.dive) { ta = 0; tm = Math.max(0.02, 0.05 - 0.02 * (o.tuck || 0)); bs = Math.min(1, 0.95 + 0.05 * (o.tuck || 0)); bb = -0.05 - 0.02 * (o.tuck || 0); powered = false; }   // the dive bomb: wings swept back, tight. 673 V2 (b): o.tuck (0..1) folds the Cardinal tighter by tier
     else if (o.flutter) { tf = Math.min(9, F.f * 1.9); ta = 0.7; tm = 0.2; D = 0.5; }
     else if (hov > 0.5) { tf = F.f * 1.35; ta = 0.85; tm = 0.3; bs = -0.12; }
     else if (bk > 0) { tf = F.f * 1.45; ta = 1.12; tm = 0.2; D = 0.4; }   // the takeoff: deep, quick beats

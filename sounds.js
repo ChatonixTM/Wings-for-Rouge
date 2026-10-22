@@ -284,8 +284,17 @@
     rnd = function () { a = (a + 0x6D2B79F5) >>> 0; var t = a; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; };
   }
 
+  var windV = null;
+  function wind(level) {   /* 673 V2 (b): the stoop's wind whistle: the noise buffer looped through a bandpass that rises with the dive, on the bus (muted with it). Called each frame of a dive; it fades by itself 0.3 s after the last call, so no mode has to switch it off */
+    if (!ctx || !bus || !noise) return false; var t = ctx.currentTime;
+    if (!windV) { var s = ctx.createBufferSource(); s.buffer = noise; s.loop = true; var f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 1.6; var g = ctx.createGain(); g.gain.value = 0; s.connect(f); f.connect(g); g.connect(bus); s.start(t); windV = { f: f, g: g }; }
+    var L = Math.max(0, Math.min(1, level || 0));
+    windV.f.frequency.setTargetAtTime(700 + 1600 * L, t, 0.1);
+    windV.g.gain.cancelScheduledValues(t); windV.g.gain.setTargetAtTime(0.07 * L, t, 0.08); windV.g.gain.setTargetAtTime(0, t + 0.3, 0.12);
+    return true;
+  }
   window.WFR_SOUND = {
-    init: init, setMuted: setMuted, call: call, near: near, ambient: ambient, KINDS: KINDS, VARIANTS: VARIANTS, MOODS: MOODS, CAL: CAL,
+    init: init, setMuted: setMuted, call: call, wind: wind, near: near, ambient: ambient, KINDS: KINDS, VARIANTS: VARIANTS, MOODS: MOODS, CAL: CAL,
     get voices() { return voices; },
     _test: { seed: seed, breath: function (on) { noBreath = !on; }, last: function () { return last; } },
   };

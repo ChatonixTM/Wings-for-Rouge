@@ -288,6 +288,7 @@
     const burrow = new THREE.Mesh(burrowGeo, new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide }));
     burrow.position.set(BURROW.x, by, BURROW.z); burrow.rotation.y = face; burrow.castShadow = true; burrow.receiveShadow = true; burrow.name = 'dunes:burrow'; site.add(burrow);
     rockList.push({ x: BURROW.x, z: BURROW.z, r: 1.9, top: by + 0.9, burrow: true });
+    { const k = new THREE.Mesh(burrowGeo, burrow.material); k.position.copy(burrow.position); k.scale.setScalar(0.0001); k.frustumCulled = false; k.castShadow = true; k.receiveShadow = true; k.name = 'dunes:burrow-keeper'; scene.add(k); }   // 675b: the keeper: the burrow's program (and its DoubleSide shadow pass) compiles at boot, never the first time a low camera sees the knoll (ship #41: the 675 ground camera was that first look: a hitch, and attack614 A6 red)
     // the beetle that started it all, by the book's rock
     const beetle = api.emojiSprite('\u{1FAB2}', 0.42); beetle.position.set(BOOK_AT.x - 1.3, meshH(BOOK_AT.x - 1.3, BOOK_AT.z - 0.7) + 0.2, BOOK_AT.z - 0.7); site.add(beetle);
 
