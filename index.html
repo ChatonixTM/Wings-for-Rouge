@@ -211,6 +211,16 @@ html.cine #boot{display:grid}
 .arrow{width:68px;height:68px;border-radius:50%;background:var(--paper);display:grid;place-items:center;position:relative;
   box-shadow:0 6px 16px rgba(34,49,74,.18)}
 .arrow canvas{position:absolute;inset:0;width:100%;height:100%}   /* the radar: what is around you, by colour */
+.compass{pointer-events:auto;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}.compass:focus-visible .arrow{outline:3px solid var(--rouge);outline-offset:2px}   /* 705: the radar is a button (68 px) */
+html.map705open .compass .arrow{box-shadow:0 0 0 3px rgba(242,177,52,.9),0 6px 16px rgba(34,49,74,.18)}
+#map705{position:fixed;inset:0;z-index:30;display:grid;place-items:center;box-sizing:border-box;padding:calc(env(safe-area-inset-top,0px) + 12px) 10px calc(env(safe-area-inset-bottom,0px) + 12px);background:rgba(20,28,44,.55);touch-action:none}#map705[hidden]{display:none}
+#map705 .m705win{position:relative;box-sizing:border-box;display:grid;justify-items:center;gap:6px;padding:10px 12px 12px;border-radius:18px;background:var(--paper);color:var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.35);animation:m705in .16s ease-out}
+@keyframes m705in{from{opacity:0;transform:scale(.96)}}@media (prefers-reduced-motion:reduce){#map705 .m705win{animation:none}}
+#map705 h3{margin:2px 0 0;min-height:30px;display:flex;align-items:center;font:700 17px/1 var(--display);letter-spacing:.04em}
+#map705cv{display:block;border-radius:6px;box-shadow:0 0 0 2px rgba(60,40,20,.35)}
+#map705 .m705foot{margin:2px 0 0;display:flex;flex-wrap:wrap;justify-content:center;gap:2px 12px;max-width:100%;font:600 13.5px/1.3 var(--body);text-align:center}
+#map705Close{position:absolute;right:6px;top:6px;width:44px;height:44px;padding:0;border:0;border-radius:50%;background:#efe4cf;color:var(--ink);font:800 18px/44px var(--body);touch-action:manipulation}
+@media (orientation:landscape) and (max-height:520px){#map705 .m705win{gap:3px;padding:6px 10px 8px}#map705 h3{min-height:24px;font-size:15px}}
 .arrow svg{width:24px;height:24px;position:relative}   /* 588: turned and eased in arrowTick, never by a CSS transition */
 .dist{font-family:var(--display);font-size:12px;font-weight:600;color:var(--paper);text-shadow:0 1px 3px var(--shade)}
 .side{display:grid;gap:8px;pointer-events:auto}
@@ -460,7 +470,7 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 <div class="layer" id="ui" hidden>
   <div class="hud">
     <div class="pill" id="lvPill"><div class="top"><span id="lvText">Lv 1</span><span class="bar"><i id="xpBar"></i></span></div><small id="quest">Twigs 0 / 5</small><small id="navHud" aria-label="play time and map square">⏱ 0:00:00 · –</small></div><div id="xpPop" hidden aria-live="polite"></div>
-    <div class="compass" aria-hidden="true">
+    <div class="compass" id="mapBtn705" role="button" tabindex="0" aria-label="Map">
       <div class="arrow"><canvas id="radar" width="136" height="136"></canvas><svg viewBox="0 0 24 24" id="arrowSvg"><path d="M12 3 L19 19 L12 15 L5 19 Z" fill="#c8314a"/></svg></div>
       <div class="dist" id="dist"></div>
     </div>
@@ -552,43 +562,43 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 <div class="rhRes" id="rhRes" hidden aria-live="polite"><b id="resRank"></b><span id="resLine"></span><small id="resTime"></small><small id="resNew" hidden></small></div>   <!-- 672 OURS/DRAFT words: Paused, Resume, Quit song -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="toon.js?v=eb4d88c428f9"></script>
+<script src="toon.js?v=4cd6ddeb2fc7"></script>
 <script>(function () { let classic = false; try { classic = localStorage.getItem('wfr.look') === 'classic'; } catch (e) { /* private mode: Standard */ }
   window.WFR_DOOR = classic ? { w: 1.2, h: 2, classic: true } : { w: 1.5, h: 2.9, classic: false }; }());   /* 683 C1: THE doorway, local units (x HS 1.6: Standard 2.4 x 4.64 m; a villager, drawn 3.67-3.72 m, is 80% of it; the brief's 2.6 left him at 89%). The ring houses, the 641 house, the cabins and the walk read it. Classic is frozen (Marth, Oct 14, board 645): its doors stay 1.2 x 2. The look is read as the game reads it (it reloads on a switch). */</script>
-<script src="gltf-loader.js?v=eb4d88c428f9"></script>
-<script src="skeleton-utils.js?v=eb4d88c428f9"></script>
-<script src="meshopt-decoder.js?v=eb4d88c428f9"></script>
-<script src="models.js?v=eb4d88c428f9"></script>
-<script src="people.js?v=eb4d88c428f9"></script>
-<script src="villagers.js?v=eb4d88c428f9"></script>
-<script src="tex-photos.js?v=eb4d88c428f9"></script>
-<script src="textures.js?v=eb4d88c428f9"></script>
-<script src="birds.js?v=eb4d88c428f9"></script>
-<script src="humans.js?v=eb4d88c428f9"></script>
-<script src="folk.js?v=eb4d88c428f9"></script>
-<script src="trees.js?v=eb4d88c428f9"></script>
-<script src="treehouses.js?v=eb4d88c428f9"></script>
-<script src="cabins.js?v=eb4d88c428f9"></script>
-<script src="cave.js?v=eb4d88c428f9"></script>
-<script src="hermits.js?v=eb4d88c428f9"></script>
-<script src="sounds.js?v=eb4d88c428f9"></script>
-<script src="music.js?v=eb4d88c428f9"></script>
-<script src="music-orchestra.js?v=eb4d88c428f9"></script>
-<script src="rhythm.js?v=eb4d88c428f9"></script>
-<script src="pictograms.js?v=eb4d88c428f9"></script>
-<script src="chick-wear.js?v=eb4d88c428f9"></script>
-<script src="hedgehogs.js?v=eb4d88c428f9"></script>
-<script src="opening.js?v=eb4d88c428f9"></script>
-<script src="skypiea.js?v=eb4d88c428f9"></script>
-<script src="pirate.js?v=eb4d88c428f9"></script>
-<script src="atmo.js?v=eb4d88c428f9"></script>
-<script src="boat.js?v=eb4d88c428f9"></script>
-<script src="weather.js?v=eb4d88c428f9"></script>
-<script src="village-build.js?v=eb4d88c428f9"></script>
-<script src="runes.js?v=eb4d88c428f9"></script>
-<script src="orchard.js?v=eb4d88c428f9"></script>
-<script src="net678.js?v=eb4d88c428f9"></script>
-<script src="net678-config.js?v=eb4d88c428f9"></script>
+<script src="gltf-loader.js?v=4cd6ddeb2fc7"></script>
+<script src="skeleton-utils.js?v=4cd6ddeb2fc7"></script>
+<script src="meshopt-decoder.js?v=4cd6ddeb2fc7"></script>
+<script src="models.js?v=4cd6ddeb2fc7"></script>
+<script src="people.js?v=4cd6ddeb2fc7"></script>
+<script src="villagers.js?v=4cd6ddeb2fc7"></script>
+<script src="tex-photos.js?v=4cd6ddeb2fc7"></script>
+<script src="textures.js?v=4cd6ddeb2fc7"></script>
+<script src="birds.js?v=4cd6ddeb2fc7"></script>
+<script src="humans.js?v=4cd6ddeb2fc7"></script>
+<script src="folk.js?v=4cd6ddeb2fc7"></script>
+<script src="trees.js?v=4cd6ddeb2fc7"></script>
+<script src="treehouses.js?v=4cd6ddeb2fc7"></script>
+<script src="cabins.js?v=4cd6ddeb2fc7"></script>
+<script src="cave.js?v=4cd6ddeb2fc7"></script>
+<script src="hermits.js?v=4cd6ddeb2fc7"></script>
+<script src="sounds.js?v=4cd6ddeb2fc7"></script>
+<script src="music.js?v=4cd6ddeb2fc7"></script>
+<script src="music-orchestra.js?v=4cd6ddeb2fc7"></script>
+<script src="rhythm.js?v=4cd6ddeb2fc7"></script>
+<script src="pictograms.js?v=4cd6ddeb2fc7"></script>
+<script src="chick-wear.js?v=4cd6ddeb2fc7"></script>
+<script src="hedgehogs.js?v=4cd6ddeb2fc7"></script>
+<script src="opening.js?v=4cd6ddeb2fc7"></script>
+<script src="skypiea.js?v=4cd6ddeb2fc7"></script>
+<script src="pirate.js?v=4cd6ddeb2fc7"></script>
+<script src="atmo.js?v=4cd6ddeb2fc7"></script>
+<script src="boat.js?v=4cd6ddeb2fc7"></script>
+<script src="weather.js?v=4cd6ddeb2fc7"></script>
+<script src="village-build.js?v=4cd6ddeb2fc7"></script>
+<script src="runes.js?v=4cd6ddeb2fc7"></script>
+<script src="orchard.js?v=4cd6ddeb2fc7"></script>
+<script src="net678.js?v=4cd6ddeb2fc7"></script>
+<script src="net678-config.js?v=4cd6ddeb2fc7"></script>
 <script>
 (() => {
 'use strict';
@@ -3106,6 +3116,121 @@ function cloakPeek() {   // the bench's read (window.__wfr.cloak)
     rainy: rainy(), k: WX.k, where: (S.sky && S.sky.where) || 'home', mode: S.mode, y: S.pos.y, runeHex: rn ? rn.material.color.getHex() : null };
 }
 $('quickBody').addEventListener('pointerdown', (e) => { const b = e.target && e.target.closest ? e.target.closest('#cloakMake') : null; if (!b) return; e.preventDefault(); cloakMake(); });
+/* 705 (Marth: "You should be able to tap the map from now on and forever more."): the radar opens the island's chart; the world holds while it is open */
+var MAP705 = { open: false, from: null, prev: null, el: null, terr: null, down: null, opens: 0, closes: 0, refused: 0, draws: 0, ms: 0 };
+const M705 = { HALF: 360, N: 180 };   // the chart's world: x and z from -360 to 360 (the 631 squares F..O across, 6..15 down, 72 m each), sampled every 4 m
+function map705Can() { return !$('ui').hidden && (S.mode === 'fly' || S.mode === 'walk' || S.mode === 'swim' || S.mode === 'hover') && !S.talking && S.tut === 0 && !RH.on && !PZ.on && !S.morph; }
+function map705Open(from) {
+  if (MAP705.open) return false;
+  if (from === 'pause') { if (S.mode !== 'paused' || $('start').hidden) return false; $('start').hidden = true; }
+  else { if (!map705Can()) { MAP705.refused++; return false; } MAP705.prev = S.mode; S.mode = 'paused'; }   // the world holds, as the Pause menu holds it
+  MAP705.from = from; MAP705.open = true; MAP705.opens++;
+  map705El().hidden = false; document.documentElement.classList.add('map705open'); map705Size(); map705Draw(); return true;
+}
+function map705Close() {
+  if (!MAP705.open) return false; MAP705.open = false; MAP705.closes++; map705El().hidden = true; document.documentElement.classList.remove('map705open');
+  if (MAP705.from === 'pause') { if (S.mode === 'paused') $('start').hidden = false; }   // back to the Pause screen it came from
+  else if (S.mode === 'paused') S.mode = MAP705.prev || 'fly';   // back to exactly what she was doing
+  MAP705.from = null; return true;
+}
+function map705Tick() { if (MAP705.open && MAP705.from !== 'pause' && S.mode !== 'paused') map705Close(); }   // something else let the world go: the chart goes with the hold
+function map705El() {
+  if (MAP705.el) return MAP705.el;
+  const m = document.createElement('div'); m.id = 'map705'; m.hidden = true; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true'); m.setAttribute('aria-label', 'Map of the island');
+  m.innerHTML = '<div class="m705win"><h3>The island</h3><canvas id="map705cv" width="8" height="8" aria-hidden="true"></canvas><p class="m705foot"><span id="map705where"></span><span id="map705goal"></span></p><button type="button" id="map705Close" aria-label="Close the map">✕</button></div>';
+  document.body.appendChild(m); MAP705.el = m;
+  $('map705Close').addEventListener('click', (e) => { e.preventDefault(); map705Close(); });
+  m.addEventListener('pointerup', (e) => { if (e.target === m) { e.preventDefault(); map705Close(); } });   // a tap outside the chart
+  return m;
+}
+function map705Size() {   // the chart's side in CSS px: as big as fits, upright on a phone held up, the head and foot kept on a phone on its side
+  const cv = $('map705cv'), side = Math.round(innerWidth > innerHeight && innerHeight <= 520 ? Math.max(150, Math.min(innerHeight - 96, innerWidth * 0.6)) : Math.max(180, Math.min(innerWidth - 44, innerHeight - 150, 460)));
+  cv.style.width = cv.style.height = side + 'px';
+}
+function map705Terrain() {   // the island from its own H(), once, cached: sea by depth, land by height, light from the north-west, a contour every 8 m, the coast inked
+  if (MAP705.terr) return MAP705.terr;
+  const N = M705.N, HALF = M705.HALF, st = 2 * HALF / N, hs = new Float32Array(N * N);
+  for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) hs[j * N + i] = H(-HALF + (i + 0.5) * st, -HALF + (j + 0.5) * st);
+  const ramp = [[-7, 98, 146, 176], [-2, 140, 186, 198], [-0.01, 188, 220, 212], [0, 232, 216, 166], [1.4, 214, 210, 150], [3.5, 176, 204, 132], [12, 134, 172, 98], [22, 124, 148, 98], [30, 164, 154, 130], [40, 196, 186, 164], [50, 240, 234, 218]];
+  const col = (e) => { if (e <= ramp[0][0]) return ramp[0]; for (let k = 1; k < ramp.length; k++) if (e <= ramp[k][0]) { const a = ramp[k - 1], b = ramp[k], t = (e - a[0]) / (b[0] - a[0]); return [0, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t, a[3] + (b[3] - a[3]) * t]; } return ramp[ramp.length - 1]; };
+  const c = document.createElement('canvas'); c.width = N; c.height = N; const g = c.getContext('2d'), im = g.createImageData(N, N), d = im.data;
+  for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+    const k = j * N + i, h = hs[k], L = hs[j * N + Math.max(0, i - 1)], Rr = hs[j * N + Math.min(N - 1, i + 1)], U = hs[Math.max(0, j - 1) * N + i], D = hs[Math.min(N - 1, j + 1) * N + i], dry = h >= WATER;
+    const cc = col(h - WATER); let r = cc[1], gg = cc[2], b = cc[3];
+    if (dry) { const sh = Math.max(0.74, Math.min(1.2, 1 + ((L - Rr) + (U - D)) * 0.045)); r *= sh; gg *= sh; b *= sh;   // the light from the north-west
+      if (Math.floor(h / 8) !== Math.floor(Rr / 8) || Math.floor(h / 8) !== Math.floor(D / 8)) { r *= 0.82; gg *= 0.8; b *= 0.76; } }   // a contour every 8 m
+    if (dry !== (Rr >= WATER) || dry !== (D >= WATER) || dry !== (L >= WATER) || dry !== (U >= WATER)) { r = 92; gg = 64; b = 38; }   // the coast, inked
+    const n = (((i * 73856093) ^ (j * 19349663)) >>> 0) % 9 - 4;   // the paper's grain: a hash, the same on every load (no random draw)
+    d[k * 4] = r * 0.88 + 243 * 0.12 + n; d[k * 4 + 1] = gg * 0.88 + 227 * 0.12 + n; d[k * 4 + 2] = b * 0.88 + 184 * 0.12 + n; d[k * 4 + 3] = 255;
+  }
+  g.putImageData(im, 0, 0); return (MAP705.terr = c);
+}
+function map705Mark(g, x, y, kind) {   // a landmark, drawn small in ink
+  g.save(); g.translate(x, y); g.lineWidth = 1.3; g.strokeStyle = '#3a1d0c'; g.lineJoin = 'round';
+  if (kind === 'house') { g.fillStyle = '#c9744a'; g.beginPath(); g.moveTo(-6, 0); g.lineTo(0, -6); g.lineTo(6, 0); g.closePath(); g.fill(); g.stroke(); g.fillStyle = '#f3e3b8'; g.fillRect(-4.5, 0, 9, 6); g.strokeRect(-4.5, 0, 9, 6); }
+  else if (kind === 'lake') { g.strokeStyle = '#2f5f86'; g.beginPath(); for (const dy of [-2, 2.5]) { g.moveTo(-6, dy); g.quadraticCurveTo(-3, dy - 3, 0, dy); g.quadraticCurveTo(3, dy + 3, 6, dy); } g.stroke(); }
+  else if (kind === 'peak') { g.fillStyle = '#8f8670'; g.beginPath(); g.moveTo(-7, 5); g.lineTo(0, -7); g.lineTo(7, 5); g.closePath(); g.fill(); g.stroke(); g.fillStyle = '#fbf6ea'; g.beginPath(); g.moveTo(-2.6, -2.4); g.lineTo(0, -7); g.lineTo(2.6, -2.4); g.closePath(); g.fill(); }
+  else if (kind === 'light') { g.fillStyle = '#f3e3b8'; g.beginPath(); g.moveTo(-3, 6); g.lineTo(-2, -4); g.lineTo(2, -4); g.lineTo(3, 6); g.closePath(); g.fill(); g.stroke(); g.fillStyle = '#c8314a'; g.fillRect(-2.5, -1, 5, 2); g.fillStyle = '#ffd25e'; g.beginPath(); g.arc(0, -5.5, 2, 0, 6.2832); g.fill(); }
+  else { g.fillStyle = '#6f5a3a'; g.fillRect(-1.3, 0, 2.6, 6); g.fillStyle = '#5f9e4a'; g.beginPath(); g.arc(0, -3, 6, 0, 6.2832); g.fill(); g.stroke(); if (S.nestDone) { g.fillStyle = '#a3713a'; g.beginPath(); g.ellipse(0, -3, 3.4, 1.8, 0, 0, 6.2832); g.fill(); } }
+  g.restore();
+}
+function map705Text(g, s, x, y) { g.lineWidth = 3; g.strokeStyle = 'rgba(243,227,184,.92)'; g.strokeText(s, x, y); g.fillStyle = '#3a1d0c'; g.fillText(s, x, y); }
+function map705Draw() {   // once on opening (the world holds while it is open), and on a turn of the phone
+  const t0 = performance.now(), cv = $('map705cv'); if (!cv) return; const box = cv.getBoundingClientRect(); if (box.width < 20) return;
+  const dpr = Math.min(2, window.devicePixelRatio || 1), Wd = box.width, Hd = box.height, PWd = Math.round(Wd * dpr), PHd = Math.round(Hd * dpr);
+  if (cv.width !== PWd || cv.height !== PHd) { cv.width = PWd; cv.height = PHd; }
+  const g = cv.getContext('2d'); g.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const HALF = M705.HALF, gut = 14, S0 = Math.min(Wd, Hd) - gut - 4, ox = gut + (Wd - gut - 4 - S0) / 2, oy = gut + (Hd - gut - 4 - S0) / 2, sc = S0 / (2 * HALF);
+  const X = (x) => ox + (x + HALF) * sc, Z = (z) => oy + (z + HALF) * sc, inside = (x, z) => Math.abs(x) < HALF && Math.abs(z) < HALF;
+  g.fillStyle = '#f1e2b8'; g.fillRect(0, 0, Wd, Hd);
+  g.imageSmoothingEnabled = true; g.drawImage(map705Terrain(), ox, oy, S0, S0);
+  const cx0 = Math.floor((S.pos.x - NAV_ORIGIN) / NAV_CELL), cz0 = Math.floor((S.pos.z - NAV_ORIGIN) / NAV_CELL), qx = NAV_ORIGIN + cx0 * NAV_CELL, qz = NAV_ORIGIN + cz0 * NAV_CELL;
+  if (inside(qx + 1, qz + 1)) { g.fillStyle = 'rgba(255,214,120,.30)'; g.fillRect(X(qx), Z(qz), NAV_CELL * sc, NAV_CELL * sc); g.strokeStyle = 'rgba(168,117,42,.95)'; g.lineWidth = 1.6; g.strokeRect(X(qx), Z(qz), NAV_CELL * sc, NAV_CELL * sc); }   // her square
+  g.strokeStyle = 'rgba(58,29,12,.26)'; g.lineWidth = 1; g.beginPath();
+  for (let k = 0; k <= 10; k++) { const t = ox + k * S0 / 10, u = oy + k * S0 / 10; g.moveTo(t, oy); g.lineTo(t, oy + S0); g.moveTo(ox, u); g.lineTo(ox + S0, u); } g.stroke();
+  g.font = '700 9.5px Georgia, serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillStyle = '#3a1d0c';
+  for (let k = 0; k < 10; k++) { g.fillText(String.fromCharCode(65 + Math.round((-HALF - NAV_ORIGIN) / NAV_CELL) + k), ox + (k + 0.5) * S0 / 10, oy - 7.5); g.fillText(String(Math.round((-HALF - NAV_ORIGIN) / NAV_CELL) + 1 + k), ox - 7.5, oy + (k + 0.5) * S0 / 10); }   // the 631 squares' letters and numbers
+  g.setLineDash([3, 4]); g.strokeStyle = 'rgba(58,29,12,.42)'; g.lineWidth = 1.2; g.beginPath(); g.arc(X(0), Z(0), EDGE * sc, 0, 6.2832); g.stroke(); g.setLineDash([]);   // where the wind turns her back
+  g.font = 'italic 700 11px Georgia, serif';
+  const marks = [[VILLAGE.x, VILLAGE.z, 'The village', 'house'], [LAKE.x, LAKE.z, 'The lake', 'lake'], [PEAKS.x, PEAKS.z, 'The peaks', 'peak'], [LIGHT.x, LIGHT.z, 'The lighthouse', 'light'], [MOUND.x, MOUND.z, S.nestDone ? 'Your nest' : 'The big tree', 'tree']];
+  for (const [x, z, word, kind] of marks) { map705Mark(g, X(x), Z(z), kind); map705Text(g, word, X(x), Z(z) + 13); }
+  const dot = (x, z, col, r) => { if (!inside(x, z)) return; g.beginPath(); g.arc(X(x), Z(z), r + 1.2, 0, 6.2832); g.fillStyle = '#2e1a06'; g.fill(); g.beginPath(); g.arc(X(x), Z(z), r, 0, 6.2832); g.fillStyle = col; g.fill(); };
+  for (const t of twigs) if (t.visible) dot(t.position.x, t.position.z, '#b07a3c', 2.2);
+  for (const nd of nodes) if (nd.g.visible) dot(nd.g.position.x, nd.g.position.z, '#b07a3c', 2);
+  for (const it of items) if (!it.held && !it.done && it.g.visible) dot(it.g.position.x, it.g.position.z, it.type.metal ? '#4f86c8' : '#e0a82e', 2.4);
+  for (const mt of mats) if (mt.g.visible) dot(mt.g.position.x, mt.g.position.z, '#4f9c40', 2.4);
+  const T = ARROW.T;
+  if (T && inside(T.x, T.z)) {   // the goal the compass points to: a ruby diamond, a dotted gold way from her
+    if (inside(S.pos.x, S.pos.z)) { g.setLineDash([2, 4]); g.strokeStyle = 'rgba(168,117,42,.9)'; g.lineWidth = 2; g.beginPath(); g.moveTo(X(S.pos.x), Z(S.pos.z)); g.lineTo(X(T.x), Z(T.z)); g.stroke(); g.setLineDash([]); }
+    g.save(); g.translate(X(T.x), Z(T.z)); g.rotate(Math.PI / 4); g.fillStyle = '#c8314a'; g.strokeStyle = '#fff2c2'; g.lineWidth = 1.6; g.fillRect(-4.5, -4.5, 9, 9); g.strokeRect(-4.5, -4.5, 9, 9); g.restore();
+    g.beginPath(); g.arc(X(T.x), Z(T.z), 9, 0, 6.2832); g.strokeStyle = 'rgba(200,49,74,.55)'; g.lineWidth = 1.4; g.stroke();
+  }
+  if (inside(S.pos.x, S.pos.z)) {   // her: a cardinal arrow along her heading (north is up: x to the right, z down, as the squares run)
+    g.save(); g.translate(X(S.pos.x), Z(S.pos.z)); g.rotate(Math.PI - (S.yaw || 0));
+    g.beginPath(); g.moveTo(0, -10); g.lineTo(7, 7); g.lineTo(0, 3); g.lineTo(-7, 7); g.closePath(); g.fillStyle = '#c8314a'; g.fill(); g.lineWidth = 1.8; g.strokeStyle = '#fff2c2'; g.stroke(); g.lineWidth = 0.8; g.strokeStyle = '#3d0610'; g.stroke(); g.restore();
+  }
+  g.strokeStyle = '#3a1d0c'; g.lineWidth = 1.2; g.strokeRect(ox - 0.5, oy - 0.5, S0 + 1, S0 + 1);
+  g.font = '700 10px Georgia, serif'; map705Text(g, 'N', ox + S0 - 10, oy + 11); g.beginPath(); g.moveTo(ox + S0 - 10, oy + 16); g.lineTo(ox + S0 - 10, oy + 30); g.strokeStyle = '#3a1d0c'; g.lineWidth = 1.4; g.stroke();
+  const far = typeof FAR682 === 'object' && FAR682.where && typeof FAR682_DATA === 'object' && FAR682_DATA[FAR682.where];
+  $('map705where').innerHTML = far ? 'You are at <b>' + esc(far.name) + '</b>, far from the island' : inside(S.pos.x, S.pos.z) ? 'You are over <b>' + mapCell(S.pos.x, S.pos.z) + '</b>' : 'You are out at sea';
+  $('map705goal').textContent = $('quest').textContent;
+  MAP705.draws++; MAP705.ms = Math.round((performance.now() - t0) * 10) / 10;
+}
+{ const cp = $('mapBtn705'), flip = () => { if (MAP705.open) map705Close(); else map705Open('hud'); };
+  /* a TAP is its own down and up on the radar (same finger, under 0.8 s, under 18 px): not a click, because 615 cancels a second tap's click within
+     350 ms of ANY lift (her Flap thumb lifts all the time) and re-sends it only to a <button>; a steering thumb that slides onto the radar never started on it */
+  cp.addEventListener('pointerdown', (e) => { MAP705.down = { id: e.pointerId, x: e.clientX, y: e.clientY, t: performance.now() }; });
+  cp.addEventListener('pointerup', (e) => { const d = MAP705.down; MAP705.down = null; if (!(d && d.id === e.pointerId && performance.now() - d.t < 800 && Math.hypot(e.clientX - d.x, e.clientY - d.y) < 18)) return; e.preventDefault(); flip(); });
+  cp.addEventListener('pointercancel', () => { MAP705.down = null; });
+  cp.addEventListener('click', (e) => { if (e.detail === 0) flip(); });   // a keyboard's Enter or Space (a thumb is the pointerup above)
+  cp.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); flip(); } });
+  const mb = document.createElement('button'); mb.className = 'ghost'; mb.id = 'mapBtn705p'; mb.type = 'button'; mb.textContent = '🗺 Map'; $('pauseRow').appendChild(mb); mb.addEventListener('click', () => map705Open('pause'));   // Pause: the map, and back to Pause
+  map705El();
+  document.addEventListener('keydown', (e) => { const k = (e.key || '').toLowerCase();   // capture, ahead of the keyboard's own pause (P / Escape)
+    if (e.target && e.target.closest && e.target.closest('input,textarea,select')) return;   // typing her name or a room code: an M is a letter
+    if (MAP705.open && (k === 'escape' || k === 'p' || k === 'm')) { e.preventDefault(); e.stopImmediatePropagation(); map705Close(); }
+    else if (!MAP705.open && k === 'm' && !e.repeat && !$('ui').hidden) map705Open('hud'); }, true);
+  addEventListener('resize', () => { if (MAP705.open) { map705Size(); map705Draw(); } }); }
 $('quickBody').addEventListener('pointerdown', (e) => { const t = e.target && e.target.closest ? e.target.closest('[data-tab703],#gust703') : null; if (!t) return; e.preventDefault();   /* 703: the bag's tabs and the Gust Feather */
   if (t.id === 'gust703') { S.seen = S.seen || {}; S.seen.gustOff703 = gustOn703() ? 1 : 0; save(); } else BAG703.tab = t.dataset.tab703;
   $('quickBody').innerHTML = quickHtml(); });   // pointerdown, not click: the body is rewritten every second, and a click could lose its target
@@ -4632,7 +4757,7 @@ function bgMusicTick(dt) {
    after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
    music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
    menu, a cutscene), the orchestra bows out. */
-const ORCH_SRC = 'orch-samples.js?v=eb4d88c428f9';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const ORCH_SRC = 'orch-samples.js?v=4cd6ddeb2fc7';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
 const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
 window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
 const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
@@ -6149,6 +6274,7 @@ try { if (localStorage.getItem('wfr.debug') === '1') window.__wfr = { eagle: () 
   carrying: () => S.fruit ? S.fruit.type.id || S.fruit.type.emoji : null, caught: () => S.fishCaught || 0,
   lv703: () => ({ level: S.level, xp: S.xp, max: LEVEL_MAX, bar: $('xpBar').style.width, carry: carrySlots(), next: nextGift(), title: ([...document.querySelectorAll('p')].map((q) => q.textContent).find((t) => /Grow from level/.test(t)) || '') }),   /* 703 bench (never the player's) */
   bag703: () => ({ level: S.level, tab: BAG703.tab, gust: gustOn703(), reach: sweepReach703(), dot: !!($('quickBtn') && $('quickBtn').classList.contains('new703')), open: !$('quick').hidden, text: ($('quickBody') ? $('quickBody').textContent.replace(/\s+/g, ' ') : '').slice(0, 900) }),   /* 703 bench (never the player's) */
+  map705: () => ({ open: MAP705.open, from: MAP705.from, prev: MAP705.prev, opens: MAP705.opens, closes: MAP705.closes, refused: MAP705.refused, draws: MAP705.draws, ms: MAP705.ms, mode: S.mode, where: MAP705.open ? $('map705where').textContent : null, startShown: !$('start').hidden }),   /* 705 bench (never the player's): a read, nothing changed */
   xp: (n, why) => gainXP(n, why), missions: (full) => missionsHtml(full !== false),   /* 641 */
   runes: () => RUNES ? Object.assign(RUNES.peek(), { programs: renderer.info.programs.length, sceneObjects: (() => { let n = 0; scene.traverse(() => { n++; }); return n; })(), geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, toast: $('toast').hidden ? '' : $('toast').textContent, quest: $('quest').textContent, rainy: rainy(), where: (S.sky && S.sky.where) || 'home', smode: S.mode, played: S.played || 0, err: window.WFR_RUNES ? WFR_RUNES.error : 'no module' }) : { ready: false, err: window.WFR_RUNES ? WFR_RUNES.error : 'no module' },
   runesStart: (k) => !!(RUNES && RUNES.start(k)), runesForce: (f) => (RUNES ? RUNES.force(f) : null),
@@ -6977,6 +7103,7 @@ function frame(now) {
   horizonTick700();   // 700: the far islands take the sky's haze
   farTick682(S.real || dt);   // 682 B: the crossing, a far place's edge, a reload while away
   markTick701();   // 701: the markers (places gold, enemies red)
+  map705Tick();   // 705: the map goes when anything else lets the world go
   bagDot703();   // 703: the gold dot on the bag until she opens it
   evoTick(S.real || dt); lvTick(); morphTick(dt);   // after the mode block: it writes the bird's turn and size last, and puts them back at the end (642: a queued level-up starts here)
   arrowTick(dt); S.camCut = false;   // 588: after the camera has moved; 584: a door's camera cut lasts one frame
@@ -7054,7 +7181,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build eb4d88c428f9): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build 4cd6ddeb2fc7): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>
