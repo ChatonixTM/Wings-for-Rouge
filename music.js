@@ -439,7 +439,8 @@
     init: init, play: play, stop: stop, setMuted: setMuted, setVolume: setVolume, note: note, clearMute: clearMute, melody: melody, info: info, holds: holds, ornaments: ornaments, bassline: bassline, bassNote: bassNote, drone: drone, droneOff: droneOff, droneInfo: droneInfo, latency: latency,
     get playing() { return !!(sess && !sess.stopping); },
     get variant() { return sess ? sess.variant : null; },
-    position: function () { if (!sess || !ctx) return null; var p = (ctx.currentTime - sess.loopStart) % sess.loopLen; return p < 0 ? p + sess.loopLen : p; },
+    position: function () { if (!sess || !ctx) return null; var d = ctx.currentTime - sess.loopStart; if (d < 0) return d;   /* 701e: before the first beat */ /* the honest small negative time: wrapped, it read as the loop's END and a song started from bar 1 (Gem Cut) ended its round at once */
+      return d % sess.loopLen; },
     LOOP_SECONDS: BARS * BEATS * 60 / TEMPO.home,   /* 657: derived, never a second copy of the tempo */
     muteLevel: function () { return muteG ? muteG.gain.value : null; },   /* the bench: does the game's mute button reach this bus */
     _test: { render: render, score: function (v) { return build(v || 'home'); }, stats: function () { return stats; }, session: function () { return sess ? { variant: sess.variant, muteMel: sess.muteMel, spb: sess.spb, tempo: TEMPO[sess.variant], stopping: !!sess.stopping } : null; } }   /* 657: the guard reads the session */
