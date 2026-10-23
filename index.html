@@ -198,6 +198,8 @@ html.cine #boot{display:grid}
 .bar{display:block;width:84px;height:7px;border-radius:9px;background:#eadfcd;overflow:hidden}
 .bar i{display:block;height:100%;width:0;background:var(--rouge);border-radius:9px;transition:width .3s}
 .pill small{font-family:var(--body);font-weight:700;font-size:12px;color:var(--mute);white-space:nowrap}#navHud{display:block;margin-top:2px;letter-spacing:.02em;font-variant-numeric:tabular-nums}   /* 631 */
+#c.grade700{filter:saturate(1.15) contrast(1.06) sepia(.05)}   /* 700 lever 2: the finishing grade, Standard only (DRAFT) */
+#vig700{position:fixed;inset:0;pointer-events:none;background:radial-gradient(120% 95% at 50% 45%,rgba(0,0,0,0) 58%,rgba(24,12,0,.2) 100%)}#vig700[hidden]{display:none}
 #xpPop{position:fixed;left:calc(env(safe-area-inset-left,0px) + 22px);top:calc(env(safe-area-inset-top,0px) + 112px);z-index:6;pointer-events:none;font-family:var(--display);font-weight:700;font-size:15px;color:var(--rouge);text-shadow:0 1px 0 var(--paper),0 0 10px var(--paper);opacity:0}   /* 641: +XP and why */
 #xpPop.on{animation:xpRise 1.5s ease-out forwards}@keyframes xpRise{0%{opacity:0;transform:translateY(8px)}15%{opacity:1;transform:translateY(0)}70%{opacity:1}100%{opacity:0;transform:translateY(-18px)}}
 #lvCard{position:fixed;left:50%;top:38%;transform:translate(-50%,-50%);z-index:7;pointer-events:none;display:grid;justify-items:center;gap:6px;text-align:center;font-family:var(--display);color:var(--paper);text-shadow:0 2px 0 rgba(34,49,74,.55),0 0 24px rgba(242,177,52,.75)}   /* 642: the level-up's card */
@@ -548,43 +550,43 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 <div class="rhRes" id="rhRes" hidden aria-live="polite"><b id="resRank"></b><span id="resLine"></span><small id="resTime"></small><small id="resNew" hidden></small></div>   <!-- 672 OURS/DRAFT words: Paused, Resume, Quit song -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="toon.js?v=10b086b7218e"></script>
+<script src="toon.js?v=83815b22b962"></script>
 <script>(function () { let classic = false; try { classic = localStorage.getItem('wfr.look') === 'classic'; } catch (e) { /* private mode: Standard */ }
   window.WFR_DOOR = classic ? { w: 1.2, h: 2, classic: true } : { w: 1.5, h: 2.9, classic: false }; }());   /* 683 C1: THE doorway, local units (x HS 1.6: Standard 2.4 x 4.64 m; a villager, drawn 3.67-3.72 m, is 80% of it; the brief's 2.6 left him at 89%). The ring houses, the 641 house, the cabins and the walk read it. Classic is frozen (Marth, Oct 14, board 645): its doors stay 1.2 x 2. The look is read as the game reads it (it reloads on a switch). */</script>
-<script src="gltf-loader.js?v=10b086b7218e"></script>
-<script src="skeleton-utils.js?v=10b086b7218e"></script>
-<script src="meshopt-decoder.js?v=10b086b7218e"></script>
-<script src="models.js?v=10b086b7218e"></script>
-<script src="people.js?v=10b086b7218e"></script>
-<script src="villagers.js?v=10b086b7218e"></script>
-<script src="tex-photos.js?v=10b086b7218e"></script>
-<script src="textures.js?v=10b086b7218e"></script>
-<script src="birds.js?v=10b086b7218e"></script>
-<script src="humans.js?v=10b086b7218e"></script>
-<script src="folk.js?v=10b086b7218e"></script>
-<script src="trees.js?v=10b086b7218e"></script>
-<script src="treehouses.js?v=10b086b7218e"></script>
-<script src="cabins.js?v=10b086b7218e"></script>
-<script src="cave.js?v=10b086b7218e"></script>
-<script src="hermits.js?v=10b086b7218e"></script>
-<script src="sounds.js?v=10b086b7218e"></script>
-<script src="music.js?v=10b086b7218e"></script>
-<script src="music-orchestra.js?v=10b086b7218e"></script>
-<script src="rhythm.js?v=10b086b7218e"></script>
-<script src="pictograms.js?v=10b086b7218e"></script>
-<script src="chick-wear.js?v=10b086b7218e"></script>
-<script src="hedgehogs.js?v=10b086b7218e"></script>
-<script src="opening.js?v=10b086b7218e"></script>
-<script src="skypiea.js?v=10b086b7218e"></script>
-<script src="pirate.js?v=10b086b7218e"></script>
-<script src="atmo.js?v=10b086b7218e"></script>
-<script src="boat.js?v=10b086b7218e"></script>
-<script src="weather.js?v=10b086b7218e"></script>
-<script src="village-build.js?v=10b086b7218e"></script>
-<script src="runes.js?v=10b086b7218e"></script>
-<script src="orchard.js?v=10b086b7218e"></script>
-<script src="net678.js?v=10b086b7218e"></script>
-<script src="net678-config.js?v=10b086b7218e"></script>
+<script src="gltf-loader.js?v=83815b22b962"></script>
+<script src="skeleton-utils.js?v=83815b22b962"></script>
+<script src="meshopt-decoder.js?v=83815b22b962"></script>
+<script src="models.js?v=83815b22b962"></script>
+<script src="people.js?v=83815b22b962"></script>
+<script src="villagers.js?v=83815b22b962"></script>
+<script src="tex-photos.js?v=83815b22b962"></script>
+<script src="textures.js?v=83815b22b962"></script>
+<script src="birds.js?v=83815b22b962"></script>
+<script src="humans.js?v=83815b22b962"></script>
+<script src="folk.js?v=83815b22b962"></script>
+<script src="trees.js?v=83815b22b962"></script>
+<script src="treehouses.js?v=83815b22b962"></script>
+<script src="cabins.js?v=83815b22b962"></script>
+<script src="cave.js?v=83815b22b962"></script>
+<script src="hermits.js?v=83815b22b962"></script>
+<script src="sounds.js?v=83815b22b962"></script>
+<script src="music.js?v=83815b22b962"></script>
+<script src="music-orchestra.js?v=83815b22b962"></script>
+<script src="rhythm.js?v=83815b22b962"></script>
+<script src="pictograms.js?v=83815b22b962"></script>
+<script src="chick-wear.js?v=83815b22b962"></script>
+<script src="hedgehogs.js?v=83815b22b962"></script>
+<script src="opening.js?v=83815b22b962"></script>
+<script src="skypiea.js?v=83815b22b962"></script>
+<script src="pirate.js?v=83815b22b962"></script>
+<script src="atmo.js?v=83815b22b962"></script>
+<script src="boat.js?v=83815b22b962"></script>
+<script src="weather.js?v=83815b22b962"></script>
+<script src="village-build.js?v=83815b22b962"></script>
+<script src="runes.js?v=83815b22b962"></script>
+<script src="orchard.js?v=83815b22b962"></script>
+<script src="net678.js?v=83815b22b962"></script>
+<script src="net678-config.js?v=83815b22b962"></script>
 <script>
 (() => {
 'use strict';
@@ -635,7 +637,150 @@ const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x9fd3f0);
-scene.fog = new THREE.Fog(0xcfe8f4, 90, 360);   // the fog is the sky's horizon colour, so the island fades INTO the sky
+scene.fog = new THREE.Fog(0xcfe8f4, 90, 360);
+/* 700 (Marth, Oct 23: "The world is way bigger too"): THE BIG HORIZON, distant islands and ranges 560-680 m out (EDGE is 330: scenery only).
+   One merged mesh, its own dice, a shader that hazes each vertex toward the live fog colour (the scene fog would erase them that far out). */
+var HZN700 = { mesh: null, u: null, groups: 0, tris: 0, rMin: 0, rMax: 0 };
+function horizonBuild700() {
+  let sd = 70011; const rnd = () => (sd = (sd * 16807) % 2147483647) / 2147483647;
+  const P = [], C = [], Z = [], I = [], col = new THREE.Color();
+  const add = (x, y, z, hex, lit, haze) => { col.setHex(hex).multiplyScalar(lit); P.push(x, y, z); C.push(col.r, col.g, col.b); Z.push(haze); return P.length / 3 - 1; };
+  const peak = (cx, cz, r, ht, haze, t) => {   // a jagged cone: a ring at the sea, a ring at mid height, a tip; the sun side a little brighter
+    const n = 7 + Math.floor(rnd() * 4), base = [], mid = [], tip = add(cx + (rnd() - 0.5) * r * 0.3, ht, cz + (rnd() - 0.5) * r * 0.3, t.top, 1.05, haze);
+    for (let k = 0; k < n; k++) { const a = k / n * Math.PI * 2 + rnd() * 0.3, rr = r * (0.75 + rnd() * 0.5), lit = 0.82 + 0.3 * Math.max(0, Math.cos(a - 0.9));
+      base.push(add(cx + Math.cos(a) * rr, -2, cz + Math.sin(a) * rr, t.base, lit, haze));
+      mid.push(add(cx + Math.cos(a) * rr * 0.55, ht * (0.42 + rnd() * 0.2), cz + Math.sin(a) * rr * 0.55, t.mid, lit, haze)); }
+    for (let k = 0; k < n; k++) { const k2 = (k + 1) % n; I.push(base[k], base[k2], mid[k], mid[k], base[k2], mid[k2], mid[k], mid[k2], tip); }
+  };
+  /* 682/700 piece A (Marth, Oct 21: "make our island flyable to lake tahoe, then do (see image) antigua guatemala ... both flyable but far in
+     the distance"; Oct 23: "theyre just for teh background??? bruh"): the REAL places on the horizon, in their own directions, from THE
+     EARTH's own elevation tiles (SRTM + ETOPO1, public domain; baked by tools/wiring/bake-700c-ranges.js): Tahoe's ring of peaks round its
+     lake, Antigua's volcanoes (Agua, Acatenango, Fuego). Footprint 32 km -> 300 m; heights x6 so they read at 600 m; the rim falls to the sea only past 86% (Acatenango and Fuego stand 12-15 km out: a wider fall flattened them). Flying there is piece B. */
+  const RANGES700 = {"tahoe":{"name":"Lake Tahoe","lat":39.0968,"lon":-120.0324,"radiusKm":16,"g":48,"zoom":11,"minM":1473,"maxM":2787,"missing":0,"summits":[{"i":9,"j":3,"m":2530},{"i":39,"j":6,"m":2681},{"i":42,"j":14,"m":2736},{"i":2,"j":19,"m":2491},{"i":43,"j":26,"m":2625},{"i":3,"j":29,"m":2574},{"i":2,"j":32,"m":2461},{"i":42,"j":32,"m":2685},{"i":42,"j":36,"m":2683},{"i":43,"j":41,"m":2508},{"i":11,"j":42,"m":2787}],"b64":"bUVvfX6GjKGdw9rFvZWCfn1nX15UU1ZUVVdtblNSUlJSUlNWW11/s8V8ZGN3XUcUY1FXa35/h6GVvcGyp5aFe3BeW1JSUlJSUlNmalNSUlJSUlJSVWiixMCsdmd1cUkcYVpMal9ge4KPsKyfl455b2ZVWFNSUlJSUlJaXVJSUlJSUlJSUniEo7W4fnJwYEombFdIVF2CnaG0zbe2pJd+a2VSUlJSUlJSUlJSUlJSUlJSUlJSUmONn8iiendvbU8yZWhJZIKjlp6opbaenYtzaGFSUlJSUlJSUlJSUlJSUlJSUlJSUmuMr7edenyKmWxGX1NNZ4KUlpKFgICDeoNvZ1dSUlJSUlJSUlJSUlJSUlJSUlJSUmqgvsmth4Gir3dfUFdOZ36QiHl1dnNzcW5pYFJSUlJSUlJSUlJSUlJSUlJSUlJSUmzL6tm7oqKirqyRW3lXYIWShIZ9emxtbGtnWlJSUlJSUlJSUlJSUlJSUlJSUlJSU2Cu2+LQvrefq7KheWZTY6GlmIqBdW5lZVxhYlJSUlJSUlJSUlJSUlJSUlJSUlJSUl2Szsndy8ewq7qxZ1ZjV5mYmot9amxbVVVVVlJSUlJSUlJSUlJSUlJSUlJSUlJSUmexwb7Py8e1truuaHR9UYiFjYl3Y2NVUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlpyu7K7z8q+xKl8fpiHamiEgYJzWVRSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUmJurbK418fJyMKErZmFeWFZaW9lU1JSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSV2SGsLK359nPua17vqiQhYR0a2hbVVJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSU4OMvMrJ9dfXz7aitI2BfoCCf21aVlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSU4uetNzH9fTy37mbgnt8fX1/f3JlWFJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUnmKpM+x6uDs6NCxcGpncHSBd11UUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJTXnaEo66758vb0MOhcIGEcm1gXVhUUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJseXmPr6XOvL3bxpeBl62tpZGCYVVTUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJbbI+bm7e3kavRroxZxb/Gsp+Oe1NSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUmVtYqKqnb6tgHeNppRzxMOmkYqLi1pSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUndbZH+Mm6mUe29pdVVGsYx2YVpZWVVSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSVnxkgYV+gJSMg2xYTzkyjHddYGFgWFNSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSYGhfeI+Df4KJhnNkUjMzb15neYGUZVJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJVY46TgpWSkH96Wz48ZWl+s6eYbVJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJTaY2RfaCjm6icaDM0a3mjuJN7dFRSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSVmVtdpGrp8WlbEMfeIGklZaafVdSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJkaoSRmI6js+Cgcj8aoY3DtK+Pd25VU1JSUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJago6OmamzwaStczYZtJPGzbqsjW9iV1ZVUlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJYeJaUoLnMvqZ8XEsizLnN1tHAn3BmWltYVlJSUlJSUlJSUlJSUlJSUlJSUlJSUlJehJSauODl3MmWkF8wvLu7qamvjXJhZWNbWVRSUlJSUlJSUlJSUlJSUlJSUlJSUlJqnJ+lsNHq6M/Sv39Vr7W9npOJemtraVxbWFZSUlJSUlJSUlJSUlJSUlJSUlJSUlJsnK+1ucXd3NHGmW9MpqfAnYN9cHRxYF9oWVJSUlJSUlJSUlJSUlJSUlJSUlJSUlN0kqGwvcnV6+nQuq6ajJWViIp4iHJiZW9cU1JSUlJSUlJSUlJSUlJSUlJSUlJSUlRljKO5wcfT18jgy5pUiIeImKegdGxme1RUYlNSUlJSUlJSUlJSUlJSUlJSUlJSUlNrcou3vtDU2JyXqIFHspKQnIZxcXiJWFVpXlJSUlJSUlJSUlJSUlJSUlJSUlJSUlNicYqirLrU3JtmZVglpaGSjJSQiqNuVWV3VlJSUlJSUlJSUlJSUlJSUlJSUlJSUlhicoWbn6zK67l4TUQQl7qol62mtXR2coZtYlNSUlJSUlJSUlJSUlJSUlJSUlJSUlRbcoWXqqfB5cehdUEHmaOwl6Wsho2cqZSDfFVSUlJSUlJSUlJSUlJSUlJSUlJSUlJaaoeVnavTu52GbSkBeZunnKClk5akwq2YdFlTUlJSUlJSUlJSUlJSUlJSUlJSWlxodXmZoq/DvoxkOyAAX42nsKCzo5i3zLe0jmpValJSUlJSUlJSUlJSUlJSUlJSUlVpeoyYrrO5wqKFdj0Ua4SZrK6yuLqbqtzgqnJdaFJSUlJSUlJSUlJSUlJSUlJSUlpgc3uDppyotsmhhnI0ZnaWo7+wud63vcP/yJdqclJSUlJSUlJSUlJSUlJSUlJSUlpYXmVygJiXpa96enxMaXSFo7S5xcrt1rDe4bSGc1JSUlJSUlJSUlJSUlJSUlJSUlNXYGRzfoaTip2DVlkwbnN6mKazt8Ll97jS/MOgdVJSUlJSUlJSUlJSUlJSUlJSUlNVW2BxfIKQk31bXk8QhnJ4kqKkqbvR5+rh8uKZdlRSUlJSUlJSUlJSUlJSUlJSUlNVWWFpf4ySnntORR8Ok45+i6q6rb/J5tLB9qF7VFJaUlJSUlJSUlJSUlJSUlJSUlNXX2N2pLmpqndxXTIhqpOKkKK0s9Xk5eGpom9TUlRoUlJSUlJSUlJSUlJSUlJSUlRZZnyjueHFypyicUke"},"antigua":{"name":"Antigua Guatemala","lat":14.5,"lon":-90.8,"radiusKm":16,"g":48,"zoom":11,"minM":533,"maxM":3786,"missing":0,"summits":[{"i":12,"j":23,"m":3786},{"i":11,"j":27,"m":3560},{"i":33,"j":29,"m":3691}],"b64":"eX18e3x8fH15enh4dnpyamVqYmFfYGFgYGFhYmNibHBqaGttb3Jwb3Bsc3V4gICEcn19fXx8fn5+f3t6eHRqZ2RjYmFhXWFgYF5hYWJiY2ZoY2xscnV2cnVvcXd6gIKDfX19fX5+f4GDgIOAenpxbWlmYmJhYVxgYVthW2BhYWFhaG5vdXh5d3V2c3N4en2AfHp6fICDhIWJhYaEfHBubWpmY2NhYWBfWl5WW19gYGBgam9wfHuIgH56dnJ4e3x+dXp7foKEh42NjIZ2b3hybmhoZGJgYWBhYGBaWVlZXGBfbHR3g4KPh4d8eHd3ent+cnF6f4OHjpWRj3l0eXdwdWxraGdkYWBhYWBfW1ZbXFxmb3aBgJOXjo6HfHd5eXp7XGp4fYOKlKKZhXl6gnp6eXpxdXFpY2FhYV1eXl1UWV9laXZvcXqEkpCEfHt5eHh4V293fIOQl5iVhoKDhICKg4t8eXJpZWRiX19jdnBaU1diXGhudm+Aj4mLgYB6d3Z2VG9udn+HkH+NhoGEiZCSiY6DeG1pZ2VoY2drf3JmWFJUXWxxZG59hHiBhod9d3JyU2BmaHp7dnyRmZKVj5OOgn2CfHFtaWhkZmZqdm5nX1ZRXmZiWGV6d3F6i4OBfXd0T1VZamZnfo6JkpOSkpWQjpGLfXRxamtpaWxwdXtzaltQUVVUVWxob21vcnN0dXRwUVFbYmFzc3NzfYGLi5ihlpaNgXZ0a3VwanB4e4VwYFFPT1BSYGJgdWttbHFxdnNwTFJbWGFgaGdwfoyMiJKXkYiBent7dnRtdXluZnRrWE9PT1JYYFhvZWRka29wdG1qTFFSVFpgY2tyfI+ikJONkJGFg3x7fntza2taW2xpYk9PTlFQUldjV2JrbW9wb2lkSVFWXF5hZm16hYWMl4aFiJCEgHhzdHJgXFlTV2dvW09PTk5PVFRbW2locnJycGxmTlBWXGFlaW5xdXuKioaAe4aQhnxwZ2xSUExLUF1rU05OTk5PWV9eaG5ydHV1cWtoR09VXGNobnV4f4+Zj4qEgHl7f3NwXGdMS0lKTFReVU5OTk5PWWJnbnF2end5dnRtUk5YXGRsdXyCiI+Tl5GQfnNrbnNmUlZTSUhOUk9VTU1OTU5PYGFkcHh5fn99gHRvUlhbXWVtdYCKjZmioaCUjIBrZFleU0xXSklKWU9NTk1NTk9QXGVvdn+EhoiFgn50U1hdY2lweYaRmaSvsbGklYV2ZV1XTkxKTUlKTE5NTU9QUFFSWmlofIiRkpKPkHZiT1ZcY2tzfoyZrbvJzcWwmYh3amJWTUtJSUpNT09QUlNVVlZXWWx5hZaZfXFyc2JWUFRbYWhwfoqivcrg49bCo457al9TTUpISkxNT1RVWVtbXl5fWl1peIWQdWlfXlhUSk5VWWh1iZCqwdf0+N7FqY94amBUS0lKTU5PUlleYGZmaGhnaWtybn58hIFsXk5SRk5YXGl2iJyrwtz7/+PHrZJ5al9TS0dKS05RVl1kbG9xc3Nyb3J8hXNwgYd7dVVHTVhQWGZmfX6mvNjz9dvBoYVtYlhPSUVHS1BWW2RtdXt/f399end2dmtud3NzdFlLQ0pPSlhha3qRqMXa18irl31oWlJJRUNFS1JZYmp2gYuOj4+Kgn14dmprfWljWlZIQ0pPVWBqd4ifv9nr0biiinZhWU5JRkJFTFRdZ3J/j5+io6CYioB4cWx2gXJkU05KPERLU1tleo+oxODtya2OgW5fVk9JRUJFTFVgbHqLnq69wLWolIZ7cmxycHdzV0tFOkFJTlhseY2qyeLrzrWWfWpeVU5IQ0BFTVVfan2Tq8bY3c2vmod6cGtqY2Rmak49Oj9ETFVgdYqhs8nLvaCNe2hYUkxGQD1DSlRdZnmSsMzr99KxmYR3cGZgXV5iZ11LNDlBRE9dbICMmqytppN9cF5VTUZCPjpBSVFaZnWKo7zT2ceqk35zaGFbWVdeY2ROMTI8REhXYG18iJCWkIRuYFdOR0I9OjdARk1YYm59kqO1uKyZhHlsZVxWVVdaWk5GLDI4QEZMU2F1c3+JdHBkVlNJQj05NjU8QkhRV2VsfY2am5WGe21mXVdRTVFOWkM5LC80OT9FUF5lZG16Yl1YUEVBPjg2MTM3PENIUFdfbHmAgX10bGJcV1FMSURKU1A2KCowMDg+SFJVXGdhVktKSkA7ODUwLy0yNzxCR0pTW2RpaWhnXldUUElHRENHTDgyIygrMDI2PkNKTlJTRjw8Ozc0MS0pLCUtMTU8PERJUFZXWFdXVU1KSERCPz5CRjI3ISQmKSwwNjlCQ0dGPDQzMS8tLSglIicoKy4zODxCREhJSkpLSEZBQT89OzszMjJFHR8jJicsMTY4PD07MCsuKCknJyQgHiIkJiguMTQ4Oz0+QEBAPz07Ojo4ODQyM0FKGhwfISQqLjIzNTQxKyUkIyIkJB8eHB4fIiQnKy4xMzQ0NTk2NTc1NTU0MjIyNkNJFxkcHiElKCstLiolHR4eHR0fIRsaGRocHiAiJikqKy0tLzAwLzIwMDExMTZAN0BCFRUYGx4hIycqKykaGBkaGB4YGhkXFhcaGBoeISMlJSYmKCoqKissLy4vMUZBPkVNExMVFxoeJSspKB0VFBUVGRUVFBQUEhMUFRcbHR0fHx8gIiMkJSYoKjg1QEVMSkxOERATFRYfJB8YHxgRERMRERASERERDRAQEhQWGBoaGhscHB4fISc8Ojg7Nzk3PkJHDA4QEhMUFBISGBQRDg8ODA4PDg4OCw0NDhESFBQVFRYXGBkbJC0yKTA2HzMuP0RCCgoNDhAQDg4PFBkPDAoMCAwNDAsLCwoKDA4PEBARERISFBUbHiIpIjAxFx4pKjw8BwkKDA8ODQ0OEhcQDAcKCgsLCgoJCAUHCQoMDAwNDQ4PDxEYIRYgHSQaDh4fIjs0BQkIDg8PDAwUERcHDxIFCgoLCggHBgQEBggICAkJCgoLDBcfGhQdFxUKFRshMS0sAgQODBYOCg0VFg0EEwsGCQoLCgkNDwUBBAUFBQYGBwcICQsiFRANEgALGSYgIh0p"}};
+  const REAL = { tahoe: { a: -0.75, rad: 600, w: 300, ex: 7 }, antigua: { a: 2.35, rad: 610, w: 300, ex: 5 } }; HZN700.real = {};
+  const real = (d, id) => {
+    const o = REAL[id], g = d.g, bin = atob(d.b64), hM = new Float32Array(g * g), s = o.w / (d.radiusKm * 2000), cx = Math.cos(o.a) * o.rad, cz = Math.sin(o.a) * o.rad, Y = new Float32Array(g * g), idx = [];
+    for (let k = 0; k < g * g; k++) hM[k] = bin.charCodeAt(k) / 255 * (d.maxM - d.minM) + d.minM;
+    for (let j = 0; j < g; j++) for (let i = 0; i < g; i++) { const u = i / (g - 1) * 2 - 1, v = j / (g - 1) * 2 - 1, r = Math.hypot(u, v), mask = 1 - Math.min(1, Math.max(0, (r - 0.86) / 0.14)); Y[j * g + i] = -2 + (hM[j * g + i] - d.minM) * s * o.ex * mask * mask * (3 - 2 * mask); }
+    let lake = 0, top = 0; for (let k = 0; k < g * g; k++) top = Math.max(top, Y[k]);
+    for (let j = 0; j < g; j++) for (let i = 0; i < g; i++) {
+      const k = j * g + i, y = Y[k], m = hM[k], gx = (Y[j * g + Math.min(g - 1, i + 1)] - Y[j * g + Math.max(0, i - 1)]), gz = (Y[Math.min(g - 1, j + 1) * g + i] - Y[Math.max(0, j - 1) * g + i]);
+      const lit = Math.max(0.6, Math.min(1.25, 0.95 - 0.06 * gx + 0.04 * gz));   // the slope facing the morning side a little brighter
+      const isLake = id === 'tahoe' && Math.abs(m - 1897) < 7 && y > 0; if (isLake) lake++;
+      const hex = isLake ? 0x3f8fc0 : id === 'tahoe' ? (m > 2600 ? 0xe8eef2 : m > 2200 ? 0x8e9a8a : 0x5f8a66) : (m > 3300 ? 0x55514d : m > 2000 ? 0x6f6a5a : 0x5b8a4f);
+      idx.push(add(cx + (i / (g - 1) - 0.5) * o.w, y, cz + (j / (g - 1) - 0.5) * o.w, hex, isLake ? 1 : lit, 0.32));
+    }
+    for (let j = 0; j < g - 1; j++) for (let i = 0; i < g - 1; i++) { const a0 = idx[j * g + i], b0 = idx[j * g + i + 1], c0 = idx[(j + 1) * g + i], d0 = idx[(j + 1) * g + i + 1]; I.push(a0, c0, b0, b0, c0, d0); }
+    let summits = 0; for (let j = 2; j < g - 2; j++) for (let i = 2; i < g - 2; i++) { const y = Y[j * g + i]; if (y < top * 0.75) continue; let hi = true; for (let dj = -2; dj <= 2 && hi; dj++) for (let di = -2; di <= 2; di++) if ((di || dj) && Y[(j + dj) * g + i + di] > y) { hi = false; break; } if (hi) summits++; }
+    HZN700.real[id] = { at: [+cx.toFixed(1), +cz.toFixed(1)], bearing: o.a, top: +top.toFixed(1), lakeCells: lake, cells: g * g, summits };
+  };
+  real(RANGES700.tahoe, 'tahoe'); real(RANGES700.antigua, 'antigua');
+  const TINTS = [{ base: 0x4f7a5c, mid: 0x6f9a74, top: 0xa9bfae }, { base: 0x5b6f7c, mid: 0x7f93a0, top: 0xdfe8ee }, { base: 0x6b7a4f, mid: 0x93a06f, top: 0xc4c9a0 }];
+  const N = 9; HZN700.groups = 0;
+  const near = (a, b) => Math.abs(Math.atan2(Math.sin(a - b), Math.cos(a - b))) < 0.45;   // the made-up islands step aside where the real places stand
+  for (let i = 0; i < N; i++) {
+    const a = i / N * Math.PI * 2 + rnd() * 0.45, rad = 560 + rnd() * 120, cx = Math.cos(a) * rad, cz = Math.sin(a) * rad, haze = 0.4 + (rad - 560) / 120 * 0.2, t = TINTS[Math.floor(rnd() * TINTS.length)];
+    if (near(a, REAL.tahoe.a) || near(a, REAL.antigua.a)) continue; HZN700.groups++;
+    const big = rnd() < 0.4, m = big ? 3 + Math.floor(rnd() * 3) : 1 + Math.floor(rnd() * 2);   // a mountain range, or a low island
+    for (let j = 0; j < m; j++) peak(cx + (rnd() - 0.5) * 80, cz + (rnd() - 0.5) * 80, (big ? 45 : 28) + rnd() * 28, (big ? 110 : 34) + rnd() * (big ? 90 : 30), haze, t);
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3)); g.setAttribute('aCol', new THREE.Float32BufferAttribute(C, 3)); g.setAttribute('aHaze', new THREE.Float32BufferAttribute(Z, 1)); g.setIndex(I);
+  const u = { uFog: { value: new THREE.Color(0xcfe8f4) }, uK: { value: 1 } };
+  const mat = new THREE.ShaderMaterial({ uniforms: u, side: THREE.DoubleSide,
+    // the haze also grows with distance from the camera: fully fog-coloured by 880 m, so nothing pops at the far plane (900 m) from the far shore
+    vertexShader: 'attribute vec3 aCol; attribute float aHaze; varying vec3 vC; varying float vH; void main() { vC = aCol; vec4 mv = modelViewMatrix * vec4( position, 1.0 ); vH = clamp( aHaze + max( 0.0, length( mv.xyz ) - 650.0 ) / 230.0, 0.0, 1.0 ); gl_Position = projectionMatrix * mv; }',
+    fragmentShader: 'uniform vec3 uFog; uniform float uK; varying vec3 vC; varying float vH; void main() { gl_FragColor = vec4( mix( vC * uK, uFog, vH ), 1.0 ); }' });
+  const mesh = new THREE.Mesh(g, mat); mesh.name = 'horizon700'; mesh.frustumCulled = false; scene.add(mesh);
+  let rMin = 1e9, rMax = 0; for (let k = 0; k < P.length; k += 3) { if (P[k + 1] <= 1.2) continue; const r2 = Math.hypot(P[k], P[k + 2]); rMin = Math.min(rMin, r2); rMax = Math.max(rMax, r2); }   // land above the water only (a real patch's square corners sink under the sea)
+  Object.assign(HZN700, { mesh, u, tris: I.length / 3, rMin: +rMin.toFixed(1), rMax: +rMax.toFixed(1) });
+}
+/* 682 PIECE B1 (Marth, Oct 21: "make our island flyable to lake tahoe ... antigua guatemala ... both flyable but far in the distance"):
+   FLY THERE. Out past the edge toward a real place on the horizon, a cloud crossing, then its REAL ground 9 km out along that bearing
+   (THE EARTH's SRTM tiles, 32 km -> 1.6 km); out of its edge, home. Flight only in this piece. DRAFT numbers and words. */
+const FAR682_DATA = {"tahoe":{"name":"Lake Tahoe","lat":39.0968,"lon":-120.0324,"radiusKm":16,"g":96,"zoom":12,"minM":1465,"maxM":2783,"missing":0,"summits":[{"i":80,"j":1,"m":2612},{"i":20,"j":7,"m":2539},{"i":79,"j":13,"m":2690},{"i":92,"j":13,"m":2463},{"i":94,"j":16,"m":2474},{"i":83,"j":17,"m":2654},{"i":81,"j":28,"m":2584},{"i":86,"j":28,"m":2760},{"i":85,"j":32,"m":2691},{"i":3,"j":39,"m":2567},{"i":6,"j":50,"m":2487},{"i":87,"j":53,"m":2612},{"i":5,"j":57,"m":2648},{"i":83,"j":61,"m":2676},{"i":89,"j":61,"m":2622},{"i":4,"j":64,"m":2499},{"i":86,"j":65,"m":2745},{"i":77,"j":66,"m":2477},{"i":89,"j":66,"m":2751},{"i":85,"j":73,"m":2687},{"i":3,"j":75,"m":2487},{"i":87,"j":83,"m":2507},{"i":22,"j":85,"m":2752},{"i":18,"j":89,"m":2771},{"i":24,"j":89,"m":2761},{"i":9,"j":94,"m":2517},{"i":18,"j":94,"m":2783}],"b64":"b15HVXCEg31+hYeGi5egopulvNTe1MnFw7KdjYaDfn99fWxhYGBhX1xUVVVXVVVVVlZXW2V4hWpUVFRUVFRUVFRUVFRUVVVYW1xbXWuEl7XXxZp5bWRkZWx3Z15RSCIWblxTSl1qcHN8h4eHjZmpnZ6uxtTUyr+4uLGijoWEhXx9dGdcYVpWWFRUVFRUVFRUVVVVVl91gGtUVFRUVFRUVFRUVFRUVFRWV1hZY3SYrcbewKaXg2xsZmxyc2ZcPykYYlxTSVhfanZ+hoSDio+hkJOkvMfGv7asq6acjIaGgnZycWVZXltUVFRUVFRUVFRUVFRUVVlzfmNUVFRUVFRUVFRUVFRUVFRUVVddaoqmw8vawb2tkXNraHZ1bHFnRzYda2NSSFVob3Rzc2twen6Oioyesbm5tKqinpyckH1/enNuZ2FWWlpVVFRUVFRUVFRUVFRUVFlyeF5UVFRUVFRUVFRUVFRUVFRUVFZnhZKYurLDuMu6nXlub3h4bWNSQCogZV9dSkxkanJnXF1ndImEho2gsbGvqqKcmJaRj4F4cm5sY1pVWFZUVFRUVFRUVFRUVFRUVFReX15UVFRUVFRUVFRUVFRUVFRUVFRufIWJqaSxuMu4oXpvdHdwaWBbSDcnZGljUkhVXV1TYmd2f46SkpmksrexrqippqOflYB1dG5pXVVUVFRUVFRUVFRUVFRUVFRUVFRXXFpUVFRUVFRUVFRUVFRUVFRUVFVpbnaHlJmmv8arlH10d394a3xkVUMsbWxcVUpLVV1bb4OCmZ6no7C4ycu4uLiyqaCaloZzbW1qYFRUVFRUVFRUVFRUVFRUVFRUVFRUVFhUVFRUVFRUVFRUVFRUVFRUVFRXZ4eQkKKry8OjkHhxen5wfGxeUDszdmpUXklLZ25sfpiYp7Wqr7rJx87QxrOuppyTjn5wbm1iW1RUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUaJKEmKy8urudj3h2eXx+hoVnVkc8alpkZ0pLYHSAlaCbmJ6gpq2qqLC9tqqhoJaPi3hva2llXFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUcX2NkbDBubKbjnh3foOLnpR8alpJZWxxalBOenmInaOonJmZoZaSkZefmZWRkpONgnVwbGZiV1RUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUa3iTnLa7tbWcmH57iZmZqaaSd1pMZ1xXVE1La3R+lZWimpWSnYqIhYWIh4yGfX6DhnNubmBcVVRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRYbn+ipru+x7aumoSChZOlqq+UdGxeWFFQT09MZnuEk5CWlImFj4CDe3l5dnp+d3N0dHNtZ2BUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRZb5Gqv9jU18mxoYmJj42mqbOYkot5UVFTVE9NY3d/kZKKjIF7eHZ2d3Z1c3V0c3Nwb2xnY19UVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRccqLK4Obe3MS6pJ2doZylqrCur56NUVZhZVBRZHKDlJiNgHx+g353dXVydHNzcnBxbmdjX1hUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRWcZbJ5e3e0cvDrLSkra2ioq3BppWOV3B0a1lUX3OCopSNiICFgn18e3ZtcnBvcG5ubWhnYVdUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFZVaIy31OLn4dbNxLy3uK+goa6/sZ6daH92aVhTYHqKm52RiYmNioeCfHV1bmxsa2tpaWhlYVZUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUZoKnwdTp4OHTwr/GubCmoqe0rLu4endrZFZQXomfp6ahlZGNiYZ8eHRybWlpaGdjYWNkZFZUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUY3iSvdLOz93ay8nDwr2to6yqu8O0f2tcWFVUX4qkpaahn5SQh393dXNtamdgY1xaWl1iZWJUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUZH+qyMW8wtfm0dHJ0M2zpay0s7Ssal1XV19WV3+copqanJSKgn93b29vaGJYV1ZXV1dYWl1XVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUbpK3vsG0u9XWzczEw7mzsbOzuLuyZl5aYXNgVneQlZCQmJmTi351bWdsaGNXVVVWVVRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUaIuVo8Ozyb7GytHEzry8uMK+v7ikY2Bqcn5mUmeLjIiLkZWMi31vaGVmZWBUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUYnx5lMGzvLa9ytbQzcbAw8K/qpSGbXKGjoRyX1R9hYOKjY+Jg3poYGBeWVRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUXGdyj7izs7a5xMzJxsLCz8O6oIp0eouQnIl4aVNqgISLhomIfXZqXVlXVVRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRbZmFrhrGzs7O9wNbKx8zH0cbIvqSNkp6ono96c2NVb3yDf39+enRoWFZUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRjX2uDnrC7s7OzxtrTys/P2svEsqWBqKOhlIp/eG5aVGJxeXV4d29jVlRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFpaYGqQqLXCs7O4z+bk1t3TzsG3pIRwu6idk4yEgHVuXFNTVWBcW1pYVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRrdHGPrbfCtLPA2+zw3dLFv8S5rp2QwrSvpZWFg4ODcWptaFpYXFZXVVZUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRnjZCNpMDJxrPG4vTq1tHS1s++sKmavKielY6Ji4qNjot/dXF5bGBcWldUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVF5siJWYnLXEzr/U8PXo3dzk4szLxresuqmWiIWDgoSGiIiHhIBuZF1hWVRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFduiZyln7LO2c7O3/r77ezw6tzHxLiipJGGgoB/fX5/f358enZ6cWlfWlRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFZpf6SjpMDH1tLB0u/68/n379vEubmriYV/f358fn1/f39/gX55cGhjXFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRifqCPnK+4z8q2yerm5/Px6uTXzsivfnl3dXd5e3t+gH+Df3p0aWRcWFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFlhfpKEj6K4x7qwyu3h2N/o7+rf1865dXJramltdHp8gYODfXZrWVdUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUWGBwe4SJk6O9s6i1yu3f0M/g69HRyb6vb2xsbGlnZmdocnp8cmhcWFVUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRZZG1xe3uMmquyp6vJzdzWx8zT4dK1tZyQb3F5iXpybGtoYm1sYF1aV1VUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVGFrb3p/fXuQprOlprPKzMTFyc/b3smun5x8dX6No5eNf3t2aGZnaFxZV1VUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFVqfIF7e4eNqqKjq8XLxq63xNDf3sOsj5KHiJiltqanoZeLg4F8aFpYVVVUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRge3iIhYqYnqCescO8pZuos8jcz7ahjHFnorK5xbOxtKKajoN7ZVpWVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFheamqFm6SZopqnxsGzmYiHqay8wbGhjnJft8G9zr6+t6ufm4uEcltVVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFReaWNrX2OApailn5itw7iulX12iYubraufmIxuxsTE1c+8saylnpSLhmRWVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRYbHBmXmR3naWekaCpt7amnIlyaXSFnJ2TkHJpxtLOwrevnqOfl5iUjXVbVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRedm5cZV9riJ2PiKKrrKqSh4l4aWJ2ioiBZGNTxMizo5SRg355e355dntlVlRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRqdmhecmx0g42HhpWkopyLd25paWJhbWNfSkpBuLKahIJzcGNgXl9gYF1ZVVRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFV4dmJfeHiBg3+AhYWOnJmBenZvYmBRU1JEPTs4uKaLeG9nX1xbWllZV1daVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVGFxdmFqeoCJgH1+gYCEj5eTkouCc25iU0k/ODUwnIt/cmFfXFxcXFpaWFpVVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUV2p0a1lhfYaIiYGCgYCAh5iTjYeCf3BlWU5DMS8siHhxYF5daWxoaG1sZFZVVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVF1rX1VoeniLlYuFgYGBi4qIiYZ8d3R3ZFlDOzg0eGxiXmBocHd1eoGJb1hUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRVVlZiaGyCk5CKh4SNkJuWkouIdYZ7bltHPjs6b2VgYGx6hImOmpuNcFlUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRWWmN8j5eWjYONm6KZkpiRjo9+c1lHPz08a2JkcXaGoKihp5iMcVtUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRVWGeElpmNhYWcpqqom5aTppmQe2NJNjg7Z2Nqe4aavLKzppeGemBVVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUV2t+gpOPf4KNnKGmp5ubs6+ki2tKMTYwa2VxgpuwxrymkYd7dGJVVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVlxleoJ9bX6GlJ6wr6Wsu72pjXBaOicebWh3kqLAsJ+Rhnx8fHRYVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFZWV1tfYWRqgHt+jpussq3DzcGhhnRROSoebm17kKO1n42KjYuRiXddVVRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVGVdXmdygH6BhIuOiKOuq7HM3b+hhW1jTjYff4CGkaC5nZKdoqOUg3JeVlRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFxqgXCNjZyZlpablp2nsbbG3sGeinBcOCkZkYiLpLS4qqitsZ6Fe3RqWVVUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFhmdoGQnJmUmJqcoaSttcCyuse6lHBSRCgZr5CJpsLCvbGrqpmMfYN2YVhYWFZUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFVbboaGioyQmJ2hrLC6vcK0mqKji25TQSwct6GNnMPbzL24taWbhnZxYltcWVZXVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRac3qJmJWQlJ6stbnCwbqtnYR3Z1tBOSogt6aUo8bl0MO+ubKinXt1YmRfWllYWFhWVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRddHmJkqGXoKm6wsvSzsS/rJiJgFpmWDwmx66ftsja1NHAvrixoIRvamhdWVpZWlpZVlRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFZjc3iKkZSjrLvM29rd09HGw7OWeXmAWDwtzMLCzsvP1NLLwr20oIdzcmleXF1dXlpaWVdWVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRmgZCLlqCdqbnQ4Oro6eLVzbSUmJ6LYUw7wr7DwsHAvLi3tLCkl4R4amNhZGRoYFtaWlpXVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFhpi6CfmJ2iqbbG2Onq6ujXzcG4vrWUblY6u7e5ubu1o6ierq+jkIN1amRlZnNnX1xcW1pXVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFVxjKKupa2kqLHC0eDq5+fe1drg2cSmh2NdtrK0truvqJ+Wk5OSg3pvZ2dscmpkX11aV1hVVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFpujaOqsauvrbnAy9fj6eLl3tvWvq+chG9er621tr+3o52akYmGe3VuaW53a2RdW15cW1pWVVRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFlsh6KtrKe3trnByNPd5d3WzcO8rZKAcmNYqayousi6qZ2TlYx6cm5ucHtwamBeX2FdW11XVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUXWdxjpSkraaytsLCyNDY3+Xh2s+/saybk4aBpaOkucGwnZuFfH92dHB3gnNlYmJiampeXllUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVnh+j5imoKa3wL3LzczV4Oz48OXY08fEuJqYlJaes6yhkY2Ignd7f3+EcGZiY2VzbWphWlRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVGFwhJaSnLDEuMDQyNfS3OTm4/H59eDFnH5wjIySmpOKiYiKhX+HiYNza2NjZnpzal5WVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUWVxjfouNoaW1u7/Ay9nW1tO+wM/W1cankn9Sh4iKiYmJj5KUmp6Yhnpsa2RkeHdmWVVVVVlUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUWGFgd31/jbDAsrfC09zb2Na6n6mys7+mfGVVjI6KiYqQmp+rsqCDdXBsaGd9fGRWVVVWYl9XVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVmVtcHqBkaGzrb++z9rV29e+m4uSjaORgVg+opSRjo2Toa2ljoVwa2lpbIKDd1ZWVldmb1tUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVV9udYB9i56rrr+1xdHQ5dqzlXx1c4ODYks0tqGUlpKVm5yEd3Z0c4CBjpCAXlZWVmh4Y1VUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVlxjb3SIj5akqa+zucbT593AmYhmXWFyWDwlq5mbn5aSiIeMioJ/gpikqYlzXVZWZHt1XlZUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVlxpbHqBkJaVoqmkuMLQ4uLUuZx9XEZQXTMVpZ+jppSTjY6WkZGUi6Omh3BoV1dkfHpoWFZUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRVWVxjaHOIipihnaKfrcDK2+zSs5F0a1AyPjIQnaWyuaKTk6ajqZyfq6WHdnB0Y2l9fG5eYV1UVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRVWFthYGiGkZGaoKynprnL2OrbxKGXd188JBkMmKa3xq6Xl6Kuqaqnu5F7b3dxdIqIe3NuZWRXVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVlpeaXd1i5KbqayjqLzC2eTgyLmchXRgQSIHmJ+su7SZmZ2sq6aonI94f36MmKaQhX15e2laVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVVdeZ3WAfI+VmaKjr7/Jz8rHuqOghWE8Ox4DmpyisbCrmJmlp62biYGQi56Roq+dlomAg2tXVVRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFVdYW56iI6Wmp+irMDTzrygloKBemxOLRQCkZmirKysmpmgpquljYWGiqOXqLu2pJCQh2lbVlVUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFVUVl1kZXZ6gYuXpZ+osLXC0r6be2dcVEdFNBQAd5Kbo6mwoZ2gpqeml5KVpaamt8CwpJ+ZfWxbVlVVVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVlpnX2podXd3fZCeqaGrsLbDz8Cokn5jTUMtHRECb4eRnKmwsp+ipaWempmdoq62y7mvqaeXiHNpXVVVW1tUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFZcY11ncm+FkJOhpaazv7jBzM+ylH1mb2JOMxcEX4CNnqersaShpbKlpKuenLG7x8G4uruvm31wYlhcaGpUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUV11rbH+KjpeZq62xs6+6zcPAoYaMiXVQQzEaa3eMmJ6osbarqbO3r6ytnpyqu8/U2NfHpoZvZVxfbm5UVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRVWWRkZ32HipePoqipr6uxwr25r6aikYh1YTwmbHSDkJmjq7eyq7HAuLy5r5yiqLbS8ezKrph/aWFia2dUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRVXV1faHN3fICHn6iqnaeorbbDyrmhnYd2dE45aGt+i5iepLK5rrC1xNLQvqagrqu43vPkxKOPeGlxbmFUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFhdZVlfYGJqaXh7hYyNnaKaoLyywqCJhYx5Z2NcZ2p2iJebo628v7Gyts3eyrirv7O42Pnx0rihh3BxdWlUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRYWldbXGBlaHJzeIaImqqZnKWzsI94cnl7f2hNZ2lsfZGepLa8wMW/tMPX0NnMwrSxwObu3cy5loVzeGZUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVlVYXGBkaG1wfXqIj5ONlJWdrJ98YWFsbmZKaml0cYSZo6izurvAxcnK0+fv1NC0sdX07cvDpZR5eG9UVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFZZWWFiZ2t3doCLh4qUlIuSnJmCY1dVWlYva2xzd32RnqKpsLe6wMDE0uXs3te+ssfm+OC9r6CEfm1UVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVVVWWF5gY2lyfn6IgYqXmpqEfHx6bVtVST8lcHBzhnqLmKGnrLO4uL3CyuH1/dvEtMnk++jMvqaMeHRYVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFZWWF1iYmlzd3yGgoeRmJSWf2lcXl5gTzsQfnN8hICHlaKmqautsbnAxdzu+u3VytHb7PrvxaSPfXBrVVRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFVVWFxgYmhucHuFioyVk52NdmhgVkRIPzQfiHZzeHl9kpyjpaWmqa67xM/T6efs0tnj7PnwzKaOe3BiVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFZWWVxhY2VqdICIjpKSlp+RfGBMSEQpIRMNlIF1eHx8iZmjpamqp628x8vM3eXjxtLm+OHKspZ/dmBUVFRaVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFVXWl9eYGRvhJKmnpqtpp6feldNRUVHNjAjlImQhH99i56rtLu8r6++yMnY5e3bxcjP99uvkoFwWVRUVFVhVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVVdYW2FgZ3F7lKe0ubSqqaqWdGdyZF1FMikhk4uWkIKEh522zMa8srPH1OXu/+Xow7q04byhgWJUVFRUVF1gVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVVdZXGVkdHqKmKW+z7+6tbKphYqUgHBTQTQeq4+UoYuGkpijq7a2tLfR4uP17tfd0a+rtZt9aVZUVFRUYGhlVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRUVFRVVldaYWdue5ChprrN38rFvsm/nKyiiHJhSSsf"},"antigua":{"name":"Antigua Guatemala","lat":14.5,"lon":-90.8,"radiusKm":16,"g":96,"zoom":12,"minM":526,"maxM":3955,"missing":0,"summits":[{"i":23,"j":47,"m":3955},{"i":22,"j":56,"m":3708},{"i":66,"j":59,"m":3751}],"b64":"cnd3d3d2dnZ2dnZ2dnV3dnN3dXVzc3NycHJ0c21sZmJhYmRgXl1dXFpcW1xdXFxcXFtcXFxdXV5fXl5eYWpuaWhmYWRnZmZoaWlnbG9qbmlta2poa21tb210eHp7enp9cHZ2d3d3dnZ3dnV3d3Z3eHZ1eHV0dXNxcXNxcWxkYWBfX19eXl1cXV1aWlxdXFxcXFtcXFxcXV1eXV1eXmdsamViYmRjZ2lpa2xpb25ub2ptbWtoam1vcnN1eXp6enl+bHV3d3d3d3d3d3Z2eHd4eXl2enZ1dnJ0c3Nxa2ZjY2FgX2BeXl1cXV1dWVlcXFxcXFxaW1xdXF1dXV1dXl5gZWNlXl5jaGdoa21tb3JwbG1wbmxqa21vcXJ1eHp6fHx9c3Z3eHh3d3h4eHh3eHl4eXp3e3h4dXV3dHVzb2tmZmdjYmFeXl1dXV1cXVhZXFxcXFxbWlxcWFxcXV1dXV5dXV1bXGViZ2hqamxvcnNzbnJ0cWxsbGpucHFzdXZ5e319d3d3eHh3dnd4enh6eXt7enx7eXp9d3l7dHd2cm5qZ2RlY2NhX11dXV1dXFxaW1xcXFxbW1xdW1pcXFtdXV1aXFpdXmVoaWxrbW9wdHhycnR1b3Bwbm1pbnBydXV6eHp6dnV4d3d0eHl5enp7e3t+e35/fH5/eXp7eXl0cGloY2FhZGBgX19eXV1dXVxcWVxbXFxYVVdcXFZaXFpcXVxZW1xcXl9maGpqcHBxdHp7dnR0dHBxb29sb3FzdHV4eXl6dnd1cnR0dnd5en17fn+AfYCCfX6BfX6AenZvaGVlZmRlZGJfX15eXV1dXVxcXFxYWlZZVFZWWlpXXFhcXVxXXFtcX2ZraWtscXR0dn9/eXp6d3RzcHBubXFydHV3d3d4c3RwdHd4d3d7fHx+foCCgYeCgIOGgn53cGpnaW1qaWZkY2JgX19eXV1dXVxcXFxXW1xbWldSUlhYW1hcXFtZW1tcYWJtbG9scXh3eYKEfH97enp2dnBvbXFvcHJ1dnd6cHJ0dHZ4eXp7fH5/gIOGhomEhYiEeHNwa2ltcG5sa2dkYmNhYF9eXVxbXFxcXFhcXFxcXFpZW1NTV1hYW1daW1lcY2prb3JxdH1+e4mFhYCCgXt0cnJxcW9zc3R1dnZ3bXRybnBzdXd5fX+Ag4aLjIiHiIJ+d3JrbnB0dnBqaWdkZGVkYWBfXl1cW1xZWVxcXFxcXFxaVFJSU1RXWVRaW1ldZmtqb3R2dXuChoqRh4eCfH5+enNzc3Fyc3R0dHZ6bHBscXN2eHt7fYCDho2Mk4mKiH90cG1vdHB0c2xubmxoZmdnZGNjYGFdXVxcW1xcXFxcXFxaWVZSUVZXUlhaV1xiaGpubXR+d3qKj46QkIWGhYJ/eXZ0cXJzc3N0dHV3aGRtcXB1dXh6f4KFio2UlY6PhX50c3B3enVwdHBvbnJrbGloaWxlZWZfXV1dXFxcXFxcXFtYWVhUVVBUVVJWW2FmaGlsb3J1dnh8g4SIj46OiIV9eXZzdHNzc3Nzc3RzWmBjbnJ0d3p8f4SJjJCXmJWMhH52cXR6fHpydnJzdXVzcG5ucG5raWhhXl5dXVxcXVxbWFhZWVhZVVNPU1ddXV9iZmZrcm9sbXBwdnqBh4+RiYN9end1dXR0c3JzcnNzXl1ncHJ1eHp8f4SHipOcnJCJg3l5c3R8gH10eHl6end8enZ0cGtnZWZhX15eXl1eXVxbWVxcXWBeW1hQVFlWW1xfZWdlZWVkaG5ydHR4gYyLioR+eHp3dnVzcnJycm9zV1lqb3Nydnl9goeOjpCYl46Jf3p6dXmBfnZ4foCCfnyCgHp0dHBtaGRiYGBfX15dXFtbWl1fZm5sZVxUUFJQVF1gXVldZGZrdHNxanF6hot/iIaBgHx4eXVzcXJxcXFxV2NtbmxwcXV5f4mOk5GKg4yIg313eH6Ggnt8g4iLhICIg359d3BvamVkYmFgX15dXV1cXV9jZnNuYVhYUk5OVFpaVl9ianJwbGhoZnB9hH9/fYeCfX59eHl1cXFwcW1wUl1raGdvcnV6foCJjoZ8eYeOgH+BeXqBhH+HioyIhISIgoB6dW5qZ2ZjY2JhYWNgYV1gZWJrc3VuZWZfUlBNUVRSVFpgaHNuY15ha3V8gHx2dYF9g4F6f3t1d3FwbW5sT1lmZWhqbnJxeIKHg3hzeYOKiIeBg4eDhYKKjYeDf4KEeHlwbGpoaWhmY2JiYWVgXmFeZ2lsdoF3ZV5ZWVNOTU5TVlxjb3JjXVhfZm16fnp5cHRzgoGAhn54d3JxcG9tT1RgYGRfZmpzfXt2dW50goaSk4qJhY+IhoWKjIeDfHt5e3l6d3Nwa2dnZGNiY2FgYGRgYWNocXVuaWFiXlZTT01OWV5laGZdVVdfZXB2e3RubG54g4mBgX98dnZzc3BsTVNVXVhYZmxydG1qaG53go+Vl5CLioyFiIqLi4WAgH6BiIJ9d3NxbmxraGNjZWFgYmZmZ2tmanFsaGFpX1xaT01NT1heW2RWUVRZY3BscWtpbGx2dHt3dXlzd3Nwb29uTFBSU1VcZmloY2Bmc3qEh4WKjIaLjYyIiYqNioaIhYSFjYaBfHRxcG9rZmVmZmVjYmNma2xob3FxcWtpY2NfUUxMTE5UWFdQUFJfaG5maGhkaWlsbHBvb29vdXFyb21sS09RUlVgY2VcYGZzeoCCd358gX+JjoyKioyMjo6Ri4eJkIiAfHd0cWtpaGVqaGhoYmVnaG1qcHR7cXhtbGpgVUxMTExMTU5OUFRka2xfZmpjaGdpZ2pqa21tcXF3c3BsTUxOUFVgYVlbaXBvc3N1bXVue3d+hYiFhYuOkJaZkIyOjomFgHh0dHBsaGlvbWtoY2dpbG5wcnl9eHRsYl9UTkxMTExMTE1OVVtnYF9bZXBiaGNoZmRqbGxsbW90cG9qSk5PVFpeVlhhZmViZGpobmdwbXJ2eHt7gYmPk5WYkpGQiYSCf312bmtraWxvcW5rZmlsb3N3d3R4eGlgVVFOTE1LS0xMTE1WWV5gV1hhbWthaGBkZ2pqa2prcHBxbWtoSEtNUFhYVVleYl1dZWNkZGtyeXiDiIOGf4iNjpONjoyJgIB7eXRydHJzcW5wbWpnaXFwdHRpa2hod2tjXlBMTExLS0xMTFFVU1tVWGFpamJbYl5hZWRmamtsbm5qaGdmSk1PU1JQUldaW1leXl9fZGl0eX6Ei4+MgoiJj5KNioWEhH5/e3d7e3h4c3VybGtqbXR1c2VdYlxkcmtfVE5MS0xMS0tMUlVQVlhRWWNuYVlXYFpgZmVpamtrbmxnZ2RjSE1NUE5PUFNVWFtbXl9kbHJ1eH6HkJeThYaKj4mLiYyJioSAgXt3dnZ5dnhycnBram9lbWBaVlpkcGteVVhNS0tMTEtLUU1NTU9SVGJkXlRcWV5maGlpamtrbGpnZmNiSk1KSk1RUlZZWlxeX2FkZmlwdX6LkZqYjY6GiYWEh4uIhIJ9d3l0c3J3d3Z3dXFlW15YZFdSUlZebG5lZl5TT0tMTEtLTExMTU5RWlZUVVVaY2FoaWtrbGxsa2lpaF9bRkhMTlFVV1ZXWlxfYWJma3J4foWHg4uVlYqBhH+AgIiHh4F6dnJvbW9vdHR0bGJdW1VRW1VOTVhiZ2trZVdPS0tMTEtLS0xMTU5PT1FTVFdbZmVma2xsbWxsa2tuZ2RjSkxQUVJWWFlaXF1gYmRnbHJ0dHZ3eH2OjYOAfn2AeoWKiIKFgXx0dG1scG1uXVVYVlRPTFJLTFdhYGhlYFFMS0tLS0tLS0tMVFRVWVlZW19lZWlpa2xubm5tbWpoa2ZcSElOUlRUV1pcXWBhY2Znamptb3F0eH+MiIKAfnx7dnmFgoqIg394d3BmZmpmYldQT1JMTUhJTVNbW2VlVE1LS0xLSktLS0tMWVtaYGJdXWBnaWtsbG5tcG9ubWxnYl1fTE1OT1NVWFtdX2FjZmhqa25ucHV3fISRh4OBf3x6d3R3eX+FgHt3cGxpW19hYVRLTUpHSUdHSE9YVmFgWExLSkpKSktLS0tNTU9RUVNbYWhmZW1vbHFwcHBwb2tta2VfQ0tOUVNVWFtdX2JkaGttb3BzdX+HipCWiIWDgX57e3Z0b3WAe3dxbmxmXlhcX05IS0pGRkZGRktVVV5bWE1LSktKSkpLS0tMT1RbWWJjZWhma2xxcXNycXFyb29vbGRnSUtKTE9TV1teYWNna21xc3J2fYOGiIuXjImGg4CEe3dzcG53d3dxa2VnWFFeW0xJRkZFRkZGR01OUVtVUFFPSkpKSkpLS0tMTE9VVWBkaGxsbGtydHZ2dHV1dHNzbmZpTkxJUVNUWFteYmdpbXB0dXh6gYOHioqRjouJiIiFfHdybWlobWxwaWVhU0xTVk9IRkVFRUZGTU5MUFRWTEpKSkpKSkpKS0tMTlhYX1xiam5xb3RwdXp3eHd0d3dzcWlpTlBOUVVWWVtfY2drbHJ3en19foeKjJCUk46Oj4yEf3l1cGtlXmdnaWReVEtNVFxRSUVFRkhUU01KSkxRT0pKSkpKS0pLS0tMVGFfYGFmaGlwd3Z2eHt9e3x6eXd1dHFrTlFTVFRVWlxgY2hrb3N4e4GDg4qPk5eYlpOWk4yHg31+c25mX1hcXV1cWExJTVdVUUVGRkdMWFNMSklKS0pKSkpKSkpLTExNU11dYmVpam1zend7enx/gIB+fXx2dnVwTFJVWFhbXl9eZWhrcHZ5fn+Iio6TmJqfnpuclpGQjIZ4cWlmZF9YVE9TVklJSE9OU0VGRkZHV1JQTElJSUpKSkpLSktLTE1OT1FTXGFncXNzf4GBf4OHh4SBf31+fG5tT1JVVlhbXmJkaGRrcnh9gYaJkJSXoKKkpaaknZyWioV+eHBoYVxXVlRPS1BKSEdJTUZGRkZHUUxNTktKSUpLS0tLTExMTU5OUVlfX2FjbnB7fYSHhIyJj4eFhISBdGBiTlJSVlhbXmFkaG5xdHl9g4qQlJuho6yvr7GxqJ+bkoqCfXBqZV9bV1JQTUpJSEdGR0ZGRkdJR0lJSUpKSktMTU1OTk5OT09QUVxhZGxsaXp+houOjoWJfH6Hi4V2Z1pZTk5TVVhaXmJlaWxyeH2Bh46XnKKrsLa8vcC4rqickoiBeXJrZmBcWFNPS0pISEdGRkZGRkdKS0tLS0tLTE1OT09RUFFRUVJSUllgaXBzdniEi5OShnx8cHh0enlwYFdUTE5TVlhbXmNmaW1ydn2Fi5Obqay2vsLIyMjDta6jmI+GfnZwaGJfWVdOSkhIR0ZGRUZHR0lKS0tMTE1OT1FSUVJTU1RUVFVUU1ZfaXF3foWGj5qNdm90aXFma2VtXlZTT1BTVllcX2BmZ2pvdHqDjZShsLi/xcvU0tDJv7WuoZCJfnRqZGBcVVJPSkhHRkVFRkdHSElJSktOT09RUlRWVVVWV1hYV1hYVlVXXWhxeYCIjpaMfnJnZGJhYFxgWFNUTlBSVFZZXmNmaWdsc3uEjJeksb3Ey9fg4djQy72vo5iLfXdtZWBaVlJOSkhGRkVGR0hKSkpLS05QUVJTVFdaWllaW1xcXFtcWVdYWlxgZ21zeIOEfHJpamVfVVVWU09MSlBOTlZdXl1faG10fIOJkJmnsrvI1OHv7eDTzL6xo5eLg3pwaGNdWFRPTEdGRUVHSUpKS0tMTFBSVFZXWFpeYF5fYGBgYWBgYWNgXmBjYmdrdX99g3dxd3NqXlFNUVBPRkhKS1FRU15ianF5hYaKlaKstb/M2+by7+LZzsKzqJiOg3twaGBaWFNNSkhGREZISUpKS0xNTlBTVllcXWBiZGNkZWZlZWVkZGVnbG5zc29wfHV0e4F7dmljXF5YT0hNREZKTlFTWF5kanJ6hYuRmKCotMHN2+n09ejc0MO1qZyRg3pwaWFaVVFOSkhFREdISEhJS0xOT1NWWV1fYmRlaWlqamlqa2pqaGhqbnZ4fH98dXBweX5/enVtbGphVUxGRElNTlNQVl1jZ211foePnKGntcTO3e//+ezc0cG0pZqNgXhtaGBeV1BMSUZFRUdHR0hJTE5PUVRYXGBiZmprbW5vb25wcG9ubWxsbW54e3pvamptd3aAfIB7fHFiU0pGRk5VUE1RUVdgaGxwe36IkJ6rucDK2uv48+jaz76vpJaJdnBrY15bU05LSEZEQkVFRkhKTE9SVFdbX2Nmam9xcnR3dnR2dnVzdHFwb3F1cXBrZ2dobnF8cHVzdXhqVkxFSUlOS0pQU1pYWVtgbmpyiZulqrjG0N7m5d7Qxbmrmo6BdWtjX1hTUE5HRURCQkNERklLTlBUWFleY2drbnR3eHp+fX1+fHt5eHRycnJxcHFnZmZscHh2a2xoZmhnUkpGQUJHSE9QUUhMUFZWW2FocoOSna67yNTY1tDIuaykkoh8dm1kXFRUT0lGQ0JBQUJERklMUFNWWV5hZmtydXd+gYKFhYKGgoGBfXh2dXNycHNmZWVncHluZGJlXV5dUUpGQkVISUVGTVFTYWdqb3t+ho+Ypa67x87MycO+tqiYkId5cGleVlFOS0dEQ0JBQEJERklNUVRXXGBlaG90eoCFiYqMjYqNioeGgX16dnRxcGtmZmVnbXRqYFpYVlReWEtEQkNHRkRQTVdeYWdpc3uDjZqnsr3F0NnVzMK3q52VjYN2aGBfWFBMSUdFQ0JAP0FERkpOUVZbX2NkbHJ6f4eOkpOUl5SYko2MhYF8enRxbWpoZmZwc3NqaGJWUktPVUxFQUQ/RExLTVhaYGNob3qDjZWhsL/N2uLUxrimp5+RhXlvZ2BYU1FMSkdFQ0JAPkBDRklOUlZcYGVrcHR+hI2Vm56foaGgmpeRi4aBendzb2toZ25xfX13cG1jV09FQ0FCQDhDRUhMUFVYW2FocHiFj5unscDQ3eDOwrenl5GNgHZtYltXU1BMSkdFQ0FAP0BDRkpQU1leYmhuc3yAjJWbpKerra2tpKCYkImDfnl0bmtpZ2hvenR2cHJtYldLSEY9Nz1BREdLTVFXW2Frc3qGkZ+tvcjV4unWxbeuoJCCfXNuYl1YVFBNSUdFQ0FAPkFESEtPVFpeZGtxeICJk5ymq7S6u7m1r6iflIuFfnh1b2xpZ2dsbWdrcWhsYVdRSkQ/OT0/QkVJTE9XXmVrdX6Ik6Kvv87Y6e3azcCzpZWHenJpYV1XVFBMSUdEQkA/PkFFSk1RVVpeZGtyeIOOmaWvtsDIycbEuq6imJCGf3p0b2toZmRnZmNkZWdmamNVS0Q8ODs+QUZISUtTXWNqcXuEkZ2tu8PQ3N7PwLqvn5CDeXBmYFlXU09LSEZDQD8+PEBDRktPU1hbY2xze4SPnqi3xcfV2dTPwLCkmZCHgHl0bmpnZGNkYF1iXmBjY2ZYT0U9ODo+Qj9FSU1SWF5mbniEkZymrbzFzszJvq6gnJCDeW9mXlZUUU5KSEVCQD08PUBDR0lOUldcYWdweYWRoa+6xdXj6+TTwrWpnZOIgXlybmpnYl5eWlpbW1tdY2VkU0xGNzg7PD9ESk1RVFlka3Z9jJWbpa+5v7y7tKmcjol8dGtlXVZPTUtIRkNAPjw7PT5BRUlOUVZaXmZvdoOQnau3xdLm8OXSw7SlmY2EfHVwbGhlYVxaWFhYWVdeYmJkWFFFNTU3OkFERklOUVZga3B6hY2SmqGqr62vp56UiYB4cmVhWlVQTElFREJAPjs5PD5BRUlMUFVZXWRoc36Ll6Ouu8rY3tjOwLCgl4qAeXRuamZjXltYV1ZYU1tdXGFfYVhHMTQ2Ojw+P0RKUFddZWt3e4GIjpaeoKGjnpaNgXZwZ2ZdVFJOS0dEQD8+PDo4Oj1AREhLT1VZXmZrcXuIkZ6ps7zIzcrBtqmckoh/dXFsZ2NeW1lWVVRVVVdZXVxaXlNNMDMzNDY+QUZIS1JaX2Vrcnt+go6SlZeUko2Fe25mXVtXUk5KR0RCPzw7Ojg2ODtAQ0VITFBYXWRob3iAiZOfp7O4vLuzrKCWiYR7c25rZWFcWVdUUlNQUVlZVlRaVUtNLi8vNjk8QEFETVJUWl5nbXR1fIGFi4uGhYN8dmxdWlVST0pIREJAPTs4ODY1Njo/QENIS1FVWl5la3F6goqTnaipra6nnpmNhXx4cWtmYV5cV1RSUFFMU1ZVTlhSSUI/Ki8yMzY5PkJHSkpQWFxiaGtzdXh5gYKGd3ZybmZgUlBRSUpFQz89Ozk4NjQzNjk8PkJGSU1TVlldZmpweH6KkZufnZ+ck42HfnVvbGhjXlpYVlJPTUtLT05LT1hLQzw5Ki0vMjU5PT9CQ0dITVJaZ3Jsa211eoSCdWpqZF5aVktPSEZDQD07OTY2NDIyNDc6PUFCRkpPT1RdX2JpcXh+ho2QkJCPiYJ8enJrZmNfXFhUUk9NSUlJTktLVFRKQDY2Ki0vMTQ1ODs7QkJITFRcZGxjY2ltb4Bza1pgXVlUUUxFRkFAPjs5NzU0MTEwMzU4Oj0/REhJTVFYWlxiaHByfYKDhISEgXd3cG1lYVtcV1RRT0xKSEdHRERNTlNORTg0KistLzIzNjg7PUBCS1BXX15bXmRndXNrXVJSUlFSTEdEQUE8PTk2NTQyLy8wMTM1ODo+QkRGSU9QU1ZcYWdrcXh2eXl3dnJrbGViXFpXVFJOTUlIRUVBQUNHTFBTT0A0KCkrKy8yNDI5OzxBRktSVltRWmFpamViVk5MTkxJS0VDPDw5OTc1MTAwLystLjEzNDg6PUBDRkpKTFFWWl5jaGxsbGtsaWlmZFxcV1VSUE5LSkdGQ0M/QUlMSUpFOjUxJigoKy4wLDU1NTo8REhMTlJQVl5fW1pWUEtER0JHRT88Ojk2NTU3LS0tLC0qLS4wMjU3Oz1CQkNDSU1PVFZdYGNjYWJiYWBgW1hWUlFOTUtJRUVDQkA/QURCQ0k6NjEwJCQpKiwpMDAxNDU7PkFDRkhPTlJTVFRNS0w9QD0+Pjw4OTQ0MjExLSsqKyolKiwuMDM0Nzs8Pj1CRkdMTFJXV1laWFhZWFlZV1RRTU1KSUhFQ0JBPz0/QD1BSEo6MjAyISQnKCosLS4wMTI3Ojs/QkVJSEpNT09HQkA+PTk1ODY0NDIxLy4sKigoKiglKSosLi8xMzU5ODo/QENDSU1QUFFTUFJRUlJTU1BNSEdGRURCQUA+Pjs7Ojw9QkA2MDA3ISMkJiYqKystLS8yNTg7PEFEQ0hKSUhDPzc2NzcyMjAwMC8tLispJyUmJSUhJykrKysvMTE0Mzk7Pj9DRUdJSUtMS0xLTExMT0tHR0NBQEFAPjw8Ozo5OTcyNDIwMDE7HyEjJCUoJykqKy4wMzc3PD89P0NDREQ9OTUxMzIwLiwtLCwrKyknJSIkIh8kJSYnKCosLS8wMjY1OTxAQEJDQ0NGR0ZFRkdGSENCQz8+PT09PDs6OTg4OTExMDAwMDNDHh8hISQlJiYpKiwvMjM1OTo5PD0+Pz45NTAsMTAtKSkqKSkqKSYlIyEhHCEiIyMlJigoKiwuMTE0Njk7PD0+Pj4/QkBCQkJBRUA+Pjw6Ojo6OTg4NzczMjEwMDAwNEJFHB4dICEiJCQlJyotLjIzNzU3OTo6OTg3MCsqKi0pKCYnJiUoJiQiIh8fGx8gISIjIyYnJyoqLS8wMzU3ODg6OTo6PDw+PT08PTs6OTg4Nzc3NzU1NjYyMjExMDE4PUVEGx0dHh4gISIlJicrLi8xNDM2NzU1NTIwLSYnJyYlJSMkIyMlJCIgIB4dGh4eHh8gISIkJikmKy0tMTEzMzU1NjY2ODg6OTk3ODY3NzU2NDQ1NDMzMjExMTEwMTM0OT1GGRkbHB0dICEiJSgpLCwwMDAxMi8yMS8uKiUjIyIiISIhICAiIyIeHh0bGBwdHR4fICEiIyUnKCorLC4wLjExMjIxMzQ2NjU0NDIzNDMyMjIzMzIxMTAwMDAxMTM8QERGGBkaGhodHh8hIyYnKSwtLC0vLy4uLCgsJyIgIB8fHx8eHh0hISEcHBoaFxobHBwdHh8jIiIkJicoKiotLC0tLi8uMDEzMTIwMDAxMjEwMDAxMTEwMDAvMDM3OzI5O0BCFxcYGBsaHR4fIiMkJicpKissLC0rKiIlHR0eHR0dHBscHB0bIB8bGhkYFRkaGhoaHBweICAhJCUmJycpJygqKysrLC0wLi4tLS0uMC8uLS4vLzAvLi8vNjlAPTQ5Pj1AFRYXFxkaGxweICEjJCQnKCkpLCsrJR0bGhsbGxoaGhoaGBsdHB0aGBgXFBcYFxkeGxodHR0gISMkJCUmJSYmKCgoKikrKisqKiosLCssKy0tLi4uLi4yP0E9OjdARklLFBYUFhcZGhsdHh8gISMkJykoKSsqIxoYGBgYGBgYFh8hFhcaGxsbFxYWEhYWFhsYFxkaGhweHyAhISIjIyQkJCUkJiYoKCkoJygpKSkqKS0tLC0uLjAyREE9PTw+QUhJExQTFBUXGBkbHB4cIScpLSwtKykmHBcWFRYWFhcWFhodFBYWGBcXFRUUERQUFBUVFRcWGRscHR4fHyAgICEhIiIiIyQlJSYlJSYnJygoKCgsLS0vOzw9RkdFPkJEQEJGEhISExQVFhgZGB0eIyMoKSYoJCMeFhQVExMUFRUUFRYUExQUExMUFBMTEBMTExMTFBUVFxkaGxwcHR0dHh8fHx8fICAiIiMiIyQlJSYnJyktODM1PDs8RElIRUdHSUlKEBEREhIUFRcYGhwdHSQnJR4lIiEbFBITEhITExMSEhISERMSEhESEhIRDhESERESExMUFRcYGRkaGxsbHBwcHB0dHR4fICAgISIjJCQuKi0zOUE/PDY9PT07Q0hJSUlHEBAPEBMTFBUWGh0hIx4cGxcgIBkXFBEREBESExERDxARERERERAQERAQDw8QDxAQERETFBUVFxcYGBkYGRoZGhkaGxsdHR0eHyAgJSo5MzcwOD83OTQ6NTk1ODxFP0VDDQ0OEBETEhQUFB0dGhkWFBQZGhgSEhAQDxAREQ8PDQ8OEBAQDw8PEA8PDgsODg4PDxARExMUFRYWFhYXGBcXFxgYGRoaGxscHR4rLTU4LC0vOTs0LDEzMzI2MTw+Pj5BDAwODg8RERITExMTExUSERIUFhYTEhEPDg0ODg0NDA0ODg8ODg4ODg4ODQsNCw0NDg4QERESExQUFBQVFRUWFhYWFxcYGBkaHCcmKjEyMiYtLzwyIB0wLygsNTw3QkE/CwsMDQ4PEA8REREPEA8QERESExoYFBMNDQwMDA0MCgoNDQ4NDQ0NDQ0NDAoLCgsMDA4PDxARERESEhITExMUFBQUFRYWFhYZGiIgLC0rLCQrNDouHBsmKSQwOTY2PkE/CgoKDA0ODQ8PDxAPDw8OEA8SExUZFxAMCwsJCwwMCAsMDQ0MDAwMDAsLCwgKCAoKCwwNDQ8PDw8QEBARERESEhISExMUFBgbGiAcIyUmKCIoLzMsHBgeHhspLCcxOj04CQkKCwsMDQ4PDhAPDg0NDw8QERYaEA0LCgkKCgoLBwsLDAwMCwsLCwoKCgkGCAgICgsLDA4NDQ4ODg4PDw8QDxARERESEhYZIiEaHiMjIyAlISIiGxAVFiEqICIzOUg5BwgICQoKCw4PDw0ODQ0MDQ4PERYXFBELCwsICQoJBQsLCwsLCwoKCwoJCAgGBwcICAkKCwwLCwwMDQwNDQ4ODg4PDw8PERMbIx4aGBshIBwlHxUZEg4VHBofGyEnOT4yBgcMCQgKDRAODg4NDQwMDQ4ODxITDAoIDQ8QDQUFCQoLCwsKCgsJCQgIBwcGBAQGBwgJCgoKCgoKCwsLCwwMDAwNDQ4PEBMdHxgWFx8dGhohHA4RCg8PExcXHyYyMDUwBQgJBwgLDRAPDw8PDAwMDRMSERIXDAgJDg4REQYCCgoKCgsLCgsJBwcHBgUFAwQFBgcICAgJCAgJCgkKCQoKCgsLDAwNGRsgGhcPFh8bFBUVFA0KEBYaGxofJi8tKzIrBQcIBgwLDBIRDg0MCwwNDxUWFBcSCwUNFBQSDwsECQkKCgsKCgsJBwcGBgcEAgIEBQUGBwcHBwcHCAgICAkJCQkKCgsLECEkGBANGRsQEhQHCQsJDxUYISEqJyopJCgjAwMECQ4LDA4VFg4MCw0MDhQZFxEOCAMJERMNCQgABgoKCgsLCgoJCAgQEwsNAgEDBAQEBQYFBQYGBgYGBgcHCAgICQkKCxkgHA8IExcLExECAgINExkgJCofICEfHCEn"}};
+var FAR682 = { where: null, regions: {}, cross: null, fade: null, title: '', crossings: 0, homes: 0, wokeHome: 0 };
+const FAR682_W = 1600, FAR682_EX = 1 / 20, FAR682_D = 9000, FAR682_BASE = 3;   // TRUE proportions, 1:20 across and up (Su 35: at 1:12.5 she arrived over the highlands squeezed under her 166 m ceiling); 9 km out; 3 m above the sea (never "water")
+function farBearing682(id) { const r = HZN700.real && HZN700.real[id]; return r ? Math.atan2(r.at[0], r.at[1]) : null; }   // the yaw that faces it (forward = sin, cos)
+function farRegion682(id) {   // built the first time she crosses to it (under the white)
+  if (FAR682.regions[id]) return FAR682.regions[id];
+  const d = FAR682_DATA[id], b = farBearing682(id); if (!d || b == null) return null;
+  const g = d.g, bin = atob(d.b64), cx = Math.sin(b) * FAR682_D, cz = Math.cos(b) * FAR682_D, Y = new Float32Array(g * g), hM = new Float32Array(g * g);
+  for (let k = 0; k < g * g; k++) { hM[k] = bin.charCodeAt(k) / 255 * (d.maxM - d.minM) + d.minM; Y[k] = FAR682_BASE + (hM[k] - d.minM) * FAR682_EX; }
+  const geo = new THREE.PlaneGeometry(FAR682_W, FAR682_W, g - 1, g - 1); geo.rotateX(-Math.PI / 2);   // row 0 north (-z), column 0 west: the grid's own order
+  const pos = geo.attributes.position, cols = new Float32Array(g * g * 3), col = new THREE.Color(); let lake = 0, top = 0;
+  for (let k = 0; k < g * g; k++) {
+    const m = hM[k], isLake = id === 'tahoe' && Math.abs(m - 1897) < 7; pos.setY(k, Y[k]); top = Math.max(top, Y[k]); if (isLake) lake++;
+    col.setHex(isLake ? 0x3f8fc0 : id === 'tahoe' ? (m > 2650 ? 0xe8eef2 : m > 2400 ? 0x8e9a8a : m > 1905 ? 0x4a6e48 : 0x7a8a5a) : (m > 3300 ? 0x55514d : m > 2400 ? 0x6f6a5a : m > 1600 ? 0x3f6b3a : 0x5b8a4f));
+    cols[k * 3] = col.r; cols[k * 3 + 1] = col.g; cols[k * 3 + 2] = col.b;
+  }
+  geo.setAttribute('color', new THREE.BufferAttribute(cols, 3)); geo.computeVertexNormals();
+  const mesh = new THREE.Mesh(geo, new THREE.MeshLambertMaterial({ vertexColors: true })); mesh.position.set(cx, 0, cz); mesh.name = 'far682:' + id; scene.add(mesh);
+  const base = new THREE.Mesh(new THREE.PlaneGeometry(6000, 6000).rotateX(-Math.PI / 2), new THREE.MeshLambertMaterial({ color: id === 'tahoe' ? 0x6f7f55 : 0x5b8a4f })); base.position.set(cx, FAR682_BASE - 0.5, cz); base.name = 'far682base:' + id; scene.add(base);
+  return (FAR682.regions[id] = { id, name: d.name, c: [cx, cz], b, g, Y, mesh, base, top: +top.toFixed(1), lake });
+}
+function farGround682(x, z) {   // the real ground under (x, z) in the place she is in (bilinear on its grid)
+  const Rg = FAR682.where && FAR682.regions[FAR682.where]; if (!Rg) return -1e9;
+  const u = (x - Rg.c[0]) / FAR682_W + 0.5, v = (z - Rg.c[1]) / FAR682_W + 0.5; if (u < 0 || v < 0 || u > 1 || v > 1) return FAR682_BASE - 0.5;
+  const g = Rg.g, fx = u * (g - 1), fz = v * (g - 1), i = Math.min(g - 2, Math.floor(fx)), j = Math.min(g - 2, Math.floor(fz)), a = fx - i, c = fz - j, Y = Rg.Y;
+  return (Y[j * g + i] * (1 - a) + Y[j * g + i + 1] * a) * (1 - c) + (Y[(j + 1) * g + i] * (1 - a) + Y[(j + 1) * g + i + 1] * a) * c;
+}
+function farToward682() {   // at home, past the edge, flying: is she heading out toward a real place? (where she is AND her heading, near its bearing)
+  if (FAR682.where || FAR682.cross || S.mode !== 'fly' || S.tut !== 0 || S.quick) return null;
+  const at = Math.atan2(S.pos.x, S.pos.z), off = (p, q) => Math.abs(Math.atan2(Math.sin(p - q), Math.cos(p - q)));
+  for (const id of ['tahoe', 'antigua']) { const b = farBearing682(id); if (b != null && off(at, b) < 0.45 && off(S.yaw, b) < 0.6) return id; }
+  return null;
+}
+function farEdge682(dc) {   // stands where "dc > EDGE" stood in the flight: true = the old turn-back
+  if (FAR682.where || FAR682.cross) return false;   // in a far place (its own edge, farTick682) or mid-crossing
+  if (dc <= EDGE) return false;
+  const id = farToward682(); if (id) { FAR682.cross = { to: id, t: 0, swapped: false, from: null }; FAR682.crossings++; return false; }
+  return true;
+}
+function farFade682() { if (!FAR682.fade) { const f = document.createElement('div'); f.id = 'cross682'; f.setAttribute('aria-hidden', 'true'); f.style.cssText = 'position:fixed;inset:0;pointer-events:none;opacity:0;background:radial-gradient(ellipse at 50% 45%,#ffffff 0%,#eef4f8 55%,#d8e6ee 100%)'; const c = $('c'); if (c) c.after(f); else document.body.appendChild(f); FAR682.fade = f; } return FAR682.fade; }
+function farPlace682(yaw) {   // her, the bird and the camera together (the flight camera eases, so it is set behind her: no 9 km swoop as the white clears)
+  S.yaw = yaw; S.camYaw = yaw; S.camCut = true; if (bird) bird.position.copy(S.pos);
+  camera.position.set(S.pos.x - Math.sin(yaw) * 12, S.pos.y + 4, S.pos.z - Math.cos(yaw) * 12);
+}
+function farSwap682(X) {   // at full white
+  if (X.to === 'home') {
+    const b = farBearing682(X.from) || 0; FAR682.where = null; FAR682.homes++;
+    S.pos.set(Math.sin(b) * (EDGE - 20), 0, Math.cos(b) * (EDGE - 20)); S.pos.y = Math.max(groundAt(S.pos.x, S.pos.z) + 18, 30); farPlace682(b + Math.PI);
+    FAR682.title = 'home'; toast('Back over your island.', 2600);
+  } else {
+    const Rg = farRegion682(X.to); if (!Rg) { FAR682.cross = null; return; }
+    FAR682.where = X.to; const e = FAR682_W / 2 - 60;
+    S.pos.set(Rg.c[0] - Math.sin(Rg.b) * e, 0, Rg.c[1] - Math.cos(Rg.b) * e); S.pos.y = Math.max(farGround682(S.pos.x, S.pos.z) + 25, Math.min(S.pos.y || 0, CEILING - 10)); farPlace682(Rg.b);
+    FAR682.title = Rg.name; toast(Rg.name, 3200);
+  }
+}
+function farTick682(dt) {
+  const X = FAR682.cross;
+  if (X) { X.t += dt; const f = farFade682(), up = 0.9, hold = 0.35, op = X.t < up ? X.t / up : X.t < up + hold ? 1 : Math.max(0, 1 - (X.t - up - hold) / up);
+    f.style.opacity = op.toFixed(3); FAR682.peak = Math.max(FAR682.peak || 0, op);
+    if (!X.swapped && X.t >= up) { X.swapped = true; farSwap682(X); }
+    if (X.t >= up * 2 + hold) { FAR682.cross = null; f.style.opacity = '0'; } }
+  if (FAR682.where && !FAR682.cross) {
+    const Rg = FAR682.regions[FAR682.where];
+    if (Rg && Math.max(Math.abs(S.pos.x - Rg.c[0]), Math.abs(S.pos.z - Rg.c[1])) > FAR682_W / 2 - 15) { FAR682.cross = { to: 'home', t: 0, swapped: false, from: FAR682.where }; FAR682.crossings++; }   // out of its edge: home
+    const l = $('land'); if (l && !l.hidden) l.hidden = true;   // flight only in this piece (B2: landing there)
+  }
+  if (!FAR682.where && !FAR682.cross && Math.hypot(S.pos.x, S.pos.z) > 2000) {   // a reload while away (FAR682 is not saved): wake on her island, at the edge facing in
+    const b = Math.atan2(S.pos.x, S.pos.z); S.pos.set(Math.sin(b) * (EDGE - 20), 0, Math.cos(b) * (EDGE - 20)); S.pos.y = Math.max(groundAt(S.pos.x, S.pos.z) + 18, 30); farPlace682(b + Math.PI); FAR682.wokeHome++;
+  }
+}
+function farPeek682() {   // the bench's read (window.__wfr.far682), never the player's
+  const rg = {}; for (const id of ['tahoe', 'antigua']) { const r = FAR682.regions[id]; rg[id] = { bearing: farBearing682(id), built: !!r, c: r ? r.c : null, top: r ? r.top : null, lake: r ? r.lake : null, name: FAR682_DATA[id].name }; }
+  return { where: FAR682.where, crossing: !!FAR682.cross, fade: FAR682.fade ? +FAR682.fade.style.opacity || 0 : 0, peak: FAR682.peak || 0, crossings: FAR682.crossings, homes: FAR682.homes, wokeHome: FAR682.wokeHome, title: FAR682.title,
+    ground: FAR682.where ? +farGround682(S.pos.x, S.pos.z).toFixed(2) : null, gAt: +groundAt(S.pos.x, S.pos.z).toFixed(2), pos: [+S.pos.x.toFixed(1), +S.pos.y.toFixed(1), +S.pos.z.toFixed(1)], yaw: +S.yaw.toFixed(3), mode: S.mode, landShown: !!($('land') && !$('land').hidden), regions: rg };
+}
+function horizonTick700() {   // every frame: the haze takes the live fog colour; the dusk and the night darken the islands with the sky
+  if (!HZN700.u || !scene.fog) return; const f = scene.fog.color; HZN700.u.uFog.value.copy(f);
+  HZN700.u.uK.value = Math.max(0.22, Math.min(1, (0.2126 * f.r + 0.7152 * f.g + 0.0722 * f.b) / 0.85));
+}
+function horizonPeek700() { const m = HZN700.mesh; return { built: !!m, inScene: !!(m && m.parent === scene), shown: !!(m && m.visible), groups: HZN700.groups, tris: HZN700.tris, rMin: HZN700.rMin, rMax: HZN700.rMax, edge: EDGE, real: HZN700.real || null,
+    compiled: !!(renderer && renderer.info.programs.some((p) => String(p.cacheKey || '').indexOf('aHaze') >= 0)), uK: HZN700.u ? +HZN700.u.uK.value.toFixed(3) : null, fogNow: HZN700.u ? HZN700.u.uFog.value.getHex() : null, fogScene: scene.fog ? scene.fog.color.getHex() : null }; }
+try { horizonBuild700(); } catch (e) { console.warn('horizon 700 stopped: ' + (e && e.message)); }   // the fog is the sky's horizon colour, so the island fades INTO the sky
 /* SHADOWS (Itachi, board 538): one sun shadow that follows the bird - a small sharp box round her, not the whole island */
 renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 if (window.WFR_ATMO) WFR_ATMO.grade(renderer, THREE);   // 613: a gentle filmic tone curve inside every material (no post pass); exposure follows the clock (atmo.js)
@@ -701,6 +846,7 @@ const wxDay = () => (S.dawns || 0) + (S.clock < 150 ? 1 : 0);   // the day she i
 const wxOf = (d) => window.WFR_WX ? WFR_WX.roll(d) : 'clear';
 const wxGated = () => S.mode === 'menu' || S.tut !== 0 || !S.nestDone || (S.dawns || 0) < 2;   // the opening days stay sunny, and the title screen's flight (Obito: rain and its sound under the opening song)
 const wxKind = () => WX.force || (wxGated() ? 'clear' : wxOf(wxDay()));
+const wxLevel699 = () => WX.force ? (WX.forceLevel || WX.force) : wxGated() ? 'clear' : (window.WFR_WX && WFR_WX.level ? WFR_WX.level(wxDay()) : wxKind());   // 699: drizzle / rain / pour / storm (a forced kind keeps its own level unless a bench names one)
 const rainy = () => wxKind() !== 'clear';
 SKYKEYS.rain = ['#6f7b88', '#8b96a2', '#a7b0b9', '#b4bbc2', '#aab2ba'];   // overcast greys (his eye rules)
 SKYKEYS.storm = ['#3e4652', '#58616d', '#737c87', '#80888f', '#7a838c'];
@@ -1234,6 +1380,7 @@ const WELL_TOP = H(VILLAGE.x, VILLAGE.z) + 1;
 var SKY_GROUND = null;   // 610: the sky island's disc is ground once she is on it (skypiea.js ground; set below, after SKYEND)
 function groundAt(x, z) {
   let g = H(x, z); if (SKY_GROUND) g = Math.max(g, SKY_GROUND(x, z));
+  if (FAR682 && FAR682.where) g = Math.max(g, farGround682(x, z));   // 682 B: a real place's ground, as the sky island's joins (FAR682 is a var: undefined, never a throw, while the world is still being built)
   for (const t of TREEHOUSES) if (Math.hypot(x - t.x, z - t.z) < 3.0) g = Math.max(g, t.y + t.th.platformTop);   // a tree house's deck
   for (const h of houses) {
     const L = toLocal(h, x, z);
@@ -1547,10 +1694,16 @@ addEventListener('pointerdown', (e) => { if (S.quick && !(e.target.closest && e.
 const NAV = { t: 9, last: '' }, NAV_CELL = 72, NAV_ORIGIN = -720;
 function mapCell(x, z) { const c = Math.max(0, Math.min(19, Math.floor((x - NAV_ORIGIN) / NAV_CELL))), r = Math.max(0, Math.min(19, Math.floor((z - NAV_ORIGIN) / NAV_CELL))); return String.fromCharCode(65 + c) + (r + 1); }
 function playClock(sec) { const s = Math.max(0, Math.floor(sec || 0)), h = Math.floor(s / 3600), m = Math.floor(s / 60) % 60, ss = s % 60; return h + ':' + String(m).padStart(2, '0') + ':' + String(ss).padStart(2, '0'); }
+/* 699 PIECE 2 (Marth, Oct 23: "THERE ARE NO CLEAR INDICTORS"): today's weather and tomorrow's at the front of the clock line. The weather is
+   fixed per day, so tomorrow's sign is a true forecast. A forced kind (a bench) shows itself twice. DRAFT signs. */
+const WX_SIGN699 = { clear: '☀️', drizzle: '🌦️', rain: '🌧️', pour: '☔', storm: '⛈️' };
+function wxNext699() { return WX.force ? wxLevel699() : wxGated() ? 'clear' : (window.WFR_WX && WFR_WX.level ? WFR_WX.level(wxDay() + 1) : 'clear'); }
+function wxSign699() { if (!window.WFR_WX || !WFR_WX.level) return ''; return (WX_SIGN699[wxLevel699()] || '') + '›' + (WX_SIGN699[wxNext699()] || '') + ' '; }
 function navHud(dt) {
   if ((NAV.t += dt) < 0.5) return; NAV.t = 0;
   const txt = '\u23f1 ' + playClock(S.played) + ' \u00b7 ' + mapCell(S.pos.x, S.pos.z);
-  if (txt !== NAV.last) { NAV.last = txt; $('navHud').textContent = txt; }
+  const txt2 = wxSign699() + txt;   // 699 piece 2: the forecast first, the clock and her square after (nav631 reads the end)
+  if (txt2 !== NAV.last) { NAV.last = txt2; $('navHud').textContent = txt2; $('navHud').setAttribute('aria-label', 'weather today ' + wxLevel699() + ', tomorrow ' + wxNext699() + '; play time and map square'); }
 }
 function hud() {
   $('lvText').textContent = 'Lv ' + S.level;
@@ -2806,7 +2959,7 @@ function coldTick(dt) {
   coldWord632();   /* 632 grace: the narrator's word, once */
   if (cd.stage === 1 && wxDay() - cd.at >= 2) { cd.stage = 2; save(); careStats(); toast('Your chick\'s cold is worse: 25% slower now. 5 apples and 2 blueberries will mend it.', 4600); }   // a second night untreated (after the live gate: raised in the menu its word was lost: Obito 7); DRAFT
   if (rainy() && WX.k > 0.5 && !(S.seen && S.seen.rain) && $('toast').hidden) { S.seen = S.seen || {}; S.seen.rain = true; save(); toast('Rain! A chick left alone in it can catch cold. Stay close to your nest.', 4600); }   // the rule, said once, the first time it rains (Obito); DRAFT
-  if (cd.stage === 0 && rainy() && WX.k > 0.5 && !onNest() && (S.sky && S.sky.where) !== 'temple') {
+  if (cd.stage === 0 && rainy() && WX.k > 0.5 && !onNest() && (S.sky && S.sky.where) !== 'temple' && !chickCloak697()) {   // 697: a cloaked chick catches no cold
     if (coldHold632()) { COLD.wet = 0; COLD.warned = false; } else COLD.wet += dt;   /* 632 grace: no cold on the grace day, nor before the word */
     if (COLD.wet >= 90 && !COLD.warned && $('toast').hidden) { COLD.warned = 1; toast('Your chick is shivering in the rain. Go home and cover it.', 4200); }   // when the slot is free (any later word wiped it: Obito); DRAFT
     if (COLD.wet >= 110 && COLD.warned === 1 && $('toast').hidden) { COLD.warned = 2; toast('Your chick is shivering! Get back to the nest, quick.', 3600); }   // once more; DRAFT
@@ -2834,7 +2987,33 @@ function cloakMake() {   // a pointerdown on Make it: three feathers spent, the 
   toast('Three white feathers, woven light as air: a nitrogen cloak. The rain will roll off you now.', 4600);   // DRAFT
   return true;
 }
-function cloakTick() {   // every frame: the cloak on her bird's back (re-parented, so a bird swap keeps it), shown in rain only; the WET word once
+/* 697: the chick's cloak, woven by Beanda (hermits.js weave()): a little white hood over the chick, shown in rain only, sized from the chick's
+   own box each frame it shows (so every growth stage wears it). Lambert like 632 U6's cloak (lam): no new kind of material. */
+function chickCloak697() { return !!(S.seen && S.seen.chickCloak697); }
+var CHICKCLOAK697 = { mesh: null, box: null, c: null };
+function chickCloakTick697() {
+  const K = CHICKCLOAK697, on = chickCloak697() && !!chick && !!chick.parent && chick.visible !== false && rainy();
+  if (!K.mesh) { if (!on) return; K.mesh = new THREE.Mesh(new THREE.SphereGeometry(1, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), lam(0xeef3ff)); K.mesh.name = 'chickCloak697'; K.box = new THREE.Box3(); K.c = new THREE.Vector3(); scene.add(K.mesh); }
+  K.mesh.visible = on; if (!on) return;
+  const b = K.box.setFromObject(chick), w = Math.max(b.max.x - b.min.x, b.max.z - b.min.z), h = b.max.y - b.min.y; b.getCenter(K.c);
+  K.mesh.position.set(K.c.x, b.min.y + h * 0.5, K.c.z); K.mesh.scale.set(w * 0.56, h * 0.48, w * 0.56); K.mesh.rotation.y = chick.rotation.y;
+}
+function small697Peek() {   // the bench's read (window.__wfr.small697), never the player's
+  const m = CHICKCLOAK697.mesh, cp = chick ? chick.getWorldPosition(new THREE.Vector3()) : null;
+  return { eagle: eagleNext697().map((l) => l[1]), beak: S.fruit ? { id: S.fruit.type.id, ripe: S.fruit.type.ripe || 0 } : null, stats: S.chick && S.chick.stats ? Object.assign({}, S.chick.stats) : null,
+    huethers: S.huethers || 0, chickCloak: chickCloak697(), rainy: rainy(), mesh: m ? { shown: !!m.visible, inScene: m.parent === scene, near: cp ? +m.position.distanceTo(cp).toFixed(3) : null } : null };
+}
+/* 700 LEVER 2 PIECE 1 (Marth, Oct 23: "yes i like that"): the finishing grade on the Standard look, by CSS on the canvas, with a soft
+   vignette right after it (no touch, under the HUD). Classic is frozen (645): the grade follows classicLook every frame. DRAFT numbers. */
+var GRADE700 = { el: null, on: null };
+function grade700() {
+  const on = !classicLook; if (on === GRADE700.on) return; GRADE700.on = on;
+  const c = $('c'); if (!c) return; c.classList.toggle('grade700', on);
+  if (!GRADE700.el) { const v = document.createElement('div'); v.id = 'vig700'; v.setAttribute('aria-hidden', 'true'); c.after(v); GRADE700.el = v; }
+  GRADE700.el.hidden = !on;
+}
+function cloakTick() {
+  chickCloakTick697();   /* 697 */   // every frame: the cloak on her bird's back (re-parented, so a bird swap keeps it), shown in rain only; the WET word once
   if (!CLOAK || !bird) return;
   if (cloakOn()) {
     if (!CLOAK.mesh) { CLOAK.mesh = new THREE.Mesh(new THREE.SphereGeometry(0.62, 12, 6, 0, Math.PI * 2, 0, Math.PI / 2), lam(0xeef3ff)); CLOAK.mesh.name = 'cloak632'; CLOAK.mesh.position.set(0, 0.4, -0.22); CLOAK.mesh.scale.set(1.05, 0.5, 1.3); }   // DRAFT: a primitive cape over her back; lam() is Lambert, FrontSide, the program the chick's body already uses; made once, never disposed (trap 651)
@@ -4372,7 +4551,7 @@ function bgMusicTick(dt) {
    after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
    music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
    menu, a cutscene), the orchestra bows out. */
-const ORCH_SRC = 'orch-samples.js?v=10b086b7218e';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const ORCH_SRC = 'orch-samples.js?v=83815b22b962';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
 const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
 window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
 const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
@@ -4643,7 +4822,7 @@ $('dressBtn').addEventListener('click', () => { const d = $('dress'); d.hidden =
 $('stayBtn').addEventListener('click', () => { if (!S.chick.follows) return; S.chick.stay = !S.chick.stay; save(); chirp(); stayDraw(); toast(S.chick.stay ? 'Your chick will wait for you at the nest.' : 'Your chick comes along with you!', 2400); });   // 621: Stay (DRAFT words)
 $('dress').addEventListener('click', (e) => { const b = e.target.closest('button[data-id]'); if (b) dressPick(b.dataset.id); });
 $('feedBtn').addEventListener('click', () => {
-  if (!S.fruit) return; const f = S.fruit.type, gives = f.gives || { [f.stat]: FRUIT_GAIN };
+  if (!S.fruit) return; const f = S.fruit.type, gives = f.gives || { [f.stat]: FRUIT_GAIN * (f.ripe || 1) };   // 697: Beandie's ripe fruit counts three
   const ups = []; for (const k in gives) { const u = addStat(k, gives[k]); if (u) ups.push(u); }
   if (chick && Object.keys(gives).length) burst(chick.position.clone().add(new THREE.Vector3(0, 0.5, 0)), Object.keys(gives).map((k) => (CSTATS.find((c) => c[0] === k) || [0, 0, 0xffd94a])[2]), 20, 0.08, 2.2, 1.6);   // 619: the drive goes in, in its stat's colours
   chickLook();   // 619: and its colour drifts toward its strongest stat on every feed, not only when it grows a stage
@@ -5501,6 +5680,20 @@ function eagleMarkTick(show, extra) {   // his ❗ once he will meet her; and th
 }
 /* 643 CHAPTER ONE (Marth's lore, Oct 14): home on the peak after the ending, he tells her where it began. A beat near him, then his word,
    then the cutscene, once (S.seen.prologue); after that a short word each visit, the eagleNotYet pattern. */
+/* 697 (Marth, Oct 23 2026, verbatim: "idk why the eagle says that; there’s nothing indicating what to do further"): after the ending the
+   Eagle names the NEXT real thing to do instead of one fixed line. It always opens "Train, little one" (story643 S7). Every word DRAFT. */
+function eagleNext697() {
+  const h = S.huethers || 0, have = 'You have ' + (h === 1 ? 'one white feather' : h + ' white feathers') + '.';
+  // Marth, Oct 23: "'train little one' feels redundant if level 42 is max level. what is train little one implying?": at LEVEL_MAX it says
+  // what is true instead (she is grown; her chick is not), and below it "Train" means the levels still ahead (story643 S7 hears it at 25).
+  const first = ['Eagle', S.level < LEVEL_MAX ? 'Train, little one. He will come back, and you will not face him alone.'
+    : 'You are as strong as any bird on this island, little one. Now your chick has growing to do. He will come back, and neither of you will face him alone.'];
+  if (!cloakOn()) return [first, ['Eagle', h >= 3 ? 'You have three white feathers. Open your pouch and weave yourself a cloak: the rain will roll off you.'
+    : 'Fly the rune course on the sky island while the sky is clear. White feathers hide between the runes, and a strong run can win one. Three make a cloak that sheds the rain. ' + have]];
+  if (!(S.seen && S.seen.chickCloak697) && S.chick && S.nestDone) return [first, ['Eagle', "Your cloak suits you. Now your chick: Beanda, in the hermits' hall, weaves cloaks from white feathers. "
+    + (h >= 3 ? 'You have three. Take them to her.' : 'Bring her three. ' + have)]];
+  return [first, ['Eagle', 'When the rain comes, the sky wall lets you through. Fly the high course in the storm, where the runes pay best. The pirates are mending their ship, and when it sails, it sails for the Hawk.']];
+}
 function eagleHome(dt) {
   const d = eagleBird.position.distanceTo(S.pos); if (d > EAGLE_AWAY) EG.homeTold = false;
   const here = (S.mode === 'walk' || S.mode === 'fly') && d < EAGLE_NEAR && S.tut === 0 && !S.inside && $('story').hidden && !cutQ.length && !S.quick;
@@ -5509,7 +5702,7 @@ function eagleHome(dt) {
   EG.homeTold = true; EG.homeT = 0;
   try { if (window.WFR_SOUND) WFR_SOUND.call('eagle', { vol: 0.6 }); } catch (e) { /* a call that fails must never stop his words */ }
   if (!(S.seen || {}).prologue) say([['Eagle', 'Little one. Sit a while. There is something you should know about the Hawk.'], ['Eagle', 'It began long before you.']], () => queueCut('prologue'));
-  else say([['Eagle', 'Train, little one. He will come back. And you will not face him alone.']]);
+  else say(eagleNext697());   // 697: the next real thing to do, never the same dead-end line
 }
 /* 643: the one word that sends her up, a few seconds into play after the ending, once, never under the wake's black fade (Ino) */
 function homeWord(dt) {
@@ -5717,7 +5910,8 @@ try { if (localStorage.getItem('wfr.debug') === '1') window.__wfr = { eagle: () 
     return { ready: !!WXR, dead: !!p.dead, day: wxDay(), kind: wxKind(), gated: wxGated(), k: WX.k, tilt: WX.tilt, rainVis: !!p.rainVis, rainVerts: p.rainVerts || 0, flashes: p.flashes || 0, minGap: p.minGap == null ? null : p.minGap, maxFlashFrames: p.maxFlashFrames || 0, maxFlashLen: p.maxFlashLen || 0, rumbles: p.rumbles || 0, sound: !!p.sound,
       sunOp: sunDisc.material.opacity, moonOp: moonDisc.material.opacity, sunEl: WX.sunEl, moonEl: WX.moonEl, sunVis: sunDisc.visible, moonVis: moonDisc.visible, sunV: WX.sunV.toArray(), moonV: WX.moonV.toArray(), shadow: SUN_DIR.toArray(),
       fogNear: FOG_AIR.near, fogFar: FOG_AIR.far, fogSame: scene.fog === FOG_AIR || scene.fog === WATERFOG, hemi: HEMI.intensity, sunI: SKY.sunI, stars: stars.material.opacity, cloudLum: cm.length ? +(cm.reduce((a, m) => a + lum(m), 0) / cm.length).toFixed(4) : null, heavenLum: lum(WX.heaven), heavenOp: WX.heaven ? WX.heaven.opacity : null, played: S.played || 0 }; },
-  wxForce: (k) => { WX.force = k || null; SKY.lastPaint = -9; }, chick621: () => { const U = chick ? chick.userData : null, W = COME.w, fly = Math.max(0, 1 - W.flut - W.zoom), rp = COME.live && RUNES && RUNES.railPose ? RUNES.railPose(3) : null;
+  wxLevel: (l) => { WX.forceLevel = l || null; return wxLevel699(); },   /* 699: the bench's door to a level (never the player's) */
+  horizon700: () => horizonPeek700(), far682: () => farPeek682(), wxForce: (k) => { WX.force = k || null; SKY.lastPaint = -9; }, chick621: () => { const U = chick ? chick.userData : null, W = COME.w, fly = Math.max(0, 1 - W.flut - W.zoom), rp = COME.live && RUNES && RUNES.railPose ? RUNES.railPose(3) : null;
    const top = W.swim > 0.5 ? 'swim' : W.air < 0.5 ? 'ground' : [['fly', fly], ['flutter', W.flut], ['zoom', W.zoom]].sort((a, b) => b[1] - a[1])[0][0];
    return { comes: (S.seen || {}).chickComes621 || 0, guest: comeGuest(), live: COME.live, fetch: COME.fetch ? +COME.fetch.t.toFixed(2) : null, fetches: COME.n, placed: COME.pl, top, w: { air: W.air, fly, flut: W.flut, zoom: W.zoom, swim: W.swim }, vs: COME.vs, vy: COME.vy, acc: COME.acc,
      chick: chick ? chick.position.toArray() : null, me: S.pos.toArray(), yaw: S.yaw, centre: rp ? [rp.p.x, rp.p.y, rp.p.z] : null, dir: rp ? [rp.dir.x, rp.dir.z] : null,
@@ -5796,7 +5990,7 @@ try { if (localStorage.getItem('wfr.debug') === '1') window.__wfr = { eagle: () 
   feel673: (ship) => { if (ship && FEEL.eagle) { window.__feel673 = FEEL.eagle; delete FEEL.eagle; } else if (!ship && window.__feel673) { FEEL.eagle = window.__feel673; window.__feel673 = null; } return !FEEL.eagle; },   /* 673 U2 bench: true = the Eagle flies as free flight shipped (FEEL0), for E3's same-run comparison */
   cam: () => ({ d: camera.position.distanceTo(S.pos), mode: S.mode, off: S.camOff || 0, lift: S.camLift || 0, yaw: S.yaw, view: (S.camYaw === undefined ? S.yaw : S.camYaw) + (S.camOff || 0) }),
   hudText: () => document.getElementById('quest').textContent,
-  cloak: () => cloakPeek(), cloakSet: (o) => { if (o && typeof o.huethers === 'number') S.huethers = Math.max(0, Math.floor(o.huethers)); save(); return cloakPeek(); },   /* 632 U6: the read, and a SETUP door (never the player's) */
+  cloak: () => cloakPeek(), small697: () => small697Peek(), cloakSet: (o) => { if (o && typeof o.huethers === 'number') S.huethers = Math.max(0, Math.floor(o.huethers)); save(); return cloakPeek(); },   /* 632 U6: the read, and a SETUP door (never the player's) */
   pouch: () => ({ inv: Object.assign({}, S.inv), toolIn: S.toolIn || 0, built: S.built, recipe: recipe(), nodes: nodes.filter((n) => n.g.visible).map((n) => [n.type.id, n.g.position.x, n.g.position.z]) }),
   carried: () => { const w = new THREE.Vector3(); return S.carry.map((it) => ({ id: it.type.id, g: it.g })).concat(S.fruit ? [{ id: S.fruit.type.id || S.fruit.type.emoji, g: S.fruit.g }] : []).map(({ id, g }) => { g.getWorldPosition(w); const sc = new THREE.Vector3(); g.getWorldScale(sc); const size = sc.x * (g.isSprite ? 1 : 1.6); let fwd = null;
     if (birdRig && birdRig.head && g.parent === birdRig.head) { const hp = new THREE.Vector3(), q = new THREE.Quaternion(); birdRig.head.getWorldPosition(hp); birdRig.head.getWorldQuaternion(q); fwd = w.clone().sub(hp).dot(new THREE.Vector3(0, 0, 1).applyQuaternion(q)); }
@@ -6246,7 +6440,7 @@ function boatTick646() {   // each frame, after chickTick and before her own ste
 var P669 = { lock: false, at: 0, n: 0, yes: 0, no: 0, lifts: 0, faults: 0, boom: null, dead: false, walkOn: false,
   spot: { x: 0, y: 0, z: 0, name: 'the pirate ship' }, L: { x: 0, z: 0 }, cam: new THREE.Vector3(), look: new THREE.Vector3(), lookS: new THREE.Vector3(), head: new THREE.Vector3() };   // var: groundAt and landTarget read it (undefined before this line, never a TDZ); one set of vectors: no allocation a frame
 const P669_WORDS = { ask: 'Become a stowaway?', yes: 'Yes', no: 'No',   // ask: HIS ('become a stowa way?'), its typing fixed by the brief as a DRAFT for him to confirm; Yes / No: the brief's
-  yesU2: 'Arr, not today, little bird! The tide be wrong. Come back another rainy day.',   // DRAFT: Yes until U3 (the voyage) lands
+  yesU2: "Arr, she's not fit to sail yet, little bird: her sails are still being mended. When she's ready, we sail for the Hawk, and you'll be aboard!",   // 697 (Marth, Oct 23: "when I land on the pirate boat he always says the tide isn’t up to par"): the truth until U3 (the voyage) lands; no rain promise. DRAFT
   away: 'The pirate ship is weighing anchor! You flutter off its deck.' };   // DRAFT
 const P669_UI = (() => { try {   // the prompt: 610's gate (skypiea.js #skyGate and .skyChoice), its look copied under its own id so it stands alone
   const css = document.createElement('style');
@@ -6282,7 +6476,7 @@ function pir669Free() {   // the lock let go: walk mode on the deck, Flap and th
 }
 function pir669Answer(yes) {
   if (!P669.lock) return;
-  if (yes) { P669.yes++; pir669Free(); toast(P669_WORDS.yesU2, 4200); }   // U3 replaces this branch: the voyage to the wall
+  if (yes) { P669.yes++; pir669Free(); toast(P669_WORDS.yesU2, 5600); }   // U3 replaces this branch: the voyage to the wall
   else { P669.no++; pir669Free(); }
 }
 function pir669Tick(real) {   // each frame, right after the ship's own tick: the lock, the two-shot, the turns, and the deck's net; never throws
@@ -6312,7 +6506,7 @@ function pir669Tick(real) {   // each frame, right after the ship's own tick: th
   } catch (e) { P669.faults++; P669.dead = true;   // a fault here hides the ship too (its deck goes), lets her go, and lifts her off the sea
     try { P.die(e); if (P669.lock) pir669Free(); if (S.mode === 'walk' && !S.inside && !S.insideTH && S.pos.y > WATER && groundAt(S.pos.x, S.pos.z) < WATER - 2) boatLift646(); } catch (e2) { /* never into the frame */ } }
 }
-const WXR = (() => { try { return window.WFR_WX ? WFR_WX.create(THREE, scene, { camera, S, k: () => WX.k, kind: () => wxKind(), night: () => nightAmt(S.clock), indoors: () => !!(S.inside || S.insideTH || wasUnder), played: () => S.played || 0, ac: () => ac, muted: () => muted, flash: (v) => { WX.flash = v; SKY.lastPaint = -9; }, phone: innerWidth <= 900 }) : null; } catch (e) { return null; } })();   // 632 U1: the rain, the thunder, the rain's sound (weather.js)
+const WXR = (() => { try { return window.WFR_WX ? WFR_WX.create(THREE, scene, { camera, S, k: () => WX.k, kind: () => wxKind(), level: () => wxLevel699(), night: () => nightAmt(S.clock), indoors: () => !!(S.inside || S.insideTH || wasUnder), played: () => S.played || 0, ac: () => ac, muted: () => muted, flash: (v) => { WX.flash = v; SKY.lastPaint = -9; }, phone: innerWidth <= 900 }) : null; } catch (e) { return null; } })();   // 632 U1: the rain, the thunder, the rain's sound (weather.js)
 let skyWarm632 = false;   // Obito R3: the sky island's programs compiled once on arrival (E8)
 function railFly(dt, B) {   // 632 U4b: the run's train track. Her speed, side and camera come from the rail; the pose is free flight's own lines
   const st0 = steer(), sq = Math.max(Math.abs(st0.sx), Math.abs(st0.sy)), kq = sq > 1e-6 ? Math.hypot(st0.sx, st0.sy) / sq : 1;   // Jiraiya: the thumb's stick is a circle (a push caps at 1), so on the rail it is stretched to a square along its own direction: a 45 deg push is full speed AND full side; straight pushes are unchanged
@@ -6472,7 +6666,7 @@ function frame(now) {
     if (S.tut === 0 && !(S.seen && S.seen.hold)) { S.seen = S.seen || {}; S.seen.hold = true; setTimeout(function tip() { if (!$('toast').hidden) return setTimeout(tip, 1500); toast('Hold Flap to fly fast and level. Hold Flap and push up or down to hover.', 5200); }, 2500); save(); }   // a tip waits its turn: it never covers the dusk line (control-46)
     if (S.hoverK > 0.5 && sy < -0.5 && window.WFR_BIRDS && birdRig) WFR_BIRDS.tuck(birdRig, 0.5);   // legs half down, coming in like a hovercraft
     const dc = Math.hypot(S.pos.x, S.pos.z);
-    if (dc > EDGE) {   // the wind turns you back toward the island
+    if (farEdge682(dc)) {   // the wind turns you back toward the island (682 B: unless she is heading out to a real place, or is in one)
       const home = Math.atan2(-S.pos.x, -S.pos.z); let rel = home - S.yaw; rel = Math.atan2(Math.sin(rel), Math.cos(rel));
       sx = rel > 0 ? -0.8 : 0.8; if (S.turnBack <= 0) { toast('The wind turns you back toward the island.'); S.turnBack = 4; }
     }
@@ -6665,6 +6859,9 @@ function frame(now) {
   navHud(S.real || dt); quickTick(S.real || dt); TYPER.tick(S.real || dt); callTick(S.real || dt); worldTick(S.real || dt); lightTick(S.real || dt); sleepTick(S.real || dt); coldTick(S.real || dt);   // 631; 644; 638; 625; 643 worlds (one, two)
   if (SKYEND) SKYEND.tick(dt);   // 544: the ending (a no-op until the gate opens)
   cloakTick();   // 632 U6: the cloak on her back in rain; the WET word once
+  grade700();   // 700: the finishing grade follows the look
+  horizonTick700();   // 700: the far islands take the sky's haze
+  farTick682(S.real || dt);   // 682 B: the crossing, a far place's edge, a reload while away
   evoTick(S.real || dt); lvTick(); morphTick(dt);   // after the mode block: it writes the bird's turn and size last, and puts them back at the end (642: a queued level-up starts here)
   arrowTick(dt); S.camCut = false;   // 588: after the camera has moved; 584: a door's camera cut lasts one frame
   sunFollow();
@@ -6741,7 +6938,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build 10b086b7218e): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build 83815b22b962): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>

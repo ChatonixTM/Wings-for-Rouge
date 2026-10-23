@@ -15,15 +15,20 @@ window.WFR_WX = (function () {
     var w = SEASONS[season || 'summer'], r = mul32(Math.imul((d | 0) + 1, 0x9E3779B1) ^ SALT);
     return r < w.storm ? 'storm' : r < w.storm + w.rain ? 'rain' : 'clear';
   }
+  function level(d, season) {   /* 699: 'clear' | 'drizzle' | 'rain' | 'pour' | 'storm' for day d: a rain day's level from its own dice, fixed per day */
+    var k = roll(d, season); if (k !== 'rain') return k;
+    var r = mul32(Math.imul((d | 0) + 1, 0x85EBCA6B) ^ (SALT + 699));
+    return r < 0.35 ? 'drizzle' : r < 0.75 ? 'rain' : 'pour';
+  }
 
   var RAIN_VS = [
-    'uniform float uT; uniform vec3 uCam; uniform vec3 uBox; uniform vec3 uVel; uniform float uA;',
+    'uniform float uT; uniform vec3 uCam; uniform vec3 uBox; uniform vec3 uVel; uniform float uA; uniform float uLen;',
     'attribute float aEnd; attribute float aSeed;',
     'varying float vA;',
     'void main() {',
     '  vec3 p = position + uVel * ( uT * ( 0.85 + 0.3 * aSeed ) );',
     '  vec3 rel = mod( p - uCam + uBox, 2.0 * uBox ) - uBox;',
-    '  rel -= normalize( uVel ) * aEnd * ( 0.9 + 0.7 * aSeed );',
+    '  rel -= normalize( uVel ) * aEnd * ( 0.9 + 0.7 * aSeed ) * uLen;',
     '  vec4 mv = modelViewMatrix * vec4( uCam + rel, 1.0 );',
     '  gl_Position = projectionMatrix * mv;',
     '  float d = length( rel );',
@@ -43,11 +48,43 @@ window.WFR_WX = (function () {
     for (var i = 0; i < N; i++) { var x = R() * 40, y = R() * 30, z = R() * 40, s = R();
       pos[i * 6] = pos[i * 6 + 3] = x; pos[i * 6 + 1] = pos[i * 6 + 4] = y; pos[i * 6 + 2] = pos[i * 6 + 5] = z; end[i * 2 + 1] = 1; sd[i * 2] = sd[i * 2 + 1] = s; }
     var g = new T.BufferGeometry(); g.setAttribute('position', new T.BufferAttribute(pos, 3)); g.setAttribute('aEnd', new T.BufferAttribute(end, 1)); g.setAttribute('aSeed', new T.BufferAttribute(sd, 1));
-    var U = { uT: { value: 0 }, uCam: { value: new T.Vector3() }, uBox: { value: BOX }, uVel: { value: new T.Vector3(0.92 * 2.2, -9, 0.38 * 2.2) }, uA: { value: 0 }, uColor: { value: new T.Color(0xd6dee8) } };
+    var U = { uT: { value: 0 }, uCam: { value: new T.Vector3() }, uBox: { value: BOX }, uVel: { value: new T.Vector3(0.92 * 2.2, -9, 0.38 * 2.2) }, uA: { value: 0 }, uLen: { value: 1 }, uColor: { value: new T.Color(0xd6dee8) } };
     var mat = new T.ShaderMaterial({ uniforms: U, vertexShader: RAIN_VS, fragmentShader: RAIN_FS, transparent: true, depthWrite: false });
     var rain = new T.LineSegments(g, mat); rain.frustumCulled = false; rain.renderOrder = 5; rain.name = 'wx:rain'; scene.add(rain);
     var warm = 3;   /* drawn (at alpha 0) for the first frames, so its one program compiles at load, never at the first rain (651's lesson) */
-    var DAY = new T.Color(0xd6dee8), NIGHT = new T.Color(0x6a7584);   /* brighter than the overcast horizon (Obito: #b8c4d0 at 0.35 over #aab2ba was ~5 levels apart) */
+    var DAY = new T.Color(0xd6dee8), NIGHT = new T.Color(0x6a7584);
+    /* 699: his four modes. a = the streaks' strength, n = the share of streaks drawn, len = their length, snd = the rain's loudness (DRAFT).
+       'rain' and 'storm' keep 0.55 (what every rain guard has measured); drizzle is thin and short, a pour long, bright and loud. */
+    var LV = { clear: { a: 0.55, n: 1, len: 1, snd: 1 }, drizzle: { a: 0.32, n: 0.4, len: 0.6, snd: 0.45 }, rain: { a: 0.55, n: 1, len: 1, snd: 1 },
+      pour: { a: 0.72, n: 1, len: 1.7, snd: 1.9 }, storm: { a: 0.55, n: 1, len: 1.8, snd: 2.2 } }, LVNOW = null;
+    /* 699: the BOLT. Two flat ribbons (the bolt and one branch) turned to face the camera, white, one material; laid with the weather's own
+       dice at each storm flash, 140-220 m out, ahead of her within about 30 degrees. Warmed with the rain at load. */
+    var BN = 16, BB = 8;
+    function ribbon(n) { var gg = new T.BufferGeometry(), ix = []; gg.setAttribute('position', new T.BufferAttribute(new Float32Array(n * 6), 3)); for (var q = 0; q < n - 1; q++) { var a = q * 2; ix.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); } gg.setIndex(ix); return gg; }
+    var BOLT = { mat: new T.MeshBasicMaterial({ color: 0xf4f7ff, transparent: true, opacity: 0, depthWrite: false, fog: false, side: T.DoubleSide }), on: 0, strikes: 0 };
+    BOLT.mesh = new T.Mesh(ribbon(BN), BOLT.mat); BOLT.branch = new T.Mesh(ribbon(BB), BOLT.mat);
+    [BOLT.mesh, BOLT.branch].forEach(function (m) { m.frustumCulled = false; m.renderOrder = 6; m.name = 'wx:bolt'; m.visible = false; scene.add(m); });
+    var _v = new T.Vector3(), _s = new T.Vector3(), _d = new T.Vector3(), _f = new T.Vector3();
+    function lay(m, pts, w) {   /* a flat ribbon through pts, its width across the line of sight, thinning to the tip */
+      var a = m.geometry.attributes.position, cam = o.camera.position;
+      for (var q = 0; q < pts.length; q++) { var p = pts[q], nx = pts[Math.min(q + 1, pts.length - 1)], pv = pts[Math.max(q - 1, 0)];
+        _d.subVectors(nx, pv).normalize(); _f.subVectors(cam, p).normalize(); _s.crossVectors(_d, _f).normalize().multiplyScalar(w * (1 - 0.6 * q / pts.length) / 2);
+        a.setXYZ(q * 2, p.x + _s.x, p.y + _s.y, p.z + _s.z); a.setXYZ(q * 2 + 1, p.x - _s.x, p.y - _s.y, p.z - _s.z); }
+      a.needsUpdate = true; m.geometry.computeBoundingSphere();
+    }
+    function boltStrike(cam) {
+      o.camera.getWorldDirection(_v);
+      var yaw = Math.atan2(_v.x, _v.z) + (R() - 0.5) * 1.1, dist = 140 + R() * 80, top = cam.y + 75 + R() * 25, drop = 70 + R() * 30;
+      var x = cam.x + Math.sin(yaw) * dist, z = cam.z + Math.cos(yaw) * dist, pts = [], br = [], q;
+      for (q = 0; q < BN; q++) { pts.push(new T.Vector3(x, top - drop * q / (BN - 1), z)); x += (R() - 0.5) * 9; z += (R() - 0.5) * 9; }
+      var j = 4 + Math.floor(R() * 5), bx = pts[j].x, bz = pts[j].z, sx = (R() < 0.5 ? -1 : 1) * (3 + R() * 3);
+      for (q = 0; q < BB; q++) { br.push(new T.Vector3(bx, pts[j].y - drop * 0.45 * q / (BB - 1), bz)); bx += sx + (R() - 0.5) * 4; bz += (R() - 0.5) * 4; }
+      lay(BOLT.mesh, pts, 2.2); lay(BOLT.branch, br, 1.2); BOLT.on = 0.22; BOLT.strikes++; BOLT.mesh.visible = BOLT.branch.visible = true; BOLT.mat.opacity = 1;
+    }
+    function boltTick(real) {
+      if (BOLT.on > 0) { BOLT.on -= real; BOLT.mat.opacity = Math.max(0, Math.min(1, BOLT.on / 0.08)); if (BOLT.on <= 0) { BOLT.mesh.visible = BOLT.branch.visible = false; BOLT.mat.opacity = 0; } }
+      else if (BOLT.mesh.visible) { BOLT.mesh.visible = BOLT.branch.visible = false; BOLT.mat.opacity = 0; }
+    }   /* brighter than the overcast horizon (Obito: #b8c4d0 at 0.35 over #aab2ba was ~5 levels apart) */
 
     /* thunder: a soft white wash over the picture, never closer than 15 s of play (photosensitive-safe, far under 3 a second) */
     var veil = null; try { veil = document.createElement('div'); veil.style.cssText = 'position:fixed;inset:0;background:#fff;opacity:0;pointer-events:none;z-index:4;transition:none'; document.body.appendChild(veil); } catch (e) { veil = null; }
@@ -60,35 +97,40 @@ window.WFR_WX = (function () {
       var d0 = d[0], dn = d[n - 1]; for (j = 0; j < n; j++) d[j] -= (dn - d0) * (j / (n - 1));   /* the loop ends where it starts: no thump every pass (Obito) */ SND.buf = b; return b; }
     function soundTick(k) {
       var ac = o.ac && o.ac(); if (!ac) return;
-      var want = (o.muted && o.muted()) ? 0 : 0.05 * k * (o.indoors() ? 0.3 : 1);
+      var want = (o.muted && o.muted()) ? 0 : Math.min(0.12, 0.05 * k * (SND.lv || 1) * (o.indoors() ? 0.3 : 1));   /* 699: the level's loudness */
       if (!SND.bed && want > 0.002) { var src = ac.createBufferSource(); src.buffer = noiseBuf(ac); src.loop = true; var lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 900; SND.gain = ac.createGain(); SND.gain.gain.value = 0; src.connect(lp); lp.connect(SND.gain); SND.gain.connect(ac.destination); src.start(); SND.bed = src; }
       if (SND.gain) SND.gain.gain.setTargetAtTime(want, ac.currentTime, 0.4);
     }
-    function rumble() {
+    function rumble(far) {
       var ac = o.ac && o.ac(); if (!ac || (o.muted && o.muted())) return; TH.rumbles++;
       var src = ac.createBufferSource(); src.buffer = noiseBuf(ac); var lp = ac.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 190; var gn = ac.createGain(), t0 = ac.currentTime;   /* 190 Hz: a phone's speaker can play it (70 was silent there) */
-      gn.gain.setValueAtTime(0, t0); gn.gain.linearRampToValueAtTime(0.1, t0 + 0.5); gn.gain.linearRampToValueAtTime(0, t0 + 2.6); src.connect(lp); lp.connect(gn); gn.connect(ac.destination); src.start(t0); src.stop(t0 + 2.8);
+      gn.gain.setValueAtTime(0, t0); gn.gain.linearRampToValueAtTime(far ? 0.05 : 0.1, t0 + 0.5); gn.gain.linearRampToValueAtTime(0, t0 + 2.6); src.connect(lp); lp.connect(gn); gn.connect(ac.destination); src.start(t0); src.stop(t0 + 2.8);
     }
 
     function tick(dt, real) {
       if (dead) return; if (real == null) real = dt;
       try {
         var k = o.k(), cam = o.camera.position, inside = o.indoors(), kind = o.kind(), played = o.played();
+        var lv = (o.level && o.level()) || kind, L = LV[lv] || LV.rain, drawN = Math.round(N * L.n) * 2;   /* 699 */
+        LVNOW = lv; SND.lv = L.snd; U.uLen.value = L.len; if (g.drawRange.count !== drawN) g.setDrawRange(0, drawN);
         U.uT.value += Math.min(dt, 0.1);   /* the game's dt: the pouch's slow motion slows the rain too */ U.uCam.value.copy(cam);
         U.uColor.value.copy(DAY).lerp(NIGHT, o.night ? o.night() : 0);
         var show = k > 0.01 && !inside && cam.y < 160;
-        if (warm > 0) { warm--; rain.visible = true; U.uA.value = 0; } else { rain.visible = show; U.uA.value = show ? 0.55 * k : 0; }
+        if (warm > 0) { warm--; rain.visible = true; U.uA.value = 0; BOLT.mesh.visible = BOLT.branch.visible = true; BOLT.mat.opacity = 0; }   /* 699: the bolt's program compiles at load too */
+        else { rain.visible = show; U.uA.value = show ? L.a * k : 0; boltTick(real); }
         soundTick(inside ? k : k);
         /* thunder, storm days only, timed in seconds of PLAY */
         if (TH.on > 0) { TH.on -= real; TH.frames++; TH.len += real; if (TH.on <= 0) { if (veil) veil.style.opacity = '0'; o.flash(0); TH.maxFrames = Math.max(TH.maxFrames, TH.frames); TH.maxLen = Math.max(TH.maxLen, TH.len); } }
-        if (kind === 'storm' && k > 0.5) {
-          if (TH.next == null) TH.next = played + 18 + R() * 27;
+        var far = kind !== 'storm' && lv === 'pour';   /* 699: a pouring day flickers far off now and then: a faint wash, a far rumble, no bolt */
+        if ((kind === 'storm' || far) && k > 0.5) {
+          if (TH.next == null) TH.next = played + (far ? 30 + R() * 40 : 18 + R() * 27);
           if (played >= TH.next && TH.on <= 0) {
             if (TH.last != null) { var gap = played - TH.last; TH.minGap = TH.minGap == null ? gap : Math.min(TH.minGap, gap); }
             TH.last = played; TH.flashes++; TH.on = 0.12; TH.frames = 0; TH.len = 0;
-            if (veil && !inside) veil.style.opacity = '0.35'; o.flash(inside ? 0.1 : 0.4);
-            setTimeout(rumble, 600 + R() * 1900);
-            TH.next = played + Math.max(15, 18 + R() * 27);
+            if (veil && !inside) veil.style.opacity = far ? '0.12' : '0.35'; o.flash(inside ? (far ? 0.04 : 0.1) : far ? 0.14 : 0.4);
+            if (far) TH.far = (TH.far || 0) + 1; else if (!inside) boltStrike(cam);   /* 699: a real bolt in the storm's sky */
+            setTimeout(function () { rumble(far); }, far ? 2200 + R() * 2400 : 600 + R() * 1900);
+            TH.next = played + Math.max(15, far ? 40 + R() * 40 : 18 + R() * 27);
           }
         } else TH.next = null;
       } catch (err) {
@@ -96,11 +138,12 @@ window.WFR_WX = (function () {
       }
     }
     function peek() {
-      return { dead: dead, rainVis: rain.visible && U.uA.value > 0.001, rainA: U.uA.value, rainVerts: N * 2, flashes: TH.flashes, minGap: TH.minGap, maxFlashFrames: TH.maxFrames, maxFlashLen: +TH.maxLen.toFixed(3), flashing: TH.on > 0, rumbles: TH.rumbles, sound: !!SND.bed };
+      return { dead: dead, rainVis: rain.visible && U.uA.value > 0.001, rainA: U.uA.value, rainVerts: N * 2, flashes: TH.flashes, minGap: TH.minGap, maxFlashFrames: TH.maxFrames, maxFlashLen: +TH.maxLen.toFixed(3), flashing: TH.on > 0, rumbles: TH.rumbles, sound: !!SND.bed,
+        level: LVNOW, drawn: g.drawRange.count / 2, uLen: U.uLen.value, bolts: BOLT.strikes, boltShown: BOLT.mesh.visible && BOLT.mat.opacity > 0.01, farFlashes: TH.far || 0 };   /* 699 */
     }
     return { tick: tick, peek: peek, rain: rain };
   }
 
-  API = { roll: roll, seasons: SEASONS, create: create, last: null, error: null };
+  API = { roll: roll, level: level, seasons: SEASONS, create: create, last: null, error: null };
   return API;
 }());

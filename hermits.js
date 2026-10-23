@@ -76,6 +76,8 @@ window.WFR_HERMITS = (function () {
       ['Beanda', 'Bigger in here than it looks, isn\'t it? Mind the beams.']],
     beandaWell: [['Beanda', 'Your chick is well. Keep it warm when the rain comes, and you will not need me.']],
     beandaNoChick: [['Beanda', 'No chick yet? When it hatches, bring its sniffles to me.']],
+    beandaCloak: function (n) { return [['Beanda', 'Your chick is well. And I could weave it a little cloak against the rain.'], ['Beanda', 'Bring me three white feathers from the sky island. You have ' + n + '.']]; },   // 697 DRAFT
+    woven: [['Beanda', 'Three white feathers, a needle of bone, and a little song. Hold still...'], ['Beanda', 'There. A cloak for your chick. The rain will not chill it now.']],   // 697 DRAFT
     mendPoor: function (p, n) { return [['Beanda', 'A cold like that takes ' + p + ' runes of herbs, dear, and you have ' + n + '.'], ['Beanda', 'The rune course up by the sky island pays well. I will be here.']]; },
     mended: [['Beanda', 'Willow bark, warm honey, and a little song. Hold still...'], ['Beanda', 'There. Your chick\'s cold is mended. Keep it out of the rain.']],
     beandie: function (n) { return [['Beandie', 'Fruit for your chick, nails for the village. Blades and such come later, if that hawk gets bold.'], ['Beandie', 'You have ' + n + ' runes. Stand at a thing on my counter to see its price.']]; },
@@ -84,7 +86,7 @@ window.WFR_HERMITS = (function () {
     noChick: [['Beandie', 'Fruit is for a chick, and you have none yet.']],
     heavy: [['Beandie', 'Nails are heavy. Come back at level 3, when you are stronger.']],
     noCrow: [['Beandie', 'Metal? Learn to see it first. The Crow can teach you.']],
-    sold: { apple: [['Beandie', 'One apple. Take it to your chick.']], blueberry: [['Beandie', 'A handful of blueberries. Take them to your chick.']],
+    sold: { apple: [['Beandie', 'One ripe apple, worth three off a tree. Take it to your chick.']], blueberry: [['Beandie', 'A handful of ripe blueberries, worth three off a bush. Take them to your chick.']],   // 697 DRAFT
       nails: [['Beandie', 'Five nails, in your pouch. Mind your beak, they are heavy.']] },
   };
 
@@ -327,7 +329,7 @@ window.WFR_HERMITS = (function () {
       if (!nr) return '';
       if (nr.who === 'item') return '✦ ' + nr.it.price + ' · Buy ' + nr.it.emoji;
       if (nr.who === 'beanda') { var cd = coldOf(); if (cd) return '✦ ' + (cd.stage >= 2 ? PRICES.mend2 : PRICES.mend1) + ' · Mend';
-        if (API.healHer && API.healHer.need && API.healHer.need()) return '✦ ' + API.healHer.price() + ' · Heal'; return '💬 Talk'; }
+        if (API.healHer && API.healHer.need && API.healHer.need()) return '✦ ' + API.healHer.price() + ' · Heal'; if (weaveable()) return '🪶 3 · Weave'; return '💬 Talk'; }
       return '💬 Talk';
     }
     function button(el) {   /* signTick's first word: the game's Talk button says what a press here does */
@@ -336,6 +338,13 @@ window.WFR_HERMITS = (function () {
         if (el.textContent !== label) el.textContent = label; if (el.hidden) el.hidden = false; return true; } catch (e) { fail(e); return false; }
     }
     function pay(n) { var S = late().S; S.runes = (S.runes || 0) - n; }
+    /* 697 (Marth, Oct 23: "when u purchase from him it doesn’t seem to overly boost your chic"): Beandie's fruit is RIPE, a copy of the tree's
+       fruit that counts three in the game's Feed (FRUIT_GAIN x ripe) and cheers the chick a little more. ("there’s nothing to manufacture the
+       cloak for the chic"): Beanda weaves the CHICK a cloak from 3 white feathers; made = S.seen.chickCloak697. DRAFT. */
+    function ripe(t) { var r = {}; for (var k in t) r[k] = t[k]; r.ripe = 3; r.happy = (t.happy || 0) + 6; return r; }
+    function chickCloaked() { var S = late().S; return !!(S.seen && S.seen.chickCloak697); }
+    function weaveable() { var Lt = late(), S = Lt.S; return !!(S.nestDone && Lt.chick() && !chickCloaked() && (S.huethers || 0) >= 3); }
+    function weave() { var Lt = late(), S = Lt.S; if (!weaveable()) return; S.huethers = (S.huethers || 0) - 3; S.seen = S.seen || {}; S.seen.chickCloak697 = 1; Lt.save(); Lt.hud(); Lt.chirp(); Lt.ding(); say(LINES.woven); }
     function mend() {
       var Lt = late(), S = Lt.S, cd = coldOf(), p = cd.stage >= 2 ? PRICES.mend2 : PRICES.mend1, n = runes();
       if (n < p) { say(LINES.mendPoor(p, n)); return; }
@@ -347,7 +356,7 @@ window.WFR_HERMITS = (function () {
       if (it.fruit) { if (!S.nestDone || !Lt.chick()) { say(LINES.noChick); return; } if (S.fruit) { say(LINES.beakFull); return; } }
       if (it.inv) { if (Lt.strength() < 2) { say(LINES.heavy); return; } if (!(S.lessons && S.lessons.crow)) { say(LINES.noCrow); return; } }
       if (n < it.price) { say(LINES.poor(it.price, n)); return; }
-      if (it.fruit) { var type = Lt.fruit(it.fruit); if (!type) { say(LINES.noChick); return; } pay(it.price); Lt.giveBeak(type); }
+      if (it.fruit) { var type = Lt.fruit(it.fruit); if (!type) { say(LINES.noChick); return; } pay(it.price); Lt.giveBeak(ripe(type)); }
       else { pay(it.price); S.inv = S.inv || {}; S.inv[it.inv] = (S.inv[it.inv] || 0) + it.n; }
       Lt.save(); Lt.hud(); Lt.chirp(); Lt.ding(); say(LINES.sold[it.id]);
     }
@@ -358,7 +367,8 @@ window.WFR_HERMITS = (function () {
         else if (nr.who === 'beanda') {
           if (coldOf()) mend();
           else if (API.healHer && API.healHer.need && API.healHer.need()) { var hp = API.healHer.price(); if (runes() < hp) say(LINES.mendPoor(hp, runes())); else { pay(hp); API.healHer.heal(); Lt.save(); Lt.hud(); say([['Beanda', API.healHer.line || 'There. You are mended.']]); } }
-          else say(S.nestDone && Lt.chick() ? LINES.beandaWell : LINES.beandaNoChick);
+          else if (weaveable()) weave();   /* 697 */
+          else say(!(S.nestDone && Lt.chick()) ? LINES.beandaNoChick : chickCloaked() ? LINES.beandaWell : LINES.beandaCloak(S.huethers || 0));
         } else { S.seen = S.seen || {}; S.seen.beandie632 = true; Lt.save(); say(LINES.beandie(runes())); }
         return true;
       } catch (e) { fail(e); return false; }
