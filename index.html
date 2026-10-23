@@ -198,6 +198,8 @@ html.cine #boot{display:grid}
 .bar{display:block;width:84px;height:7px;border-radius:9px;background:#eadfcd;overflow:hidden}
 .bar i{display:block;height:100%;width:0;background:var(--rouge);border-radius:9px;transition:width .3s}
 .pill small{font-family:var(--body);font-weight:700;font-size:12px;color:var(--mute);white-space:nowrap}#navHud{display:block;margin-top:2px;letter-spacing:.02em;font-variant-numeric:tabular-nums}   /* 631 */
+.tabs703{display:flex;gap:6px;margin:2px 0 10px}.tab703{flex:1;min-height:40px;padding:6px 4px;border-radius:12px;border:2px solid rgba(60,40,20,.18);background:#fff8ea;font:800 13px/1 var(--body);color:#3b2a1a}.tab703.on{background:#f2b134;border-color:#c98a12;color:#2a1a08}
+#quickBtn.new703{position:relative}#quickBtn.new703::after{content:'';position:absolute;top:3px;right:3px;width:11px;height:11px;border-radius:50%;background:#f2b134;box-shadow:0 0 6px #f2b134,0 0 0 2px #fff8ea}   /* 703 */
 #c.grade700{filter:saturate(1.15) contrast(1.06) sepia(.05)}   /* 700 lever 2: the finishing grade, Standard only (DRAFT) */
 #vig700{position:fixed;inset:0;pointer-events:none;background:radial-gradient(120% 95% at 50% 45%,rgba(0,0,0,0) 58%,rgba(24,12,0,.2) 100%)}#vig700[hidden]{display:none}
 #xpPop{position:fixed;left:calc(env(safe-area-inset-left,0px) + 22px);top:calc(env(safe-area-inset-top,0px) + 112px);z-index:6;pointer-events:none;font-family:var(--display);font-weight:700;font-size:15px;color:var(--rouge);text-shadow:0 1px 0 var(--paper),0 0 10px var(--paper);opacity:0}   /* 641: +XP and why */
@@ -550,43 +552,43 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 <div class="rhRes" id="rhRes" hidden aria-live="polite"><b id="resRank"></b><span id="resLine"></span><small id="resTime"></small><small id="resNew" hidden></small></div>   <!-- 672 OURS/DRAFT words: Paused, Resume, Quit song -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="toon.js?v=1a2732054bcd"></script>
+<script src="toon.js?v=eb4d88c428f9"></script>
 <script>(function () { let classic = false; try { classic = localStorage.getItem('wfr.look') === 'classic'; } catch (e) { /* private mode: Standard */ }
   window.WFR_DOOR = classic ? { w: 1.2, h: 2, classic: true } : { w: 1.5, h: 2.9, classic: false }; }());   /* 683 C1: THE doorway, local units (x HS 1.6: Standard 2.4 x 4.64 m; a villager, drawn 3.67-3.72 m, is 80% of it; the brief's 2.6 left him at 89%). The ring houses, the 641 house, the cabins and the walk read it. Classic is frozen (Marth, Oct 14, board 645): its doors stay 1.2 x 2. The look is read as the game reads it (it reloads on a switch). */</script>
-<script src="gltf-loader.js?v=1a2732054bcd"></script>
-<script src="skeleton-utils.js?v=1a2732054bcd"></script>
-<script src="meshopt-decoder.js?v=1a2732054bcd"></script>
-<script src="models.js?v=1a2732054bcd"></script>
-<script src="people.js?v=1a2732054bcd"></script>
-<script src="villagers.js?v=1a2732054bcd"></script>
-<script src="tex-photos.js?v=1a2732054bcd"></script>
-<script src="textures.js?v=1a2732054bcd"></script>
-<script src="birds.js?v=1a2732054bcd"></script>
-<script src="humans.js?v=1a2732054bcd"></script>
-<script src="folk.js?v=1a2732054bcd"></script>
-<script src="trees.js?v=1a2732054bcd"></script>
-<script src="treehouses.js?v=1a2732054bcd"></script>
-<script src="cabins.js?v=1a2732054bcd"></script>
-<script src="cave.js?v=1a2732054bcd"></script>
-<script src="hermits.js?v=1a2732054bcd"></script>
-<script src="sounds.js?v=1a2732054bcd"></script>
-<script src="music.js?v=1a2732054bcd"></script>
-<script src="music-orchestra.js?v=1a2732054bcd"></script>
-<script src="rhythm.js?v=1a2732054bcd"></script>
-<script src="pictograms.js?v=1a2732054bcd"></script>
-<script src="chick-wear.js?v=1a2732054bcd"></script>
-<script src="hedgehogs.js?v=1a2732054bcd"></script>
-<script src="opening.js?v=1a2732054bcd"></script>
-<script src="skypiea.js?v=1a2732054bcd"></script>
-<script src="pirate.js?v=1a2732054bcd"></script>
-<script src="atmo.js?v=1a2732054bcd"></script>
-<script src="boat.js?v=1a2732054bcd"></script>
-<script src="weather.js?v=1a2732054bcd"></script>
-<script src="village-build.js?v=1a2732054bcd"></script>
-<script src="runes.js?v=1a2732054bcd"></script>
-<script src="orchard.js?v=1a2732054bcd"></script>
-<script src="net678.js?v=1a2732054bcd"></script>
-<script src="net678-config.js?v=1a2732054bcd"></script>
+<script src="gltf-loader.js?v=eb4d88c428f9"></script>
+<script src="skeleton-utils.js?v=eb4d88c428f9"></script>
+<script src="meshopt-decoder.js?v=eb4d88c428f9"></script>
+<script src="models.js?v=eb4d88c428f9"></script>
+<script src="people.js?v=eb4d88c428f9"></script>
+<script src="villagers.js?v=eb4d88c428f9"></script>
+<script src="tex-photos.js?v=eb4d88c428f9"></script>
+<script src="textures.js?v=eb4d88c428f9"></script>
+<script src="birds.js?v=eb4d88c428f9"></script>
+<script src="humans.js?v=eb4d88c428f9"></script>
+<script src="folk.js?v=eb4d88c428f9"></script>
+<script src="trees.js?v=eb4d88c428f9"></script>
+<script src="treehouses.js?v=eb4d88c428f9"></script>
+<script src="cabins.js?v=eb4d88c428f9"></script>
+<script src="cave.js?v=eb4d88c428f9"></script>
+<script src="hermits.js?v=eb4d88c428f9"></script>
+<script src="sounds.js?v=eb4d88c428f9"></script>
+<script src="music.js?v=eb4d88c428f9"></script>
+<script src="music-orchestra.js?v=eb4d88c428f9"></script>
+<script src="rhythm.js?v=eb4d88c428f9"></script>
+<script src="pictograms.js?v=eb4d88c428f9"></script>
+<script src="chick-wear.js?v=eb4d88c428f9"></script>
+<script src="hedgehogs.js?v=eb4d88c428f9"></script>
+<script src="opening.js?v=eb4d88c428f9"></script>
+<script src="skypiea.js?v=eb4d88c428f9"></script>
+<script src="pirate.js?v=eb4d88c428f9"></script>
+<script src="atmo.js?v=eb4d88c428f9"></script>
+<script src="boat.js?v=eb4d88c428f9"></script>
+<script src="weather.js?v=eb4d88c428f9"></script>
+<script src="village-build.js?v=eb4d88c428f9"></script>
+<script src="runes.js?v=eb4d88c428f9"></script>
+<script src="orchard.js?v=eb4d88c428f9"></script>
+<script src="net678.js?v=eb4d88c428f9"></script>
+<script src="net678-config.js?v=eb4d88c428f9"></script>
 <script>
 (() => {
 'use strict';
@@ -1681,7 +1683,39 @@ const QUICK_SLOW = 0.35; let QLAST = '';   /* 650: the last body written, so the
    a rare part her nest has not yet earned says so (Obito: a silent dead-end otherwise) */
 function quickRow(k, n, now, count) { const gated = count == null && !STUFF[k] && S.nestTier < (MAT_TIER[k] || 99), h = Math.min(count == null ? have(k) : count, n), full = h >= n, rare = !STUFF[k];
   return '<li class="' + (now ? 'now' : '') + (rare ? ' rare' : '') + '"><span>' + matEmoji(k) + ' ' + esc(matName(k)) + (gated ? ' <small>\u00b7 your nest first</small>' : '') + '</span><span>' + h + ' / ' + n + '</span><span class="bar"><i class="' + (full ? 'full' : '') + '" style="width:' + Math.round(h / n * 100) + '%"></i></span></li>'; }
-function quickHtml() {
+/* 703 ships 2-3 (Marth: "level 40 should unlock the weapons holder. and level 41 perhaps a proper item inventory"; the holder, his
+   button: "the first slot the Gust Feather (the tail sweep reaches farther); slots 2-3 won in the storm"): the pouch gains the holder at 40
+   and becomes a tabbed bag at 41; the Items tab is today's pouch exactly. DRAFT words. */
+var BAG703 = { tab: 'items' };
+function gustOn703() { return S.level >= 40 && !(S.seen && S.seen.gustOff703); }
+function sweepReach703() { return ATK_SWEEP.scout + (gustOn703() ? 1.0 : 0); }   // the sweep and the bench both read this
+function gear703() {
+  if (S.level < 40) return '';
+  const on = gustOn703(), free = '<li class="slot dim"><i>·</i><em>won in the storm</em><b></b></li>';
+  return '<h3>Weapons holder</h3><ul class="slots gear703"><li class="slot' + (on ? '' : ' dim') + '" id="gust703"><i>🪶</i><em>Gust Feather ' + (on ? '(on)' : '(off)') + '</em><b>' + (on ? '✓' : '') + '</b></li>' + free + free + '</ul>'
+    + '<div class="line">The Gust Feather: your tail sweep drives a scout off from farther away. Tap it to take it off or put it back on.</div>';
+}
+function keep703() {
+  const L = [], nm = { home: 'The Island Wakes', legend: 'The Island Wakes, slow', gem: 'Gem Cut' };
+  if (S.seen && S.seen.cloak632) L.push('Your nitrogen cloak');
+  if (S.seen && S.seen.chickCloak697) L.push('Your chick’s cloak');
+  for (const m of Object.keys((S.chick && S.chick.marks) || {})) { const f = FRUITS.find((x) => x.id === m); L.push((f ? f.emoji + ' ' : '') + esc(f ? f.name : m) + ' (your chick’s keepsake)'); }
+  const songs = Object.keys(S.songs || {}).filter((k) => S.songs[k]).map((k) => nm[k] || k); if (songs.length) L.push('♪ Songs you know: ' + esc(songs.join(', ')));
+  return '<h3>Keepsakes</h3>' + (L.length ? '<ul>' + L.map((x) => '<li><span>' + x + '</span></li>').join('') + '</ul>' : '<div class="line">Nothing yet: the keepsakes you earn are kept here.</div>');
+}
+function bag703(base) {
+  if (S.level >= 40 && !(S.seen && S.seen.bag703)) { S.seen = S.seen || {}; S.seen.bag703 = 1; save(); }   // she opened it: the dot goes
+  if (S.level < 41) return S.level >= 40 ? base + gear703() : base;
+  const t = BAG703.tab, tab = (k, label) => '<button type="button" class="tab703' + (t === k ? ' on' : '') + '" data-tab703="' + k + '">' + label + '</button>';
+  const tabs = '<div class="tabs703">' + tab('items', 'Items') + tab('keep', 'Keepsakes') + tab('gear', 'Gear') + '</div>';
+  if (t === 'gear') return tabs + gear703();
+  if (t === 'keep') return tabs + keep703();
+  const h = S.huethers || 0;
+  return tabs + '<div class="line">✦ ' + (S.runes || 0) + ' runes · 🪶 ' + h + ' white feather' + (h === 1 ? '' : 's') + '</div>' + base;
+}
+function bagDot703() { const b = $('quickBtn'); if (!b) return; const on = S.level >= 40 && !(S.seen && S.seen.bag703); if (b.classList.contains('new703') !== on) b.classList.toggle('new703', on); }
+function quickHtml() { return bag703(quickHtmlBase703()); }
+function quickHtmlBase703() {
   /* 650 (Marth, Oct 14: "the x button is poorly placed and the inventory design is just poor"; Itachi's BRIEF_650): a GAME inventory.
      Holding: her carry slots, filled or free, the beak when it holds a fruit, then the wayfinding lines. Pouch: six slots with a count
      badge (nails, logs, stones; the nest's flowers, branches, planks), dim at 0. Building: the build she is saving for as a card with its
@@ -1768,10 +1802,10 @@ function hud() {
 }
 const UNLOCKS = { 3: 'Strength 2: you can carry metal tools now.', 4: 'Quick Flutter unlocked: a burst of speed in the air.', 12: 'Strength 3.', 20: 'The Eagle is unlocked. Happy birthday, ' + NAME + '.',
   21: 'You can carry one more thing.', 24: 'Quick Flutter lasts longer.', 26: 'What to do now counts your chick to its next stage.', 27: 'A little boat now sails round the island. Land on its deck to ride along.', 28: 'What to do now names every signpost with its map square.',   // 641: every gift is TRUE in the code before it is named
-  30: 'Level 30! Your lungs are as strong as they will get.', 36: 'You can carry one more thing.', 45: 'You can carry one more thing.', 60: 'Level 60! As high as a bird can go. Look at you.' };   /* 703: the top moved to 60; 45 a true gift (carrySlots) */
+  30: 'Level 30! Your lungs are as strong as they will get.', 36: 'You can carry one more thing.', 40: 'A weapons holder, with the Gust Feather: your tail sweep reaches farther. Open the 🎒.', 41: 'A proper bag: your items, keepsakes and gear, in tabs.', 45: 'You can carry one more thing.', 60: 'Level 60! As high as a bird can go. Look at you.' };   /* 703: the top moved to 60; 45 a true gift (carrySlots) */
 /* 641: the next gift, so the number on the pill has somewhere to go */
 function nextGift() { for (const k of Object.keys(UNLOCKS).map(Number).sort((a, b) => a - b)) if (k > S.level) return { lv: k, text: UNLOCKS[k] }; return null; }
-const GIFT_SHORT = { 21: 'carry one more', 24: 'a longer Quick Flutter', 26: 'the chick\'s next stage counted', 27: 'a boat to ride', 28: 'signposts on the map', 30: 'the strongest lungs', 36: 'carry one more', 45: 'carry one more', 60: 'as high as a bird can go' };
+const GIFT_SHORT = { 21: 'carry one more', 24: 'a longer Quick Flutter', 26: 'the chick\'s next stage counted', 27: 'a boat to ride', 28: 'signposts on the map', 30: 'the strongest lungs', 36: 'carry one more', 40: 'a weapons holder', 41: 'a proper bag', 45: 'carry one more', 60: 'as high as a bird can go' };
 /* 642: THE LEVEL-UP IS A MOMENT (Marth: 'a fancier version of when u swap which bird u use'): the bird-swap flash, gold, held longer, with the
    number and the gift on a card; queued while a cutscene, a talk or another flash runs, never dropped; the toast still says the words after. */
 function levelMoment(n) { S.lvQ = S.lvQ || []; S.lvQ.push(n); }
@@ -3071,7 +3105,10 @@ function cloakPeek() {   // the bench's read (window.__wfr.cloak)
     programs: progs.length, progs: progs.map(function (p) { return [p.id, p.name || '']; }), played: S.played || 0, morph: !!S.morph, scale: bird ? +bird.scale.x.toFixed(4) : null, size: BIRDS[kind].size, kind: kind,
     rainy: rainy(), k: WX.k, where: (S.sky && S.sky.where) || 'home', mode: S.mode, y: S.pos.y, runeHex: rn ? rn.material.color.getHex() : null };
 }
-$('quickBody').addEventListener('pointerdown', (e) => { const b = e.target && e.target.closest ? e.target.closest('#cloakMake') : null; if (!b) return; e.preventDefault(); cloakMake(); });   // pointerdown, not click: the body is rewritten every second, and a click could lose its target
+$('quickBody').addEventListener('pointerdown', (e) => { const b = e.target && e.target.closest ? e.target.closest('#cloakMake') : null; if (!b) return; e.preventDefault(); cloakMake(); });
+$('quickBody').addEventListener('pointerdown', (e) => { const t = e.target && e.target.closest ? e.target.closest('[data-tab703],#gust703') : null; if (!t) return; e.preventDefault();   /* 703: the bag's tabs and the Gust Feather */
+  if (t.id === 'gust703') { S.seen = S.seen || {}; S.seen.gustOff703 = gustOn703() ? 1 : 0; save(); } else BAG703.tab = t.dataset.tab703;
+  $('quickBody').innerHTML = quickHtml(); });   // pointerdown, not click: the body is rewritten every second, and a click could lose its target
 function homeOffered() {
   if (!S.nestDone || S.talking || S.tut !== 0 || S.inside || !(S.mode === 'walk' || S.mode === 'fly')) return false;
   const d = Math.hypot(S.pos.x - NEST.x, S.pos.z - NEST.z);
@@ -3464,7 +3501,7 @@ function atkHit(kind, i) {
     if (v.state === 'flinch') v.stateT = Math.max(v.stateT, ATK_FLINCH - 0.3); else { v.atkY = v.g.position.y; interrupt(v, 'flinch', ATK_FLINCH); } ATK.flinches++; n++; }   // listen and receive keep their own clocks: never interrupted
   const KD = window.WFR_FOLK && WFR_FOLK.children;
   if (KD) for (const k of KD.list) if (k.g.visible && !k.in && !(k.atkFall && k.atkFall.on) && reach(k.pos.x, k.pos.y + 0.5, k.pos.z, R) && fresh(k)) { atkTumble(k); n++; }
-  if (sw && SCO && (SCO.st === 'in' || SCO.st === 'swoop' || SCO.st === 'grab') && SCO.g.position.distanceTo(P) <= ATK_SWEEP.scout && fresh(SCO)) { scoutFlee(); n++; }
+  if (sw && SCO && (SCO.st === 'in' || SCO.st === 'swoop' || SCO.st === 'grab') && SCO.g.position.distanceTo(P) <= sweepReach703() && fresh(SCO)) { scoutFlee(); n++; }
   atkLog(kind, 'hit', i, n);
   if (!sw) { tone(n ? 880 : 1250, 0, 0.045, n ? 'square' : 'triangle', n ? 0.04 : 0.025); ATK_FX.sparkT = 0.14; } else if (n) tone(170, 0, 0.12, 'square', 0.04);
 }
@@ -4595,7 +4632,7 @@ function bgMusicTick(dt) {
    after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
    music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
    menu, a cutscene), the orchestra bows out. */
-const ORCH_SRC = 'orch-samples.js?v=1a2732054bcd';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const ORCH_SRC = 'orch-samples.js?v=eb4d88c428f9';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
 const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
 window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
 const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
@@ -6111,6 +6148,7 @@ try { if (localStorage.getItem('wfr.debug') === '1') window.__wfr = { eagle: () 
   heldLeft: () => { let n = 0; if (bird) bird.traverse((o) => { if (o !== bird && o.userData && o.userData.slot !== undefined) n++; }); return n; },
   carrying: () => S.fruit ? S.fruit.type.id || S.fruit.type.emoji : null, caught: () => S.fishCaught || 0,
   lv703: () => ({ level: S.level, xp: S.xp, max: LEVEL_MAX, bar: $('xpBar').style.width, carry: carrySlots(), next: nextGift(), title: ([...document.querySelectorAll('p')].map((q) => q.textContent).find((t) => /Grow from level/.test(t)) || '') }),   /* 703 bench (never the player's) */
+  bag703: () => ({ level: S.level, tab: BAG703.tab, gust: gustOn703(), reach: sweepReach703(), dot: !!($('quickBtn') && $('quickBtn').classList.contains('new703')), open: !$('quick').hidden, text: ($('quickBody') ? $('quickBody').textContent.replace(/\s+/g, ' ') : '').slice(0, 900) }),   /* 703 bench (never the player's) */
   xp: (n, why) => gainXP(n, why), missions: (full) => missionsHtml(full !== false),   /* 641 */
   runes: () => RUNES ? Object.assign(RUNES.peek(), { programs: renderer.info.programs.length, sceneObjects: (() => { let n = 0; scene.traverse(() => { n++; }); return n; })(), geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, toast: $('toast').hidden ? '' : $('toast').textContent, quest: $('quest').textContent, rainy: rainy(), where: (S.sky && S.sky.where) || 'home', smode: S.mode, played: S.played || 0, err: window.WFR_RUNES ? WFR_RUNES.error : 'no module' }) : { ready: false, err: window.WFR_RUNES ? WFR_RUNES.error : 'no module' },
   runesStart: (k) => !!(RUNES && RUNES.start(k)), runesForce: (f) => (RUNES ? RUNES.force(f) : null),
@@ -6939,6 +6977,7 @@ function frame(now) {
   horizonTick700();   // 700: the far islands take the sky's haze
   farTick682(S.real || dt);   // 682 B: the crossing, a far place's edge, a reload while away
   markTick701();   // 701: the markers (places gold, enemies red)
+  bagDot703();   // 703: the gold dot on the bag until she opens it
   evoTick(S.real || dt); lvTick(); morphTick(dt);   // after the mode block: it writes the bird's turn and size last, and puts them back at the end (642: a queued level-up starts here)
   arrowTick(dt); S.camCut = false;   // 588: after the camera has moved; 584: a door's camera cut lasts one frame
   sunFollow();
@@ -7015,7 +7054,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build 1a2732054bcd): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build eb4d88c428f9): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>
