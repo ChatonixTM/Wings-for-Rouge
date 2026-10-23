@@ -550,43 +550,43 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 <div class="rhRes" id="rhRes" hidden aria-live="polite"><b id="resRank"></b><span id="resLine"></span><small id="resTime"></small><small id="resNew" hidden></small></div>   <!-- 672 OURS/DRAFT words: Paused, Resume, Quit song -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="toon.js?v=4846577773ce"></script>
+<script src="toon.js?v=9af482651f10"></script>
 <script>(function () { let classic = false; try { classic = localStorage.getItem('wfr.look') === 'classic'; } catch (e) { /* private mode: Standard */ }
   window.WFR_DOOR = classic ? { w: 1.2, h: 2, classic: true } : { w: 1.5, h: 2.9, classic: false }; }());   /* 683 C1: THE doorway, local units (x HS 1.6: Standard 2.4 x 4.64 m; a villager, drawn 3.67-3.72 m, is 80% of it; the brief's 2.6 left him at 89%). The ring houses, the 641 house, the cabins and the walk read it. Classic is frozen (Marth, Oct 14, board 645): its doors stay 1.2 x 2. The look is read as the game reads it (it reloads on a switch). */</script>
-<script src="gltf-loader.js?v=4846577773ce"></script>
-<script src="skeleton-utils.js?v=4846577773ce"></script>
-<script src="meshopt-decoder.js?v=4846577773ce"></script>
-<script src="models.js?v=4846577773ce"></script>
-<script src="people.js?v=4846577773ce"></script>
-<script src="villagers.js?v=4846577773ce"></script>
-<script src="tex-photos.js?v=4846577773ce"></script>
-<script src="textures.js?v=4846577773ce"></script>
-<script src="birds.js?v=4846577773ce"></script>
-<script src="humans.js?v=4846577773ce"></script>
-<script src="folk.js?v=4846577773ce"></script>
-<script src="trees.js?v=4846577773ce"></script>
-<script src="treehouses.js?v=4846577773ce"></script>
-<script src="cabins.js?v=4846577773ce"></script>
-<script src="cave.js?v=4846577773ce"></script>
-<script src="hermits.js?v=4846577773ce"></script>
-<script src="sounds.js?v=4846577773ce"></script>
-<script src="music.js?v=4846577773ce"></script>
-<script src="music-orchestra.js?v=4846577773ce"></script>
-<script src="rhythm.js?v=4846577773ce"></script>
-<script src="pictograms.js?v=4846577773ce"></script>
-<script src="chick-wear.js?v=4846577773ce"></script>
-<script src="hedgehogs.js?v=4846577773ce"></script>
-<script src="opening.js?v=4846577773ce"></script>
-<script src="skypiea.js?v=4846577773ce"></script>
-<script src="pirate.js?v=4846577773ce"></script>
-<script src="atmo.js?v=4846577773ce"></script>
-<script src="boat.js?v=4846577773ce"></script>
-<script src="weather.js?v=4846577773ce"></script>
-<script src="village-build.js?v=4846577773ce"></script>
-<script src="runes.js?v=4846577773ce"></script>
-<script src="orchard.js?v=4846577773ce"></script>
-<script src="net678.js?v=4846577773ce"></script>
-<script src="net678-config.js?v=4846577773ce"></script>
+<script src="gltf-loader.js?v=9af482651f10"></script>
+<script src="skeleton-utils.js?v=9af482651f10"></script>
+<script src="meshopt-decoder.js?v=9af482651f10"></script>
+<script src="models.js?v=9af482651f10"></script>
+<script src="people.js?v=9af482651f10"></script>
+<script src="villagers.js?v=9af482651f10"></script>
+<script src="tex-photos.js?v=9af482651f10"></script>
+<script src="textures.js?v=9af482651f10"></script>
+<script src="birds.js?v=9af482651f10"></script>
+<script src="humans.js?v=9af482651f10"></script>
+<script src="folk.js?v=9af482651f10"></script>
+<script src="trees.js?v=9af482651f10"></script>
+<script src="treehouses.js?v=9af482651f10"></script>
+<script src="cabins.js?v=9af482651f10"></script>
+<script src="cave.js?v=9af482651f10"></script>
+<script src="hermits.js?v=9af482651f10"></script>
+<script src="sounds.js?v=9af482651f10"></script>
+<script src="music.js?v=9af482651f10"></script>
+<script src="music-orchestra.js?v=9af482651f10"></script>
+<script src="rhythm.js?v=9af482651f10"></script>
+<script src="pictograms.js?v=9af482651f10"></script>
+<script src="chick-wear.js?v=9af482651f10"></script>
+<script src="hedgehogs.js?v=9af482651f10"></script>
+<script src="opening.js?v=9af482651f10"></script>
+<script src="skypiea.js?v=9af482651f10"></script>
+<script src="pirate.js?v=9af482651f10"></script>
+<script src="atmo.js?v=9af482651f10"></script>
+<script src="boat.js?v=9af482651f10"></script>
+<script src="weather.js?v=9af482651f10"></script>
+<script src="village-build.js?v=9af482651f10"></script>
+<script src="runes.js?v=9af482651f10"></script>
+<script src="orchard.js?v=9af482651f10"></script>
+<script src="net678.js?v=9af482651f10"></script>
+<script src="net678-config.js?v=9af482651f10"></script>
 <script>
 (() => {
 'use strict';
@@ -3688,7 +3688,7 @@ function doSing() {
   if (!(window.WFR_SOUND && audio() && WFR_SOUND.call(kind, { vol: 0.7 }))) [0, 0.12, 0.24, 0.42].forEach((t, i) => tone(PENTA[(i * 2 + Math.floor(Math.random() * 2)) % 6] * 2, t, 0.14, 'triangle', 0.08));
   let heard = 0; const fresh = S.singCd <= 0;   // the words and the bodies share one gate: when the toast says they stop, they stop
   for (const n of npcs) if (n.g.visible && n.g.position.distanceTo(S.pos) < 16) { n.smileT = Math.max(n.smileT, 2.5); heard++; if (fresh) listen(n); }
-  for (const q of nearPeople676(16)) if (!q.npc) { heard++; if (fresh && typeof VG !== 'undefined' && VG && VG.npc && q.g === VG.npc.g) { VG.npc.waveT = 2.6; VG.wrenSung = (VG.wrenSung || 0) + 1; } }   /* 676 (a): Wren waves from his porch; Hal, the kids, the hermits count */
+  for (const q of nearPeople676(16)) if (!q.npc) { heard++; if (fresh && typeof vgOwner704 === 'function' && vgOwner704(q.g)) { const o = vgOwner704(q.g); o.npc.waveT = 2.6; o.wrenSung = (o.wrenSung || 0) + 1; }   /* 704: the villager at any house, sealed or not */ }   /* 676 (a): Wren waves from his porch; Hal, the kids, the hermits count */
   if (fresh && chick && S.nestDone && (S.chick.bond || 0) >= 60 && chick.position.distanceTo(S.pos) < 16) setTimeout(() => { if (window.WFR_SOUND && audio()) WFR_SOUND.call(kind, { vol: 0.35, notes: 1 }); else tone(1568, 0, 0.12, 'triangle', 0.05); S.chickHop = 1; chickFeel(0, 2); }, 650);   // 564: at 60 the chick answers her song
   if (heard && fresh) { gainXP(5, 'a song'); S.singCd = 8; toast(heard > 1 ? 'The villagers stop to listen.' : 'A villager stops to listen.'); }
 }
@@ -4595,7 +4595,7 @@ function bgMusicTick(dt) {
    after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
    music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
    menu, a cutscene), the orchestra bows out. */
-const ORCH_SRC = 'orch-samples.js?v=4846577773ce';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const ORCH_SRC = 'orch-samples.js?v=9af482651f10';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
 const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
 window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
 const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
@@ -5032,7 +5032,7 @@ const VG_SAY = { 1: 'Two trees came down and the plot is cleared!', 2: 'The fram
 if (VGW) S.village = VGW.clean(S.village);
 function vgOpen() { return !!VGW && !!S.nestDone && (S.built >= BUILDS.length || S.level >= 20); }   // DRAFT gate: after the village's six builds, or from the Eagle's level
 function vgOn() { return !!(VG && VG.on); }
-function vgPlot() { return S.village.plot1; }
+function vgPlot() { const c = S.village.cur || 1; return c === 1 ? S.village.plot1 : (S.village['plot' + c] || (S.village['plot' + c] = { got: {}, stage: 0 })); }   /* 704: the plot being built now (plot1 first, then plot2, plot3...) */
 function vgWants(k) { return vgOn() && vgPlot().stage < VGW.LAST ? Math.max(0, (VGW.TOTAL[k] || 0) - (vgPlot().got[k] || 0)) : 0; }
 function vgShort(k) { return Math.max(0, vgWants(k) - (S.inv[k] || 0)); }
 function vgBase() { return npcs.length + (FOLK ? 1 : 0) + (KIDS && WFR_FOLK.children ? WFR_FOLK.children.list.length : 0); }   // the game's own people: the six, Hal, the children
@@ -5047,21 +5047,27 @@ function vgSite() {
     const a = (k + 0.5) / 12 * Math.PI * 2, x = VILLAGE.x + Math.cos(a) * r, z = VILLAGE.z + Math.sin(a) * r, y = H(x, z);
     let ok = y > WATER + 1.8 && y < 22 && Math.hypot(x, z) < EDGE - 30 && Math.hypot(x - LAKE.x, z - LAKE.z) > 60 && Math.hypot(x - MOUND.x, z - MOUND.z) > 25;
     if (ok) for (const [cx, cz] of [[-4.5, -4.5], [4.5, -4.5], [-4.5, 4.5], [4.5, 4.5]]) if (Math.abs(H(x + cx, z + cz) - y) > 1.6) ok = false;
-    if (ok) ok = houses.every((h) => Math.hypot(h.x - x, h.z - z) > 13) && TREEHOUSES.every((t) => Math.hypot(t.x - x, t.z - z) > 12) && (!jetty || Math.hypot(jetty.x - x, jetty.z - z) > 18);
+    if (ok) ok = VG_DONE.every((v) => Math.hypot(v.x - x, v.z - z) > 14) && houses.every((h) => Math.hypot(h.x - x, h.z - z) > 13) && TREEHOUSES.every((t) => Math.hypot(t.x - x, t.z - z) > 12) && (!jetty || Math.hypot(jetty.x - x, jetty.z - z) > 18);
     cands.push({ x, z, ok });
   }
   return VGW.pickPlot(cands, trees.map((t) => ({ x: t.x, z: t.z, skip: fruitTrees.some((f) => f.t === t) })));   // a fruit tree is never cut
 }
 function vgBuild() {
   if (VG) return;
+  if (!VG_FORCE) {   /* 704: the sealed houses from the save first, each whole at its own site (every path: the boot calls vgBuild directly) */
+    const sites = S.village.sites || [];
+    while (VG_DONE.length < sites.length) { const s = sites[VG_DONE.length]; VG_FORCE = { cand: { x: s.x, z: s.z }, trees: s.trees || [], n: s.n || VG_DONE.length + 1 }; try { vgBuild(); } finally { VG_FORCE = null; } VG_DONE.push(VG || { x: s.x, z: s.z, npc: null }); VG = null; }
+    if (vgCount().n >= VGW.CAP) return;   /* the village is complete: no plot opens */
+  }
   VG = { on: false, err: '', stage: -1, g: [], h: null, cd: 0, told: false, inPlot: false, npc: null, stumped: false, stumps: [], doorT: 0, gave: 0 };
   try {
-    const site = vgSite(); if (!site) { VG.err = 'no plot passed the tests'; return; }
+    const site = VG_FORCE || vgSite(); if (!site) { VG.err = 'no plot passed the tests'; return; }   /* 704: a sealed house is rebuilt at its saved site */
     const c = site.cand, rot = Math.atan2(VILLAGE.x - c.x, VILLAGE.z - c.z) || 0, y = H(c.x, c.z);
     Object.assign(VG, { x: c.x, z: c.z, y, rot, h: { x: c.x, z: c.z, rot }, treeIx: site.trees, treeTop0: site.trees.map((i) => trees[i].top) });
     VG.root = new THREE.Group(); VG.root.position.set(c.x, y, c.z); VG.root.rotation.y = rot; scene.add(VG.root);
     VG.sign = emojiSprite('🏡', 2.2); VG.signY = y + 6.2; VG.sign.position.set(c.x, VG.signY, c.z); scene.add(VG.sign);
-    VG.on = true; vgShow(vgPlot().stage, false); vgWarm();
+    VG.on = true; VG.houseN = VG_FORCE ? VG_FORCE.n : (S.village.cur || 1); if (!VG_FORCE) vgPlot().stage = VGW.stageOf(vgPlot().got);   /* 704 */
+    vgShow(VG_FORCE ? VGW.LAST : vgPlot().stage, false); if (!VG_FORCE) vgWarm();
   } catch (e) { VG.err = String((e && e.message) || e); VG.on = false; }
 }
 /* H7 (tests/house641.js, red at the roof: programs 46 -> 47 at the move-in, a stutter on her phone). three.js compiles a program the first
@@ -5156,7 +5162,7 @@ function vgShow(stage, fresh) {
 }
 function vgNewcomer(walk) {   // walk: from the green (between two houses) to the door; else (a reload) already on the porch
   const m = window.WFR_HUMANS ? WFR_HUMANS.make(THREE, 2, NC_PAL, { renderer }) : makeHuman(2);
-  const n = Object.assign(m, { name: NC_NAME, i: 6, yaw: 0, stride: 0, state: walk ? 'walk' : 'porch', waveCd: 4, waveT: 0, from: null });
+  const n = Object.assign(m, { name: vgName704(), i: 6, yaw: 0, stride: 0, state: walk ? 'walk' : 'porch', waveCd: 4, waveT: 0, from: null });
   const door = vgDoorAt(1.1), from = walk ? vgDoorAt(8) : door;
   n.from = [from.x, from.z]; n.g.position.set(from.x, H(from.x, from.z), from.z); n.yaw = walk ? Math.atan2(door.x - from.x, door.z - from.z) : VG.rot; n.g.rotation.y = n.yaw;
   n.g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } }); scene.add(n.g); VG.npc = n;
@@ -5184,7 +5190,7 @@ function vgDeliver() {
   for (const k in t.give) { S.inv[k] = (S.inv[k] || 0) - t.give[k]; P.got[k] = (P.got[k] || 0) + t.give[k]; }
   const s0 = P.stage; P.stage = VGW.stageOf(P.got); VG.told = true; VG.gave++;
   const up = P.stage > s0, done = up && P.stage >= VGW.LAST;
-  if (done) S.village.moved = Math.max(S.village.moved || 0, 1);
+  if (done) S.village.moved = Math.max(S.village.moved || 0, S.village.cur || 1);   /* 704: one villager per finished house */
   chirp(); ding(); if (up) fanfare();
   gainXP(Math.min(40, 2 * t.n) + (up ? 30 : 0) + (done ? 50 : 0), done ? 'a new neighbour' : up ? 'the new home rose' : 'the new home');   // DRAFT amounts
   save(); hud();
@@ -5192,8 +5198,28 @@ function vgDeliver() {
   const gave = Object.keys(t.give).map((k) => t.give[k] + ' ' + matEmoji(k)).join(' + ');
   toast(done ? 'The roof is on! The new home is finished, and someone is moving in...' : up ? VG_SAY[P.stage] + ' Next, ' + VGW.next(P.got).name + ': ' + vgNeedText() + '.' : 'You gave ' + gave + ' to the new home. ' + VGW.next(P.got).name[0].toUpperCase() + VGW.next(P.got).name.slice(1) + ': ' + vgNeedText() + '.', 5200);   // DRAFT words
 }
+/* 704 THE HOUSE QUEUE (Marth: "after 'Wren' it doesnt seem like the other houses are loaded in either"): a whole house whose newcomer has
+   stood on the porch 3 s is sealed and the next plot opens; sealed houses are rebuilt from the save first, each at its own site. DRAFT. */
+var VG_DONE = [], VG_FORCE = null, VG_SEALT = 0;
+const NC_NAMES = ['Wren', 'Juniper', 'Cedar', 'Hazel', 'Rowan', 'Linden', 'Briar', 'Willow', 'Sage', 'Robin', 'Clover', 'Ash', 'Fern', 'Laurel', 'Birch', 'Heath', 'Holly', 'Reed', 'Aspen', 'Maple', 'Alder', 'Bramble', 'Thistle', 'Poppy', 'Sorrel', 'Yarrow', 'Tansy', 'Rue'];   // DRAFT (Marth or Rouge may name them); the first is Wren
+function vgName704() { const n = (VG && VG.houseN) || S.village.cur || 1; return NC_NAMES[(n - 1) % NC_NAMES.length]; }
+function vgNext704() { vgBuild(); }   // vgBuild rebuilds the sealed houses first and keeps the cap (the boot path calls vgBuild too)
+function vgOwner704(g) { if (VG && VG.npc && VG.npc.g === g) return VG; for (const v of VG_DONE) if (v.npc && v.npc.g === g) return v; return null; }
+function vgWren704() { for (const v of VG_DONE) if (v.npc && v.npc.name === 'Wren') return v; return VG && VG.npc && VG.npc.name === 'Wren' ? VG : null; }
+function vgSeal704(dt) {
+  const n = VG.npc; if (!(vgPlot().stage >= VGW.LAST && n && n.state === 'porch')) { VG_SEALT = 0; return; }
+  if ((VG_SEALT += dt) < 3) return; VG_SEALT = 0;
+  const cur = S.village.cur || 1; S.village.sites = S.village.sites || [];
+  S.village.sites.push({ x: +VG.x.toFixed(3), z: +VG.z.toFixed(3), trees: (VG.treeIx || []).slice(), n: cur });
+  VG_DONE.push(VG); VG = null; S.village.cur = cur + 1; S.village['plot' + (cur + 1)] = { got: {}, stage: 0 }; save(); hud();
+  if (vgCount().n >= VGW.CAP) toast('Village complete! ' + VGW.CAP + ' villagers call this island home.', 5200);   // DRAFT words
+  else toast(NC_NAMES[(cur - 1) % NC_NAMES.length] + ' is settled in. There is room for another home: look for the next 🏡.', 4600);   // DRAFT words
+}
+function vgDoneTick704(dt) { if (!VG_DONE.length) return; const keep = VG; for (const v of VG_DONE) { VG = v; try { vgNpcTick(dt); } catch (e) { /* a finished house never stops the game */ } } VG = keep; }
 function vgTick(dt) {
-  if (!VG) { if ((VG_CHK += dt) > 1) { VG_CHK = 0; if (vgOpen()) vgBuild(); } return; }
+  vgDoneTick704(dt);   /* 704: the finished houses' villagers on their porches */
+  if (!VG) { if ((VG_CHK += dt) > 1) { VG_CHK = 0; if (vgOpen()) vgNext704(); } return; }
+  vgSeal704(dt); if (!VG) return;   /* 704: a whole house is sealed, the next plot opens */
   if (!VG.on) return;
   if (VG.sign.visible) VG.sign.position.y = VG.signY + Math.sin(S.t * 2) * 0.25;
   if (!(S.seen && S.seen.house641) && $('toast').hidden && S.tut === 0 && !S.talking && ['walk', 'fly', 'hover', 'swim'].includes(S.mode) && vgPlot().stage < VGW.LAST) { S.seen = S.seen || {}; S.seen.house641 = true; save(); toast('Stakes went up by the village (the 🏡): a new home! Bring stones, logs and nails, and land on the stakes.', 5600); }   // DRAFT; once
@@ -5206,7 +5232,7 @@ function vgTick(dt) {
 }
 function vgLines() {
   const nx = VGW.next(vgPlot().got), L = [vgCount().text + '.'];
-  L.push(nx ? 'A new home is staked out by the village at ' + mapCell(VG.x, VG.z) + ' (the 🏡). Next, ' + nx.name + ': ' + vgNeedText() + '. Land on the stakes with them.' : NC_NAME + ' moved into the new home.');
+  L.push(nx ? 'A new home is staked out by the village at ' + mapCell(VG.x, VG.z) + ' (the 🏡). Next, ' + nx.name + ': ' + vgNeedText() + '. Land on the stakes with them.' : vgName704() + ' moved into the new home.');
   return L;
 }
 function vgCard() {
@@ -5911,7 +5937,10 @@ try { if (localStorage.getItem('wfr.debug') === '1') window.__wfr = { eagle: () 
   teachMorph: () => (S.morph ? [S.morph.t, !!S.morph.swapped] : null), teachToast: () => ($('toast').hidden ? '' : $('toast').textContent),
   teachEnd: () => { S.sky = S.sky || { seen: false, ended: false, where: 'home' }; S.sky.seen = true; S.sky.ended = true; save(); return isOpen(BIRDS.crow); },   /* the ending's own write (skypiea.js:501/644), nothing else of it */
   net678: () => (window.WFR_NET678 ? WFR_NET678.state() : null), net678Out: () => { const T = window.WFR_NET678 && WFR_NET678._fake(); return T ? T.outbox.splice(0) : []; }, net678In: (o, d) => { WFR_NET678._inject(o, d); }, net678Join: (c, n) => WFR_NET678.join(c, n), net678Leave: () => WFR_NET678.leave(), net678Jitter: (o) => WFR_NET678._jitter(o),   /* 678 guard: the fake transport's two ends; v1.1: delivery with jitter */
-  wren676: () => ({ waveT: VG && VG.npc ? VG.npc.waveT : null, sung: VG ? VG.wrenSung || 0 : 0, near: nearPeople676(16).length }),   /* 676 (a) bench: Wren's wave, the songs he heard, people near her */
+  wren676: () => ({ waveT: vgWren704() && vgWren704().npc ? vgWren704().npc.waveT : null, sung: vgWren704() ? vgWren704().wrenSung || 0 : 0,   /* 704: Wren's own house */ near: nearPeople676(16).length }),   /* 676 (a) bench: Wren's wave, the songs he heard, people near her */
+  vgq: () => ({ cur: S.village.cur || 1, done: VG_DONE.length, sites: (S.village.sites || []).map((s) => [s.x, s.z, s.n]), names: VG_DONE.map((v) => (v.npc ? v.npc.name : null)), moved: S.village.moved || 0, count: vgCount().n, cap: VGW.CAP,
+    active: VG ? { x: VG.x, z: VG.z, on: !!VG.on, stage: VG.stage, n: VG.houseN, name: VG.npc ? VG.npc.name : null, err: VG.err } : null }),   /* 704 bench (never the player's) */
+  vgWren: () => { const w = vgWren704(); if (!w) return null; const keep = VG; VG = w; try { return window.__wfr.vg(); } finally { VG = keep; } },   /* 704: the bench's read of Wren's own house */
   vg: () => { const on = vgOn(), P = on ? vgPlot() : null, n = VG && VG.npc, dm = VG && VG.door ? VG.door.getWorldPosition(new THREE.Vector3()).toArray() : null; let saved = null; try { saved = (JSON.parse(localStorage.getItem('wfr.save') || 'null') || {}).village || null; } catch (e) { saved = 'bad'; }
     return { open: vgOpen(), on, err: VG ? VG.err : 'unbuilt', x: VG ? VG.x : null, z: VG ? VG.z : null, y: VG ? VG.y : null, R: VG_R, stage: P ? P.stage : null, got: P ? Object.assign({}, P.got) : null, moved: S.village ? S.village.moved : null, saved, inv: Object.assign({}, S.inv),
       parts: { npcs: npcs.length, hal: FOLK ? 1 : 0, kids: KIDS && WFR_FOLK.children ? WFR_FOLK.children.list.length : 0 }, count: on ? vgCount().text : null, groups: VG ? [0, 1, 2, 3].map((i) => VG.g[i] ? [VG.g[i].visible, +VG.g[i].scale.x.toFixed(3), VG.g[i].children[0].children.length] : null) : [], sign: !!(VG && VG.sign && VG.sign.visible),
@@ -6985,7 +7014,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build 4846577773ce): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build 9af482651f10): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>
