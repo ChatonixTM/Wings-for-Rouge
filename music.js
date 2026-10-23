@@ -259,7 +259,7 @@
       switch (e.k) {
         case 'harp': harpLike(e, t, out, s.spb, false); break;
         case 'mel': if (s.muteMel && (s.muteMel === 'all' || s.muteMel[e.b])) break; stats.mel++; harpLike(e, t, out, s.spb, true); break;   /* 562: her taps play these; 657: 'all' = the whole melody is hers, tail and fade included */
-        case 'bass': bass(e, t, out); break;
+        case 'bass': if (s.muteBass && s.muteMel === 'all' && s.muteBass[e.b]) { stats.bassLeft = (stats.bassLeft || 0) + 1; break; } stats.bassSong = (stats.bassSong || 0) + 1; bass(e, t, out); break;   /* 689: Expert's charted bass is hers to play (657's rule, by beat), only while the round's mute holds (so it never outlives the round) */
         case 'pad': pad(e, t, out, s.spb); break;
         case 'bell': bell(e, t, out); break;
         case 'thump': thump(e, t, out); break;
@@ -293,7 +293,8 @@
     if (sess) { retire(sess, 0.6); stopTimer(); }
     sess = newSession(variant, ctx.currentTime + 0.06, o.startBar, fadeIn);
     if (o.muteMel === 'all') sess.muteMel = 'all'; else if (o.muteMel) { sess.muteMel = {}; o.muteMel.forEach(function (b) { sess.muteMel[b] = true; }); }
-    sess.muteOrn = !!o.muteOrn;   /* 658 U6: an Expert round charts the island's answers: the song leaves them to her (only while the round's mute holds) */   /* 562: the charted notes are hers to play; 657: or every melody note */
+    sess.muteBass = null; if (o.muteBass && o.muteBass.length) { sess.muteBass = {}; o.muteBass.forEach(function (b) { sess.muteBass[b] = true; }); }   /* 689 */
+    sess.muteOrn = !!o.muteOrn && !sess.muteBass;   /* 658 U6: an Expert round charts the island's answers: the song leaves them to her (only while the round's mute holds) */   /* 562: the charted notes are hers to play; 657: or every melody note */
     startTimer();
     return true;
   }
@@ -311,6 +312,14 @@
      section-A bar whose melody holds, a tone of that bar's chord (C: bars 10, 14, 18, 22; D: bars 12, 16, 20, 24). OURS/DRAFT, for his ear. */
   var ORN = { 10: 'E5', 12: 'A4', 14: 'G5', 16: 'F#5', 18: 'C5', 20: 'A4', 22: 'G4', 24: 'F#4' };
   function ornaments(from, to, variant) { if ((variant || 'home') !== 'home') return []; return build('home').filter(function (e) { return e.k === 'orn' && e.b >= (from - 1) * BEATS && e.b < to * BEATS; }).map(function (e) { return { b: e.b, m: e.m, d: e.d, orn: true }; }); }
+  /* 689: the song's own bass, bars from..to inclusive, in beats from bar 1, for Expert's 4th lane. 'legend' (the slow harp) has no bass of its
+     own: it is the island's harmony, so it lends the island's. */
+  function bassline(from, to, variant) { var v = variant || 'home'; if (v === 'legend') v = 'home'; var B = BEATS_OF[v] || BEATS; if (!READY[v]) return [];
+    return build(v).filter(function (e) { return e.k === 'bass' && e.b >= (from - 1) * B && e.b < to * B; }).map(function (e) { return { b: e.b, m: e.m }; }); }
+  /* 689: one bass note NOW from her tap, on the session's bass strip (Mute and the volume reach it): the song's own bass voice at its exact
+     pitch, and a soft harp an octave up so a phone's small speaker carries it (OURS/DRAFT, for her ear) */
+  function bassNote(m) { if (!sess || !ctx) return false; stats.bassTapped = (stats.bassTapped || 0) + 1; var t = ctx.currentTime + 0.005;
+    bass({ m: m, v: 1 }, t, sess.strips.bass); harpLike({ b: 0, k: 'harp', m: m + 12, d: 0.5, v: 0.55 }, t, sess.strips.bass, sess.spb, false); return true; }
   var HOLDS_OF = {};
   /* 620 U2 "GEM CUT" (Marth, Oct 15 ~23:55: "make it sound like the sand level in sonic or some egeyption shi"). ORIGINAL: composed here; no
      melody, riff or hook from any game's song. E Phrygian dominant (E F G# A B C D): the home chord is E major and the tune leans on the half
@@ -427,7 +436,7 @@
 
   window.WFR_MUSIC = {
     cue: cue, cueCount: function () { return cueN; },
-    init: init, play: play, stop: stop, setMuted: setMuted, setVolume: setVolume, note: note, clearMute: clearMute, melody: melody, info: info, holds: holds, ornaments: ornaments, drone: drone, droneOff: droneOff, droneInfo: droneInfo, latency: latency,
+    init: init, play: play, stop: stop, setMuted: setMuted, setVolume: setVolume, note: note, clearMute: clearMute, melody: melody, info: info, holds: holds, ornaments: ornaments, bassline: bassline, bassNote: bassNote, drone: drone, droneOff: droneOff, droneInfo: droneInfo, latency: latency,
     get playing() { return !!(sess && !sess.stopping); },
     get variant() { return sess ? sess.variant : null; },
     position: function () { if (!sess || !ctx) return null; var p = (ctx.currentTime - sess.loopStart) % sess.loopLen; return p < 0 ? p + sess.loopLen : p; },

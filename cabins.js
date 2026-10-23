@@ -65,7 +65,8 @@ window.WFR_CABINS = (function () {
     w: 5.6, d: 5.2, ht: 3.4,  // fixed (552 §4): the game's toLocal / groundAt / walk code read these
     r: 0.2,                   // log radius: courses every 0.4
     ov: 0.5,                  // log ends run past the wall line (the notched corners)
-    dw: 1.2, dh: 2.0,         // the doorway: the game walks her in through |x| < 0.6
+    dw: (typeof window !== 'undefined' && window.WFR_DOOR ? window.WFR_DOOR.w : 1.5),   // 683 C1: the doorway is THE doorway (window.WFR_DOOR: Standard 1.5 x 2.9, Classic 1.2 x 2;
+    dh: (typeof window !== 'undefined' && window.WFR_DOOR ? window.WFR_DOOR.h : 2.9),   //   node alone: Standard's). The game walks her in through |x| < dw / 2; the cut, threshold, frame, lintel and leaf read dw / dh
     slope: 0.8,               // roof pitch (rise per run, ~38.7 degrees)
     eave: 0.45,               // roof past the side walls' outer face
     front: 0.8, back: 0.5,    // roof past the front (over the door) and the back gable
@@ -362,13 +363,14 @@ window.WFR_CABINS = (function () {
 
     /* ── the door frame and the door (on its pivot: rotation.y 0 shut, 1.4 open, swinging in like a village door) ── */
     for (const s of [-1, 1]) wood.push(Object.assign(boxAt(s * (dw / 2 + 0.05) - 0.06, 0.02, D2 - r - 0.03, s * (dw / 2 + 0.05) + 0.06, dh + 0.04, D2 + r + 0.03), { col: rgb(COL.wood, 0.8), uv: [0.2, 1.4], swap: true }));
-    wood.push(Object.assign(boxAt(-dw / 2 - 0.16, dh, D2 - r - 0.03, dw / 2 + 0.16, dh + 0.14, D2 + r + 0.03), { col: rgb(COL.wood, 0.75), uv: [1, 0.2] }));
+    wood.push(Object.assign(boxAt(-dw / 2 - 0.16, dh, D2 - r - 0.03, dw / 2 + 0.16, Math.max(dh + 0.14, 2 * r * Math.ceil(dh / (2 * r) - 1e-6) + 0.04), D2 + r + 0.03), { col: rgb(COL.wood, 0.75), uv: [1, 0.2] }));   // 683 C1: up to the first uncut course (at 1.2 x 2: dh + 0.14, as before)
     const doorCol = rgb(V.door), doorParts = [];
-    for (let b = 0; b < 5; b++) doorParts.push(Object.assign(boxAt(b * 0.24 + 0.004, 0, -0.035, b * 0.24 + 0.236, 1.88, 0.035), { col: doorCol.map((v) => v * (0.9 + 0.14 * seq(b, 0.2))), uv: [0.19, 1.2], swap: true }));
-    for (const by of [0.32, 1.5]) doorParts.push(Object.assign(boxAt(0.06, by - 0.07, -0.085, 1.14, by + 0.07, -0.035), { col: doorCol.map((v) => v * 0.8) }));   // battens, inside
-    { const br = rod([0.16, 0.4, -0.06], [1.04, 1.43, -0.06], 0.05, 0.05, 4, true); doorParts.push({ g: br.g, m: br.m, col: doorCol.map((v) => v * 0.78) }); }
-    for (const hy of [0.32, 1.5]) doorParts.push(Object.assign(boxAt(0.02, hy - 0.035, 0.035, 0.5, hy + 0.035, 0.05), { col: rgb(COL.iron) }));   // hinge straps
-    for (const s of [-1, 1]) { const hd = new T.TorusGeometry(0.06, 0.014, 5, 10); doorParts.push({ g: hd, m: M(1.05, 0.95, s * 0.06, 0, Math.PI / 2, 0), col: rgb(COL.iron) }); }   // a ring pull each side
+    const bw = dw / 5, kh = dh / 2;   // 683 C1: five boards across the doorway, the ironwork at the same fractions of its height (drawn by hand for 1.2 x 2: those numbers come back at 1.2 x 2)
+    for (let b = 0; b < 5; b++) doorParts.push(Object.assign(boxAt(b * bw + 0.004, 0, -0.035, (b + 1) * bw - 0.004, dh - 0.12, 0.035), { col: doorCol.map((v) => v * (0.9 + 0.14 * seq(b, 0.2))), uv: [0.19, 1.2], swap: true }));
+    for (const by of [0.32 * kh, 1.5 * kh]) doorParts.push(Object.assign(boxAt(0.06, by - 0.07, -0.085, dw - 0.06, by + 0.07, -0.035), { col: doorCol.map((v) => v * 0.8) }));   // battens, inside
+    { const br = rod([0.16, 0.4 * kh, -0.06], [dw - 0.16, 1.43 * kh, -0.06], 0.05, 0.05, 4, true); doorParts.push({ g: br.g, m: br.m, col: doorCol.map((v) => v * 0.78) }); }
+    for (const hy of [0.32 * kh, 1.5 * kh]) doorParts.push(Object.assign(boxAt(0.02, hy - 0.035, 0.035, 0.5, hy + 0.035, 0.05), { col: rgb(COL.iron) }));   // hinge straps
+    for (const s of [-1, 1]) { const hd = new T.TorusGeometry(0.06, 0.014, 5, 10); doorParts.push({ g: hd, m: M(dw - 0.15, 0.95 * kh, s * 0.06, 0, Math.PI / 2, 0), col: rgb(COL.iron) }); }   // a ring pull each side
     const door = new T.Group(); door.name = 'cabin:door'; door.position.set(-dw / 2, D.floorTop - 0.02, D2);
     const doorMesh = new T.Mesh(merge(doorParts), mat('door', 0xffffff, { vertexColors: true }, 'planks', R)); door.add(doorMesh);
 
@@ -385,8 +387,9 @@ window.WFR_CABINS = (function () {
       for (const e of [-1, 1]) wood.push(Object.assign(B(c + e * h - 0.05, o.y0, -0.24, c + e * h + 0.05, o.y1, 0.24), { col: fr }));   // jambs
       wood.push(Object.assign(B(c - 0.03, o.y0 + 0.08, -0.035, c + 0.03, o.y1 - 0.08, 0.035), { col: fr }));          // glazing bars
       wood.push(Object.assign(B(c - h, ym - 0.03, -0.035, c + h, ym + 0.03, 0.035), { col: fr }));
-      for (const e of [-1, 1]) { const a0 = c + e * (h + 0.06), a1 = c + e * (h + 0.06 + o.shut);   // shutters, open flat against the logs
-        wood.push(Object.assign(B(Math.min(a0, a1), o.y0 + 0.02, r + 0.005, Math.max(a0, a1), o.y1 - 0.02, r + 0.055), { col: shut.map((v) => v * (0.92 + 0.1 * e)), uv: [o.shut / 1.3, 1], swap: true })); }
+      const sw = o.wall === 'front' ? Math.max(0.12, Math.min(o.shut, Math.abs(c) - h - 0.06 - (dw / 2 + 0.11 + 0.03))) : o.shut;   // 683 C1: a front shutter stops 3 cm short of the door frame's post (its outer edge dw / 2 + 0.11); at 1.2 x 2 that leaves o.shut
+      for (const e of [-1, 1]) { const a0 = c + e * (h + 0.06), a1 = c + e * (h + 0.06 + sw);   // shutters, open flat against the logs
+        wood.push(Object.assign(B(Math.min(a0, a1), o.y0 + 0.02, r + 0.005, Math.max(a0, a1), o.y1 - 0.02, r + 0.055), { col: shut.map((v) => v * (0.92 + 0.1 * e)), uv: [sw / 1.3, 1], swap: true })); }
       const pane = new T.Mesh(o.wall === 'left' ? new T.BoxGeometry(0.04, o.y1 - o.y0 - 0.16, 2 * h - 0.1) : new T.BoxGeometry(2 * h - 0.1, o.y1 - o.y0 - 0.16, 0.04), glassMat);
       if (o.wall === 'left') pane.position.set(-W2, ym, c); else pane.position.set(c, ym, D2);
       pane.name = 'cabin:window:' + o.wall; windows.push(pane);

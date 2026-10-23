@@ -637,9 +637,11 @@ window.WFR_TEX = (function () {
   const photoState = {};
   /* 626: the dial. Standard = the photos at full strength; Classic = no photos (the island as hand-painted). Read once per load. */
   const CLASSIC_LOOK = (function () { try { return localStorage.getItem('wfr.look') === 'classic'; } catch (e) { return false; } })();
+  const WW_LOOK = !CLASSIC_LOOK && !(function () { try { return /[?&]ww=0(&|$)/.test(location.search); } catch (e) { return false; } })();   // 683 (e): Standard wears the painted set (Wind Waker); ?ww=0 = the photo look of #41. Read once: nothing switches while it runs
   const PHOTO_SIZE = 512, PHOTO_HUE = CLASSIC_LOOK ? 0.25 : 0.65, PHOTO_CONTRAST = CLASSIC_LOOK ? 0.85 : 1.0;   // how much of the photo's own colour survives; detail strength
   function photoFor(base) {
     if (CLASSIC_LOOK) return;   // 626: Classic keeps the hand-made textures untouched
+    if (WW_LOOK) return;   // 683 (e): the painted look wears no photo (Obito: a photo under the toon light is "the definition of a filter")
     const P = window.WFR_PHOTOS; if (!P || !P.use || !P.files || photoState[base]) return;
     const key = P.use[base] ? base : (/^roof_clay_/.test(base) ? 'roofTiles' : null);   // the village houses' clay roofs (any colour) wear the clay-tile photo
     const src = key && P.files[P.use[key]]; if (!src) return;
@@ -1097,7 +1099,8 @@ window.WFR_TEX = (function () {
     g.fillStyle = rg; g.fillRect(0, 0, S, 10);
     g.fillStyle = 'rgba(25,18,12,0.5)'; g.fillRect(0, S - 3, S, 3);
   }
-  function roofPainter(kind, hex) {
+  function roofPainter(kind, hex, hand) {
+    if (WW_LOOK && !hand) return wwRoof(kind, hex);   // 683 (e): the painted roof, in the roof's own colour
     return function () {
       const S = 256, c = canvas(S), g = ctx(c), r = rng((kind === 'slate' ? 579400 : 579300) + (hex % 997)), base = hexRGB(hex);
       if (kind === 'slate') paintSlate(g, S, base, r); else paintClay(g, S, base, r);
@@ -1348,10 +1351,10 @@ window.WFR_TEX = (function () {
         sh.vertexShader = v.replace('#include <common>', '#include <common>\nattribute vec4 wfrSurf;\nvarying vec4 vWfrSurf;\nvarying vec3 vWfrPos;')
           .replace('#include <begin_vertex>', '#include <begin_vertex>\nvWfrSurf = wfrSurf;\nvWfrPos = ( modelMatrix * vec4( transformed, 1.0 ) ).xyz;');
         sh.fragmentShader = f.replace('#include <common>', '#include <common>\nuniform sampler2D wfrDetail;\nuniform float wfrWater;\nuniform vec4 wfrVil;\nuniform float wfrVilOn;\nvarying vec4 vWfrSurf;\nvarying vec3 vWfrPos;')
-          .replace('#include <map_fragment>', GROUND_MAP).replace('#include <color_fragment>', '#include <color_fragment>\n' + GROUND_FRAG);
+          .replace('#include <map_fragment>', GROUND_MAP).replace('#include <color_fragment>', '#include <color_fragment>\n' + (WW_LOOK ? GROUND_FRAG_WW : GROUND_FRAG));
         st.shader = 'on';
       };
-      m.customProgramCacheKey = function () { return 'wfr-ground-578b'; };
+      m.customProgramCacheKey = function () { return WW_LOOK ? 'wfr-ground-683e' : 'wfr-ground-578b'; };   // 683 (e): one ground program either way; read once per load
       m.needsUpdate = true; mesh.userData.terrainDressed = true; st.ms = Math.round((now() - t0) * 10) / 10;
       return true;
     } catch (e) { api.terrainDressed = { error: String(e && e.message || e) }; return false; }
@@ -1445,6 +1448,375 @@ window.WFR_TEX = (function () {
     gr.addColorStop(0.49, mix(2, 3, 0.5)); gr.addColorStop(0.5, col[3]); gr.addColorStop(0.51, mix(3, 4, 0.55)); gr.addColorStop(0.53, col[4]); gr.addColorStop(1, col[4]);
   };
 
+  /* ═══════════════════════════════════════════════════════════════════════════
+     683 (e) - THE PAINTED SET (Marth, Oct 22, verbatim: "keep upgrading the textures"; on live #41: "the textures look the same";
+     his feel law, row 685: Wind Waker / BotW). Obito, on photo sets under 687's toon light: "the definition of a filter".
+     STANDARD wears painted surfaces: flat colour fields with a few hand-painted marks - grass tufts as simple blades, planks as flat
+     bands with darker seams, stones as rounded flat blobs, roof tiles as clean scallops, sand in soft ripple bands (the island's
+     shader), rock in flat patches, bark in long ridges, plaster with a crack or two. Every mark is its base made DARKER and a little
+     COOLER (shade) or lighter and warmer (sun). Each near-white canvas is then scaled, channel by channel, to the hand-made texture's
+     own average colour (WW_MEAN, measured from those painters), so every surface keeps the island's colour on average; the village
+     roofs paint in their own colour as before. Seeded (never the game's rnd(), never Math.random), periodic where it repeats, painted
+     once at first use; no file, no network, no new material, no new program. CLASSIC is untouched (board 645).
+     WFR_TEX.ww683.state() - what was painted; .orig(name) - the hand-made canvas, painted live (bench only).
+     ═══════════════════════════════════════════════════════════════════════════ */
+  const WW_NAMES = ['grass', 'sand', 'rock', 'stone', 'bark', 'barkTree', 'planks', 'wood', 'plaster', 'roofTiles', 'wallTimber', 'wallBrick', 'wallStone'];
+  const WW_MEAN = {grass: [231.9,236.2,223.9],sand: [237.7,234.8,226.1],rock: [206.8,206.8,206.8],stone: [205.5,205.5,205.5],bark: [189.2,189.2,189.2],barkTree: [181,183.7,165.3],planks: [227.6,216.9,199.9],wood: [222.5,212.5,196.5],plaster: [242.9,242.8,242.5],roofTiles: [213.2,213.2,213.2],wallTimber: [198,188,177.5],wallBrick: [195,165.7,152],wallStone: [201.4,194.7,179.2]};   // the hand-made set's average RGB per texture (Classic, Oct 22; the guard re-paints them live and compares)
+  const WW_ROOF_K = {clay: 0.916,slate: 1.027};   // the village roofs: how bright a painted tile is against the roof's colour, so a roof's average stays its hand-made one
+  const WW_ST = { painted: {}, roofs: {}, anchors: 0 }, WW_ORIG = {};
+  const wwShade = (c, k) => { const s = Math.min(1, Math.max(0, (1 - k) / 0.3)); return [c[0] * k * (1 - 0.05 * s), c[1] * k * (1 - 0.02 * s), c[2] * k * (1 + 0.06 * s)]; };   // darker and a little cooler: the painted shade (the deeper, the cooler; a faint mark stays its own hue)
+  const wwSun = (c, k) => [c[0] * k * 1.02, c[1] * k, c[2] * k * 0.95];             // lighter and a little warmer: the painted sun
+  const wwFill = (g, c, a) => { g.fillStyle = rgbaC(c[0], c[1], c[2], a == null ? 1 : a); };
+  function wwMean(c) {
+    const d = ctx(c).getImageData(0, 0, c.width, c.height).data; let r = 0, g = 0, b = 0;
+    for (let p = 0; p < d.length; p += 4) { r += d[p]; g += d[p + 1]; b += d[p + 2]; }
+    const n = d.length / 4; return [r / n, g / n, b / n];
+  }
+  function wwLock(c, name) {   // scale each channel so this canvas's average is the hand-made texture's average (the data clamps to 0..255)
+    const m = WW_MEAN[name]; if (!m) return c;
+    const g = ctx(c), img = g.getImageData(0, 0, c.width, c.height), d = img.data, a = wwMean(c), k = [m[0] / a[0], m[1] / a[1], m[2] / a[2]];
+    for (let p = 0; p < d.length; p += 4) { d[p] = d[p] * k[0]; d[p + 1] = d[p + 1] * k[1]; d[p + 2] = d[p + 2] * k[2]; }
+    g.putImageData(img, 0, 0); return c;
+  }
+  /* one pointed blade from (x, y), leaning by a (0 = straight up the canvas): a filled curved wedge, added to the current path */
+  function wwBlade(g, x, y, a, len, w, lean) {
+    const tx = x + Math.sin(a) * len, ty = y - Math.cos(a) * len, cx = x + Math.sin(a) * len * 0.5 + lean, cy = y - Math.cos(a) * len * 0.5;
+    g.moveTo(x - w, y); g.quadraticCurveTo(cx - w * 0.4, cy, tx, ty); g.quadraticCurveTo(cx + w * 0.4, cy, x + w, y); g.closePath();
+  }
+  /* a polyline drawn at its wrapped copies (cracks, splits) */
+  function wwLine(g, S, pts, col, w) {
+    g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = rgbaC(col[0], col[1], col[2], 1); g.lineWidth = w;
+    for (const ox of [-S, 0, S]) for (const oy of [-S, 0, S]) { g.beginPath(); pts.forEach(function (q, i) { if (i) g.lineTo(q[0] + ox, q[1] + oy); else g.moveTo(q[0] + ox, q[1] + oy); }); g.stroke(); }
+  }
+  function wwWalk(r, S, n, step0, step1, turn) { const pts = [[r() * S, r() * S]]; let a = r() * TAU; for (let s = 0; s < n; s++) { a += (r() - 0.5) * turn; const l = step0 + r() * step1, q = pts[pts.length - 1]; pts.push([q[0] + Math.cos(a) * l, q[1] + Math.sin(a) * l]); } return pts; }
+  /* a rounded flat-coloured stone: one flat fill, a darker cooler crescent along its foot, a small sunlit fleck, a thin painted rim */
+  function wwBlob(g, x, y, w, h, col, jit, edge) {
+    const rr = Math.min(w, h) * 0.38;
+    const path = function () {
+      g.beginPath();
+      g.moveTo(x + rr + jit[0], y + jit[1]); g.lineTo(x + w - rr + jit[2], y + jit[3]);
+      g.quadraticCurveTo(x + w, y, x + w + jit[4] * 0.4, y + rr); g.lineTo(x + w + jit[5] * 0.4, y + h - rr);
+      g.quadraticCurveTo(x + w, y + h, x + w - rr + jit[6], y + h); g.lineTo(x + rr + jit[7], y + h);
+      g.quadraticCurveTo(x, y + h, x, y + h - rr); g.lineTo(x, y + rr); g.quadraticCurveTo(x, y, x + rr + jit[0], y + jit[1]);
+      g.closePath();
+    };
+    path(); wwFill(g, col); g.fill();
+    g.save(); path(); g.clip();
+    wwFill(g, wwShade(col, 0.8)); g.beginPath(); g.ellipse(x + w * 0.6, y + h * 1.14, w * 0.8, h * 0.42, 0, 0, TAU); g.fill();
+    wwFill(g, wwSun(col, 1.07)); g.beginPath(); g.ellipse(x + w * 0.3, y + h * 0.17, w * 0.18, h * 0.08, -0.2, 0, TAU); g.fill();
+    g.restore();
+    path(); g.strokeStyle = rgbaC(edge[0], edge[1], edge[2], 0.9); g.lineWidth = 1.3; g.stroke();
+  }
+  /* clean fish-scale tiles, the eave at the canvas bottom: each course is laid over the one below (bottom first), a flat rim, a flat
+     shadow on the course below. fillFor(course, column) -> the tile's flat colour. */
+  function wwScallops(g, S, rows, cols, fillFor, gapCol) {
+    const th = S / rows, tw = S / cols, R = tw / 2 - 0.6;
+    wwFill(g, gapCol); g.fillRect(0, 0, S, S);
+    for (let j = -1; j <= rows; j++) {
+      const yb = S - j * th, yt = yb - th * 1.7, off = (((j % 2) + 2) % 2) ? tw / 2 : 0, jj = ((j % rows) + rows) % rows;
+      for (let i = -1; i <= cols; i++) {
+        const ii = ((i % cols) + cols) % cols, col = fillFor(jj, ii), cx = i * tw + off + tw / 2;
+        const U = function (rad, dy) { g.beginPath(); g.moveTo(cx - rad, yt); g.lineTo(cx - rad, yb - R + dy); g.arc(cx, yb - R + dy, rad, Math.PI, 0, true); g.lineTo(cx + rad, yt); g.closePath(); };
+        wwFill(g, wwShade(col, 0.55)); U(R, 4); g.fill();      // its flat shadow on the course below
+        wwFill(g, wwShade(col, 0.8)); U(R, 0); g.fill();       // the rim
+        wwFill(g, col); U(R - 2.4, -0.6); g.fill();             // the face
+      }
+    }
+  }
+  function wwBark(seed, base, name) {
+    const S = 256, c = canvas(S), g = ctx(c), r = rng(seed), dark = wwShade(base, 0.7), mid = wwShade(base, 0.85), lite = wwSun(base, 1.06), N = 9;
+    wwFill(g, base); g.fillRect(0, 0, S, S);
+    for (let k = 0; k < N; k++) {   // long ridges, top to bottom: wavy flat bands, whole sine periods so they tile
+      const x0 = (k + r() * 0.6) * S / N, A = 3 + r() * 5, f = 1 + ((r() * 2) | 0), ph = r() * TAU, w = 2.2 + r() * 3.2, col = k % 3 === 0 ? dark : mid;
+      const xAt = (y) => x0 + A * Math.sin(y / S * TAU * f + ph), wAt = (y) => w * (0.7 + 0.3 * Math.sin(y / S * TAU * 2 + ph));
+      for (const ox of [-S, 0, S]) {
+        g.beginPath();
+        for (let y = 0; y <= S; y += 4) { if (y) g.lineTo(xAt(y) + ox - wAt(y), y); else g.moveTo(xAt(y) + ox - wAt(y), y); }
+        for (let y = S; y >= 0; y -= 4) g.lineTo(xAt(y) + ox + wAt(y), y);
+        g.closePath(); wwFill(g, col); g.fill();
+      }
+    }
+    for (let k = 0; k < 16; k++) {   // short splits and a few sunlit plate edges
+      const x = r() * S, y = r() * S, l = 6 + r() * 14, col = k % 2 ? lite : dark, w = 1.4 + r();
+      wwLine(g, S, [[x, y], [x + l * 0.15, y + l]], col, w);
+    }
+    return wwLock(c, name);
+  }
+  const timberShade = (L, o, cool) => { timberRGB(L, o); if (cool) { o[0] *= 0.95; o[2] *= 1.1; } };
+  /* two courses of flat fieldstone along the foot of a wall (the painted plinth) */
+  function wwPlinth(g, W, Hh, y0, r) {
+    wwFill(g, [150, 142, 128]); g.fillRect(0, y0, W, Hh - y0);
+    const rh = (Hh - y0) / 2;
+    for (let row = 0; row < 2; row++) {
+      const ry = y0 + row * rh; let x = -r() * 20; const x0 = x;
+      while (x < x0 + W) {
+        const w = Math.min(16 + r() * 24, x0 + W - x), v = 176 + r() * 40, jit = [];
+        for (let k = 0; k < 8; k++) jit.push((r() - 0.5) * 3);
+        if (w > 4) for (const ox of [-W, 0, W]) wwBlob(g, x + ox + 1.2, ry + 1, w - 2.4, rh - 2, [v + 8, v + 2, v - 10], jit, [70, 64, 58]);
+        if (w < 0.5) break;
+        x += w;
+      }
+    }
+    wwFill(g, [40, 36, 44], 0.5); g.fillRect(0, y0, W, 3);   // the sole beam's flat shadow
+  }
+  function wwClay(g, S, base) {
+    const K = WW_ROOF_K.clay;
+    wwScallops(g, S, 11, 8, function (j, i) { const t = K * (0.97 + ((j * 7 + i * 3) % 5) * 0.015); return [base[0] * t, base[1] * t, base[2] * t]; }, wwShade(base, 0.38));
+  }
+  function wwSlate(g, S, base, r) {
+    const rows = 12, th = S / rows, K = WW_ROOF_K.slate;
+    wwFill(g, wwShade(base, 0.36)); g.fillRect(0, 0, S, S);
+    for (let j = 0; j < rows; j++) {
+      const yb = S - j * th, yt = yb - th * 1.5, ws = []; let sum = 0;
+      while (sum < S - 18) { const w = 22 + r() * 16; ws.push(w); sum += w; }
+      const kw = S / sum; let x = r() * 20;
+      for (let n = 0; n < ws.length; n++) {
+        const w = ws[n] * kw, t = K * (0.95 + r() * 0.08), col = [base[0] * t, base[1] * t, base[2] * t];
+        for (const ox of [-S, 0, S]) {
+          const X = x + ox; if (X > S + 2 || X + w < -2) continue;
+          wwFill(g, wwShade(col, 0.5)); g.fillRect(X + 1, yb - 1, w - 1, 4);   // its flat shadow on the course below
+          const rr = 3, B = yb;
+          g.save(); g.beginPath(); g.moveTo(X + 1, yt); g.lineTo(X + w - 1, yt); g.lineTo(X + w - 1, B - rr); g.quadraticCurveTo(X + w - 1, B, X + w - 1 - rr, B);
+          g.lineTo(X + 1 + rr, B); g.quadraticCurveTo(X + 1, B, X + 1, B - rr); g.closePath(); g.clip();
+          wwFill(g, col); g.fillRect(X, yt, w, B - yt);
+          wwFill(g, wwShade(col, 0.78)); g.fillRect(X, B - 3, w, 3);   // the shaded lower edge
+          g.restore();
+        }
+        x += w;
+      }
+    }
+  }
+  function wwRoof(kind, hex) {
+    return function () {
+      const S = 256, c = canvas(S), g = ctx(c), r = rng((kind === 'slate' ? 683400 : 683300) + (hex % 997)), base = hexRGB(hex);
+      if (kind === 'slate') wwSlate(g, S, base, r); else wwClay(g, S, base);
+      wwFill(g, wwShade(base, 0.62)); g.fillRect(0, 0, S, 10); wwFill(g, wwSun(base, 0.95)); g.fillRect(0, 3, S, 2);   // the ridge cap
+      wwFill(g, wwShade(base, 0.45)); g.fillRect(0, S - 3, S, 3);   // the drip edge
+      WW_ST.roofs[kind + '_' + hex.toString(16)] = true;
+      return c;
+    };
+  }
+  const WWP = {
+    /* grass: a flat field, tufts of three to five blades (shade), a scatter of single strokes (shade and sun). 512 px, so a tuft
+       is ~0.3 m on the island's 6.5 m tile; from the air the mipmaps fold them into the field. */
+    grass: function () {
+      const S = 512, c = canvas(S), g = ctx(c), r = rng(683101), base = [240, 244, 228], dark = wwShade(base, 0.76), deep = wwShade(base, 0.66), lite = wwSun(base, 1.05), N = 10, cell = S / N;
+      wwFill(g, base); g.fillRect(0, 0, S, S);
+      for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
+        if (r() < 0.25) continue;
+        const x = (i + 0.15 + r() * 0.7) * cell, y = (j + 0.15 + r() * 0.7) * cell, s = 16 + r() * 14, n = 3 + ((r() * 3) | 0), lean = (r() - 0.5) * 0.5, col = r() < 0.3 ? deep : dark;
+        drawWrapped(S, S, x, y, s + 4, function (px, py) {
+          wwFill(g, col); g.beginPath();
+          for (let k = 0; k < n; k++) { const t = n > 1 ? k / (n - 1) - 0.5 : 0; wwBlade(g, px + t * s * 0.35, py, lean + t * 1.1, s * (1 - Math.abs(t) * 0.55), s * 0.11, t * 3); }
+          g.fill();
+        });
+      }
+      for (let k = 0; k < 90; k++) {
+        const x = r() * S, y = r() * S, s = 5 + r() * 6, a = (r() - 0.5) * 0.8, col = r() < 0.5 ? dark : lite;
+        drawWrapped(S, S, x, y, s + 3, function (px, py) { wwFill(g, col); g.beginPath(); wwBlade(g, px, py, a, s, 1.4, 0); g.fill(); });
+      }
+      return wwLock(c, 'grass');
+    },
+    /* sand: flat, with soft wind ripples (a shaded band and its sunlit crest), whole sine periods so it tiles */
+    sand: function () {
+      const S = 256, c = canvas(S), g = ctx(c), r = rng(683102), base = [246, 240, 226], band = wwShade(base, 0.9), crest = wwSun(base, 1.03), rows = 6;
+      wwFill(g, base); g.fillRect(0, 0, S, S);
+      g.lineCap = 'round'; g.lineJoin = 'round';
+      for (let j = 0; j < rows; j++) {
+        const y0 = (j + r() * 0.4) * S / rows, A = 3 + r() * 5, k1 = 1 + ((r() * 2) | 0), ph = r() * TAU, A2 = 1 + r() * 1.5, ph2 = r() * TAU, w = 3.5 + r() * 2;
+        const yAt = (x) => y0 + A * Math.sin(x / S * TAU * k1 + ph) + A2 * Math.sin(x / S * TAU * 3 + ph2);
+        for (const oy of [-S, 0, S]) for (const [col, lw, dy] of [[band, w, 0], [crest, 1.5, -w * 0.5 - 1.5]]) {
+          g.strokeStyle = rgbaC(col[0], col[1], col[2], 1); g.lineWidth = lw; g.beginPath();
+          for (let x = 0; x <= S; x += 4) { const y = yAt(x) + oy + dy; if (x) g.lineTo(x, y); else g.moveTo(x, y); }
+          g.stroke();
+        }
+      }
+      return wwLock(c, 'sand');
+    },
+    /* rock: flat, with a few big flat facets (light and dark) and branching cracks */
+    rock: function () {
+      const S = 256, c = canvas(S), g = ctx(c), r = rng(683103), base = [232, 232, 228], lite = wwSun(base, 1.05), dark = wwShade(base, 0.86), crack = wwShade(base, 0.62);
+      wwFill(g, base); g.fillRect(0, 0, S, S);
+      for (let k = 0; k < 9; k++) {
+        const x = r() * S, y = r() * S, rw = 18 + r() * 30, rh = rw * (0.45 + r() * 0.4), a = r() * TAU, col = k % 3 === 0 ? dark : lite;
+        drawWrapped(S, S, x, y, rw + 2, function (px, py) { wwFill(g, col); g.beginPath(); g.ellipse(px, py, rw, rh, a, 0, TAU); g.fill(); });
+      }
+      for (let k = 0; k < 7; k++) wwLine(g, S, wwWalk(r, S, 4, 8, 14, 1.2), crack, 1.2 + r() * 1.3);
+      return wwLock(c, 'rock');
+    },
+    /* stone: the same six courses as the hand-made stone (the well, the footings keep their scale), each stone a rounded flat blob */
+    stone: function () {
+      const S = 256, c = canvas(S), g = ctx(c), r = rng(683104), rows = 6, rh = S / rows, edge = [118, 116, 124];
+      wwFill(g, [176, 176, 184]); g.fillRect(0, 0, S, S);
+      for (let j = 0; j < rows; j++) {
+        let x = -r() * 30; const x0 = x, y = j * rh;
+        while (x < x0 + S) {
+          const w = Math.min(30 + r() * 30, x0 + S - x), v = 232 + r() * 18, col = [v, v - 3, v - 10], jit = [];
+          for (let k = 0; k < 8; k++) jit.push((r() - 0.5) * 3);
+          if (w > 6) for (const ox of [-S, 0, S]) wwBlob(g, x + ox + 2.5, y + 2.5, w - 5, rh - 5, col, jit, edge);
+          x += w;
+        }
+      }
+      return wwLock(c, 'stone');
+    },
+    bark: function () { return wwBark(683105, [232, 224, 212], 'bark'); },
+    barkTree: function () { return wwBark(683106, [236, 230, 216], 'barkTree'); },
+    /* planks: the same eight boards a tile as the hand-made planks, each one flat tone; a lit top edge, a dark cool seam, a grain
+       stroke or two, two butt joints with their nails */
+    planks: function () {
+      const S = 256, c = canvas(S), g = ctx(c), r = rng(683107), rows = 8, bh = S / rows, base = [244, 234, 216];
+      for (let j = 0; j < rows; j++) {
+        const t = 0.96 + r() * 0.07, col = [base[0] * t, base[1] * t, base[2] * t], y = j * bh, gc = wwShade(col, 0.88), seam = wwShade(col, 0.6), nail = wwShade(col, 0.45);
+        wwFill(g, col); g.fillRect(0, y, S, bh);
+        const n = 1 + ((r() * 2) | 0);
+        for (let k = 0; k < n; k++) {
+          const gy = y + 6 + r() * (bh - 14), x = r() * S, l = 60 + r() * 120, a = (r() - 0.5) * 3;
+          for (const ox of [-S, 0]) { g.strokeStyle = rgbaC(gc[0], gc[1], gc[2], 1); g.lineWidth = 1.4; g.beginPath(); g.moveTo(x + ox, gy); g.quadraticCurveTo(x + ox + l / 2, gy + a, x + ox + l, gy); g.stroke(); }
+        }
+        wwFill(g, wwSun(col, 1.05)); g.fillRect(0, y, S, 1.5);
+        wwFill(g, seam); g.fillRect(0, y + bh - 3, S, 3);
+        const a0 = r() * S, a1 = (a0 + S * (0.35 + r() * 0.3)) % S;
+        for (const jx of [a0, a1]) for (const ox of [-S, 0, S]) {
+          wwFill(g, seam); g.fillRect(jx + ox - 1, y, 2.5, bh - 3);
+          wwFill(g, nail); for (const side of [-4.5, 4.5]) for (const ny of [6, bh - 9]) { g.beginPath(); g.arc(jx + side + ox, y + ny, 1.4, 0, TAU); g.fill(); }
+        }
+      }
+      return wwLock(c, 'planks');
+    },
+    /* wood (doors, shutters, fences): flat, a few long wavy grain lines, one knot */
+    wood: function () {
+      const S = 256, c = canvas(S), g = ctx(c), r = rng(683108), base = [242, 232, 214], gc = wwShade(base, 0.86), kc = wwShade(base, 0.62);
+      wwFill(g, base); g.fillRect(0, 0, S, S);
+      g.lineCap = 'round';
+      for (let k = 0; k < 7; k++) {
+        const x0 = (k + r() * 0.7) * S / 7, A = 2 + r() * 4, ph = r() * TAU, f = 1 + ((r() * 2) | 0), w = 1.2 + r() * 1.2;
+        for (const ox of [-S, 0, S]) { g.strokeStyle = rgbaC(gc[0], gc[1], gc[2], 1); g.lineWidth = w; g.beginPath(); for (let y = 0; y <= S; y += 4) { const x = x0 + ox + A * Math.sin(y / S * TAU * f + ph); if (y) g.lineTo(x, y); else g.moveTo(x, y); } g.stroke(); }
+      }
+      const kx = r() * S, ky = r() * S;
+      drawWrapped(S, S, kx, ky, 12, function (px, py) { wwFill(g, kc); g.beginPath(); g.ellipse(px, py, 3.5, 6, 0, 0, TAU); g.fill(); g.strokeStyle = rgbaC(gc[0], gc[1], gc[2], 1); g.lineWidth = 1.4; g.beginPath(); g.ellipse(px, py, 7, 11, 0, 0, TAU); g.stroke(); });
+      return wwLock(c, 'wood');
+    },
+    /* plaster: flat, two or three soft flat patches, a hairline crack or two */
+    plaster: function () {
+      const S = 256, c = canvas(S), g = ctx(c), r = rng(683109), base = [246, 244, 238], patch = wwShade(base, 0.95), crack = wwShade(base, 0.7);
+      wwFill(g, base); g.fillRect(0, 0, S, S);
+      for (let k = 0; k < 3; k++) {
+        const x = r() * S, y = r() * S, rw = 20 + r() * 26, rh = rw * (0.5 + r() * 0.4), a = r() * TAU;
+        drawWrapped(S, S, x, y, rw, function (px, py) { wwFill(g, patch); g.beginPath(); g.ellipse(px, py, rw, rh, a, 0, TAU); g.fill(); });
+      }
+      for (let k = 0; k < 3; k++) wwLine(g, S, wwWalk(r, S, 4, 6, 10, 1.4), crack, 1);
+      return wwLock(c, 'plaster');
+    },
+    /* roofTiles (cabins, treehouses): the same 8 x 8 tiles a tile as the hand-made ones, as clean scallops */
+    roofTiles: function () {
+      const S = 256, c = canvas(S), g = ctx(c), base = [238, 236, 232];
+      wwScallops(g, S, 8, 8, function (j, i) { const t = 0.96 + ((j * 5 + i * 3) % 4) * 0.02; return [base[0] * t, base[1] * t, base[2] * t]; }, wwShade(base, 0.45));
+      return wwLock(c, 'roofTiles');
+    },
+    /* the village walls keep the hand-made panels' rows (posts, rail, beams, plinth stand where the doors and windows expect them),
+       painted flat: timber in one tone with a lit top-left and a cool shaded foot, plaster flat, each timber's flat cast shadow, the
+       eaves' flat shadow along the top */
+    wallTimber: function () {
+      const W = 256, Hh = 512, r = rng(683301), PL = [246, 244, 238], PLS = wwShade(PL, 0.9), EAVE = wwShade(PL, 0.86);
+      const P = 15, T0 = 4, T1 = 24, R0 = 290, R1 = 308, S0 = 446, S1 = 466;
+      const tim = function (x, y) {   // 0 plaster, 1 post, 2 beam, 3 brace (the hand-made panel's own layout)
+        x = ((x % W) + W) % W; const m = Math.min(x, W - x);
+        if (y < T0 || y >= S1) return 0;
+        if (m < P) return 1;
+        if (y < T1 || (y >= R0 && y < R1) || y >= S0) return 2;
+        if (y > R1 && y < S0 && segDist(m, y, P - 2, S0, P + 58, R1) < 6.5) return 3;
+        if (y > T1 && y < R0 && segDist(m, y, P - 2, T1 + 78, P + 46, T1) < 5.5) return 3;
+        return 0;
+      };
+      const M = new Uint8Array(W * Hh);
+      for (let y = T0, i = T0 * W; y < S1; y++) for (let x = 0; x < W; x++, i++) M[i] = tim(x, y);
+      const T = (x, y) => (y < 0 || y >= Hh ? 0 : M[y * W + (((x % W) + W) % W)]);
+      const out = pixWH(W, Hh, function (x, y, i, o) {
+        if (y >= S1) { o[0] = o[1] = o[2] = 0; return; }
+        if (M[i]) { if (!T(x - 2, y - 2)) timberShade(1.18, o, false); else if (!T(x + 2, y + 2)) timberShade(0.7, o, true); else timberShade(1, o, false); return; }
+        const c = y < T1 + 22 ? EAVE : (T(x - 3, y - 4) || T(x - 1, y - 3)) ? PLS : PL;
+        o[0] = c[0]; o[1] = c[1]; o[2] = c[2];
+      });
+      wwPlinth(out.g, W, Hh, S1, r);
+      const g = out.g;
+      for (const [px, py] of [[7, T0 + 10], [7, R0 + 9], [7, S0 + 10], [24, R0 + 14], [22, T1 + 4]]) for (const sx of [px, W - px]) {
+        drawWrapped(W, Hh, sx, py, 4, function (qx, qy) { wwFill(g, [40, 26, 16]); g.beginPath(); g.arc(qx, qy, 2.3, 0, TAU); g.fill(); });   // oak pegs
+      }
+      return wwLock(out.c, 'wallTimber');
+    },
+    /* wallBrick: plaster above, timber bands, flat bricks below; where the plaster fell away the bricks show in a clean-edged patch */
+    wallBrick: function () {
+      const W = 256, Hh = 512, r = rng(683302), spall = stretch(fbmWH(W, Hh, r, 3, 6, 2, 0.5));
+      const T0 = 4, T1 = 22, B0 = 254, B1 = 272, BW = 32, BH = 14;
+      const tone = []; for (let k = 0; k < 40 * 8; k++) tone.push(r());
+      const PL = [246, 244, 238], PLS = wwShade(PL, 0.88), RIM = wwShade(PL, 0.72), BEAM = wwShade(PL, 0.8), MORT = [214, 206, 194], MORTS = wwShade(MORT, 0.8);
+      const brick = function (x, y, o) {
+        const yy = y - B1, row = Math.floor(yy / BH), ly = yy - row * BH, off = (row & 1) ? BW / 2 : 0, xx = (((x + off) % W) + W) % W, cI = (xx / BW) | 0, lx = xx - cI * BW;
+        let c;
+        if (ly >= BH - 3 || lx >= BW - 3) c = (ly >= BH - 3 && ly < BH - 1 && lx < BW - 3) ? MORTS : MORT;
+        else { const q = tone[(((row % 40) + 40) % 40) * 8 + cI]; c = q < 0.16 ? [140, 70, 56] : q > 0.9 ? [200, 140, 104] : q > 0.7 ? [190, 106, 68] : [176, 92, 64]; if (ly < 2) c = wwSun(c, 1.1); }
+        o[0] = c[0]; o[1] = c[1]; o[2] = c[2];
+      };
+      const out = pixWH(W, Hh, function (x, y, i, o) {
+        if ((y >= T0 && y < T1) || (y >= B0 && y < B1)) { const top = y >= B0 ? B0 : T0, bot = y >= B0 ? B1 : T1; if (y < top + 2) timberShade(1.18, o, false); else if (y >= bot - 3) timberShade(0.7, o, true); else timberShade(1, o, false); return; }
+        if (y >= B1) { brick(x, y, o); if (y >= Hh - 6 || y < B1 + 3) { o[0] *= 0.78; o[1] *= 0.8; o[2] *= 0.86; } return; }
+        const sp = spall[i] * (0.78 + 0.22 * smooth(T1, B0, y));
+        if (sp > 0.8) { brick(x, y, o); return; }
+        const c = sp > 0.775 ? RIM : (y >= T1 && y < T1 + 4) ? BEAM : y < T1 + 22 ? PLS : PL;
+        o[0] = c[0]; o[1] = c[1]; o[2] = c[2];
+      });
+      return wwLock(out.c, 'wallBrick');
+    },
+    /* wallStone: coursed fieldstone (the hand-made courses), each stone a flat rounded blob, a timber plate under the eaves */
+    wallStone: function () {
+      const W = 256, Hh = 512, c = canvas(W, Hh), g = ctx(c), r = rng(683303), edge = [96, 88, 80];
+      wwFill(g, [206, 198, 184]); g.fillRect(0, 0, W, Hh);
+      let y = 20;
+      while (y < Hh) {
+        const rh = 15 + r() * 13 + (y > Hh - 70 ? 6 : 0);
+        let x = -r() * 30; const x0 = x;
+        while (x < x0 + W) {
+          const w = Math.min(rh * (1.0 + r() * 1.7), x0 + W - x), q = r(), v = 214 + r() * 24, jit = [];
+          for (let k = 0; k < 8; k++) jit.push((r() - 0.5) * 4);
+          const col = q < 0.5 ? [v + 10, v + 4, v - 12] : q < 0.66 ? [v - 2, v - 1, v + 2] : q < 0.72 ? [v - 40, v - 42, v - 44] : [v + 6, v + 3, v - 4];
+          if (w > 4) for (const ox of [-W, 0, W]) wwBlob(g, x + ox + 1.5, y + 1.5, w - 3, rh - 3, col, jit, edge);
+          if (w < 0.5) break;
+          x += w;
+        }
+        y += rh;
+      }
+      const o = [0, 0, 0];
+      timberShade(1, o, false); wwFill(g, o); g.fillRect(0, 3, W, 17);
+      timberShade(1.18, o, false); wwFill(g, o); g.fillRect(0, 3, W, 2);
+      timberShade(0.7, o, true); wwFill(g, o); g.fillRect(0, 17, W, 3);
+      wwFill(g, [40, 44, 64], 0.16); g.fillRect(0, 20, W, 24);   // the eaves' flat shadow over the top courses
+      return wwLock(c, 'wallStone');
+    },
+  };
+  WW_NAMES.forEach(function (n) { WW_ORIG[n] = painters[n]; });
+  if (WW_LOOK) WW_NAMES.forEach(function (n) {
+    painters[n] = function () { const t0 = now(), c = WWP[n](); WW_ST.painted[n] = Math.round((now() - t0) * 10) / 10; return c; };
+  });
+  /* the island's shader, painted: sand in soft ripple bands across the wind (world space, ~4 m apart), rock in flat light and dark
+     patches, the village paths flat with darker flat pebble patches. Each swap keeps the old line's average (sand 0.90, rock ~0.94,
+     path ~1.03), so the shore, the peak and the green keep their colour. A missing line leaves the old one (counted in anchors). */
+  const GROUND_WW = [
+    ['  vec3 tSand = vec3( 0.88 + ( d1.g - 0.55 ) * 0.4 );',
+      '  float wwRp = sin( dot( vWfrPos.xz, vec2( 0.55, 0.83 ) ) * 1.6 + sin( vWfrPos.x * 0.11 + vWfrPos.z * 0.07 ) * 2.4 + nz * 3.0 ); vec3 tSand = mix( vec3( 0.93 ), vec3( 0.82, 0.83, 0.88 ), smoothstep( 0.55, 0.72, wwRp ) );'],
+    ['  vec3 tRock = vec3( 0.66 + d1.r * 0.44 ) * ( 0.9 + d2.r * 0.2 );',
+      '  vec3 tRock = vec3( 0.9 + 0.1 * smoothstep( 0.56, 0.6, d1.r ) - 0.12 * ( 1.0 - smoothstep( 0.28, 0.32, d1.r ) ) ) * ( 0.95 + d2.r * 0.1 );'],
+    ['    vec3 dirt = vec3( 0.5, 0.42, 0.29 ) * ( 0.8 + d1.b * 0.4 );',
+      '    vec3 dirt = vec3( 0.5, 0.42, 0.29 ) * ( 1.07 - 0.1 * smoothstep( 0.6, 0.64, d1.b ) );'],
+  ];
+  const GROUND_FRAG_WW = GROUND_WW.reduce(function (s, e) { if (s.split(e[0]).length !== 2) return s; WW_ST.anchors++; return s.replace(e[0], function () { return e[1]; }); }, GROUND_FRAG);
+  api.ww683 = {
+    state: function () { return { on: WW_LOOK, classic: CLASSIC_LOOK, painted: Object.assign({}, WW_ST.painted), roofs: Object.keys(WW_ST.roofs), groundAnchors: WW_ST.anchors, groundPainted: WW_LOOK && GROUND_FRAG_WW !== GROUND_FRAG, names: WW_NAMES.slice() }; },
+    mean: function (name) { const c = canvases[name]; return c ? wwMean(c) : null; },
+    orig: function (name) {   // the HAND-MADE texture, painted now into a fresh canvas (bench only: costs a paint; the guard hashes and averages it)
+      const m = /^roof_(clay|slate)_([0-9a-f]+)$/.exec(name), f = m ? roofPainter(m[1], parseInt(m[2], 16), true) : WW_ORIG[name];
+      return f ? f() : null;
+    },
+  };
   api.photoDial = () => ({ classic: CLASSIC_LOOK, hue: PHOTO_HUE, contrast: PHOTO_CONTRAST, state: Object.assign({}, photoState) });   // 626: the dial, for the benches
   return api;
 })();

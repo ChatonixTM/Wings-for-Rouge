@@ -172,6 +172,7 @@ window.WFR_RUNES = (function () {
       var played = S.played || 0;
       st.mode = kind; st.t0 = played; st.el = 0; st.got = 0; st.gate = 0; st.rare = false; st.rareGot = false; st.last = null;
       for (var i = 0; i < N; i++) alive[i] = 1;
+      st.storm = !!(o.storm && o.storm()); M.rune.color.setHex(st.storm ? 0x8fb4ff : 0x7ff0dc);   /* 632 U6: rain + the cloak = storm runes (DRAFT colour) */
       runes.visible = true; feather.visible = false; st.gift = 0;
       if (roll() < RARE) { var j = 20 + Math.floor(Math.random() * 160); feather.position.copy(RLINE[j]).lerp(RLINE[j + 1], 0.5); st.rare = true; feather.visible = true; }
       if (kind === 'race') { var pace = (o.pace && o.pace()) || 1; st.vf = Math.max(4, ((o.cruise && o.cruise()) || 15) * falconK() * pace); st.tf = L / st.vf; st.fs = 0; st.fdone = false; st.fback = 1; }
@@ -185,10 +186,10 @@ window.WFR_RUNES = (function () {
       if (RL.on) release();   /* 632 U4b */
       var k = st.mode, el = st.el, got = st.got, rec = S.runeRec = (S.runeRec && typeof S.runeRec === 'object') ? S.runeRec : {};
       var R = { kind: k, why: why, got: got, t: +el.toFixed(2), tf: k === 'race' ? +st.tf.toFixed(2) : null, win: false, rare: st.rareGot, bonus: false, newBest: false, eligible: false };
-      S.runes = (S.runes || 0) + got;
+      var pay = got + (st.storm ? Math.round(got * 0.25) : 0); S.runes = (S.runes || 0) + pay; R.paid = pay;
       if (k === 'runes') { if (rec.best == null || got > rec.best) { rec.best = got; R.newBest = true; } }
       else if (why === 'finish' && el < st.tf) { R.win = true; rec.wins = (rec.wins || 0) + 1; if (rec.race == null || el < rec.race) { rec.race = +el.toFixed(2); R.newBest = true; } }
-      R.eligible = R.win || (got >= Math.ceil(GOOD * N) && (k === 'runes' || why === 'finish'));   /* "more often": 90%+ of the course, or the Falcon beaten */
+      R.eligible = R.win || (got >= Math.ceil((st.storm ? 0.75 : GOOD) * N) && (k === 'runes' || why === 'finish'));   /* "more often": 90%+ of the course, or the Falcon beaten */
       if (R.eligible && roll() < BONUS) { R.bonus = true; S.huethers = (S.huethers || 0) + 1; st.gift = 2.2; feather.visible = true; }
       else if (!st.rareGot) feather.visible = false;
       st.mode = 'idle'; st.cool = (S.played || 0) + COOL; runes.visible = false; st.rare = false; st.last = R;
@@ -199,6 +200,7 @@ window.WFR_RUNES = (function () {
       if (k === 'race' && got) w += ' +' + got + ' runes.';
       if (R.newBest && k === 'runes') w += ' A new best!';
       if (R.bonus) w += ' A white feather drifts down to you!';
+      if (st.storm && pay > got) w += ' Storm runes: +' + (pay - got) + '.';   /* 632 U6; DRAFT */
       try { if (R.win || why === 'all') { if (o.fanfare) o.fanfare(); } else if (o.ding) o.ding(); } catch (e) { /* sound is optional */ }
       try { o.save(); } catch (e) { /* private mode: it still plays */ }
       say(w, 4600); if (o.hud) o.hud();
@@ -214,7 +216,7 @@ window.WFR_RUNES = (function () {
         if (st.warm === 0) { feather.visible = false; feather.frustumCulled = true; haloGold.frustumCulled = true; haloBlue.frustumCulled = true; runes.visible = false; if (fal) fal.g.scale.setScalar(FAL_SIZE); }
         return;
       }
-      var up = ((S.sky && S.sky.where) || 'home') === 'temple', closed = !!(o.closed && o.closed()), played = S.played || 0;
+      var up = ((S.sky && S.sky.where) || 'home') === 'temple', closed = !!(o.closed && o.closed()) && !(o.dry && o.dry()), played = S.played || 0;
       var dp = st.lastPlayed == null ? 0 : Math.max(0, Math.min(0.25, played - st.lastPlayed)); st.lastPlayed = played;
       if (dp > dt) dp = dt;   /* Obito R1 (Jiraiya): the pouch slows the island to 0.35x while S.played counts real seconds: the run's clock and the Falcon follow the game's dt, slowing with her (a pause still holds them) */
       var want = S.mode === 'menu' ? 0 : up ? (closed ? 0.28 : 1) : 0;   /* semi-invisible: seen only from the sky island; rain all but hides it */

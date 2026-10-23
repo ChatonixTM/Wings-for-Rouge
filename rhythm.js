@@ -32,12 +32,14 @@ window.WFR_RHYTHM = (function () {
                hard: { id: 'hard', name: 'Hard', pick: 0.5, win: { perfect: 0.08, good: 0.16 }, fall: 1.6, pay: 1.5 },
                expert: { id: 'expert', name: 'Expert', pick: 0.5, win: { perfect: 0.06, good: 0.12 }, fall: 1.25, pay: 2 } };
   function rowOf(r) { return (r && ROWS[r.id || r]) || ROWS.easy; }
+  ROWS.expert.fall = 1.0;   /* 689: Expert's notes fall in 1.0 s, was 1.25 (Marth, Oct 22: "the notes faster"); the windows stay 623's: the difficulty comes from density */
 
   /* 658: density by beat, for a NEW song (The Island Wakes keeps 623's rows): Easy = each bar's downbeat; Hard = the downbeat and the
      bar's last beat (beat 4 in 4/4); Expert = every note. Nested by construction (BRIEF_620_658 §2). */
   function onBeat(b, beats, row) { var p = b - Math.floor(b / beats) * beats; return row === 'expert' || p < 1e-6 || (row === 'hard' && Math.abs(p - (beats - 1)) < 1e-6); }
   function chart(melody, opts) {
     opts = opts || {};
+    if (opts.bass && opts.bass.length && rowOf(opts.row).id === 'expert') return expertChart(melody, opts);   /* 689: the real Expert (without the bass, chart() is 623/658's, byte for byte) */
     if (opts.orn && opts.orn.length && rowOf(opts.row).id === 'expert') melody = melody.concat(opts.orn).sort(function (a, b) { return a.b - b.b; });   /* 658 U6: Expert's slightly more notes */
     var beats = opts.beats || BEATS, SPB = 60 / (opts.bpm || BPM), rule = opts.rule || 'pick';   /* 658: THIS song's bar and beat length (the defaults are The Island Wakes', byte for byte) */
     var startBar = opts.startBar || 7, t0 = (startBar - 1) * beats, row = rowOf(opts.row);
@@ -53,6 +55,42 @@ window.WFR_RHYTHM = (function () {
     if (opts.holds && row.id === 'expert') opts.holds.forEach(function (h) { notes.push({ b: h.b, m: h.m, d: h.d, t: (h.b - t0) * SPB, lane: 3, hold: Math.max(0.25, h.d * SPB) }); });   /* 658 U3: Expert's 4th lane */
     notes.sort(function (a, b) { return a.t - b.t; });
     return notes.map(function (n, i) { var o = { i: i, t: n.t, b: n.b, lane: n.lane, m: n.m, d: n.d }; if (n.hold) o.hold = n.hold; return o; });   /* b: the beat, so the song can leave exactly these to her */
+  }
+  /* 689 THE REAL EXPERT (Marth, Oct 22: "the expert mode doesn't even seem to have the background notes ... It needs to feel harder, the
+     notes faster"; Rouge: the purple hold was "like some sort of guitar where you hold it down"). A part for TWO thumbs, from the song's own score:
+       lanes 1-3  the whole melody, its pitches ranked per 4-bar phrase in thirds (623's rule, so a pitch keeps its lane)
+       lane 4     the song's own BASS (opts.bass = [{ b, m }] from music.js), tapped at its exact pitch: every bar's downbeat (a chord with the
+                  melody), and under each held note its beats and the last eighth before the next melody note
+       holds      the melody's own long notes (2+ beats) are held in their lane and let go half a beat early (no more two-bar pedal)
+       thumbs     every chord and every bass tap under a hold is split: the melody note in lanes 1-2 (left thumb), the bass in lanes 3-4
+                  (right thumb). A bass tap closer than 2 x Good behind the last one in lane 4 steps to lane 3; if neither has room it is left
+                  to the song. So no thumb ever presses two lanes at once, and two notes in one lane are always 2 x Good apart.
+     Each note: { i, t, b, lane, m, d } (+ hold seconds, + dr the bass under a hold for its pad, + bass: true). OURS/DRAFT: her thumb tunes it. */
+  function expertChart(melody, opts) {
+    var beats = opts.beats || BEATS, spb = 60 / (opts.bpm || BPM), t0 = ((opts.startBar || 7) - 1) * beats, EPS = 1e-6, gap = 2 * ROWS.expert.win.good;
+    var bassAt = function (b) { for (var k = 0; k < opts.bass.length; k++) if (Math.abs(opts.bass[k].b - b) < EPS) return opts.bass[k]; return null; };
+    var notes = melody.map(function (e) { return { b: e.b, m: e.m, d: e.d, t: (e.b - t0) * spb }; });
+    var phrase = function (b) { return Math.floor(b / (4 * beats)); }, groups = {};
+    notes.forEach(function (n) { (groups[phrase(n.b)] = groups[phrase(n.b)] || []).push(n); });
+    Object.keys(groups).forEach(function (k) {
+      var ps = groups[k].map(function (n) { return n.m; }).filter(function (m, i, a) { return a.indexOf(m) === i; }).sort(function (a, b) { return a - b; });
+      groups[k].forEach(function (n) { n.lane = Math.min(2, Math.floor(ps.indexOf(n.m) * 3 / ps.length)); });
+    });
+    var want = [];
+    notes.forEach(function (n) {
+      if (n.b - Math.floor(n.b / beats + EPS) * beats < EPS) want.push(n.b);   /* the bar's downbeat: melody and bass together */
+      if (n.d >= 2) { n.hold = (n.d - 0.5) * spb; var hb = bassAt(n.b); if (hb) n.dr = hb.m;
+        for (var k = 1; k < n.d - 0.5 - EPS; k++) want.push(n.b + k);   /* under the held note: its beats */
+        want.push(n.b + n.d - 0.5); }   /* and the last eighth before the next melody note */
+    });
+    var chordAt = {}; want.forEach(function (b) { if (bassAt(b)) chordAt[b.toFixed(3)] = true; });
+    notes.forEach(function (n) { if (n.hold || chordAt[n.b.toFixed(3)]) n.lane = Math.min(n.lane, 1); });   /* the thumb rule: held, or with the bass = the LEFT thumb's */
+    var bass = [], seen = {};
+    want.sort(function (a, b) { return a - b; }).forEach(function (b) { var e = bassAt(b); if (!e || seen[e.b.toFixed(3)]) return; seen[e.b.toFixed(3)] = true;
+      var t = (e.b - t0) * spb, room = function (ln) { return !notes.concat(bass).some(function (o) { return o.lane === ln && Math.abs(o.t - t) < gap - EPS; }); };
+      var ln = room(3) ? 3 : room(2) ? 2 : -1; if (ln >= 0) bass.push({ b: e.b, m: e.m, d: 0.5, t: t, lane: ln, bass: true }); });
+    notes = notes.concat(bass).sort(function (a, b) { return a.t - b.t || a.lane - b.lane; });
+    return notes.map(function (n, i) { var o = { i: i, t: n.t, b: n.b, lane: n.lane, m: n.m, d: n.d }; if (n.hold) o.hold = n.hold; if (n.dr != null) o.dr = n.dr; if (n.bass) o.bass = true; return o; });
   }
   function judge(dt, win) { win = win || WINDOWS; var a = Math.abs(dt); return a <= win.perfect ? 'perfect' : a <= win.good ? 'good' : null; }
   function round(notes, row) { var r = rowOf(row); return { notes: notes, state: notes.map(function () { return null; }), score: 0, streak: 0, best: 0, mult: 1, hits: 0, perfects: 0, misses: 0, row: r.id, win: r.win }; }   /* 623: the round carries its own windows; tap and tick read them, never the constant */

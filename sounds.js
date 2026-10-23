@@ -285,16 +285,21 @@
   }
 
   var windV = null;
+  function windState() {   /* 683 A bench: what the whistle was last asked for (the TARGET gain and band: what ships), how often, and the gain's value now */
+    if (!windV) return { made: false, calls: 0, level: null, gain: null, freq: null, at: null, now: null, state: ctx ? ctx.state : null };
+    return { made: true, calls: windV.n, level: windV.last.L, gain: windV.last.gain, freq: windV.last.freq, at: windV.last.t, now: windV.g.gain.value, state: ctx ? ctx.state : null };
+  }
   function wind(level) {   /* 673 V2 (b): the stoop's wind whistle: the noise buffer looped through a bandpass that rises with the dive, on the bus (muted with it). Called each frame of a dive; it fades by itself 0.3 s after the last call, so no mode has to switch it off */
     if (!ctx || !bus || !noise) return false; var t = ctx.currentTime;
-    if (!windV) { var s = ctx.createBufferSource(); s.buffer = noise; s.loop = true; var f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 1.6; var g = ctx.createGain(); g.gain.value = 0; s.connect(f); f.connect(g); g.connect(bus); s.start(t); windV = { f: f, g: g }; }
+    if (!windV) { var s = ctx.createBufferSource(); s.buffer = noise; s.loop = true; var f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.Q.value = 1.6; var g = ctx.createGain(); g.gain.value = 0; s.connect(f); f.connect(g); g.connect(bus); s.start(t); windV = { f: f, g: g, n: 0, last: { L: 0, gain: 0, freq: 0, t: 0 } }; }
     var L = Math.max(0, Math.min(1, level || 0));
-    windV.f.frequency.setTargetAtTime(700 + 1600 * L, t, 0.1);
-    windV.g.gain.cancelScheduledValues(t); windV.g.gain.setTargetAtTime(0.07 * L, t, 0.08); windV.g.gain.setTargetAtTime(0, t + 0.3, 0.12);
+    var F = 250 + 650 * L, G = 0.015 * L;   /* 683 A: a low rush (250 -> 900 Hz) at a fifth of the old gain (0.07 -> 0.015). Marth, Oct 22: "the annoying dive sound" */
+    windV.f.frequency.setTargetAtTime(F, t, 0.1);
+    windV.g.gain.cancelScheduledValues(t); windV.g.gain.setTargetAtTime(G, t, 0.08); windV.last.L = L; windV.last.gain = G; windV.last.freq = F; windV.last.t = t; windV.n++; windV.g.gain.setTargetAtTime(0, t + 0.3, 0.12);
     return true;
   }
   window.WFR_SOUND = {
-    init: init, setMuted: setMuted, call: call, wind: wind, near: near, ambient: ambient, KINDS: KINDS, VARIANTS: VARIANTS, MOODS: MOODS, CAL: CAL,
+    init: init, setMuted: setMuted, call: call, wind: wind, windState: windState, near: near, ambient: ambient, KINDS: KINDS, VARIANTS: VARIANTS, MOODS: MOODS, CAL: CAL,
     get voices() { return voices; },
     _test: { seed: seed, breath: function (on) { noBreath = !on; }, last: function () { return last; } },
   };
