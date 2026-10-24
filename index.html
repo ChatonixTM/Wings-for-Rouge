@@ -232,7 +232,7 @@ html.map705open .compass .arrow{box-shadow:0 0 0 3px rgba(242,177,52,.9),0 6px 1
   box-shadow:0 6px 16px rgba(34,49,74,.18)}
 #fade{position:fixed;inset:0;background:#0b1430;opacity:0;pointer-events:none;z-index:25}   /* a fade from dark: Sleep, and night B */
 /* 625b: the call's words over the world: her cry big and red, the dive's typed line white on the black */
-.savebox{margin:10px auto 0;max-width:440px;text-align:left}.savebox p{margin:0 0 8px;font-size:14px;line-height:1.4}.savebox textarea{width:100%;box-sizing:border-box;font:12px/1.4 ui-monospace,Menlo,monospace;border-radius:12px;border:2px solid #e8dcc8;padding:10px;resize:none;background:#fffdf8}.savebox-row{display:flex;gap:12px;align-items:center;margin-top:8px}#saveGo{min-height:44px;padding:0 20px;border-radius:22px;border:0;background:#c8314a;color:#fff;font-weight:800;font-size:15px}   /* 662 */
+.savebox{margin:10px auto 0;max-width:440px;text-align:left}.savebox p{margin:0 0 8px;font-size:14px;line-height:1.4}.savebox textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default;touch-action:pan-y;overflow-y:auto;max-height:38vh;width:100%;box-sizing:border-box;font:12px/1.4 ui-monospace,Menlo,monospace;border-radius:12px;border:2px solid #e8dcc8;padding:10px;resize:none;background:#fffdf8}.savebox-row{display:flex;gap:12px;align-items:center;margin-top:8px}#saveGo{min-height:44px;padding:0 20px;border-radius:22px;border:0;background:#c8314a;color:#fff;font-weight:800;font-size:15px}   /* 662 */
 #callCap{position:fixed;inset:0;z-index:26;display:grid;place-items:center;text-align:center;padding:24px;pointer-events:auto}#callCap[hidden]{display:none}#callCap.cry{align-content:start;padding-top:22vh}   /* the cry sits above her, not across her */
 #callCap.cry b{font-family:var(--display);font-weight:800;font-size:clamp(40px,12vw,76px);line-height:1;color:#c8314a;-webkit-text-stroke:2px #111;text-shadow:0 6px 18px rgba(0,0,0,.35);animation:cryIn .35s cubic-bezier(.2,1.4,.4,1) both}@keyframes cryIn{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:scale(1)}}
 #callCap.black p{font-family:var(--body);font-weight:700;font-size:18px;line-height:1.55;color:#fff8ec;max-width:30ch;margin:0;min-height:3.2em}
@@ -529,7 +529,7 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
     <div class="pause-row" id="pauseRow" hidden><button class="ghost" id="saveBtn" type="button">💾 Save</button><button class="ghost" id="toTitle" type="button">🏠 Main menu</button><button class="ghost" id="lookBtn" type="button">🧍 Look: Standard</button><button class="ghost" id="journalBtn" type="button">📖 Journal</button><button class="ghost" id="windBtn683" type="button" aria-pressed="true">🌬 Wind sound: on</button><button class="ghost" id="netBtn678" type="button" aria-label="Fly together">🤝 <span class="n678l">Fly together</span><span class="n678s">Together</span></button></div><div class="savebox" id="net678" hidden role="region" aria-label="Fly together"><p id="net678Msg"></p><div class="net678-row"><input id="net678Name" maxlength="12" placeholder="Your name" autocomplete="off" aria-label="Your name"><input id="net678Code" maxlength="6" placeholder="Code" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Room code"></div><div class="savebox-row"><button type="button" id="net678Make">Make a code</button><button type="button" id="net678Join">Enter a code</button><button type="button" class="linkish" id="net678Leave" style="min-height:44px">Leave</button></div></div><div class="journal" id="journal" hidden role="region" aria-label="Journal"></div>
     <p class="how" id="how"></p>
     <div class="title-links"><button class="linkish" id="rewatch" type="button" style="min-height:44px" hidden>Watch the story again</button><button class="linkish" id="newGame" type="button" style="min-height:44px">New game</button><button class="linkish" id="backupBtn" type="button" style="min-height:44px">Back up</button><button class="linkish" id="restoreBtn" type="button" style="min-height:44px">Restore</button><button class="linkish" id="netBtn678t" type="button" style="min-height:44px">🤝 Fly with someone</button></div>
-    <div class="savebox" id="saveBox" hidden><p id="saveMsg"></p><textarea id="saveCode" rows="4" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Backup code"></textarea><div class="savebox-row"><button type="button" id="saveGo">Copy</button><button type="button" class="linkish" id="saveClose" style="min-height:44px">Close</button></div></div>
+    <div class="savebox" id="saveBox" hidden><p id="saveMsg"></p><textarea id="saveCode" rows="6" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Backup code"></textarea><div class="savebox-row"><button type="button" id="saveGo">Copy</button><button type="button" class="ghost" id="saveShare" hidden style="min-height:44px">Share</button><button type="button" class="linkish" id="saveClose" style="min-height:44px">Close</button></div></div>
   </div>
 </div>
 
@@ -567,43 +567,43 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 <div class="rhRes" id="rhRes" hidden aria-live="polite"><b id="resRank"></b><span id="resLine"></span><small id="resTime"></small><small id="resNew" hidden></small></div>   <!-- 672 OURS/DRAFT words: Paused, Resume, Quit song -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="toon.js?v=2ea30f801bff"></script>
+<script src="toon.js?v=529949f8d266"></script>
 <script>(function () { let classic = false; try { classic = localStorage.getItem('wfr.look') === 'classic'; } catch (e) { /* private mode: Standard */ }
   window.WFR_DOOR = classic ? { w: 1.2, h: 2, classic: true } : { w: 1.5, h: 2.9, classic: false }; }());   /* 683 C1: THE doorway, local units (x HS 1.6: Standard 2.4 x 4.64 m; a villager, drawn 3.67-3.72 m, is 80% of it; the brief's 2.6 left him at 89%). The ring houses, the 641 house, the cabins and the walk read it. Classic is frozen (Marth, Oct 14, board 645): its doors stay 1.2 x 2. The look is read as the game reads it (it reloads on a switch). */</script>
-<script src="gltf-loader.js?v=2ea30f801bff"></script>
-<script src="skeleton-utils.js?v=2ea30f801bff"></script>
-<script src="meshopt-decoder.js?v=2ea30f801bff"></script>
-<script src="models.js?v=2ea30f801bff"></script>
-<script src="people.js?v=2ea30f801bff"></script>
-<script src="villagers.js?v=2ea30f801bff"></script>
-<script src="tex-photos.js?v=2ea30f801bff"></script>
-<script src="textures.js?v=2ea30f801bff"></script>
-<script src="birds.js?v=2ea30f801bff"></script>
-<script src="humans.js?v=2ea30f801bff"></script>
-<script src="folk.js?v=2ea30f801bff"></script>
-<script src="trees.js?v=2ea30f801bff"></script>
-<script src="treehouses.js?v=2ea30f801bff"></script>
-<script src="cabins.js?v=2ea30f801bff"></script>
-<script src="cave.js?v=2ea30f801bff"></script>
-<script src="hermits.js?v=2ea30f801bff"></script>
-<script src="sounds.js?v=2ea30f801bff"></script>
-<script src="music.js?v=2ea30f801bff"></script>
-<script src="music-orchestra.js?v=2ea30f801bff"></script>
-<script src="rhythm.js?v=2ea30f801bff"></script>
-<script src="pictograms.js?v=2ea30f801bff"></script>
-<script src="chick-wear.js?v=2ea30f801bff"></script>
-<script src="hedgehogs.js?v=2ea30f801bff"></script>
-<script src="opening.js?v=2ea30f801bff"></script>
-<script src="skypiea.js?v=2ea30f801bff"></script>
-<script src="pirate.js?v=2ea30f801bff"></script>
-<script src="atmo.js?v=2ea30f801bff"></script>
-<script src="boat.js?v=2ea30f801bff"></script>
-<script src="weather.js?v=2ea30f801bff"></script>
-<script src="village-build.js?v=2ea30f801bff"></script>
-<script src="runes.js?v=2ea30f801bff"></script>
-<script src="orchard.js?v=2ea30f801bff"></script>
-<script src="net678.js?v=2ea30f801bff"></script>
-<script src="net678-config.js?v=2ea30f801bff"></script>
+<script src="gltf-loader.js?v=529949f8d266"></script>
+<script src="skeleton-utils.js?v=529949f8d266"></script>
+<script src="meshopt-decoder.js?v=529949f8d266"></script>
+<script src="models.js?v=529949f8d266"></script>
+<script src="people.js?v=529949f8d266"></script>
+<script src="villagers.js?v=529949f8d266"></script>
+<script src="tex-photos.js?v=529949f8d266"></script>
+<script src="textures.js?v=529949f8d266"></script>
+<script src="birds.js?v=529949f8d266"></script>
+<script src="humans.js?v=529949f8d266"></script>
+<script src="folk.js?v=529949f8d266"></script>
+<script src="trees.js?v=529949f8d266"></script>
+<script src="treehouses.js?v=529949f8d266"></script>
+<script src="cabins.js?v=529949f8d266"></script>
+<script src="cave.js?v=529949f8d266"></script>
+<script src="hermits.js?v=529949f8d266"></script>
+<script src="sounds.js?v=529949f8d266"></script>
+<script src="music.js?v=529949f8d266"></script>
+<script src="music-orchestra.js?v=529949f8d266"></script>
+<script src="rhythm.js?v=529949f8d266"></script>
+<script src="pictograms.js?v=529949f8d266"></script>
+<script src="chick-wear.js?v=529949f8d266"></script>
+<script src="hedgehogs.js?v=529949f8d266"></script>
+<script src="opening.js?v=529949f8d266"></script>
+<script src="skypiea.js?v=529949f8d266"></script>
+<script src="pirate.js?v=529949f8d266"></script>
+<script src="atmo.js?v=529949f8d266"></script>
+<script src="boat.js?v=529949f8d266"></script>
+<script src="weather.js?v=529949f8d266"></script>
+<script src="village-build.js?v=529949f8d266"></script>
+<script src="runes.js?v=529949f8d266"></script>
+<script src="orchard.js?v=529949f8d266"></script>
+<script src="net678.js?v=529949f8d266"></script>
+<script src="net678-config.js?v=529949f8d266"></script>
 <script>
 (() => {
 'use strict';
@@ -2162,6 +2162,7 @@ const ACTS = {
   market: { need: 2, dur: 8, place: () => near(builtAt[2], 2.2, VILLAGE), face: () => builtAt[2], pose: 'shop' },
   bench:  { need: 3, dur: 12, place: () => ({ x: builtAt[3].x, z: builtAt[3].z }), face: () => VILLAGE, pose: 'sit' },
   bath:   { need: 4, dur: 5, place: () => near(builtAt[4], 2.4, VILLAGE), face: () => builtAt[4], pose: 'look' },
+  trek:   { trip: true, dur: 30, place: (n) => n.target, pose: 'look' },   // 704b: a day out on a trail (never in chooseAct's pool: trekMay704 decides)
   /* a visit: cross the village to a neighbour's door and stand there a while (Itachi: people in the streets) */
   /* 559: a delivered tool is USED where it belongs (never chosen without the tool: chooseAct leaves out tool acts) */
   fix:    { tool: true, dur: 8, place: (n) => toWorld(n.house, n.house.w / 2 - 0.9, n.house.d / 2 + 1.0), face: (n) => toWorld(n.house, n.house.w / 2 - 0.9, n.house.d / 2), pose: 'hammer' },
@@ -2172,15 +2173,61 @@ const ACTS = {
             face: (n) => doorFront(n.visiting, 0), pose: 'talk' },
 };
 /* 660 L2: what each act looks like over a head, so she sees each decision (DRAFT emoji, his eye rules; home has no ACTS entry) */
-const ACT_ICON = { stroll: '🌿', sky: '☀️', well: '🪣', sweep: '🧹', garden: '🌱', market: '🧺', bench: '📖', bath: '♨️', fix: '🔨', paint: '🖌️', unlock: '🔑', crank: '🔧', visit: '🚪', home: '🏠' };
+const ACT_ICON = { stroll: '🌿', sky: '☀️', well: '🪣', sweep: '🧹', garden: '🌱', market: '🧺', bench: '📖', bath: '♨️', fix: '🔨', paint: '🖌️', unlock: '🔑', crank: '🔧', visit: '🚪', home: '🏠', trek: '🥾' };
 const ICON_NEAR = 9;   // 660b: the act icons only when she is near (Marth, row 660, Oct 16 ~00:00: "b) when shes near."); DRAFT 9 m (the brief's G6 says 8 m, his range 8-10)
 function chooseAct(n) {
   n.walks = (n.walks || 0) + 1; n.planT = S.t; n.why = 'clock';   // 660 L3: every decision stamped; a caller with a reason writes n.why after
+  if (n.trek) { trekGo704(n); return; }   // 704b: out on a trail, every decision is the trail (on, or back the same way)
   if (n.walks % (rainy() && !S.carry.some((it) => it.owner === n) ? 2 : 5) === 0 || S.clock > 2040) { n.act = 'home'; n.phase = 'go'; const f = doorFront(n.house, 0.2); n.target = { x: f.x, z: f.z }; n.house.openT = Math.max(n.house.openT, 6); return; }   // every fifth walk - and every walk once evening comes (board 540)
   if (n.tool) { n.act = 'home'; n.phase = 'go'; const f = doorFront(n.house, 0.2); n.target = { x: f.x, z: f.z }; n.house.openT = Math.max(n.house.openT, 6); return; }   // work done: the tool goes home with them (559)
-  const open = Object.keys(ACTS).filter((k) => !ACTS[k].tool && (ACTS[k].need === undefined || builtAt[ACTS[k].need]));
+  if (trekMay704(n)) { trekStart704(n); return; }   // 704b: a dry morning: a day out
+  const open = Object.keys(ACTS).filter((k) => !ACTS[k].tool && !ACTS[k].trip && (ACTS[k].need === undefined || builtAt[ACTS[k].need]));
   const pool = []; for (const k of open) { const w = k === n.fav ? 4 : k === 'stroll' ? 3 : 1; for (let j = 0; j < w; j++) pool.push(k); }
   n.act = pool[Math.floor(Math.random() * pool.length)]; n.phase = 'go'; n.target = ACTS[n.act].place(n); n.actT = ACTS[n.act].dur;
+}
+/* 704b VILLAGERS WHO GO OUT (his words and the rules: tools/wiring/wire-704b-trails.js). n.trek = { name, pts, i, out, len } while out. */
+var TREK704 = { MAX: 3, routes: null, day: -1, today: 0, starts: 0, backs: 0, home: 0 };
+function trekOk704(x, z) { if (!(H(x, z) > WATER + 0.6) || Math.hypot(x, z) > 235) return false; for (const t of trees) { const dx = x - t.x, dz = z - t.z, r = 1.2 * t.r + 0.9; if (dx * dx + dz * dz < r * r) return false; } return true; }
+function trekLine704(a, b) { const L = Math.hypot(b.x - a.x, b.z - a.z), k = Math.max(1, Math.ceil(L / 3)); let hp = H(a.x, a.z);
+  for (let q = 1; q <= k; q++) { const x = a.x + (b.x - a.x) * q / k, z = a.z + (b.z - a.z) * q / k, h = H(x, z); if (!trekOk704(x, z) || Math.abs(h - hp) > 1.3) return false; hp = h; } return true; }
+function trekName704(p) { const d = (o) => Math.hypot(p.x - o.x, p.z - o.z); return d(MOUND) < 50 ? 'the big tree' : d(LAKE) < 50 ? 'the lake' : d(PEAKS) < 120 ? 'the hills' : Math.hypot(p.x, p.z) > 195 ? 'the shore' : 'the meadows'; }
+function trekRoutes704() {
+  if (TREK704.routes) return TREK704.routes;
+  const out = []; let seed = 7041; const rnd = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
+  for (let k = 0; k < 24; k++) { const a = k / 24 * Math.PI * 2, c = Math.cos(a), s = Math.sin(a), A = { x: VILLAGE.x + c * 34, z: VILLAGE.z + s * 34 };
+    if (!trekOk704(A.x, A.z)) continue;
+    for (const r of [200, 170, 140, 110]) { const B = { x: VILLAGE.x + c * r, z: VILLAGE.z + s * r }; if (!trekLine704(A, B)) continue;
+      const pts = [A], n = Math.max(2, Math.round((r - 34) / 22));
+      for (let q = 1; q < n; q++) { const u = q / n, j = (rnd() - 0.5) * 5, P = { x: A.x + (B.x - A.x) * u - s * j, z: A.z + (B.z - A.z) * u + c * j };
+        pts.push(trekLine704(pts[pts.length - 1], P) ? P : { x: A.x + (B.x - A.x) * u, z: A.z + (B.z - A.z) * u }); }
+      pts.push(B); if (!pts.every((p, q) => q === 0 || trekLine704(pts[q - 1], p))) continue;
+      let len = 0; for (let q = 1; q < pts.length; q++) len += Math.hypot(pts[q].x - pts[q - 1].x, pts[q].z - pts[q - 1].z);
+      out.push({ name: trekName704(B), pts, len }); break; } }
+  return (TREK704.routes = out);
+}
+function trekMay704(n) {
+  const d = wxDay(); if (TREK704.day !== d) { TREK704.day = d; TREK704.today = 0; }
+  if (TREK704.today >= TREK704.MAX || n.trekDay === d || rainy() || S.clock < 150 || S.clock > 650 || n.tool || S.carry.some((it) => it.owner === n) || Math.random() > 0.35) return false;
+  return trekRoutes704().length > 0;
+}
+function trekStart704(n, ri) {
+  const Rt = trekRoutes704(); if (!Rt.length) return false; const r = Rt[ri != null ? ri % Rt.length : Math.floor(Math.random() * Rt.length)];
+  n.trek = { name: r.name, pts: r.pts.slice(), i: 0, out: true, len: r.len }; n.trekDay = wxDay(); TREK704.today++; TREK704.starts++;
+  trekGo704(n); return true;
+}
+function trekBack704(n) { const T = n.trek; if (!T || !T.out) return; T.pts = T.pts.slice(0, Math.min(T.i, T.pts.length)).reverse(); T.i = 0; T.out = false; TREK704.backs++; }   // the points already passed, in reverse
+function trekHome704(n) { n.trek = null; TREK704.home++; n.act = 'home'; n.phase = 'go'; const f = doorFront(n.house, 0.2); n.target = { x: f.x, z: f.z }; n.house.openT = Math.max(n.house.openT, 6); }
+function trekGo704(n) {   // on the way: out to the next point (or, once there, at dusk, or turned round: back), else home
+  const T = n.trek; if (T.out && (T.i >= T.pts.length || S.clock > 2040 || rainy())) trekBack704(n);
+  n.act = 'trek'; n.phase = 'go';
+  if (T.i < T.pts.length) { n.target = T.pts[T.i]; return; }
+  trekHome704(n);
+}
+function trekStep704(n) {   // updateNPC: a trail point reached
+  const T = n.trek; T.i++;
+  if (T.i < T.pts.length) { n.target = T.pts[T.i]; return true; }
+  if (!T.out) { trekHome704(n); return true; }
+  const back = T.len / 1.6 * DAY_SPEED; n.phase = 'do'; n.actT = Math.max(12, Math.min(150, (1950 - back - S.clock) / DAY_SPEED)); return true;   // they stay until the walk back brings them home before dusk
 }
 const ease = (o, k, v, r) => { o[k] += (v - o[k]) * r; };
 const PROP_OF = { kneel: 'can', shop: 'basket', sit: 'book', look: 'mug', talk: 'bread' };   // garden, market, bench, bath, a visit
@@ -2230,6 +2277,7 @@ function interrupt(n, state, dur) { if (n.state !== state) n.before = n.state; n
 function replan(n, why) {
   if (n.partner) { const m = n.partner; m.partner = null; if (m.state === 'talk') { m.state = 'act'; chooseAct(m); m.why = 'friend'; } n.partner = null; }   // a talk is released as receive() releases it
   n.state = 'act'; n.before = null;
+  if (why === 'rain' && n.trek) { trekBack704(n); trekGo704(n); n.why = why; return; }   // 704b: out on a trail when the rain comes: back along it, hurrying
   if (why === 'rain' && !S.carry.some((it) => it.owner === n)) { n.act = 'home'; n.phase = 'go'; const f = doorFront(n.house, 0.2); n.target = { x: f.x, z: f.z }; n.house.openT = Math.max(n.house.openT, 6); n.planT = S.t; }   // rain: home (chooseAct's home branch), unless she is bringing them something
   else chooseAct(n);
   n.why = why;
@@ -2369,6 +2417,7 @@ function updateNPC(n, dt) {
     const dx = n.target.x - p.x, dz = n.target.z - p.z, d = Math.hypot(dx, dz);
     if (d < 0.5) {
       if (n.act === 'home') { putAway(n); n.g.visible = false; n.state = 'inside'; n.t = rainy() && !S.carry.some((it) => it.owner === n) ? 30 + Math.random() * 20 : 7 + Math.random() * 6; n.house.openT = Math.max(n.house.openT, 2.5); return; }
+      if (n.act === 'trek' && n.trek && trekStep704(n)) return;   // 704b: the next trail point, the stay, or home
       if (n.act === 'stroll') { chooseAct(n); return; }
       if (n.act === 'visit' && n.visiting) n.visiting.openT = Math.max(n.visiting.openT, 8);   // someone answers the door
       n.phase = 'do'; n.actT = ACTS[n.act].dur; return;
@@ -2470,26 +2519,34 @@ $('newGame').addEventListener('click', () => { fileMode = fileMode === 'new' ? '
 const SAVECODE = {
   sum(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return (h >>> 0).toString(36); },
   enc(json) { const b = btoa(unescape(encodeURIComponent(json))); return 'WFR1:' + b + ':' + SAVECODE.sum(b); },
-  dec(code) { const m = /^WFR1:([A-Za-z0-9+/=]+):([0-9a-z]+)$/.exec(String(code || '').replace(/\s+/g, '')); if (!m || SAVECODE.sum(m[1]) !== m[2]) return null;
-    try { const j = decodeURIComponent(escape(atob(m[1]))), o = JSON.parse(j); return o && typeof o === 'object' && o.level && o.kind ? j : null; } catch (e) { return null; } },
+  dec(code) { const all = String(code || '').replace(/\s+/g, '').match(/WFR1:[A-Za-z0-9+/=]+:[0-9a-z]+/g) || [];   // 709: the code is found inside anything pasted with it; the last whole one wins
+    for (let q = all.length - 1; q >= 0; q--) { const m = /^WFR1:([A-Za-z0-9+/=]+):([0-9a-z]+)$/.exec(all[q]); if (!m || SAVECODE.sum(m[1]) !== m[2]) continue;
+      try { const j = decodeURIComponent(escape(atob(m[1]))), o = JSON.parse(j); if (o && typeof o === 'object' && o.level && o.kind) return j; } catch (e) { /* the next one */ } }
+    return null; },
 };
 let restoreArmed = false;
 const birdName = (o) => (o && BIRDS[o.kind] ? BIRDS[o.kind].name : 'a bird') + ', Lv ' + ((o && o.level) || 1);
 function saveBox(mode) {
-  const box = $('saveBox'), ta = $('saveCode'), go = $('saveGo'), msg = $('saveMsg'); restoreArmed = false; box.hidden = false; box.dataset.mode = mode; go.hidden = false;
+  const box = $('saveBox'), ta = $('saveCode'), go = $('saveGo'), msg = $('saveMsg'); restoreArmed = false; box.hidden = false; box.dataset.mode = mode; go.hidden = false; $('saveShare').hidden = true;
   if (mode === 'backup') { let raw = null; try { raw = localStorage.getItem(fileKey(ACTIVE)) || localStorage.getItem('wfr.save'); } catch (e) { raw = null; }
     let o = null; try { o = JSON.parse(raw || 'null'); } catch (e) { o = null; }
     if (!o) { msg.textContent = 'File ' + ACTIVE + ' has nothing to back up yet.'; ta.value = ''; go.hidden = true; return; }
-    ta.value = SAVECODE.enc(raw); ta.readOnly = true; go.textContent = 'Copy'; msg.textContent = 'File ' + ACTIVE + ': ' + birdName(o) + '. Keep this code somewhere safe, like Notes.'; return; }
+    ta.value = SAVECODE.enc(raw); ta.readOnly = true; $('saveShare').hidden = !navigator.share; go.textContent = 'Copy'; msg.textContent = 'File ' + ACTIVE + ': ' + birdName(o) + '. Keep this code somewhere safe, like Notes.'; return; }
   ta.value = ''; ta.readOnly = false; go.textContent = 'Restore'; msg.textContent = 'Paste a backup code. It goes into File ' + ACTIVE + '.';
 }
 $('backupBtn').addEventListener('click', () => saveBox('backup'));
 $('restoreBtn').addEventListener('click', () => saveBox('restore'));
 $('saveClose').addEventListener('click', () => { $('saveBox').hidden = true; restoreArmed = false; });
+$('saveShare').addEventListener('click', () => { const ta = $('saveCode'), msg = $('saveMsg'); if (!navigator.share || !ta.value) return;   // 709: the share sheet: Notes, Messages, anywhere
+  try { navigator.share({ title: 'Wings for Rouge backup', text: ta.value }).then(() => { msg.textContent = 'Sent. Keep it somewhere safe, like Notes.'; }, () => {}); } catch (e) { /* the sheet was refused: Copy is still there */ } });
+$('saveCode').addEventListener('focus', () => { const ta = $('saveCode'); if ($('saveBox').dataset.mode === 'backup' && ta.value) setTimeout(() => { try { ta.setSelectionRange(0, ta.value.length); } catch (e) { /* fine */ } }, 0); });   // 709: a tap selects the whole code
 $('saveGo').addEventListener('click', () => {
   const ta = $('saveCode'), msg = $('saveMsg'), go = $('saveGo');
-  if ($('saveBox').dataset.mode === 'backup') { ta.focus(); ta.select(); let ok = false; try { if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(ta.value).catch(() => {}); ok = true; } else ok = document.execCommand('copy'); } catch (e) { ok = false; }
-    msg.textContent = ok ? 'Copied. Paste it into Notes to keep it.' : 'Select the code above and copy it by hand.'; return; }
+  if ($('saveBox').dataset.mode === 'backup') { ta.focus(); ta.setSelectionRange(0, ta.value.length);   // 709: "Copied" only when the phone says it copied
+    const said = (ok) => { msg.textContent = ok ? 'Copied. Paste it into Notes to keep it.' : (navigator.share ? 'Your phone would not copy it from here. Tap Share instead, or press and hold the code, then Select All and Copy.' : 'Your phone would not copy it from here. Press and hold the code, then Select All and Copy.'); };
+    const byHand = () => { let ok = false; try { ok = document.execCommand('copy'); } catch (e) { ok = false; } said(ok); };
+    try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).then(() => said(true), byHand); else byHand(); } catch (e) { byHand(); }
+    return; }
   const j = SAVECODE.dec(ta.value); if (!j) { restoreArmed = false; go.textContent = 'Restore'; msg.textContent = 'That is not a whole backup code (or it was cut short). Nothing changed.'; return; }
   const o = JSON.parse(j), cur = readFile(ACTIVE);
   if (cur && !restoreArmed) { restoreArmed = true; go.textContent = 'Tap again to replace'; msg.textContent = 'File ' + ACTIVE + ' holds ' + birdName(cur) + '. Replace it with ' + birdName(o) + '?'; return; }
@@ -4981,7 +5038,7 @@ function bgMusicTick(dt) {
    after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
    music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
    menu, a cutscene), the orchestra bows out. */
-const ORCH_SRC = 'orch-samples.js?v=2ea30f801bff';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const ORCH_SRC = 'orch-samples.js?v=529949f8d266';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
 const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
 window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
 const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
@@ -6509,6 +6566,15 @@ try { if (localStorage.getItem('wfr.debug') === '1') window.__wfr = { eagle: () 
   call703: () => { const C = CALL703, h = S.world && S.world.hawk, sh = PIR669 && !PIR669.dead ? { st: PIR669.state(), r: +PIR669.pose.r.toFixed(2), shown: PIR669.shown(), x: PIR669.group.position.x, z: PIR669.group.position.z } : null, f = new THREE.Vector3(); camera.getWorldDirection(f);
     return { open: call703Open(), test: ACT703_TEST, qual: call703Qual(), hawk: h ? JSON.parse(JSON.stringify(h)) : null, ph: C.ph, plays: C.plays, books: C.books, refusedFlash: C.refusedFlash, fault: C.fault, shipR0: C.shipR0, shipR1: C.shipR1, anchored: C.anchored,
       day: wxDay(), kind: wxKind(), level: wxLevel699(), next: wxNext699(), k: +WX.k.toFixed(3), mode: S.mode, ui: !$('ui').hidden, edge: EDGE, ccam: C.lp.toArray(), cfwd: new THREE.Vector3(0, 0, -1).applyQuaternion(C.lq).toArray(), ship: sh, th: WXR && WXR.th ? WXR.th() : null, at: [C.at.x, C.at.y, C.at.z], cam: camera.position.toArray(), fwd: f.toArray(), me: S.pos.toArray(), night: nightAmt(S.clock), can: call703Can() }; },   /* 703 bench (never the player's) */
+  trek704: () => ({ routes: trekRoutes704().map((r) => ({ name: r.name, len: +r.len.toFixed(1), n: r.pts.length, dry: +Math.min(...r.pts.map((p) => H(p.x, p.z) - WATER)).toFixed(2) })), day: TREK704.day, today: TREK704.today, starts: TREK704.starts, backs: TREK704.backs, home: TREK704.home, clock: S.clock,
+    npcs: npcs.map((n) => ({ act: n.act, phase: n.phase, state: n.state, vis: n.g.visible, trek: n.trek ? { name: n.trek.name, i: n.trek.i, n: n.trek.pts.length, out: n.trek.out } : null, d: +Math.hypot(n.g.position.x - VILLAGE.x, n.g.position.z - VILLAGE.z).toFixed(1) })) }),   /* 704b bench */
+  trek704sim: (i, secs, ri, rainAt) => { const n = npcs[i]; if (ri != null) trekStart704(n, ri); let minDry = 1e9, hits = 0, far = 0, did = false, stay = 0, steps = 0, rained = false, outAt = null; const dt = 0.1;   /* 704b bench: one villager's day, stepped (never the player's) */
+    for (let t = 0; t < secs; t += dt) { if (rainAt != null && !rained && t >= rainAt) { rained = true; replan(n, 'rain'); } updateNPC(n, dt); steps++; const p = n.g.position;
+      if (n.g.visible) { minDry = Math.min(minDry, H(p.x, p.z) - WATER); for (const tr of trees) { const dx = p.x - tr.x, dz = p.z - tr.z; if (dx * dx + dz * dz < (0.8 * tr.r) * (0.8 * tr.r)) { hits++; break; } } }
+      far = Math.max(far, Math.hypot(p.x - VILLAGE.x, p.z - VILLAGE.z)); if (n.act === 'trek' && n.phase === 'do') { did = true; stay += dt; }
+      if (n.state === 'inside' && !n.trek) { outAt = +t.toFixed(1); break; } }
+    return { minDry: +minDry.toFixed(2), hits, far: +far.toFixed(1), did, stay: +stay.toFixed(1), steps, state: n.state, act: n.act, trek: !!n.trek, homeAt: outAt, backs: TREK704.backs }; },
+  trek704may: (tries) => { let s = 0; for (let q = 0; q < tries; q++) for (const n of npcs) if (!n.trek && trekMay704(n)) { trekStart704(n); s++; } return { started: s, today: TREK704.today, max: TREK704.MAX, out: npcs.filter((n) => n.trek).length }; },   /* 704b bench */
   xp: (n, why) => gainXP(n, why), missions: (full) => missionsHtml(full !== false),   /* 641 */
   runes: () => RUNES ? Object.assign(RUNES.peek(), { programs: renderer.info.programs.length, sceneObjects: (() => { let n = 0; scene.traverse(() => { n++; }); return n; })(), geometries: renderer.info.memory.geometries, textures: renderer.info.memory.textures, toast: $('toast').hidden ? '' : $('toast').textContent, quest: $('quest').textContent, rainy: rainy(), where: (S.sky && S.sky.where) || 'home', smode: S.mode, played: S.played || 0, err: window.WFR_RUNES ? WFR_RUNES.error : 'no module' }) : { ready: false, err: window.WFR_RUNES ? WFR_RUNES.error : 'no module' },
   runesStart: (k) => !!(RUNES && RUNES.start(k)), runesForce: (f) => (RUNES ? RUNES.force(f) : null),
@@ -7474,7 +7540,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build 2ea30f801bff): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build 529949f8d266): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>
