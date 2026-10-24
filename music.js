@@ -140,7 +140,8 @@
   function voice(t, end, kind) {
     var i = 0; while (i < active.length) { if (active[i] <= t) active.splice(i, 1); else i++; }
     var low = kind === 'harp' || kind === 'brush';
-    if (active.length >= (low ? MAX_VOICES : HARD_CAP)) { stats.dropped++; return null; }
+    if (kind === 'mel' && active.length >= HARD_CAP) stats.melOver = (stats.melOver || 0) + 1;   // 710b (Marth, Oct 24: "make sure when I touch the notes - especially on expert, the notes are still heard"): her own notes go over the cap, counted
+    if (kind !== 'mel' && active.length >= (low ? MAX_VOICES : HARD_CAP)) { stats.dropped++; return null; }   // 710b: the song's backing may be dropped, never a note she played
     active.push(end); stats.scheduled++; if (active.length > stats.maxActive) stats.maxActive = active.length;
     return { nodes: [], srcs: 0 };
   }
@@ -441,6 +442,8 @@
     get variant() { return sess ? sess.variant : null; },
     position: function () { if (!sess || !ctx) return null; var d = ctx.currentTime - sess.loopStart; if (d < 0) return d;   /* 701e: before the first beat */ /* the honest small negative time: wrapped, it read as the loop's END and a song started from bar 1 (Gem Cut) ended its round at once */
       return d % sess.loopLen; },
+    loopLength: function () { return sess ? sess.loopLen : null; },   /* 710: the loop's length, so a round's clock can count the loops it passed */
+    liveStats: function () { return { scheduled: stats.scheduled, dropped: stats.dropped, maxActive: stats.maxActive, tapped: stats.tapped, melOver: stats.melOver || 0, active: active.length }; },   /* 710b bench */
     LOOP_SECONDS: BARS * BEATS * 60 / TEMPO.home,   /* 657: derived, never a second copy of the tempo */
     muteLevel: function () { return muteG ? muteG.gain.value : null; },   /* the bench: does the game's mute button reach this bus */
     _test: { render: render, score: function (v) { return build(v || 'home'); }, stats: function () { return stats; }, session: function () { return sess ? { variant: sess.variant, muteMel: sess.muteMel, spb: sess.spb, tempo: TEMPO[sess.variant], stopping: !!sess.stopping } : null; } }   /* 657: the guard reads the session */
