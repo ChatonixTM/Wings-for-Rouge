@@ -72,10 +72,11 @@ window.WFR_WX = (function () {
         a.setXYZ(q * 2, p.x + _s.x, p.y + _s.y, p.z + _s.z); a.setXYZ(q * 2 + 1, p.x - _s.x, p.y - _s.y, p.z - _s.z); }
       a.needsUpdate = true; m.geometry.computeBoundingSphere();
     }
-    function boltStrike(cam) {
+    function boltStrike(cam, at) {   /* 703: at = a chosen spot { x, y, z } (the Call); without it, the storm's own dice */
       o.camera.getWorldDirection(_v);
       var yaw = Math.atan2(_v.x, _v.z) + (R() - 0.5) * 1.1, dist = 140 + R() * 80, top = cam.y + 75 + R() * 25, drop = 70 + R() * 30;
       var x = cam.x + Math.sin(yaw) * dist, z = cam.z + Math.cos(yaw) * dist, pts = [], br = [], q;
+      if (at) { x = at.x; z = at.z; top = (at.y || 0) + 85 + R() * 15; drop = top - (at.y || 0); }   /* 703: from the cloud down to the sea */
       for (q = 0; q < BN; q++) { pts.push(new T.Vector3(x, top - drop * q / (BN - 1), z)); x += (R() - 0.5) * 9; z += (R() - 0.5) * 9; }
       var j = 4 + Math.floor(R() * 5), bx = pts[j].x, bz = pts[j].z, sx = (R() < 0.5 ? -1 : 1) * (3 + R() * 3);
       for (q = 0; q < BB; q++) { br.push(new T.Vector3(bx, pts[j].y - drop * 0.45 * q / (BB - 1), bz)); bx += sx + (R() - 0.5) * 4; bz += (R() - 0.5) * 4; }
@@ -107,6 +108,16 @@ window.WFR_WX = (function () {
       gn.gain.setValueAtTime(0, t0); gn.gain.linearRampToValueAtTime(far ? 0.05 : 0.1, t0 + 0.5); gn.gain.linearRampToValueAtTime(0, t0 + 2.6); src.connect(lp); lp.connect(gn); gn.connect(ac.destination); src.start(t0); src.stop(t0 + 2.8);
     }
 
+    function strikeAt(at) {   /* 703 ship 4 (the Call): one bolt at a chosen spot, with the storm's own flash and rumble. Refused (false) inside 15 s of
+       the last flash, while a flash is on, or indoors: the photosensitive rule holds in a cutscene too */
+      if (dead) return false; var played = +o.played() || 0;
+      if (o.indoors() || TH.on > 0 || (TH.last != null && played - TH.last < 15)) return false;
+      if (TH.last != null) { var gap = played - TH.last; TH.minGap = TH.minGap == null ? gap : Math.min(TH.minGap, gap); }
+      TH.last = played; TH.flashes++; TH.on = 0.12; TH.frames = 0; TH.len = 0; TH.called = (TH.called || 0) + 1;
+      if (veil) veil.style.opacity = '0.35'; o.flash(0.4); boltStrike(o.camera.position, at);
+      setTimeout(function () { rumble(false); }, 600 + R() * 900);
+      TH.next = played + Math.max(15, 18 + R() * 27); return true;
+    }
     function tick(dt, real) {
       if (dead) return; if (real == null) real = dt;
       try {
@@ -141,7 +152,7 @@ window.WFR_WX = (function () {
       return { dead: dead, rainVis: rain.visible && U.uA.value > 0.001, rainA: U.uA.value, rainVerts: N * 2, flashes: TH.flashes, minGap: TH.minGap, maxFlashFrames: TH.maxFrames, maxFlashLen: +TH.maxLen.toFixed(3), flashing: TH.on > 0, rumbles: TH.rumbles, sound: !!SND.bed,
         level: LVNOW, drawn: g.drawRange.count / 2, uLen: U.uLen.value, bolts: BOLT.strikes, boltShown: BOLT.mesh.visible && BOLT.mat.opacity > 0.01, farFlashes: TH.far || 0 };   /* 699 */
     }
-    return { tick: tick, peek: peek, rain: rain };
+    return { tick: tick, peek: peek, rain: rain, strikeAt: strikeAt, th: function () { return { flashes: TH.flashes, last: TH.last, minGap: TH.minGap, called: TH.called || 0 }; } };   /* 703 */
   }
 
   API = { roll: roll, level: level, seasons: SEASONS, create: create, last: null, error: null };

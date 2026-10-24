@@ -121,7 +121,7 @@ window.WFR_PIRATE = (function () {
       L.r0 = pose.r; L.th0 = pose.th;
       if (kind === 'in') { rA = anchorR(); L.r1 = rA; L.th1 = a; } else { L.r1 = rOut; L.th1 = a - dthA; }
       var len = Math.sqrt((L.r1 - L.r0) * (L.r1 - L.r0) + (0.5 * (L.r0 + L.r1) * (L.th1 - L.th0)) * (0.5 * (L.r0 + L.r1) * (L.th1 - L.th0)));
-      L.dur = Math.max(6, len / C.V); L.u = 0;
+      L.dur = Math.max(6, len / (C.V * ((o.speed && +o.speed()) || 1))); L.u = 0;   /* 703: the Call's leg is quicker */
       if (st === 'away') { L.u = 0; place(0); pose.yaw = headingNow(); }   /* it appears already pointing along its way */
       st = kind;
     }
@@ -138,7 +138,7 @@ window.WFR_PIRATE = (function () {
       var t = +o.played() || 0, dp = lastT == null ? 0 : t - lastT; lastT = t;
       if (!(dp > 0)) dp = 0; if (dp > 0.5) dp = 0.5;   /* seconds of PLAY: the title screen, a pause, a page asleep move nothing */
       if (inst.hold) { group.visible = false; return; }   /* the bench: held out of sight (the program census's "before") */
-      var g = !!o.gate(), want = g && C.COMES[o.kind()] === 1 && o.night() < C.NIGHT;
+      var g = !!o.gate(), call = !!(o.call && o.call()), want = g && (call || (C.COMES[o.kind()] === 1 && o.night() < C.NIGHT));   /* 703 ship 4: the Call brings it in a storm and keeps it the rest of that day */
       if (st === 'away') { if (want) leg('in'); }
       else if (st === 'out') { if (want) leg('in'); }
       else if (!want && !(o.keep && o.keep())) leg('out');   /* U2: while she is landing on it or held by its prompt, it keeps its anchor */
