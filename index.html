@@ -232,7 +232,7 @@ html.map705open .compass .arrow{box-shadow:0 0 0 3px rgba(242,177,52,.9),0 6px 1
   box-shadow:0 6px 16px rgba(34,49,74,.18)}
 #fade{position:fixed;inset:0;background:#0b1430;opacity:0;pointer-events:none;z-index:25}   /* a fade from dark: Sleep, and night B */
 /* 625b: the call's words over the world: her cry big and red, the dive's typed line white on the black */
-.savebox{margin:10px auto 0;max-width:440px;text-align:left}.savebox p{margin:0 0 8px;font-size:14px;line-height:1.4}.savebox textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default;touch-action:pan-y;overflow-y:auto;max-height:38vh;width:100%;box-sizing:border-box;font:12px/1.4 ui-monospace,Menlo,monospace;border-radius:12px;border:2px solid #e8dcc8;padding:10px;resize:none;background:#fffdf8}.savebox-row{display:flex;gap:12px;align-items:center;margin-top:8px}#saveGo{min-height:44px;padding:0 20px;border-radius:22px;border:0;background:#c8314a;color:#fff;font-weight:800;font-size:15px}   /* 662 */
+.savebox{margin:10px auto 0;max-width:440px;text-align:left}.credit712{margin:14px auto 0;max-width:440px;font-size:11px;line-height:1.35;opacity:.72;text-align:center}.savebox p{margin:0 0 8px;font-size:14px;line-height:1.4}.savebox textarea{-webkit-user-select:text;user-select:text;-webkit-touch-callout:default;touch-action:pan-y;overflow-y:auto;max-height:38vh;width:100%;box-sizing:border-box;font:12px/1.4 ui-monospace,Menlo,monospace;border-radius:12px;border:2px solid #e8dcc8;padding:10px;resize:none;background:#fffdf8}.savebox-row{display:flex;gap:12px;align-items:center;margin-top:8px}#saveGo{min-height:44px;padding:0 20px;border-radius:22px;border:0;background:#c8314a;color:#fff;font-weight:800;font-size:15px}   /* 662 */
 #callCap{position:fixed;inset:0;z-index:26;display:grid;place-items:center;text-align:center;padding:24px;pointer-events:auto}#callCap[hidden]{display:none}#callCap.cry{align-content:start;padding-top:22vh}   /* the cry sits above her, not across her */
 #callCap.cry b{font-family:var(--display);font-weight:800;font-size:clamp(40px,12vw,76px);line-height:1;color:#c8314a;-webkit-text-stroke:2px #111;text-shadow:0 6px 18px rgba(0,0,0,.35);animation:cryIn .35s cubic-bezier(.2,1.4,.4,1) both}@keyframes cryIn{from{opacity:0;transform:scale(.5)}to{opacity:1;transform:scale(1)}}
 #callCap.black p{font-family:var(--body);font-weight:700;font-size:18px;line-height:1.55;color:#fff8ec;max-width:30ch;margin:0;min-height:3.2em}
@@ -530,6 +530,7 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
     <p class="how" id="how"></p>
     <div class="title-links"><button class="linkish" id="rewatch" type="button" style="min-height:44px" hidden>Watch the story again</button><button class="linkish" id="newGame" type="button" style="min-height:44px">New game</button><button class="linkish" id="backupBtn" type="button" style="min-height:44px">Back up</button><button class="linkish" id="restoreBtn" type="button" style="min-height:44px">Restore</button><button class="linkish" id="netBtn678t" type="button" style="min-height:44px">🤝 Fly with someone</button></div>
     <div class="savebox" id="saveBox" hidden><p id="saveMsg"></p><textarea id="saveCode" rows="6" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Backup code"></textarea><div class="savebox-row"><button type="button" id="saveGo">Copy</button><button type="button" class="ghost" id="saveShare" hidden style="min-height:44px">Share</button><button type="button" class="linkish" id="saveClose" style="min-height:44px">Close</button></div></div>
+    <p class="credit712" id="credit712">Terrain: SRTM/GMTED2010/3DEP courtesy of the U.S. Geological Survey; ETOPO1 NOAA. Terrain tiles: Mapzen/Tilezen via the AWS Open Data registry.</p>
   </div>
 </div>
 
@@ -567,46 +568,47 @@ body.rhythmOn .stick,body.rhythmOn .flap,body.rhythmOn .act,body.rhythmOn .care{
 <div class="rhRes" id="rhRes" hidden aria-live="polite"><b id="resRank"></b><span id="resLine"></span><small id="resTime"></small><small id="resNew" hidden></small></div>   <!-- 672 OURS/DRAFT words: Paused, Resume, Quit song -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="toon.js?v=0a3d1546b5a9"></script>
+<script src="toon.js?v=f8325e89c76f"></script>
 <script>(function () { let classic = false; try { classic = localStorage.getItem('wfr.look') === 'classic'; } catch (e) { /* private mode: Standard */ }
   window.WFR_DOOR = classic ? { w: 1.2, h: 2, classic: true } : { w: 1.5, h: 2.9, classic: false }; }());   /* 683 C1: THE doorway, local units (x HS 1.6: Standard 2.4 x 4.64 m; a villager, drawn 3.67-3.72 m, is 80% of it; the brief's 2.6 left him at 89%). The ring houses, the 641 house, the cabins and the walk read it. Classic is frozen (Marth, Oct 14, board 645): its doors stay 1.2 x 2. The look is read as the game reads it (it reloads on a switch). */</script>
-<script src="gltf-loader.js?v=0a3d1546b5a9"></script>
-<script src="skeleton-utils.js?v=0a3d1546b5a9"></script>
-<script src="meshopt-decoder.js?v=0a3d1546b5a9"></script>
-<script src="models.js?v=0a3d1546b5a9"></script>
-<script src="people.js?v=0a3d1546b5a9"></script>
-<script src="villagers.js?v=0a3d1546b5a9"></script>
-<script src="tex-photos.js?v=0a3d1546b5a9"></script>
-<script src="textures.js?v=0a3d1546b5a9"></script>
-<script src="birds.js?v=0a3d1546b5a9"></script>
-<script src="humans.js?v=0a3d1546b5a9"></script>
-<script src="folk.js?v=0a3d1546b5a9"></script>
-<script src="trees.js?v=0a3d1546b5a9"></script>
-<script src="treehouses.js?v=0a3d1546b5a9"></script>
-<script src="cabins.js?v=0a3d1546b5a9"></script>
-<script src="cave.js?v=0a3d1546b5a9"></script>
-<script src="hermits.js?v=0a3d1546b5a9"></script>
-<script src="sounds.js?v=0a3d1546b5a9"></script>
-<script src="music.js?v=0a3d1546b5a9"></script>
-<script src="music-orchestra.js?v=0a3d1546b5a9"></script>
-<script src="rhythm.js?v=0a3d1546b5a9"></script>
-<script src="pictograms.js?v=0a3d1546b5a9"></script>
-<script src="chick-wear.js?v=0a3d1546b5a9"></script>
-<script src="hedgehogs.js?v=0a3d1546b5a9"></script>
-<script src="opening.js?v=0a3d1546b5a9"></script>
-<script src="skypiea.js?v=0a3d1546b5a9"></script>
-<script src="pirate.js?v=0a3d1546b5a9"></script>
-<script src="atmo.js?v=0a3d1546b5a9"></script>
-<script src="boat.js?v=0a3d1546b5a9"></script>
-<script src="weather.js?v=0a3d1546b5a9"></script>
-<script src="village-build.js?v=0a3d1546b5a9"></script>
-<script src="runes.js?v=0a3d1546b5a9"></script>
-<script src="hawkwake.js?v=0a3d1546b5a9"></script>
-<script src="hawkfight.js?v=0a3d1546b5a9"></script>
-<script src="hawkarena.js?v=0a3d1546b5a9"></script>
-<script src="orchard.js?v=0a3d1546b5a9"></script>
-<script src="net678.js?v=0a3d1546b5a9"></script>
-<script src="net678-config.js?v=0a3d1546b5a9"></script>
+<script src="gltf-loader.js?v=f8325e89c76f"></script>
+<script src="skeleton-utils.js?v=f8325e89c76f"></script>
+<script src="meshopt-decoder.js?v=f8325e89c76f"></script>
+<script src="models.js?v=f8325e89c76f"></script>
+<script src="people.js?v=f8325e89c76f"></script>
+<script src="villagers.js?v=f8325e89c76f"></script>
+<script src="tex-photos.js?v=f8325e89c76f"></script>
+<script src="textures.js?v=f8325e89c76f"></script>
+<script src="birds.js?v=f8325e89c76f"></script>
+<script src="humans.js?v=f8325e89c76f"></script>
+<script src="folk.js?v=f8325e89c76f"></script>
+<script src="trees.js?v=f8325e89c76f"></script>
+<script src="treehouses.js?v=f8325e89c76f"></script>
+<script src="cabins.js?v=f8325e89c76f"></script>
+<script src="cave.js?v=f8325e89c76f"></script>
+<script src="hermits.js?v=f8325e89c76f"></script>
+<script src="sounds.js?v=f8325e89c76f"></script>
+<script src="music.js?v=f8325e89c76f"></script>
+<script src="music-orchestra.js?v=f8325e89c76f"></script>
+<script src="rhythm.js?v=f8325e89c76f"></script>
+<script src="pictograms.js?v=f8325e89c76f"></script>
+<script src="chick-wear.js?v=f8325e89c76f"></script>
+<script src="hedgehogs.js?v=f8325e89c76f"></script>
+<script src="opening.js?v=f8325e89c76f"></script>
+<script src="skypiea.js?v=f8325e89c76f"></script>
+<script src="pirate.js?v=f8325e89c76f"></script>
+<script src="atmo.js?v=f8325e89c76f"></script>
+<script src="boat.js?v=f8325e89c76f"></script>
+<script src="weather.js?v=f8325e89c76f"></script>
+<script src="village-build.js?v=f8325e89c76f"></script>
+<script src="runes.js?v=f8325e89c76f"></script>
+<script src="world712-frame.js?v=f8325e89c76f"></script>
+<script src="hawkwake.js?v=f8325e89c76f"></script>
+<script src="hawkfight.js?v=f8325e89c76f"></script>
+<script src="hawkarena.js?v=f8325e89c76f"></script>
+<script src="orchard.js?v=f8325e89c76f"></script>
+<script src="net678.js?v=f8325e89c76f"></script>
+<script src="net678-config.js?v=f8325e89c76f"></script>
 <script>
 (() => {
 'use strict';
@@ -5043,7 +5045,7 @@ function bgMusicTick(dt) {
    after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
    music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
    menu, a cutscene), the orchestra bows out. */
-const ORCH_SRC = 'orch-samples.js?v=0a3d1546b5a9';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const ORCH_SRC = 'orch-samples.js?v=f8325e89c76f';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
 const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
 window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
 const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
@@ -7919,7 +7921,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build 0a3d1546b5a9): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build f8325e89c76f): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>
