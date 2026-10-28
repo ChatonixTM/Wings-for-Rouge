@@ -15,6 +15,8 @@
    out until its hull clears 646's circling boat (o.clear(): that ring's outer radius, the boat's ring being EDGE - 20 today) by GAP metres;
    once it lies settled there its main deck is ground (deck(), joined to groundAt by the game) and a landing spot (spot()); o.keep() holds
    it at anchor while she lands on it or answers its prompt. Without o.reach it is U1's ship, unchanged.
+   715 (Trunks, Oct 28; wire-715a-the-ship-home.js): inst.pin (null by default: the island's ship unchanged) holds it where the game puts it
+   (Damned's shore, the ride home) with its deck offered while pin.deck; inst.unpin(home) lets go, home = at its own anchorage.
    Every number in C is a DRAFT (reasoned, not measured on his phone): his eye decides. */
 window.WFR_PIRATE = (function () {
   'use strict';
@@ -138,6 +140,7 @@ window.WFR_PIRATE = (function () {
       var t = +o.played() || 0, dp = lastT == null ? 0 : t - lastT; lastT = t;
       if (!(dp > 0)) dp = 0; if (dp > 0.5) dp = 0.5;   /* seconds of PLAY: the title screen, a pause, a page asleep move nothing */
       if (inst.hold) { group.visible = false; return; }   /* the bench: held out of sight (the program census's "before") */
+      if (inst.pin) { pinned(t); return; }   /* 715: held where the game puts it (Damned's shore, the ride home); its own legs wait */
       var g = !!o.gate(), call = !!(o.call && o.call()), want = g && (call || (C.COMES[o.kind()] === 1 && o.night() < C.NIGHT));   /* 703 ship 4: the Call brings it in a storm and keeps it the rest of that day */
       if (st === 'away') { if (want) leg('in'); }
       else if (st === 'out') { if (want) leg('in'); }
@@ -158,6 +161,19 @@ window.WFR_PIRATE = (function () {
       group.position.set(pose.x, pose.y, pose.z); group.rotation.set(pose.pitch, pose.yaw, pose.roll);
       group.visible = g && st !== 'away';
     }
+    function pinned(t) {   /* 715 (Trunks, Oct 28): inst.pin = { x, z, yaw, deck } puts the ship where the game says, shown (by the gate), bobbing as at anchor;
+       its leg (st, r, th) is left as it was, so letting go resumes it. pin.deck offers the deck (deck(), spot()) wherever it lies, moving or not */
+      var P = inst.pin; pose.x = +P.x; pose.z = +P.z; pose.yaw = +P.yaw; pose.speed = +P.speed || 0;
+      pose.y = o.water + C.BOB * Math.sin(2 * Math.PI * t / C.BOBT);
+      pose.roll = C.ROLL * Math.sin(2 * Math.PI * t / C.ROLLT); pose.pitch = C.PITCH * Math.sin(2 * Math.PI * t / C.PITCHT);
+      pose.deckY = pose.y + C.DECK; pose.state = st;
+      group.position.set(pose.x, pose.y, pose.z); group.rotation.set(pose.pitch, pose.yaw, pose.roll);
+      group.visible = !!o.gate();
+    }
+    function unpin(home) {   /* 715: let go. home: it lies at its own anchorage now (the ride's end), so its own legs take it on from there */
+      inst.pin = null; if (!home) return;
+      rA = anchorR(); pose.r = rA; pose.th = a; L.u = 1; st = 'anchor';
+    }
     function die(err) { dead = true; inst.dead = true; group.visible = false; API.error = String(err && err.message || err); }
     function tick() {   /* once a frame; never throws */
       if (dead) return;
@@ -174,6 +190,7 @@ window.WFR_PIRATE = (function () {
       return Math.abs(lx) < C.HALF_W * (C.BOW - lz) / (C.BOW - C.MID) - m;
     }
     function settled() {   /* U2: at anchor, shown, and swung to its line: the deck stands still under her (only the bob moves it) */
+      if (inst.pin) return group.visible && !!inst.pin.deck;   /* 715: pinned, the game says when the deck is offered */
       return group.visible && st === 'anchor' && Math.abs(Math.atan2(Math.sin(YAW_A - pose.yaw), Math.cos(YAW_A - pose.yaw))) < C.SETTLE;
     }
     function deck(x, z) {   /* U2's part of groundAt: the deck's top while it lies settled at anchor; else nothing (-1e9). One distance test first */
@@ -190,12 +207,12 @@ window.WFR_PIRATE = (function () {
     function peek() {   /* the bench (allocates: never called by the game's frame) */
       return { dead: dead, error: API.error, state: st, shown: group.visible, x: pose.x, y: pose.y, z: pose.z, r: Math.hypot(pose.x, pose.z), th: pose.th, yaw: pose.yaw,
         speed: pose.speed, deckY: pose.deckY, u: L.u, dur: L.dur, edge: E, anchorR: rA, fromR: rIn, awayR: rOut, bearing: a, yawAnchor: YAW_A, hold: !!inst.hold, meshes: meshes.length,
-        reach: !!o.reach, settled: settled(), kept: !!(o.keep && o.keep()), halfW: C.HALF_W, gap: C.GAP, warn: API.warn || '',
+        reach: !!o.reach, settled: settled(), pinned: !!inst.pin, kept: !!(o.keep && o.keep()), halfW: C.HALF_W, gap: C.GAP, warn: API.warn || '',
         shadow: meshes.some(function (m) { return m.castShadow || m.receiveShadow; }) };
     }
     pose.x = pose.r * Math.cos(pose.th); pose.z = pose.r * Math.sin(pose.th); pose.y = o.water; pose.deckY = o.water + C.DECK;
     group.position.set(pose.x, pose.y, pose.z); group.rotation.set(0, pose.yaw, 0);
-    inst = { C: C, pose: pose, group: group, man: man, meshes: meshes, dead: false, boom: false, hold: false, tick: tick, die: die, peek: peek, local: local, inDeck: inDeck, deck: deck, anchorAt: anchorAt, spot: spot, settled: settled,
+    inst = { C: C, pose: pose, group: group, man: man, meshes: meshes, dead: false, boom: false, hold: false, pin: null, unpin: unpin, tick: tick, die: die, peek: peek, local: local, inDeck: inDeck, deck: deck, anchorAt: anchorAt, spot: spot, settled: settled,
       state: function () { return st; }, shown: function () { return group.visible; } };
     return inst;
   }
