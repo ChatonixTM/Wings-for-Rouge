@@ -154,6 +154,7 @@ window.WFR_PIRATE = (function () {
       pose.y = o.water + C.BOB * Math.sin(2 * Math.PI * t / C.BOBT);
       pose.roll = C.ROLL * Math.sin(2 * Math.PI * t / C.ROLLT); pose.pitch = C.PITCH * Math.sin(2 * Math.PI * t / C.PITCHT);
       pose.deckY = pose.y + C.DECK; pose.state = st;
+      if (inst.ride) { try { inst.ride(pose, dp, t); } catch (err) { inst.ride = null; API.warn = '703 voyage: ' + (err && err.message); } }   /* 703 ship 5: the voyage steers the ship itself */
       group.position.set(pose.x, pose.y, pose.z); group.rotation.set(pose.pitch, pose.yaw, pose.roll);
       group.visible = g && st !== 'away';
     }
