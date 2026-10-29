@@ -108,16 +108,50 @@ window.WFR_VILLAGE = (function () {
     rec.t = Math.min(LEARN.need, (+rec.t || 0) + Math.max(0, +dClock || 0));
     return { rec: rec, learned: rec.t >= LEARN.need };
   }
-  /* a load: S.village.live704 = { jobs: { who: jobId }, watch: { who: { job, t } } }; unknown jobs dropped, times clamped */
+  /* LEARNING GOES ON (Marth: "continually learning things to build and places to go and things to do"): a villager may come to hold up to
+     CRAFT.maxTrades trades over the days (their house's own first, then each one watched long enough), and the trades teach them THINGS TO
+     BUILD round the village: small real objects, a few a day, never more than CRAFT.cap in all. ALL DRAFT. */
+  var CRAFTS = [
+    { id: 'bench', name: 'a bench', trades: ['builder', 'woodcutter'], r: 1.1 },
+    { id: 'flowers', name: 'a flower bed', trades: ['gardener', 'herbalist'], r: 1.1 },
+    { id: 'lantern', name: 'a lantern', trades: ['builder', 'lookout', 'fisher'], r: 0.6 },
+    { id: 'planter', name: 'a planter', trades: ['gardener', 'fisher', 'herbalist'], r: 0.7 },
+    { id: 'awning', name: 'a market awning', trades: ['weaver', 'baker'], r: 1.5 },
+    { id: 'well', name: 'a little well', trades: ['builder', 'woodcutter'], r: 1.1 },
+    { id: 'birdbath', name: 'a bird bath', trades: ['gardener', 'lookout'], r: 0.8 }
+  ];
+  var CRAFT = { cap: 24, perDay: 2, maxTrades: 3 };
+  function craftById(id) { for (var i = 0; i < CRAFTS.length; i++) if (CRAFTS[i].id === id) return CRAFTS[i]; return null; }
+  /* what a villager with these trades builds next: of the things their trades teach, the one the village has least of (ties: the list's
+     order); none at the cap, none once today's share is built */
+  function craftFor(trades, made, day) {
+    made = made || []; trades = trades || []; if (made.length >= CRAFT.cap) return null;
+    var today = 0; for (var i = 0; i < made.length; i++) if (made[i].day === day) today++; if (today >= CRAFT.perDay) return null;
+    var best = null, bn = 1e9;
+    for (var c = 0; c < CRAFTS.length; c++) { var C = CRAFTS[c], ok = false; for (var t = 0; t < C.trades.length; t++) if (trades.indexOf(C.trades[t]) >= 0) ok = true; if (!ok) continue;
+      var n = 0; for (var m = 0; m < made.length; m++) if (made[m].k === C.id) n++; if (n < bn) { bn = n; best = C; } }
+    return best;
+  }
+  function mayLearn(trades, jobId) { trades = trades || []; return !!jobById(jobId) && trades.indexOf(jobId) < 0 && trades.length < CRAFT.maxTrades; }
+  /* a load: S.village.live704 = { jobs: { who: jobId } (the first trade learned: kept for older saves), trades: { who: [jobId] } (every trade
+     learned), watch: { who: { job, t } }, builds: [{ k, x, z, rot, by, day }] }; unknown trades and crafts dropped, times clamped, the
+     trades per villager and the builds capped */
   function cleanLive(v) {
-    var o = { jobs: {}, watch: {} }; if (!v || typeof v !== 'object') return o;
-    var j = v.jobs && typeof v.jobs === 'object' ? v.jobs : {}, w = v.watch && typeof v.watch === 'object' ? v.watch : {};
+    var o = { jobs: {}, watch: {}, trades: {}, builds: [] }; if (!v || typeof v !== 'object') return o;
+    var j = v.jobs && typeof v.jobs === 'object' ? v.jobs : {}, w = v.watch && typeof v.watch === 'object' ? v.watch : {}, tr = v.trades && typeof v.trades === 'object' ? v.trades : {};
     for (var a in j) if (jobById(j[a])) o.jobs[a] = j[a];
     for (var b in w) { var r = w[b]; if (r && typeof r === 'object' && jobById(r.job)) o.watch[b] = { job: r.job, t: Math.max(0, Math.min(LEARN.need, +r.t || 0)) }; }
-    for (var key in v) if (key !== 'jobs' && key !== 'watch') o[key] = v[key];
+    var add = function (who, id) { var L = o.trades[who] || (o.trades[who] = []); if (jobById(id) && L.indexOf(id) < 0 && L.length < CRAFT.maxTrades) L.push(id); };
+    for (var c in tr) if (Object.prototype.toString.call(tr[c]) === '[object Array]') for (var q = 0; q < tr[c].length; q++) add(c, tr[c][q]);
+    for (var d in o.jobs) add(d, o.jobs[d]);
+    for (var e in o.trades) if (!o.trades[e].length) delete o.trades[e];
+    var bl = Object.prototype.toString.call(v.builds) === '[object Array]' ? v.builds : [];
+    for (var f = 0; f < bl.length && o.builds.length < CRAFT.cap; f++) { var B = bl[f]; if (!B || !craftById(B.k) || !isFinite(+B.x) || !isFinite(+B.z)) continue; o.builds.push({ k: B.k, x: +B.x, z: +B.z, rot: isFinite(+B.rot) ? +B.rot : 0, by: String(B.by || ''), day: Math.floor(+B.day || 0) }); }
+    for (var key in v) if (key !== 'jobs' && key !== 'watch' && key !== 'trades' && key !== 'builds') o[key] = v[key];
     return o;
   }
   return { CAP: CAP, STAGES: STAGES, TOTAL: TOTAL, LAST: LAST, fresh: fresh, stageOf: stageOf, next: next, clean: clean, take: take, pickPlot: pickPlot, villagers: villagers,
-    pile: pile, JOBS: JOBS, LEARN: LEARN, jobById: jobById, jobsOpen: jobsOpen, jobOfHouse: jobOfHouse, routine: routine, watch: watch, cleanLive: cleanLive };
+    pile: pile, JOBS: JOBS, LEARN: LEARN, jobById: jobById, jobsOpen: jobsOpen, jobOfHouse: jobOfHouse, routine: routine, watch: watch, cleanLive: cleanLive,
+    CRAFTS: CRAFTS, CRAFT: CRAFT, craftById: craftById, craftFor: craftFor, mayLearn: mayLearn };
 })();
 if (typeof module === 'object' && module.exports) module.exports = window.WFR_VILLAGE;

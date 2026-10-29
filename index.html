@@ -230,7 +230,7 @@ html.map705open .compass .arrow{box-shadow:0 0 0 3px rgba(242,177,52,.9),0 6px 1
 #map705 .m705win{position:relative;box-sizing:border-box;display:grid;justify-items:center;gap:6px;padding:10px 12px 12px;border-radius:18px;background:var(--paper);color:var(--ink);box-shadow:0 10px 30px rgba(0,0,0,.35);animation:m705in .16s ease-out}
 @keyframes m705in{from{opacity:0;transform:scale(.96)}}@media (prefers-reduced-motion:reduce){#map705 .m705win{animation:none}}
 #map705 h3{margin:2px 0 0;min-height:30px;display:flex;align-items:center;font:700 17px/1 var(--display);letter-spacing:.04em}
-#map705cv{display:block;border-radius:6px;box-shadow:0 0 0 2px rgba(60,40,20,.35)}
+#map705cv{display:block;position:static;inset:auto;border-radius:6px;box-shadow:0 0 0 2px rgba(60,40,20,.35)}
 #map705 .m705foot{margin:2px 0 0;display:flex;flex-wrap:wrap;justify-content:center;gap:2px 12px;max-width:100%;font:600 13.5px/1.3 var(--body);text-align:center}
 #map705Close{position:absolute;right:6px;top:6px;width:44px;height:44px;padding:0;border:0;border-radius:50%;background:#efe4cf;color:var(--ink);font:800 18px/44px var(--body);touch-action:manipulation}
 @media (orientation:landscape) and (max-height:520px){#map705 .m705win{gap:3px;padding:6px 10px 8px}#map705 h3{min-height:24px;font-size:15px}}
@@ -907,52 +907,52 @@ html.ui716 #pzQuit{border-radius:0;background:var(--u-plate-e)!important;font-fa
 <div class="rhRes" id="rhRes" hidden aria-live="polite"><b id="resRank"></b><span id="resLine"></span><small id="resTime"></small><small id="resNew" hidden></small></div>   <!-- 672 OURS/DRAFT words: Paused, Resume, Quit song -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="toon.js?v=344f4005a616"></script>
+<script src="toon.js?v=1dfdf5eb8e50"></script>
 <script>(function () { let classic = false; try { classic = localStorage.getItem('wfr.look') === 'classic'; } catch (e) { /* private mode: Standard */ }
   window.WFR_DOOR = classic ? { w: 1.2, h: 2, classic: true } : { w: 1.5, h: 2.9, classic: false }; }());   /* 683 C1: THE doorway, local units (x HS 1.6: Standard 2.4 x 4.64 m; a villager, drawn 3.67-3.72 m, is 80% of it; the brief's 2.6 left him at 89%). The ring houses, the 641 house, the cabins and the walk read it. Classic is frozen (Marth, Oct 14, board 645): its doors stay 1.2 x 2. The look is read as the game reads it (it reloads on a switch). */</script>
-<script src="gltf-loader.js?v=344f4005a616"></script>
-<script src="skeleton-utils.js?v=344f4005a616"></script>
-<script src="meshopt-decoder.js?v=344f4005a616"></script>
-<script src="models.js?v=344f4005a616"></script>
-<script src="people.js?v=344f4005a616"></script>
-<script src="villagers.js?v=344f4005a616"></script>
-<script src="tex-photos.js?v=344f4005a616"></script>
-<script src="textures.js?v=344f4005a616"></script>
-<script src="birds.js?v=344f4005a616"></script>
-<script src="humans.js?v=344f4005a616"></script>
-<script src="folk.js?v=344f4005a616"></script>
-<script src="trees.js?v=344f4005a616"></script>
-<script src="treehouses.js?v=344f4005a616"></script>
-<script src="cabins.js?v=344f4005a616"></script>
-<script src="cave.js?v=344f4005a616"></script>
-<script src="hermits.js?v=344f4005a616"></script>
-<script src="sounds.js?v=344f4005a616"></script>
-<script src="music.js?v=344f4005a616"></script>
-<script src="battle703-song.js?v=344f4005a616"></script>
-<script src="music-orchestra.js?v=344f4005a616"></script>
-<script src="rhythm.js?v=344f4005a616"></script>
-<script src="pictograms.js?v=344f4005a616"></script>
-<script src="chick-wear.js?v=344f4005a616"></script>
-<script src="hedgehogs.js?v=344f4005a616"></script>
-<script src="opening.js?v=344f4005a616"></script>
-<script src="skypiea.js?v=344f4005a616"></script>
-<script src="pirate.js?v=344f4005a616"></script>
-<script src="atmo.js?v=344f4005a616"></script>
-<script src="boat.js?v=344f4005a616"></script>
-<script src="weather.js?v=344f4005a616"></script>
-<script src="village-build.js?v=344f4005a616"></script>
-<script src="runes.js?v=344f4005a616"></script>
-<script src="hearts714.js?v=344f4005a616"></script>
-<script src="world712-frame.js?v=344f4005a616"></script>
-<script src="world712-carib.js?v=344f4005a616"></script>
-<script src="world712-dunns.js?v=344f4005a616"></script>
-<script src="hawkwake.js?v=344f4005a616"></script>
-<script src="hawkfight.js?v=344f4005a616"></script>
-<script src="hawkarena.js?v=344f4005a616"></script>
-<script src="orchard.js?v=344f4005a616"></script>
-<script src="net678.js?v=344f4005a616"></script>
-<script src="net678-config.js?v=344f4005a616"></script>
-<script src="animals714.js?v=344f4005a616"></script>
+<script src="gltf-loader.js?v=1dfdf5eb8e50"></script>
+<script src="skeleton-utils.js?v=1dfdf5eb8e50"></script>
+<script src="meshopt-decoder.js?v=1dfdf5eb8e50"></script>
+<script src="models.js?v=1dfdf5eb8e50"></script>
+<script src="people.js?v=1dfdf5eb8e50"></script>
+<script src="villagers.js?v=1dfdf5eb8e50"></script>
+<script src="tex-photos.js?v=1dfdf5eb8e50"></script>
+<script src="textures.js?v=1dfdf5eb8e50"></script>
+<script src="birds.js?v=1dfdf5eb8e50"></script>
+<script src="humans.js?v=1dfdf5eb8e50"></script>
+<script src="folk.js?v=1dfdf5eb8e50"></script>
+<script src="trees.js?v=1dfdf5eb8e50"></script>
+<script src="treehouses.js?v=1dfdf5eb8e50"></script>
+<script src="cabins.js?v=1dfdf5eb8e50"></script>
+<script src="cave.js?v=1dfdf5eb8e50"></script>
+<script src="hermits.js?v=1dfdf5eb8e50"></script>
+<script src="sounds.js?v=1dfdf5eb8e50"></script>
+<script src="music.js?v=1dfdf5eb8e50"></script>
+<script src="battle703-song.js?v=1dfdf5eb8e50"></script>
+<script src="music-orchestra.js?v=1dfdf5eb8e50"></script>
+<script src="rhythm.js?v=1dfdf5eb8e50"></script>
+<script src="pictograms.js?v=1dfdf5eb8e50"></script>
+<script src="chick-wear.js?v=1dfdf5eb8e50"></script>
+<script src="hedgehogs.js?v=1dfdf5eb8e50"></script>
+<script src="opening.js?v=1dfdf5eb8e50"></script>
+<script src="skypiea.js?v=1dfdf5eb8e50"></script>
+<script src="pirate.js?v=1dfdf5eb8e50"></script>
+<script src="atmo.js?v=1dfdf5eb8e50"></script>
+<script src="boat.js?v=1dfdf5eb8e50"></script>
+<script src="weather.js?v=1dfdf5eb8e50"></script>
+<script src="village-build.js?v=1dfdf5eb8e50"></script>
+<script src="runes.js?v=1dfdf5eb8e50"></script>
+<script src="hearts714.js?v=1dfdf5eb8e50"></script>
+<script src="world712-frame.js?v=1dfdf5eb8e50"></script>
+<script src="world712-carib.js?v=1dfdf5eb8e50"></script>
+<script src="world712-dunns.js?v=1dfdf5eb8e50"></script>
+<script src="hawkwake.js?v=1dfdf5eb8e50"></script>
+<script src="hawkfight.js?v=1dfdf5eb8e50"></script>
+<script src="hawkarena.js?v=1dfdf5eb8e50"></script>
+<script src="orchard.js?v=1dfdf5eb8e50"></script>
+<script src="net678.js?v=1dfdf5eb8e50"></script>
+<script src="net678-config.js?v=1dfdf5eb8e50"></script>
+<script src="animals714.js?v=1dfdf5eb8e50"></script>
 <script>
 (() => {
 'use strict';
@@ -3971,10 +3971,14 @@ function map705El() {
   if (MAP705.el) return MAP705.el;
   const m = document.createElement('div'); m.id = 'map705'; m.hidden = true; m.setAttribute('role', 'dialog'); m.setAttribute('aria-modal', 'true'); m.setAttribute('aria-label', 'Map of the island');
   m.innerHTML = '<div class="m705win"><h3>The island</h3><canvas id="map705cv" width="8" height="8" aria-hidden="true"></canvas><p class="m705foot"><span id="map705where"></span><span id="map705goal"></span></p><button type="button" id="map705Close" aria-label="Close the map">✕</button></div>';
-  document.body.appendChild(m); MAP705.el = m;
+  document.body.appendChild(m); MAP705.el = m; wmap712Hook(m);
   $('map705Close').addEventListener('click', (e) => { e.preventDefault(); map705Close(); });
   m.addEventListener('pointerup', (e) => { if (e.target === m) { e.preventDefault(); map705Close(); } });   // a tap outside the chart
   return m;
+}
+function wmap712Hook(m) {   // 712e (Marth, Oct 28: "Not just Jamaica, the whole world."): the chart's World tab; world712-mapview.js draws it, the island chart is untouched
+  let data = 'world712-map.js'; { const ORCH_SRC = 'world712-map.js?v=1dfdf5eb8e50'; data = ORCH_SRC; }   // named as build-site.js finds a lazy file, so her app carries it offline
+  { const ORCH_SRC = 'world712-mapview.js?v=1dfdf5eb8e50'; const s = document.createElement('script'); s.src = ORCH_SRC; s.async = true; s.onload = () => { if (window.WMAP712) WMAP712.attach(m, data, () => { if (MAP705.open) { map705Size(); map705Draw(); } }); }; document.head.appendChild(s); }
 }
 function map705Size() {   // the chart's side in CSS px: as big as fits, upright on a phone held up, the head and foot kept on a phone on its side
   const cv = $('map705cv'), side = Math.round(innerWidth > innerHeight && innerHeight <= 520 ? Math.max(150, Math.min(innerHeight - 96, innerWidth * 0.6)) : Math.max(180, Math.min(innerWidth - 44, innerHeight - 150, 460)));
@@ -3984,13 +3988,15 @@ function map705Terrain() {   // the island from its own H(), once, cached: sea b
   if (MAP705.terr) return MAP705.terr;
   const N = M705.N, HALF = M705.HALF, st = 2 * HALF / N, hs = new Float32Array(N * N);
   for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) hs[j * N + i] = H(-HALF + (i + 0.5) * st, -HALF + (j + 0.5) * st);
-  const ramp = [[-7, 98, 146, 176], [-2, 140, 186, 198], [-0.01, 188, 220, 212], [0, 232, 216, 166], [1.4, 214, 210, 150], [3.5, 176, 204, 132], [12, 134, 172, 98], [22, 124, 148, 98], [30, 164, 154, 130], [40, 196, 186, 164], [50, 240, 234, 218]];
+  window.WMAP705H = { H: (x, z) => H(x, z), water: WATER };   // 705c: a bench door (the island's own heights, for the shading guard)
+  const SH705 = 0.09;   // 705c: the hillshade's strength (0 would be a flat chart)
+  const ramp = [[-7, 70, 130, 186], [-2, 128, 186, 222], [-0.01, 178, 220, 236], [0, 236, 222, 172], [1.4, 150, 196, 112], [3.5, 128, 182, 100], [12, 176, 196, 118], [22, 214, 196, 132], [30, 196, 150, 100], [40, 160, 116, 84], [50, 240, 238, 234]];   // 705c: the classroom-atlas palette
   const col = (e) => { if (e <= ramp[0][0]) return ramp[0]; for (let k = 1; k < ramp.length; k++) if (e <= ramp[k][0]) { const a = ramp[k - 1], b = ramp[k], t = (e - a[0]) / (b[0] - a[0]); return [0, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t, a[3] + (b[3] - a[3]) * t]; } return ramp[ramp.length - 1]; };
   const c = document.createElement('canvas'); c.width = N; c.height = N; const g = c.getContext('2d'), im = g.createImageData(N, N), d = im.data;
   for (let j = 0; j < N; j++) for (let i = 0; i < N; i++) {
     const k = j * N + i, h = hs[k], L = hs[j * N + Math.max(0, i - 1)], Rr = hs[j * N + Math.min(N - 1, i + 1)], U = hs[Math.max(0, j - 1) * N + i], D = hs[Math.min(N - 1, j + 1) * N + i], dry = h >= WATER;
     const cc = col(h - WATER); let r = cc[1], gg = cc[2], b = cc[3];
-    if (dry) { const sh = Math.max(0.74, Math.min(1.2, 1 + ((L - Rr) + (U - D)) * 0.045)); r *= sh; gg *= sh; b *= sh;   // the light from the north-west
+    if (dry) { const sh = Math.max(0.62, Math.min(1.34, 1 + ((Rr - L) + (D - U)) * SH705)); r *= sh; gg *= sh; b *= sh;   // the light from the north-west (705c: a face rising to the east and south is turned to it)
       if (Math.floor(h / 8) !== Math.floor(Rr / 8) || Math.floor(h / 8) !== Math.floor(D / 8)) { r *= 0.82; gg *= 0.8; b *= 0.76; } }   // a contour every 8 m
     if (dry !== (Rr >= WATER) || dry !== (D >= WATER) || dry !== (L >= WATER) || dry !== (U >= WATER)) { r = 92; gg = 64; b = 38; }   // the coast, inked
     const n = (((i * 73856093) ^ (j * 19349663)) >>> 0) % 9 - 4;   // the paper's grain: a hash, the same on every load (no random draw)
@@ -6091,7 +6097,7 @@ function bgMusicTick(dt) {
    after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
    music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
    menu, a cutscene), the orchestra bows out. */
-const ORCH_SRC = 'orch-samples.js?v=344f4005a616';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const ORCH_SRC = 'orch-samples.js?v=1dfdf5eb8e50';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
 const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
 window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
 const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
@@ -9551,7 +9557,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build 344f4005a616): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build 1dfdf5eb8e50): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>
