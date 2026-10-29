@@ -65,6 +65,59 @@ window.WFR_VILLAGE = (function () {
     return best;
   }
   function villagers(base, moved) { var n = (base | 0) + Math.max(0, moved | 0); return { n: n, cap: CAP, text: 'Villagers ' + n + ' / ' + CAP }; }
-  return { CAP: CAP, STAGES: STAGES, TOTAL: TOTAL, LAST: LAST, fresh: fresh, stageOf: stageOf, next: next, clean: clean, take: take, pickPlot: pickPlot, villagers: villagers };
+  /* 707 THE PILE AT THE FENCE (Marth, Oct 23: "we should also make so when youre gathering tools for the new houses you can drop the tools in
+     your inventory at the fence where the house waits to be built"). A drop is take() above: the house's own clamps, never more than she has.
+     What lies at the fence is what she delivered that the standing stage has not used yet (the stages are cumulative: a stage stands on its
+     row, the rest waits in the pile). At the roof everything is used: the pile is gone. */
+  function pile(got) {
+    got = got || {}; var used = STAGES[stageOf(got)].need, o = {};
+    for (var k in TOTAL) { var n = Math.min(TOTAL[k], Math.max(0, Math.floor(+got[k] || 0))); o[k] = Math.max(0, n - (used[k] || 0)); }
+    return o;
+  }
+  /* 704 PIECE 2, VILLAGERS WHO LIVE (Marth, Oct 23: "some of these villagers need to have 'random' or 'smart' pathways, where they are
+     continually learning things to build and places to go and things to do and interact with the world"). Each finished house opens the
+     next JOB and its PLACE (the house's newcomer brings the trade); a villager who has WATCHED a job long enough takes it up. ALL DRAFT. */
+  var JOBS = [
+    { id: 'fisher', name: 'fisher', place: 'the shore', icon: '🎣', pose: 'pull' },
+    { id: 'gardener', name: 'gardener', place: 'the garden', icon: '🥕', pose: 'kneel' },
+    { id: 'builder', name: 'builder', place: 'the next plot', icon: '🔨', pose: 'hammer' },
+    { id: 'lookout', name: 'lookout', place: 'the hill', icon: '🔭', pose: 'look' },
+    { id: 'weaver', name: 'weaver', place: 'the loom', icon: '🧶', pose: 'paint' },
+    { id: 'baker', name: 'baker', place: 'the oven', icon: '🍞', pose: 'shop' },
+    { id: 'woodcutter', name: 'woodcutter', place: 'the woodpile', icon: '🪓', pose: 'hammer' },
+    { id: 'herbalist', name: 'herbalist', place: 'the meadow', icon: '🌿', pose: 'kneel' }
+  ];
+  var LEARN = { need: 240, near: 7, cap: 3 };   /* clock units watched (240: about 53 s of play at the day's pace), within 7 m of the worker at work, at most 3 to a job */
+  function jobById(id) { for (var i = 0; i < JOBS.length; i++) if (JOBS[i].id === id) return JOBS[i]; return null; }
+  function jobsOpen(sealed) { return JOBS.slice(0, Math.max(0, Math.min(JOBS.length, Math.floor(+sealed || 0)))); }
+  function jobOfHouse(n) { n = Math.floor(+n || 0); return n >= 1 && n <= JOBS.length ? JOBS[n - 1] : null; }
+  /* the day (the game's clock: dawn 0-150, day to 1800, dusk to 2100, night to 2700; the village goes in at 2040): what a villager's day
+     asks of them now. They set out for the evening's gathering at 1650, so the square is full by dusk. Rain and night send everyone home. */
+  function routine(clock, wet) {
+    clock = +clock || 0;
+    if (wet || clock >= 2040) return 'home';
+    if (clock >= 1650) return 'gather';
+    if (clock < 300) return 'morning';
+    if (clock < 1300) return 'work';
+    return 'free';
+  }
+  /* watching: rec = { job, t } (t in clock units). Watching another job starts again from nothing; the watch never runs past the need. */
+  function watch(rec, jobId, dClock) {
+    if (!jobById(jobId)) return { rec: rec || null, learned: false };
+    if (!rec || rec.job !== jobId) rec = { job: jobId, t: 0 };
+    rec.t = Math.min(LEARN.need, (+rec.t || 0) + Math.max(0, +dClock || 0));
+    return { rec: rec, learned: rec.t >= LEARN.need };
+  }
+  /* a load: S.village.live704 = { jobs: { who: jobId }, watch: { who: { job, t } } }; unknown jobs dropped, times clamped */
+  function cleanLive(v) {
+    var o = { jobs: {}, watch: {} }; if (!v || typeof v !== 'object') return o;
+    var j = v.jobs && typeof v.jobs === 'object' ? v.jobs : {}, w = v.watch && typeof v.watch === 'object' ? v.watch : {};
+    for (var a in j) if (jobById(j[a])) o.jobs[a] = j[a];
+    for (var b in w) { var r = w[b]; if (r && typeof r === 'object' && jobById(r.job)) o.watch[b] = { job: r.job, t: Math.max(0, Math.min(LEARN.need, +r.t || 0)) }; }
+    for (var key in v) if (key !== 'jobs' && key !== 'watch') o[key] = v[key];
+    return o;
+  }
+  return { CAP: CAP, STAGES: STAGES, TOTAL: TOTAL, LAST: LAST, fresh: fresh, stageOf: stageOf, next: next, clean: clean, take: take, pickPlot: pickPlot, villagers: villagers,
+    pile: pile, JOBS: JOBS, LEARN: LEARN, jobById: jobById, jobsOpen: jobsOpen, jobOfHouse: jobOfHouse, routine: routine, watch: watch, cleanLive: cleanLive };
 })();
 if (typeof module === 'object' && module.exports) module.exports = window.WFR_VILLAGE;
