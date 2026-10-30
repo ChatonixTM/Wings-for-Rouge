@@ -865,7 +865,7 @@ html.ui716 #pzQuit{border-radius:0;background:var(--u-plate-e)!important;font-fa
     <div class="files" id="files" role="group" aria-label="Save files"></div>
     <div class="birds" role="group" aria-label="Pick your bird" id="birdCards"></div>
     <button class="go" id="go" type="button">Fly</button>
-    <div class="pause-row" id="pauseRow" hidden><button class="ghost" id="saveBtn" type="button">💾 Save</button><button class="ghost" id="toTitle" type="button">🏠 Main menu</button><button class="ghost" id="lookBtn" type="button">🧍 Look: Standard</button><button class="ghost" id="journalBtn" type="button">📖 Journal</button><button class="ghost" id="windBtn683" type="button" aria-pressed="true">🌬 Wind sound: on</button><button class="ghost" id="netBtn678" type="button" aria-label="Fly together">🤝 <span class="n678l">Fly together</span><span class="n678s">Together</span></button></div><div class="savebox" id="net678" hidden role="region" aria-label="Fly together"><p id="net678Msg"></p><div class="net678-row"><input id="net678Name" maxlength="12" placeholder="Your name" autocomplete="off" aria-label="Your name"><input id="net678Code" maxlength="6" placeholder="Code" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Room code"></div><div class="savebox-row"><button type="button" id="net678Make">Make a code</button><button type="button" id="net678Join">Enter a code</button><button type="button" class="linkish" id="net678Leave" style="min-height:44px">Leave</button></div></div><div class="journal" id="journal" hidden role="region" aria-label="Journal"></div>
+    <div class="pause-row" id="pauseRow" hidden><button class="ghost" id="saveBtn" type="button">💾 Save</button><button class="ghost" id="toTitle" type="button">🏠 Main menu</button><button class="ghost" id="lookBtn" type="button">🧍 Look: Standard</button><button class="ghost" id="journalBtn" type="button">📖 Journal</button><button class="ghost" id="windBtn683" type="button" aria-pressed="true">🌬 Wind sound: on</button><button class="ghost" id="netBtn678" type="button" aria-label="Fly together">🤝 <span class="n678l">Fly together</span><span class="n678s">Together</span></button></div><div class="savebox" id="net678" hidden role="region" aria-label="Fly together"><p id="net678Msg"></p><div class="net678-row"><input id="net678Name" maxlength="12" placeholder="Your name" autocomplete="off" aria-label="Your name"><input id="net678Code" maxlength="6" placeholder="Code" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Room code"></div><div class="savebox-row"><button type="button" id="net678Make">Make a code</button><button type="button" id="net678Join">Enter a code</button><button type="button" class="linkish" id="net678Leave" style="min-height:44px">Leave</button></div><div class="w721" id="w721" role="group" aria-label="Play the story together"><p class="w721-title">🌍 Play the story together</p><p class="w721-msg" id="w721Msg"></p><div class="savebox-row w721-row"><button type="button" class="w721-btn w721-primary" id="w721Make">Make a world</button><button type="button" class="w721-btn" id="w721Join">Enter a world</button><button type="button" class="linkish w721-leave" id="w721Leave" style="min-height:44px" hidden>Leave the world</button></div></div></div><div class="journal" id="journal" hidden role="region" aria-label="Journal"></div>
     <p class="how" id="how"></p>
     <div class="title-links"><button class="linkish" id="rewatch" type="button" style="min-height:44px" hidden>Watch the story again</button><button class="linkish" id="newGame" type="button" style="min-height:44px">New game</button><button class="linkish" id="backupBtn" type="button" style="min-height:44px">Back up</button><button class="linkish" id="restoreBtn" type="button" style="min-height:44px">Restore</button><button class="linkish" id="netBtn678t" type="button" style="min-height:44px">🤝 Fly with someone</button></div>
     <div class="savebox" id="saveBox" hidden><p id="saveMsg"></p><textarea id="saveCode" rows="6" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Backup code"></textarea><div class="savebox-row"><button type="button" id="saveGo">Copy</button><button type="button" class="ghost" id="saveShare" hidden style="min-height:44px">Share</button><button type="button" class="linkish" id="saveClose" style="min-height:44px">Close</button></div></div>
@@ -907,52 +907,53 @@ html.ui716 #pzQuit{border-radius:0;background:var(--u-plate-e)!important;font-fa
 <div class="rhRes" id="rhRes" hidden aria-live="polite"><b id="resRank"></b><span id="resLine"></span><small id="resTime"></small><small id="resNew" hidden></small></div>   <!-- 672 OURS/DRAFT words: Paused, Resume, Quit song -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="toon.js?v=1ef471b15ead"></script>
+<script src="toon.js?v=32e93132c06e"></script>
 <script>(function () { let classic = false; try { classic = localStorage.getItem('wfr.look') === 'classic'; } catch (e) { /* private mode: Standard */ }
   window.WFR_DOOR = classic ? { w: 1.2, h: 2, classic: true } : { w: 1.5, h: 2.9, classic: false }; }());   /* 683 C1: THE doorway, local units (x HS 1.6: Standard 2.4 x 4.64 m; a villager, drawn 3.67-3.72 m, is 80% of it; the brief's 2.6 left him at 89%). The ring houses, the 641 house, the cabins and the walk read it. Classic is frozen (Marth, Oct 14, board 645): its doors stay 1.2 x 2. The look is read as the game reads it (it reloads on a switch). */</script>
-<script src="gltf-loader.js?v=1ef471b15ead"></script>
-<script src="skeleton-utils.js?v=1ef471b15ead"></script>
-<script src="meshopt-decoder.js?v=1ef471b15ead"></script>
-<script src="models.js?v=1ef471b15ead"></script>
-<script src="people.js?v=1ef471b15ead"></script>
-<script src="villagers.js?v=1ef471b15ead"></script>
-<script src="tex-photos.js?v=1ef471b15ead"></script>
-<script src="textures.js?v=1ef471b15ead"></script>
-<script src="birds.js?v=1ef471b15ead"></script>
-<script src="humans.js?v=1ef471b15ead"></script>
-<script src="folk.js?v=1ef471b15ead"></script>
-<script src="trees.js?v=1ef471b15ead"></script>
-<script src="treehouses.js?v=1ef471b15ead"></script>
-<script src="cabins.js?v=1ef471b15ead"></script>
-<script src="cave.js?v=1ef471b15ead"></script>
-<script src="hermits.js?v=1ef471b15ead"></script>
-<script src="sounds.js?v=1ef471b15ead"></script>
-<script src="music.js?v=1ef471b15ead"></script>
-<script src="battle703-song.js?v=1ef471b15ead"></script>
-<script src="music-orchestra.js?v=1ef471b15ead"></script>
-<script src="rhythm.js?v=1ef471b15ead"></script>
-<script src="pictograms.js?v=1ef471b15ead"></script>
-<script src="chick-wear.js?v=1ef471b15ead"></script>
-<script src="hedgehogs.js?v=1ef471b15ead"></script>
-<script src="opening.js?v=1ef471b15ead"></script>
-<script src="skypiea.js?v=1ef471b15ead"></script>
-<script src="pirate.js?v=1ef471b15ead"></script>
-<script src="atmo.js?v=1ef471b15ead"></script>
-<script src="boat.js?v=1ef471b15ead"></script>
-<script src="weather.js?v=1ef471b15ead"></script>
-<script src="village-build.js?v=1ef471b15ead"></script>
-<script src="runes.js?v=1ef471b15ead"></script>
-<script src="hearts714.js?v=1ef471b15ead"></script>
-<script src="world712-frame.js?v=1ef471b15ead"></script>
-<script src="world712-carib.js?v=1ef471b15ead"></script>
-<script src="world712-dunns.js?v=1ef471b15ead"></script>
-<script src="hawkwake.js?v=1ef471b15ead"></script>
-<script src="hawkfight.js?v=1ef471b15ead"></script>
-<script src="hawkarena.js?v=1ef471b15ead"></script>
-<script src="orchard.js?v=1ef471b15ead"></script>
-<script src="net678.js?v=1ef471b15ead"></script>
-<script src="net678-config.js?v=1ef471b15ead"></script>
-<script src="animals714.js?v=1ef471b15ead"></script>
+<script src="gltf-loader.js?v=32e93132c06e"></script>
+<script src="skeleton-utils.js?v=32e93132c06e"></script>
+<script src="meshopt-decoder.js?v=32e93132c06e"></script>
+<script src="models.js?v=32e93132c06e"></script>
+<script src="people.js?v=32e93132c06e"></script>
+<script src="villagers.js?v=32e93132c06e"></script>
+<script src="tex-photos.js?v=32e93132c06e"></script>
+<script src="textures.js?v=32e93132c06e"></script>
+<script src="birds.js?v=32e93132c06e"></script>
+<script src="humans.js?v=32e93132c06e"></script>
+<script src="folk.js?v=32e93132c06e"></script>
+<script src="trees.js?v=32e93132c06e"></script>
+<script src="treehouses.js?v=32e93132c06e"></script>
+<script src="cabins.js?v=32e93132c06e"></script>
+<script src="cave.js?v=32e93132c06e"></script>
+<script src="hermits.js?v=32e93132c06e"></script>
+<script src="sounds.js?v=32e93132c06e"></script>
+<script src="music.js?v=32e93132c06e"></script>
+<script src="battle703-song.js?v=32e93132c06e"></script>
+<script src="music-orchestra.js?v=32e93132c06e"></script>
+<script src="rhythm.js?v=32e93132c06e"></script>
+<script src="pictograms.js?v=32e93132c06e"></script>
+<script src="chick-wear.js?v=32e93132c06e"></script>
+<script src="hedgehogs.js?v=32e93132c06e"></script>
+<script src="opening.js?v=32e93132c06e"></script>
+<script src="skypiea.js?v=32e93132c06e"></script>
+<script src="pirate.js?v=32e93132c06e"></script>
+<script src="atmo.js?v=32e93132c06e"></script>
+<script src="boat.js?v=32e93132c06e"></script>
+<script src="weather.js?v=32e93132c06e"></script>
+<script src="village-build.js?v=32e93132c06e"></script>
+<script src="runes.js?v=32e93132c06e"></script>
+<script src="hearts714.js?v=32e93132c06e"></script>
+<script src="world712-frame.js?v=32e93132c06e"></script>
+<script src="world712-carib.js?v=32e93132c06e"></script>
+<script src="world712-dunns.js?v=32e93132c06e"></script>
+<script src="hawkwake.js?v=32e93132c06e"></script>
+<script src="hawkfight.js?v=32e93132c06e"></script>
+<script src="hawkarena.js?v=32e93132c06e"></script>
+<script src="orchard.js?v=32e93132c06e"></script>
+<script src="net678.js?v=32e93132c06e"></script>
+<script src="net678-config.js?v=32e93132c06e"></script>
+<script src="net721.js?v=32e93132c06e"></script>
+<script src="animals714.js?v=32e93132c06e"></script>
 <script>
 (() => {
 'use strict';
@@ -1114,7 +1115,7 @@ function farToward682() {   // at home, past the edge, flying: is she heading ou
 function farEdge682(dc) {   // stands where "dc > EDGE" stood in the flight: true = the old turn-back
   if (FAR682.where || FAR682.cross) return false;   // in a far place (its own edge, farTick682) or mid-crossing
   if (dc <= EDGE) return false;
-  const id = farToward682(); if (id === 'damned') { DAMNED703.pending = true; DAMNED703.revisit = true; DAMNED703.starts++; }   // 703 ship 10: back to Damned
+  const id = net721Guest() ? null : farToward682(); if (id === 'damned') { DAMNED703.pending = true; DAMNED703.revisit = true; DAMNED703.starts++; }   // 703 ship 10: back to Damned
   if (id) { FAR682.cross = { to: id, t: 0, swapped: false, from: null }; FAR682.crossings++; return false; }
   return true;
 }
@@ -2355,7 +2356,7 @@ if (typeof S.clock !== 'number') S.clock = 600;   // a new game starts mid-morni
 for (const i of S.treatsTaken || []) if (houses[i]) { houses[i].treatTaken = true; if (houses[i].treat) houses[i].treat.visible = false; }   // a treat eaten stays eaten
 for (const n of OLDNESTS) if (S.seen && S.seen['nest:' + n.id]) { n.taken = true; n.treat.visible = false; }   // and a keepsake taken from an old nest (528)
 function save() { if (window.__wfrRestoring) return; try { const s_ = JSON.stringify({ savedAt: Date.now(), level: S.level, xp: S.xp, nestDone: S.nestDone, found: S.found, kind, storySeen: S.storySeen, tutDone: S.tutDone, built: S.built, lessons: S.lessons, nestTier: S.nestTier, mats: S.mats, eagleFound: S.eagleFound, treats: houses.filter((h) => h.treatTaken).map((h) => h.i), twigs: (() => { try { return twigs.map((t, i) => t.visible ? -1 : i).filter((i) => i >= 0); } catch (e) { return S.twigsTaken || []; } })(),   /* a save before the twigs exist must not lose the whole save */
-    fish: S.fishCaught || 0, clock: Math.round(S.clock || 0), played: Math.round(S.played || 0), /* 631 */ beak: S.fruit ? S.fruit.type.id : null, cutQ: (() => { try { return cutQ.slice(); } catch (e) { return S.cutPending || []; } })(), read: S.read, seen: S.seen, owlLv: S.owlLv, inv: S.inv, hearts: hearts714Save(), ani714: S.ani714 || null, /* 714 */ toolIn: S.toolIn || 0, given: S.given || 0, grown: S.grown || 0, marks: S.marks || [], village: S.village || null, /* 641 U1 */ world: S.world || {}, dawns: S.dawns || 0, /* 643 worlds */ choices: Array.isArray(S.choices) ? S.choices : [], /* 703 ship 10: choices remembered (713) */ sky: S.sky || { seen: false, ended: false }, runes: S.runes || 0, huethers: S.huethers || 0, runeRec: S.runeRec || {}, /* 632 U4 */ orchard: S.orchard || {}, /* 637 */ songs: S.songs || {}, /* 658 */ songBest: S.songBest || {}, /* 658 U2 */ chick: Object.assign({}, S.chick, { at: Date.now() }) }); window.__wfrLastSave = s_; if (!window.__wfrWxTest) { localStorage.setItem('wfr.save', s_); localStorage.setItem(fileKey(ACTIVE), s_); } } catch (e) { /* private mode: it still plays */ } }   // 665 P1: a test link's visit writes nothing
+    fish: S.fishCaught || 0, clock: Math.round(S.clock || 0), played: Math.round(S.played || 0), /* 631 */ beak: S.fruit ? S.fruit.type.id : null, cutQ: (() => { try { return cutQ.slice(); } catch (e) { return S.cutPending || []; } })(), read: S.read, seen: S.seen, owlLv: S.owlLv, inv: S.inv, hearts: hearts714Save(), ani714: S.ani714 || null, /* 714 */ toolIn: S.toolIn || 0, given: S.given || 0, grown: S.grown || 0, marks: S.marks || [], village: S.village || null, /* 641 U1 */ world: S.world || {}, dawns: S.dawns || 0, /* 643 worlds */ choices: Array.isArray(S.choices) ? S.choices : [], /* 703 ship 10: choices remembered (713) */ sky: S.sky || { seen: false, ended: false }, runes: S.runes || 0, huethers: S.huethers || 0, runeRec: S.runeRec || {}, /* 632 U4 */ orchard: S.orchard || {}, /* 637 */ songs: S.songs || {}, /* 658 */ songBest: S.songBest || {}, /* 658 U2 */ chick: Object.assign({}, S.chick, { at: Date.now() }) }); const o_ = net721Own(s_); window.__wfrLastSave = o_; if (!window.__wfrWxTest) { localStorage.setItem('wfr.save', o_); localStorage.setItem(fileKey(ACTIVE), o_); } } catch (e) { /* private mode: it still plays */ } }   // 665 P1: a test link's visit writes nothing
 /* 665 P2 (Jiraiya + Minato, Oct 15): a SAVE WHEN SHE LEAVES THE APP. Hidden or pagehide calls save() itself, so its guards hold (662's restore,
    P1's test link). It stands down first when the save would land in the wrong place: another file is being made active (a reload will load
    it), this file was just erased (New game), or she has not played this visit (the title only; a load that fell back to a fresh start). */
@@ -2588,6 +2589,7 @@ function lvTick() {
 /* 641: every paying action says so: '+N XP · why' rises over the pill (the 160 m trickle stays quiet: it passes no reason) */
 function xpPop(n, why) { const el = $('xpPop'); if (!el || !why) return; el.textContent = '+' + n + ' XP \u00b7 ' + why; el.hidden = false; el.classList.remove('on'); void el.offsetWidth; el.classList.add('on'); clearTimeout(xpPop.t); xpPop.t = setTimeout(() => { el.hidden = true; el.classList.remove('on'); }, 1600); }
 function gainXP(n, why) {
+  const n0 = n; n = net721XP(n); if (n0 > 0 && !(n > 0)) { save(); hud(); return; }   // 721: a guest's XP x clamp(2^((host - me)/10), 0.25, 2); a fraction waits for the next
   if (S.level >= LEVEL_MAX) { save(); hud(); return; }   // at the cap it still saves: treats and discoveries lean on this save (Obito)
   S.xp += n; xpPop(n, why);   // 641
   while (S.level < LEVEL_MAX && S.xp >= need(S.level)) {
@@ -3977,8 +3979,8 @@ function map705El() {
   return m;
 }
 function wmap712Hook(m) {   // 712e (Marth, Oct 28: "Not just Jamaica, the whole world."): the chart's World tab; world712-mapview.js draws it, the island chart is untouched
-  let data = 'world712-map.js'; { const ORCH_SRC = 'world712-map.js?v=1ef471b15ead'; data = ORCH_SRC; }   // named as build-site.js finds a lazy file, so her app carries it offline
-  { const ORCH_SRC = 'world712-mapview.js?v=1ef471b15ead'; const s = document.createElement('script'); s.src = ORCH_SRC; s.async = true; s.onload = () => { if (window.WMAP712) WMAP712.attach(m, data, () => { if (MAP705.open) { map705Size(); map705Draw(); } }); }; document.head.appendChild(s); }
+  let data = 'world712-map.js'; { const ORCH_SRC = 'world712-map.js?v=32e93132c06e'; data = ORCH_SRC; }   // named as build-site.js finds a lazy file, so her app carries it offline
+  { const ORCH_SRC = 'world712-mapview.js?v=32e93132c06e'; const s = document.createElement('script'); s.src = ORCH_SRC; s.async = true; s.onload = () => { if (window.WMAP712) WMAP712.attach(m, data, () => { if (MAP705.open) { map705Size(); map705Draw(); } }); }; document.head.appendChild(s); }
 }
 function map705Size() {   // the chart's side in CSS px: as big as fits, upright on a phone held up, the head and foot kept on a phone on its side
   const cv = $('map705cv'), side = Math.round(innerWidth > innerHeight && innerHeight <= 520 ? Math.max(150, Math.min(innerHeight - 96, innerWidth * 0.6)) : Math.max(180, Math.min(innerWidth - 44, innerHeight - 150, 460)));
@@ -6101,7 +6103,7 @@ function bgMusicTick(dt) {
    after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
    music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
    menu, a cutscene), the orchestra bows out. */
-const ORCH_SRC = 'orch-samples.js?v=1ef471b15ead';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const ORCH_SRC = 'orch-samples.js?v=32e93132c06e';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
 const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
 window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
 const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
@@ -7444,6 +7446,12 @@ try { if (localStorage.getItem('wfr.debug') === '1') window.__wfr = { eagle: () 
   teach: () => ({ kind, birdKind: bird && bird.userData ? bird.userData.kind || null : null, mode: S.mode, y: +S.pos.y.toFixed(2), played: S.played || 0, ended: !!(S.sky && S.sky.ended), where: S.sky ? S.sky.where : null, open: { crow: isOpen(BIRDS.crow), falcon: isOpen(BIRDS.falcon), owl: isOpen(BIRDS.owl) }, cards: Array.from(document.querySelectorAll('#birdCards .bird')).map((b) => [b.dataset.bird, b.getAttribute('aria-pressed') === 'true', b.textContent]), sheet: $('start').hidden ? '' : $('start').innerText, lines: storyLines(), toast: $('toast').hidden ? '' : $('toast').textContent, word: !!(S.seen || {}).teach610, saved: teachSaved() }),
   teachMorph: () => (S.morph ? [S.morph.t, !!S.morph.swapped] : null), teachToast: () => ($('toast').hidden ? '' : $('toast').textContent),
   teachEnd: () => { S.sky = S.sky || { seen: false, ended: false, where: 'home' }; S.sky.seen = true; S.sky.ended = true; save(); return isOpen(BIRDS.crow); },   /* the ending's own write (skypiea.js:501/644), nothing else of it */
+  w721: () => (window.WFR_NET721 ? WFR_NET721.state() : null), w721Out: () => { const T = window.WFR_NET721 && WFR_NET721._fake(); return T ? T.outbox.splice(0) : []; }, w721In: (L) => { const T = window.WFR_NET721 && WFR_NET721._fake(); if (T) for (const m of L) T.inject(m); return !!T; },
+  w721Make: (n) => { WFR_NET721.make(n); return true; }, w721Enter: (c, n) => { WFR_NET721.enter(c, n); return true; }, w721Leave: () => { WFR_NET721.leave(); return true; }, w721Cross: (id) => { if (id === 'damned') { damned703Go(); return true; } return net721Follow(id, 0); },
+  w721XP: (n) => { const b = { level: S.level, xp: S.xp }; gainXP(n, 'bench'); return { before: b, level: S.level, xp: S.xp }; }, w721Level: (n) => { S.level = n; S.xp = 0; return S.level; },
+  w721Try: (p, v) => { const T = window.WFR_NET721 && WFR_NET721._fake(); window.__w721try = null; if (!T) return false; T.set(p, v).then(() => { window.__w721try = 'ok'; }, (e) => { window.__w721try = 'refused ' + (e && e.code || e); }); return true; },
+  w721Pick: (k) => { if (!CHOICE703.on) return false; choice703Pick(k); return true; },   /* a SETUP door: the host's card, as its button does */
+  w721Peek: () => ({ base: net721Base(FAR682.where || 'home'), world: JSON.stringify(S.world || {}), choices: JSON.stringify(Array.isArray(S.choices) ? S.choices : []), dawns: S.dawns || 0, clock: +S.clock.toFixed(1), day: wxDay(), wx: wxKind(), w703: !!WORLD703.on, undone: WORLD703.undone || 0, where: FAR682.where || null, cross: !!FAR682.cross, pos: [+S.pos.x.toFixed(2), +S.pos.y.toFixed(2), +S.pos.z.toFixed(2)], nest: [NEST.x, NEST.y, NEST.z], level: S.level, xp: S.xp, mode: S.mode, arena: ARENA703S.on, won: ARENA703S.won, starts: ARENA703S.starts, damned: { ph: DAMNED703.ph || null, pending: !!DAMNED703.pending, starts: DAMNED703.starts }, pk: ARENA703 ? ARENA703.peek() : null, hawk: (S.world && S.world.hawk) ? JSON.parse(JSON.stringify(S.world.hawk)) : null, last: window.__wfrLastSave || null }),
   net678: () => (window.WFR_NET678 ? WFR_NET678.state() : null), net678Out: () => { const T = window.WFR_NET678 && WFR_NET678._fake(); return T ? T.outbox.splice(0) : []; }, net678In: (o, d) => { WFR_NET678._inject(o, d); }, net678Join: (c, n) => WFR_NET678.join(c, n), net678Leave: () => WFR_NET678.leave(), net678Jitter: (o) => WFR_NET678._jitter(o),   /* 678 guard: the fake transport's two ends; v1.1: delivery with jitter */
   wren676: () => ({ waveT: vgWren704() && vgWren704().npc ? vgWren704().npc.waveT : null, sung: vgWren704() ? vgWren704().wrenSung || 0 : 0,   /* 704: Wren's own house */ near: nearPeople676(16).length }),   /* 676 (a) bench: Wren's wave, the songs he heard, people near her */
   vgq: () => ({ cur: S.village.cur || 1, done: VG_DONE.length, sites: (S.village.sites || []).map((s) => [s.x, s.z, s.n]), names: VG_DONE.map((v) => (v.npc ? v.npc.name : null)), moved: S.village.moved || 0, count: vgCount().n, cap: VGW.CAP,
@@ -8356,7 +8364,7 @@ function arena703Tick(dt) {
   if (SW703.on) { sw703Tick(dt); return; }   // 703 the switch: the cutscene, the chick's turn, her return (the fight is held, never stepped)
   if (S.mode !== 'fly' && S.mode !== 'walk' && S.mode !== 'hover' && S.mode !== 'landing') return;   // paused or a card: the arena holds
   A.me.x = S.pos.x; A.me.y = S.pos.y; A.me.z = S.pos.z;
-  const dtA = arena703Slow(dt); fx703Tick(dtA); const s = ARENA703.step(dtA, { me: A.me, sidestep: F.side, attack: F.atk, tapLag: 0 }); F.side = F.atk = false;   // 703 tremendous: a perfect parry slows the arena
+  const dtA = arena703Slow(dt); fx703Tick(dtA); const s = ARENA703.step(net721ArenaDt(dtA), { me: A.me, sidestep: F.side, attack: F.atk, tapLag: 0, shared: net721Shared() }); F.side = F.atk = false;   // 703 tremendous: a perfect parry slows the arena
   if (!s) { arena703Stop(); return; }
   A.arriveIn = s.warn ? s.arriveIn : 0; A.stunT = s.stunT || 0;   // the bench's view of his strike (a guard's thumb)
   S.pos.set(s.me.x, s.me.y, s.me.z); if (s.side && s.side.on) { const v = (s.side.d || 3) / (s.side.t || 0.35); S.pos.x += (s.side.x || 0) * v * dt; S.pos.z += (s.side.z || 0) * v * dt; }   // the ring holds her; the sidestep slides her
@@ -8621,7 +8629,7 @@ function choice703Card() { if (CHOICE703.el) return CHOICE703.el; const w = docu
   mk('ch703f', CHOICE703_WORDS.friend, '#2f8f5a').addEventListener('click', () => choice703Pick(1));
   mk('ch703r', CHOICE703_WORDS.refuse, '#a8323e').addEventListener('click', () => choice703Pick(-1));
   w.hidden = true; document.body.appendChild(w); return (CHOICE703.el = w); }
-function choice703Start() {   // after the final strike (fin703End)
+function choice703Start() { if (net721Guest()) { net721Wait(); return; }   // after the final strike (fin703End); 721: on a guest the HOST chooses, and its pick reaches the guest's own save (net721.js creditPick)
   const h = choice703Hawk(); h.won = 1;
   if (h.friend === 1 || h.friend === -1) { CHOICE703.rematches++; gainXP(40, 'the Hawk'); toast(CHOICE703_WORDS.rematch, 4200); save(); choice703HawkAway(); return; }   // chosen for good: a rematch asks nothing again
   const el = choice703Card(); $('choice703t').textContent = CHOICE703_WORDS.card; el.hidden = false; CHOICE703.on = true; CHOICE703.cards++; S.mode = 'event'; $('ui').hidden = true; save(); }
@@ -9049,6 +9057,53 @@ function netSheet678(why) {   /* the sheet's one line: not set up / off / in a r
   $('net678Make').disabled = !ready || !!on; $('net678Join').disabled = !ready || !!on; $('net678Leave').hidden = !on;
   $('net678Msg').textContent = why ? why : !ready ? "Multiplayer isn't set up yet." : on ? 'In room ' + st.code + ' as ' + st.name + '. Tell them the code: when they fly in, you will see them on the island.' : 'Fly with someone. Make a code and tell it to them, or enter theirs: you will see each other fly on the island. Nothing else is shared.';   /* v1.1: an invitation, not a settings panel (DRAFT: his eye decides the words) */
 }
+/* ---------- 721 SHIP A: PLAY THE STORY TOGETHER (Marth: "one where you join the other persons progress, tethered completely to the Hosts world but you still level up"). The logic is net721.js; this block hands it the island. var, never let: save() reads it and runs before this line does. ---------- */
+var NET721 = null, NET721_PK = null, NET721_PKF = -1, NET721_ST = null, NET721_STT = -1, NET721_F = 0;
+function net721Guest() { return !!(NET721 && WFR_NET721.guest()); }
+function net721Shared() { return NET721 ? WFR_NET721.shared() : null; }
+function net721ArenaDt(dt) { return NET721 && WFR_NET721.hold() ? 0 : dt; }
+function net721XP(n) { return NET721 ? WFR_NET721.xp(n) : n; }
+function net721Own(s_) { return NET721 ? WFR_NET721.ownSave(s_) : s_; }
+function net721Wait() { if (NET721) WFR_NET721.wait(); }
+function net721Base(id) { if (!id || id === 'home') return [0, 0]; const r = FAR682.regions[id]; return r && r.c ? [r.c[0], r.c[1]] : null; }
+function net721Me() { if (!bird || !S.started) return null; const w = FAR682.where || 'home', b = net721Base(w) || [0, 0]; return { k: kind, w, p: [S.pos.x - b[0], S.pos.y, S.pos.z - b[1]], y: S.yaw, t: S.pitch, f: S.flapT > 0, m: S.mode === 'fly' || S.mode === 'landing' ? 'fly' : S.mode === 'swim' ? 'swim' : 'walk' }; }
+function net721Story() { if (NET721_ST && S.t - NET721_STT < 0.5) { NET721_ST.where = FAR682.where || 'home'; NET721_ST.clock = S.clock; NET721_ST.dawns = S.dawns || 0; NET721_ST.w703 = !!WORLD703.on; return NET721_ST; }
+  NET721_STT = S.t; return (NET721_ST = { where: FAR682.where || 'home', w703: !!WORLD703.on, clock: S.clock, dawns: S.dawns || 0, world: JSON.stringify(S.world || {}), choices: JSON.stringify(Array.isArray(S.choices) ? S.choices : []) }); }   // the host's story, its two big strings at most twice a second
+function net721Apply(p) { if (p.world && typeof p.world === 'object') S.world = p.world; if (Array.isArray(p.choices)) S.choices = p.choices; if (typeof p.dawns === 'number') S.dawns = p.dawns;
+  if (typeof p.clock === 'number') { const d = ((p.clock - S.clock) % CYCLE + CYCLE * 1.5) % CYCLE - CYCLE / 2; if (Math.abs(d) > 30) S.clock = ((p.clock % CYCLE) + CYCLE) % CYCLE; } }   // the guest plays inside the host's story; its own is kept by net721.js and is all it ever saves
+function net721Restore(o) { S.world = o.world; S.choices = o.choices; S.dawns = o.dawns; S.clock = o.clock % CYCLE; }
+function net721World703(on) { if (on == null) on = world703Won(); if (!!on === !!WORLD703.on) return; if (on) { world703Apply(); return; } WORLD703.on = false; WORLD703.undone = (WORLD703.undone || 0) + 1;
+  for (const id of ['tahoe', 'antigua']) { const r = FAR682.regions[id]; if (r && FAR682.where !== id) { scene.remove(r.mesh); scene.remove(r.base); r.mesh.geometry.dispose(); r.base.geometry.dispose(); delete FAR682.regions[id]; } }
+  try { horizonBuild700(); } catch (e) { WORLD703.fault = String(e && e.message || e); } }   // the world spreads only when the world being played has beaten the Hawk (world703Apply's own steps, the other way)
+function net721CanFollow() { return S.mode !== 'menu' && S.mode !== 'event' && S.mode !== 'paused' && S.tut === 0 && !FAR682.cross && !(WAKE703S && WAKE703S.on) && !ARENA703S.on && !FIN703.on && !SW703.on && !DAMNED703.ph && !DAMNED703.pending; }
+function net721Follow(to, arena) {   // behind the same white as the host (the guest never sets off alone: farEdge682)
+  if (FAR682.cross) return false; if (to === 'home') { if (!FAR682.where) return false; FAR682.cross = { to: 'home', t: 0, swapped: false, from: FAR682.where }; FAR682.crossings++; return true; }
+  if (to === 'damned') { const D = DAMNED703; D.pending = true; D.revisit = world703Won() && !arena; D.starts++; }
+  FAR682.cross = { to, t: 0, swapped: false, from: FAR682.where || null }; FAR682.crossings++; return true;
+}
+function net721Home() {   // the host went home: she wakes in her own nest (hearts714Down's way)
+  const D = DAMNED703; if (ARENA703S.on) { try { arena703Stop(); } catch (e) { /* fine */ } } if (VOY703.hawk) VOY703.hawk.visible = false; D.friends.forEach((f) => { f.g.visible = false; }); D.pending = false;
+  if (D.ph) { D.ph = null; $('ui').hidden = false; flapBtn.hidden = false; stick.hidden = false; } if (FIN703.on) { FIN703.on = false; $('ui').hidden = false; flapBtn.hidden = false; stick.hidden = false; }
+  FAR682.cross = null; FAR682.where = null; if (FAR682.fade) FAR682.fade.style.opacity = '0'; S.inside = null; S.resting = false;
+  S.pos.set(NEST.x + 1.6, NEST.y - 0.2 + standOf(kind), NEST.z); if (S.mode !== 'menu') { S.mode = 'walk'; S.speed = 0; } farPlace682(S.yaw);
+}
+function net721HostWin() { const h = call703Hawk(); if (h.won === 1) return false; h.won = 1; h.call = Object.assign({}, h.call || {}, { arena: 2, together: 1 }); save(); return true; }   // a host who was down when a friend beat the Hawk: "Both get it" (the choice card comes when she is free)
+function net721Arena() { if (!ARENA703) return null; if (NET721_PKF !== NET721_F) { NET721_PKF = NET721_F; NET721_PK = { on: ARENA703S.on, starts: ARENA703S.starts, won: ARENA703S.won, pk: ARENA703.peek() }; } return NET721_PK; }   // one peek a frame
+function net721Sheet() { if (!NET721) return; const st = WFR_NET721.state(), on = st.status === 'host' || st.status === 'guest', busy = st.status === 'joining';
+  $('w721Msg').textContent = WFR_NET721.sheetText(); $('w721Make').disabled = !WFR_NET721.ready() || on || busy; $('w721Join').disabled = !WFR_NET721.ready() || on || busy; $('w721Leave').hidden = !on; }
+function net721Attach() {
+  if (NET721 || !window.WFR_NET721 || !window.WFR_BIRDS) return;
+  NET721 = WFR_NET721.attach({ THREE, scene, renderer, BIRDS, me: net721Me, level: () => S.level, where: () => FAR682.where || 'home', placeBase: net721Base, story: net721Story, applyStory: net721Apply, follow: net721Follow, canFollow: net721CanFollow,
+    world703: net721World703, restore: net721Restore, wakeHome: net721Home, arena: net721Arena, daySpeed: DAY_SPEED, save, saveNow: () => { save(); return window.__wfrLastSave || null; }, toast, sheet: net721Sheet, file: () => ACTIVE, fileText: () => { try { return localStorage.getItem(fileKey(ACTIVE)); } catch (e) { return null; } }, hostWin: net721HostWin,
+    build: (k) => { const r = WFR_BIRDS.build(THREE, k, BIRDS[k] || BIRDS.cardinal, { renderer }); shadowsOn(r.g, false); return r; } });
+  const st = document.createElement('style'); st.textContent = '.w721{margin-top:12px;padding-top:10px;border-top:2px dashed #e6dccb}.w721-title{margin:0 0 4px;font-weight:800}.w721-msg{margin:0 0 8px}.w721-btn{min-height:44px;padding:0 18px;border-radius:22px;font-weight:800;font-size:15px;font-family:var(--body);border:2px solid #2f6d8c;background:#fff;color:#2f6d8c}.w721-primary{border:0;background:#2f6d8c;color:#fff}.w721-btn:disabled{opacity:.45}'; document.head.appendChild(st);   /* plain classes: 716 may theme them */
+  const nm = () => $('net678Name').value, go = (p) => { net721Sheet(); Promise.resolve(p).then(() => net721Sheet(), () => net721Sheet()); };
+  $('w721Make').addEventListener('click', () => { if (window.WFR_NET678) WFR_NET678.leave(); go(WFR_NET721.make(nm()).then((r) => { if (r && r.ok) $('net678Code').value = r.code; })); });   /* one way of playing together at a time: Fly together steps aside */
+  $('w721Join').addEventListener('click', () => { if (window.WFR_NET678) WFR_NET678.leave(); go(WFR_NET721.enter($('net678Code').value, nm())); });
+  $('w721Leave').addEventListener('click', () => { go(WFR_NET721.leave()); });
+  if (WFR_NET721.resume()) net721Sheet(); net721Sheet();   /* wfr.world721 remembers the world: back in it after a reload, no code typed */
+}
+function net721Tick(dt) { NET721_F++; if (!NET721) { net721Attach(); if (!NET721) return; } WFR_NET721.tick(dt); if (!$('net678').hidden && (NET721_F & 15) === 0) net721Sheet(); }
 function netTick678(dt) {
   if (!NET678) { netAttach678(); if (!NET678) return; }
   WFR_NET678.tick(dt);
@@ -9068,6 +9123,7 @@ function frame(now) {
   if (S.mode !== 'menu' && S.mode !== 'paused') { mentors(dt); leaveTick(dt); nestTiers(dt); eagleEvent(dt); chickTick(dt); fishTick(dt); signTick(); cutTick(); nodeTick(dt); folkTick(dt); }
   for (const it of items) if (!it.held && !it.done) it.g.visible = !it.type.metal || !!S.lessons.crow;   // metal shines only once you know how to look
   netTick678(dt);   /* 678 v1.1: send her 10 times a second, draw the other bird's ghost between its last snapshots */
+  net721Tick(dt);   /* 721 A: the world together (the host's story, the other birds, the shared Hawk) */
   boatTick646();   // 646: the boat sails, and carries what stands on its deck (after chickTick, before her own step)
   for (const c of clouds) { c.position.x += dt * 1.2; if (c.position.x > 300) c.position.x = -300;
     // a cloud fades as the camera nears it: gone inside 20 m, whole beyond 60 (Oct 9: the home flight's high stops met a
@@ -9561,7 +9617,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build 1ef471b15ead): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build 32e93132c06e): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>

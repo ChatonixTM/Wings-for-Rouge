@@ -143,6 +143,12 @@ window.WFR_HAWKARENA = (function () {
     function stunned() { return R.mode === 'stun' && R.stunT > 0; }
     function hurt() { if (R.plant === 'nohurt') return; if (SEG && R.plant !== 'chickdown') { R.segHits++; R.hurts++; ev('hurt'); ev('chickhit'); if (R.segHits >= SEG.hits) segEnd('hits'); return; }   /* the switch: a stagger, never a feather (plant 'chickdown': the control) */
       R.feathers--; R.hurts++; ev('hurt'); if (R.feathers <= 0) { R.feathers = 0; setMode('down'); ev('down'); } }   /* feathers puff: never a wound; plant 'nohurt': the control for claim (f) */
+    function teamHp(hp) {   /* board 721 (co-op, his ruling "all boss fights will be 2 players"): another player's hits on the ONE Hawk; this engine keeps attacking its own bird on its own clock */
+      hp = num(hp, 0, HP0); if (!(hp < R.hp)) return; R.hp = hp; R.team++; ev('teamhit');
+      if (R.hp <= 0) { setMode('won'); ev('won'); return; }
+      var np = R.hp * 3 <= HP0 ? 3 : R.hp * 3 <= HP0 * 2 ? 2 : 1;
+      if (np > R.phase) { while (R.phase < np) { R.phase++; R.phaseN++; ev('phase'); } if (R.mode !== 'stun') { setMode('roar'); var g = gapDraw(); R.nextAct = R.lastWarnAct >= 0 ? Math.max(R.act, R.lastWarnAct + g) : R.act + g; R.nextKind = rollKind(); } }
+    }
     function hitHawk() {
       var d = R.hits >= DMG.length - 1 ? R.hp : DMG[R.hits]; R.hp = Math.max(0, R.hp - d); R.hits++; if (R.dmgN < DMG_LOG.length) { DMG_LOG[R.dmgN] = d; R.dmgN++; }
       R.stunHit = true; R.stunT = 0; ev('struck');
@@ -230,6 +236,7 @@ window.WFR_HAWKARENA = (function () {
     function tick(dt, inp) {
       dt = dt > 0 ? (dt < 0.25 ? dt : 0.25) : 0;
       EV.length = 0;
+      if (inp && inp.shared != null && !done()) teamHp(inp.shared);   /* board 721: null or absent = alone, nothing changes */
       var m = inp && inp.me, side = !!(inp && inp.sidestep), atk = !!(inp && inp.attack), i, b;
       ME.x = num(m && m.x, -1e6, 1e6); ME.y = num(m && m.y, -1e6, 1e6); ME.z = num(m && m.z, -1e6, 1e6); ring(ME); R.inRing = inside(ME);
       R.lag = num(inp && inp.tapLag, 0, LAG_MAX); R.t += dt; R.mt += dt; if ((R.mode === 'circle' && !R.hold) || R.mode === 'warn' || R.mode === 'dive') R.act += dt;   /* his clock runs only while he is in the fight (not stunned, not climbing back, not holding for a crow) */
@@ -298,7 +305,7 @@ window.WFR_HAWKARENA = (function () {
       for (var i = 0; i < 8; i++) W8[i] = -99; W8i = 0;
       for (i = 0; i < NB; i++) { var b = B[i]; b.alive = true; b.hp = HELPER_HP; b.state = 'perched'; b.st = 0; b.swoops = 0; b.landed = 0; b.last = -99; copy3(b.pos, b.perch); b.next = SWOOP_FIRST[0] + rnd() * (SWOOP_FIRST[1] - SWOOP_FIRST[0]); }
       R.segHits = 0; R.segWhy = ''; if (SEG) R.hNext = SEG_FIRST0 + rnd() * (SEG_FIRST1 - SEG_FIRST0);   /* the switch: his helpers come sooner (an extra roll only with o.segment) */
-      R.phase = PH0; R.phaseN = 0; R.kind = ''; R.strike = 0; R.dbl = false; R.w2Done = false; R.fake = false; R.doubles = 0; R.feints = 0;
+      R.phase = PH0; R.phaseN = 0; R.team = 0; R.kind = ''; R.strike = 0; R.dbl = false; R.w2Done = false; R.fake = false; R.doubles = 0; R.feints = 0;
       if (PH0 > 1) { R.hp = Math.floor(HP0 * (PH0 === 2 ? 2 : 1) / 3); R.hits = PH0 === 2 ? 3 : 5; }   /* the top of that phase; his hit count where the damage table would have him */
       R.nextKind = rollKind();   /* last, so phase 1's dice stay exactly as they were */
       HK.x = RING.cx; HK.y = RING.floor + RING.r * 0.3; HK.z = RING.cz + HAWK_R; setMode('circle');
@@ -316,7 +323,7 @@ window.WFR_HAWKARENA = (function () {
         dodges: R.dodges, misses: R.misses, hurts: R.hurts, whiffs: R.whiffs, staggers: R.staggers, helpersAlive: alive, helpersOff: R.helpersOff, friendSwoops: R.friendSwoops, friendLanded: R.friendLanded,
         helperSwoops: R.helperSwoops, helperIncoming: ST.helperIncoming, helperArriveIn: ST.helperIncoming ? +ST.helperArriveIn.toFixed(3) : null, hold: R.hold, helperNext: +R.hNext.toFixed(3), friendNext: +R.fNext.toFixed(3), lastJudge: R.lastJudge, inRing: R.inRing, edge: +R.edge.toFixed(3), t: +R.t.toFixed(3), dmg: DMG_LOG.slice(0, R.dmgN), ring: Object.assign({}, RING), chickSwoops: chickSwoops,
         segment: !!SEG, segHits: R.segHits, segWhy: R.segWhy, segT: SEG ? SEG.t : null, segMaxHits: SEG ? SEG.hits : null, helpersLeft: alive,
-        phase: R.phase, phases: R.phaseN, kind: ST.kind, strike: ST.strike, feint: ST.feint, nextKind: R.nextKind, doubles: R.doubles, feints: R.feints,
+        phase: R.phase, phases: R.phaseN, team: R.team || 0, kind: ST.kind, strike: ST.strike, feint: ST.feint, nextKind: R.nextKind, doubles: R.doubles, feints: R.feints,
         birds: B.map(function (b) { return { kind: b.kind, name: b.name, state: b.state, target: b.kind === 'friend' && b.state === 'swooping' ? (b.target >= 0 ? B[b.target].name : 'hawk') : b.kind === 'helper' && b.state !== 'perched' && b.alive ? 'rouge' : null, alive: b.alive, swoops: b.swoops, hp: b.hp }; }), plant: R.plant };
     }
     var A = { dead: false, _plant: null, start: start, stop: function () { R.on = false; }, on: function () { return R.on && !R.dead; }, step: step, peek: peek, birds: B };
