@@ -172,7 +172,7 @@ window.WFR_HAWKWAKE = (function () {
     function toWorld(lx, ly, lz, out) { out.x = R.ox + lx * R.c + lz * R.sn; out.y = R.oy + ly; out.z = R.oz - lx * R.sn + lz * R.c; return out; }   /* the root's frame: rotation.y = yaw0 */
     function railStep(dt, inp) {
       dt = dt > 0 ? (dt < 0.25 ? dt : 0.25) : 0;   /* NaN and negatives are no time; a long stall is a quarter second */
-      var sx = num(inp && inp.sx, -1, 1), sy = num(inp && inp.sy, -1, 1), flap = !!(inp && inp.flap), boost = !!(inp && inp.boost);
+      var sx = num(inp && inp.sx, -1, 1), sy = num(inp && inp.sy, -1, 1), flap = !!(inp && inp.flap), boost = !!(inp && inp.boost), dashV = num(inp && inp.dash, 0, 120), dodge = !!(inp && inp.dodge);   /* 703p: the fight's dash to the Hawk, m/s along the line (absent: 0, the ride as before) */
       R.t += dt; R.cut = false; R.cd = Math.max(0, R.cd - dt); R.burstT = Math.max(0, R.burstT - dt);
       if (flap && R.cd <= 0 && !R.done) { R.burstT = BURST_T; R.cd = BURST_CD; }
       var bi = bandAt(R.s), push = 0;
@@ -186,8 +186,8 @@ window.WFR_HAWKWAKE = (function () {
       if (pinned) want -= EDGE_DRAG * V0;
       if (R.done) want = V0;
       R.v += (want - R.v) * Math.min(1, dt * SPD_K); R.v = clamp(R.v, (1 - V_DOWN - EDGE_DRAG) * V0, V_MAX * V0);
-      R.s += R.v * dt; if (R.s > R.maxS) R.maxS = R.s;
-      var lat0 = R.lat; R.lat += (sx * RAIL_W + push - R.lat) * Math.min(1, dt * LAT_K);
+      R.s += R.v * dt; if (dashV > 0) R.s += dashV * dt; if (R.s > R.maxS) R.maxS = R.s;
+      var lat0 = R.lat; R.lat += (sx * RAIL_W + (dodge ? 0 : push) - R.lat) * Math.min(1, dt * LAT_K);   /* 703p: a dodge (the fight's sidestep) beats the shove */
       if (R.plant !== 'noclamp') R.lat = clamp(R.lat, -RAIL_W, RAIL_W);   /* THE LANE (plant 'noclamp' lifts it: the unit test's control) */
       R.latV = dt > 0 ? (R.lat - lat0) / dt : 0;
       if (!R.done) { var g = Math.min(GATES, Math.floor(R.s / GATE_EVERY)); if (g > R.gate) { R.gate = g; say('gate'); } }

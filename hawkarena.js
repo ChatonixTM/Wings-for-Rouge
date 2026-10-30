@@ -44,6 +44,18 @@ window.WFR_HAWKARENA = (function () {
      its feathers are never spent and it is never 'down'; the turn ENDS ('segend', s.segWhy 'time' | 'hits' | 'helpers') at t s, at the hits-th hit, or when no helper is left. bench: friend
      indices that never swoop (the partner beside her, the Eagle on the Hawk); friends swoop only at helpers. Without o.segment nothing above changes (not one extra roll of the dice). */
   var SEG_T = 40, SEG_HITS = 3, SEG_FIRST0 = 2, SEG_FIRST1 = 4, SEG_GAP0 = 3, SEG_GAP1 = 6;   /* DRAFT: a 40 s turn, 3 hits end it early (never a loss); the helpers' first swoop at 2-4 s, then 3-6 s after the last one ends */
+  /* 703p CATCHABLE (Trunks, Oct 29). Marth's field verdict: "even so I can't attack the hawk or reach him in either phases". His design, verbatim: "The speed of the hawk needs to deteriorate or slow down
+     just like final chase where u chase shadow or vice versa so u can land a hit. Or they (the hawk) slows to try and hit you and you can dodge and hit him or just dodge and hit him when he's returning to his position".
+     Only with create({ reach: true }); without it not one number changes. He no longer circles HER at a fixed 14 m (flying at him moved his circle with her): his pace comes in WAVES, a burst (he keeps
+     away, 17 m out, eased fast) then a tired spell (13 m out, eased slowly, circling slower: flying at him closes in); never more than 24 m from her (the rubber band). Three windows, each struck by the
+     DASH (⚔️ within 9 m): TIRED, STUN (he slows to strike, a longer telegraph; a dodge commits him 1.4 s, a parry stuns as ever) and RETURN (after a dodge or a miss he flies back out; in reach on the way).
+     His 0.8-8 s gaps, 3 in any 5 s, the phases and the birds are untouched. */
+  var RA_B = [2.6, 3.6], RA_T = [3.2, 4.2];   /* s: a burst, then a tired spell (DRAFT) */
+  var RA_RB = 17, RA_EB = 3, RA_RT = 13, RA_ET = 0.45, RA_WT = 0.35;   /* bursting: 17 m out, eased at 3/s; tired: 13 m out, eased at 0.45/s, circling at 35% */
+  var RA_BAND = 24, RA_REACH = 9, RA_DASH_W = 0.22, RA_DASH_T = 0.26;   /* the band; the dash's reach, windup and dash */
+  var RA_WARN = 0.9, RA_LOCK = 0.35, RA_DODGE = 1.4, RA_RETURN = 1.8, RA_RET_E = 0.9, RA_NOW = 0.6;   /* he slows to strike (0.9 s telegraph, his aim set 0.35 s out); committed 1.4 s after a dodge; 1.8 s back out at 0.9/s; '↔️ NOW' 0.6 s before contact */
+  var RA_FORCE = 6.4;                        /* s of real time after his last warning: he strikes (his 8 real seconds, with room for a dash, a feint and slow-mo) */
+  var RA_NB_R = 22, RA_NB_E = 3;              /* plant 'noband': 22 m out, eased fast, whatever his wave (the control) */
   var API = null;
   function clamp(x, a, b) { return x < a ? a : x > b ? b : x; }
   function num(x, lo, hi) { x = +x; return x === x && x !== Infinity && x !== -Infinity ? clamp(x, lo, hi) : 0; }
@@ -81,11 +93,14 @@ window.WFR_HAWKARENA = (function () {
     var W8 = [-99, -99, -99, -99, -99, -99, -99, -99], W8i = 0, DMG_LOG = [0, 0, 0, 0, 0, 0, 0, 0];
     var ME = { x: 0, y: 0, z: 0 }, HK = { x: 0, y: 0, z: 0 }, AIM = { x: 0, y: 0, z: 0 }, EV = [];
     var ST = { mode: 'idle', hp: HP0, feathers: FEATHERS, me: ME, hawk: HK, warn: false, warnDir: 0, arriveIn: 0, stunT: 0, side: { on: false, x: 0, z: 0, d: SIDE_D, t: SIDE_T }, edge: 0, edgeWarn: false, inRing: true, helperIncoming: false, helperArriveIn: 0, hold: false, events: EV, birds: B,
-      phase: 1, kind: '', strike: 0, feint: false, segment: !!SEG, segHits: 0, segWhy: '' };
+      phase: 1, kind: '', strike: 0, feint: false, segment: !!SEG, segHits: 0, segWhy: '',
+      reach: false, wave: '', win: '', inRange: false, far: 0, dashWind: false, dashLeft: 0, now: '', hitsLeft: 0 };   /* 703p: what the screen shows */
+    var RCH = !!o.reach && !SEG;   /* 703p: the catchable arena (never in the chick's turn) */
+    var RAP = { lastWarnT: -1, minArr: 0, forced: 0, gMin: 1e9, gMax: 0, wave: 'burst', waveEnd: 0, dashT: -1, dashWin: '', tiredHit: false, retOpen: false, retHit: false, dashes: 0, far: 0, byTired: 0, byStun: 0, byReturn: 0, dashMiss: 0, tiredWaves: 0, nearest: 1e9, maxD: 0 };
 
     /* ARENA-TICK BEGIN: nothing between these markers allocates (tests/hawkarena-unit.js reads this text) */
     function rnd() { return num(rand(), 0, 0.999999); }
-    function warnA() { return R.plant === 'nowarn' ? 0 : WARN_A; }       /* plant 'nowarn': the control for claim (c) */
+    function warnA() { return R.plant === 'nowarn' ? 0 : RCH ? RA_WARN : WARN_A; }   /* 703p: he slows to strike */       /* plant 'nowarn': the control for claim (c) */
     function warnH() { return R.plant === 'nowarn' ? 0 : HELPER_WARN; }
     function swoopGap(h) { return SEG && h ? SEG_GAP0 + rnd() * (SEG_GAP1 - SEG_GAP0) : SWOOP_MIN + rnd() * (SWOOP_MAX - SWOOP_MIN); }   /* h: the helpers' side (the switch draws its own gap; one roll either way) */
     function done() { return R.mode === 'won' || R.mode === 'down' || R.mode === 'segend'; }   /* the fight (or the chick's turn) is over */
@@ -178,7 +193,7 @@ window.WFR_HAWKARENA = (function () {
     function startAttack() {   /* the gap on his clock (0.8-8 s, 5 s, 3.5 s by phase) AND the 3-in-5 s cap in real time */
       var k = R.nextKind;
       if (R.plant !== 'nocap' && !capFits(k)) return false;   /* plant 'nocap': the control for claim (a) */
-      R.kind = k; R.dbl = false; R.fake = false; R.arrive = 0; R.atkAng = R.ang;
+      R.kind = k; R.dbl = false; R.fake = false; R.arrive = RCH ? RAP.minArr : 0; R.atkAng = R.ang;
       if (k === 'feint') { R.feints++; R.fake = true; R.strike = 0; R.fakeEnd = R.t + FEINT_T; R.arrive = R.fakeEnd + warnA() + FLY_A; R.warnStart = R.t; R.tapped = false; R.arrived = false; copy3(AIM, ME); setMode('warn'); ev('feintwarn'); return true; }   /* the fake: it spends nothing and can never land */
       realWarn();
       if (k === 'double') { R.doubles++; R.dbl = true; R.w2Done = false; R.arr2 = R.arrive + DBL_T; }
@@ -193,8 +208,8 @@ window.WFR_HAWKARENA = (function () {
     }
     function resolveHawk() {
       var clear = dist(ME, AIM.x, AIM.y, AIM.z) >= DODGE_CLEAR, stepped = R.lastSide >= R.arrive - SIDE_WIN && R.lastSide <= R.arrive, first = R.dbl;   /* first: a double's first strike, judged on its own */
-      if (clear && stepped) { R.dodges++; R.lastJudge = 'dodge'; if (first) { ev('dodge'); next2(); } else stunHawk(STUN_DODGE, 'dodge', 'dodge'); return; }
-      if (clear) { R.misses++; ev('miss'); if (first) next2(); else setMode('circle'); return; }
+      if (clear && stepped) { R.dodges++; R.lastJudge = 'dodge'; if (first) { ev('dodge'); next2(); } else stunHawk(RCH ? RA_DODGE : STUN_DODGE, 'dodge', 'dodge'); return; }
+      if (clear) { R.misses++; ev('miss'); if (first) next2(); else setMode(RCH ? 'recover' : 'circle'); return; }   /* 703p: a miss sends him back out (the return) */
       hurt(); if (R.mode !== 'down') { if (first) next2(); else setMode('circle'); }
     }
     function birdStep(b, dt) {
@@ -233,6 +248,48 @@ window.WFR_HAWKARENA = (function () {
       }
       if (b.state === 'returning') { var kb = clamp(b.st / BACK_T, 0, 1); lerp3(b.pos, b.from, b.perch, kb * kb * (3 - 2 * kb)); if (kb >= 1) b.state = 'perched'; }
     }
+    /* 703p REACH: the catchable arena (only when RCH; nothing here allocates) */
+    function raWave() { if (R.t < RAP.waveEnd) return; var r = rnd();   /* plant 'noslow': he never tires, the control */
+      if (RAP.wave === 'burst' && R.plant !== 'noslow') { RAP.wave = 'tired'; RAP.tiredHit = false; RAP.tiredWaves++; RAP.waveEnd = R.t + RA_T[0] + r * (RA_T[1] - RA_T[0]); ev('tired'); }
+      else { RAP.wave = 'burst'; RAP.waveEnd = R.t + RA_B[0] + r * (RA_B[1] - RA_B[0]); ev('burst'); } }
+    function raWin() {
+      if (stunned() && !R.stunHit) return 'stun';
+      if (R.mode === 'recover' && RAP.retOpen && !RAP.retHit && R.plant !== 'noreturn') return 'return';   /* plant 'noreturn': the control */
+      if (R.mode === 'circle' && RAP.wave === 'tired' && !RAP.tiredHit) return 'tired';
+      return ''; }
+    function raD() { return dist(ME, HK.x, HK.y, HK.z); }
+    function raIn(w) { return raD() <= (w === 'stun' ? RA_BAND : RA_REACH); }   /* a dizzy Hawk anywhere inside the band (he is helpless), else within RA_REACH */
+    function raAtk() {   /* true: the tap is the reach mode's (a dash, or 'far'); false: as ever (a parry, a crow's parry, a whiff) */
+      if (RAP.dashT >= 0) return false;   /* mid-dash a tap is still hers: a crow's parry, as ever (the Hawk's hit is already committed, never twice) */
+      if (hawkIncoming()) return false;
+      var w = raWin(); if (!w) return false;
+      if (w !== 'stun') for (var i = 0; i < NB; i++) { var hb = B[i]; if (helperIncoming(hb) && !hb.tapped && judge(hb.arrive) !== 9) return false; }   /* a crow on the beat is parried first, as ever: only a stun hit outranks a parry */
+      if (raIn(w)) { RAP.dashT = 0; RAP.dashWin = w; RAP.dashes++; ev('dash'); return true; }
+      R.whiffs++; RAP.far++; ev('far'); return true; }
+    function raDash(dt) {   /* true while her dash runs (his machine holds, he stays where he is: the game flies her to him); then the hit lands (plant 'nodash': never) */
+      if (RAP.dashT < 0) return false;
+      RAP.dashT += dt; if (RAP.dashT < RA_DASH_W + RA_DASH_T) return true;
+      RAP.dashT = -1;
+      if (R.plant === 'nodash' || done()) { RAP.dashMiss++; ev('dashmiss'); return true; }
+      if (RAP.dashWin === 'tired') { RAP.tiredHit = true; RAP.byTired++; } else if (RAP.dashWin === 'return') { RAP.retHit = true; RAP.byReturn++; } else RAP.byStun++;
+      RAP.retOpen = false; hitHawk(); RAP.wave = 'burst'; RAP.waveEnd = R.t + RA_B[1];   /* struck, he bolts */
+      return true; }
+    function raDue() { return RCH && R.plant !== 'nocap8' && RAP.lastWarnT >= 0 && R.t - RAP.lastWarnT >= RA_FORCE && !done(); }   /* his 8 real seconds are nearly up */
+    function raCrowArr() { var m = 0; for (var i = 0; i < NB; i++) { var b = B[i]; if (b.kind === 'helper' && b.swoops > 0 && b.state === 'swooping' && b.arrive > m) m = b.arrive; } return m > 0 ? m + HAWK_SPACE : 0; }   /* a forced strike lands 1.5 s clear of any crow already diving */
+    function raBand() { var dx = HK.x - ME.x, dy = HK.y - ME.y, dz = HK.z - ME.z, d = Math.sqrt(dx * dx + dy * dy + dz * dz); if (d > RA_BAND) { var k = RA_BAND / d; HK.x = ME.x + dx * k; HK.y = ME.y + dy * k; HK.z = ME.z + dz * k; } }
+    function raReturn(dt) { var e = Math.min(1, dt * RA_RET_E); HK.x += (ME.x + Math.sin(R.ang) * RA_RB - HK.x) * e; HK.y += (ME.y + HAWK_UP - HK.y) * e; HK.z += (ME.z + Math.cos(R.ang) * RA_RB - HK.z) * e; }
+    function raPost() {
+      for (var i = 0; i < EV.length; i++) { var e = EV[i]; if (e === 'shakeoff' || e === 'miss') { RAP.retOpen = true; RAP.retHit = false; } else if (e === 'struck') RAP.retOpen = false;
+        else if (e === 'warn') { if (RAP.lastWarnT >= 0) { var gg = R.t - RAP.lastWarnT; if (gg < RAP.gMin) RAP.gMin = gg; if (gg > RAP.gMax) RAP.gMax = gg; } RAP.lastWarnT = R.t; } }
+      if (raDue() && RAP.dashT < 0 && (R.mode === 'stun' || R.mode === 'recover' || R.mode === 'roar')) { RAP.retOpen = false; setMode('circle'); }   /* his 8 real seconds outrank a dizzy spell, the way back, a roar */
+      if (R.mode !== 'recover') RAP.retOpen = false;
+      var w = raWin(), d = raD(), inc = hawkIncoming(), ai = inc ? R.arrive - R.t : 9, hs = 9;
+      for (i = 0; i < NB; i++) { var b = B[i]; if (helperIncoming(b) && b.arrive - R.t < hs) hs = b.arrive - R.t; }
+      if (d < RAP.nearest) RAP.nearest = d; if (d > RAP.maxD) RAP.maxD = d;
+      ST.reach = true; ST.wave = RAP.wave; ST.win = w; ST.inRange = raIn(w); ST.far = d;
+      ST.dashWind = RAP.dashT >= 0 && RAP.dashT < RA_DASH_W; ST.dashLeft = RAP.dashT >= RA_DASH_W ? RA_DASH_W + RA_DASH_T - RAP.dashT : 0;
+      ST.now = (inc && !R.tapped && !R.fake && ai <= RA_NOW && ai > -GOOD) || (hs <= RA_NOW && hs > -GOOD) ? 'side' : w && raIn(w) && RAP.dashT < 0 && !inc ? 'atk' : '';
+      var hl = R.hp, hi = R.hits, hn = 0; while (hl > 0 && hn < 20) { hl -= hi >= DMG.length - 1 ? hl : DMG[hi]; hi++; hn++; } ST.hitsLeft = hn; }   /* her hits still to land, from his hp (a co-op partner's hits count: board 721) */
     function tick(dt, inp) {
       dt = dt > 0 ? (dt < 0.25 ? dt : 0.25) : 0;
       EV.length = 0;
@@ -249,8 +306,9 @@ window.WFR_HAWKARENA = (function () {
         if (px * (RING.cx - ME.x) + pz * (RING.cz - ME.z) < 0) { px = -px; pz = -pz; }
         R.sdx = px; R.sdz = pz; R.sideT = SIDE_T; R.sideCd = SIDE_CD; R.lastSide = R.t; ev('sidestep');
       }
-      if (atk && !over) {   /* what Attack means is decided here, by the state, and nowhere else */
-        if ((stunned() && !R.stunHit) || (R.plant === 'anyhit' && R.mode !== 'recover')) hitHawk();   /* plant 'anyhit': the control for claim (b) */
+      if (atk && !over && RCH && raAtk()) { /* 703p: the dash (or 'far'); every other tap below, as ever */ }
+      else if (atk && !over) {   /* what Attack means is decided here, by the state, and nowhere else */
+        if ((stunned() && !R.stunHit && !(RCH && RAP.dashT >= 0)) || (R.plant === 'anyhit' && R.mode !== 'recover')) hitHawk();   /* plant 'anyhit': the control for claim (b) */
         else {
           var best = -1, bd = 9, d0;
           if (hawkIncoming() && !R.tapped) { d0 = judge(R.arrive); if (d0 !== 9) { best = NB; bd = d0; } }
@@ -266,14 +324,19 @@ window.WFR_HAWKARENA = (function () {
         }
       }
       /* the Hawk */
-      if (R.mode === 'circle') {
-        R.ang += HAWK_W * dt; HK.x += (ME.x + Math.sin(R.ang) * HAWK_R - HK.x) * Math.min(1, dt * 3); HK.y += (ME.y + HAWK_UP - HK.y) * Math.min(1, dt * 3); HK.z += (ME.z + Math.cos(R.ang) * HAWK_R - HK.z) * Math.min(1, dt * 3);
-        R.hold = false; if (R.act >= R.nextAct) { if (helperBlocks()) R.hold = true; else startAttack(); }
+      var held = RCH && raDash(dt), cw = HAWK_W, cr = HAWK_R, ce = 3;   /* 703p: while her dash runs his machine holds */
+      if (RCH && R.mode === 'circle') { raWave(); if (R.plant === 'noband') { cr = RA_NB_R; ce = RA_NB_E; } else if (RAP.wave === 'tired') { cw = HAWK_W * RA_WT; cr = RA_RT; ce = RA_ET; } else { cr = RA_RB; ce = RA_EB; } }   /* 703p: his waves */
+      if (held) { /* 703p: held */ }
+      else if (R.mode === 'circle') {
+        R.ang += cw * dt; HK.x += (ME.x + Math.sin(R.ang) * cr - HK.x) * Math.min(1, dt * ce); HK.y += (ME.y + HAWK_UP - HK.y) * Math.min(1, dt * ce); HK.z += (ME.z + Math.cos(R.ang) * cr - HK.z) * Math.min(1, dt * ce);
+        if (RCH && R.plant !== 'noband') raBand();   /* 703p: THE RUBBER BAND */
+        R.hold = false; if (R.act >= R.nextAct || raDue()) { if (!raDue() && (helperBlocks() || (RCH && RAP.wave === 'tired' && !RAP.tiredHit))) R.hold = true; else { if (raDue()) { RAP.minArr = raCrowArr(); RAP.forced++; } startAttack(); RAP.minArr = 0; } }   /* 703p: tired, he holds his strike (his clock holds with him): a clear window */
       }
       if (hawkIncoming() && R.fake && R.t >= R.fakeEnd) endFake();
       if (hawkIncoming() && R.dbl && !R.w2Done && R.t >= R.arr2 - warnA() - FLY_A) warn2();
-      if (hawkIncoming()) {
-        if (R.arrive - R.t > LOCK_A) copy3(AIM, ME);
+      if (held) { /* 703p: held */ }
+      else if (hawkIncoming()) {
+        if (R.arrive - R.t > (RCH ? RA_LOCK : LOCK_A)) copy3(AIM, ME);
         if (R.t < R.arrive - FLY_A) { HK.x += (ME.x + Math.sin(R.atkAng) * HAWK_R - HK.x) * Math.min(1, dt * 4); HK.y += (ME.y + HAWK_UP + 1.5 - HK.y) * Math.min(1, dt * 4); HK.z += (ME.z + Math.cos(R.atkAng) * HAWK_R - HK.z) * Math.min(1, dt * 4); }   /* he flares, wings high */
         else { if (R.mode === 'warn') setMode('dive'); var kk = clamp(1 - (R.arrive - R.t) / FLY_A, 0, 1); HK.x += (AIM.x - HK.x) * kk; HK.y += (AIM.y - HK.y) * kk; HK.z += (AIM.z - HK.z) * kk; }
         if (!R.arrived && R.t >= R.arrive) { R.arrived = true; ev('arrive'); if (dist(ME, AIM.x, AIM.y, AIM.z) >= DODGE_CLEAR && R.lastSide >= R.arrive - SIDE_WIN) resolveHawk(); }
@@ -281,12 +344,13 @@ window.WFR_HAWKARENA = (function () {
       } else if (R.mode === 'stun') {
         R.stunT = Math.max(0, R.stunT - dt); HK.x += (ME.x + Math.sin(R.atkAng) * STUN_REL - HK.x) * Math.min(1, dt * 4); HK.y += (ME.y - HK.y) * Math.min(1, dt * 4); HK.z += (ME.z + Math.cos(R.atkAng) * STUN_REL - HK.z) * Math.min(1, dt * 4);
         if (R.stunT <= 0) { ev('shakeoff'); setMode('recover'); }
-      } else if (R.mode === 'recover') { HK.y += 4 * dt; if (R.mt >= RECOVER_T) setMode('circle'); }
+      } else if (R.mode === 'recover') { if (RCH && RAP.retOpen) raReturn(dt); else HK.y += 4 * dt; if (R.mt >= (RCH && RAP.retOpen ? RA_RETURN : RECOVER_T)) setMode('circle'); }   /* 703p: the return, in reach on the way out */
       else if (R.mode === 'roar') { HK.y += 2.5 * dt; if (R.mt >= ROAR_T) setMode('circle'); }   /* he rises and roars; the storm thickens (the game's) */
       for (i = 0; i < NB; i++) birdStep(B[i], dt);
       groupStep();
       if (SEG && !done()) { if (R.t >= SEG.t) segEnd('time'); else if (helpersLeft() === 0) segEnd('helpers'); }   /* the chick's turn ends on time, or when his helpers are gone */
       var hs = 1e9; for (i = 0; i < NB; i++) { b = B[i]; if (helperIncoming(b) && b.arrive < hs) hs = b.arrive; }
+      if (RCH) raPost();   /* 703p */
       ST.helperIncoming = hs < 1e9; ST.helperArriveIn = hs < 1e9 ? hs - R.t : 0; ST.hold = R.hold;
       ST.mode = R.mode; ST.hp = R.hp; ST.feathers = R.feathers; ST.warn = hawkIncoming(); ST.warnDir = R.atkAng; ST.arriveIn = hawkIncoming() ? R.arrive - R.t : 0; ST.stunT = R.stunT;
       ST.side.on = R.sideT > 0; ST.side.x = R.sdx; ST.side.z = R.sdz; ST.edge = R.edge; ST.edgeWarn = R.edge > 0; ST.inRing = R.inRing;
@@ -305,6 +369,8 @@ window.WFR_HAWKARENA = (function () {
       for (var i = 0; i < 8; i++) W8[i] = -99; W8i = 0;
       for (i = 0; i < NB; i++) { var b = B[i]; b.alive = true; b.hp = HELPER_HP; b.state = 'perched'; b.st = 0; b.swoops = 0; b.landed = 0; b.last = -99; copy3(b.pos, b.perch); b.next = SWOOP_FIRST[0] + rnd() * (SWOOP_FIRST[1] - SWOOP_FIRST[0]); }
       R.segHits = 0; R.segWhy = ''; if (SEG) R.hNext = SEG_FIRST0 + rnd() * (SEG_FIRST1 - SEG_FIRST0);   /* the switch: his helpers come sooner (an extra roll only with o.segment) */
+      RAP.wave = 'burst'; RAP.waveEnd = R.t + RA_B[0]; RAP.dashT = -1; RAP.dashWin = ''; RAP.tiredHit = false; RAP.retOpen = false; RAP.retHit = false; RAP.dashes = 0; RAP.far = 0;   /* 703p */
+      RAP.lastWarnT = -1; RAP.minArr = 0; RAP.forced = 0; RAP.gMin = 1e9; RAP.gMax = 0; RAP.byTired = 0; RAP.byStun = 0; RAP.byReturn = 0; RAP.dashMiss = 0; RAP.tiredWaves = 0; RAP.nearest = 1e9; RAP.maxD = 0;
       R.phase = PH0; R.phaseN = 0; R.team = 0; R.kind = ''; R.strike = 0; R.dbl = false; R.w2Done = false; R.fake = false; R.doubles = 0; R.feints = 0;
       if (PH0 > 1) { R.hp = Math.floor(HP0 * (PH0 === 2 ? 2 : 1) / 3); R.hits = PH0 === 2 ? 3 : 5; }   /* the top of that phase; his hit count where the damage table would have him */
       R.nextKind = rollKind();   /* last, so phase 1's dice stay exactly as they were */
@@ -322,7 +388,8 @@ window.WFR_HAWKARENA = (function () {
         gaps: { min: R.gapMin === 1e9 ? null : +R.gapMin.toFixed(3), max: +R.gapMax.toFixed(3) }, stunT: +R.stunT.toFixed(3), stunKind: R.stunKind, parries: { good: R.parG, perfect: R.parP },
         dodges: R.dodges, misses: R.misses, hurts: R.hurts, whiffs: R.whiffs, staggers: R.staggers, helpersAlive: alive, helpersOff: R.helpersOff, friendSwoops: R.friendSwoops, friendLanded: R.friendLanded,
         helperSwoops: R.helperSwoops, helperIncoming: ST.helperIncoming, helperArriveIn: ST.helperIncoming ? +ST.helperArriveIn.toFixed(3) : null, hold: R.hold, helperNext: +R.hNext.toFixed(3), friendNext: +R.fNext.toFixed(3), lastJudge: R.lastJudge, inRing: R.inRing, edge: +R.edge.toFixed(3), t: +R.t.toFixed(3), dmg: DMG_LOG.slice(0, R.dmgN), ring: Object.assign({}, RING), chickSwoops: chickSwoops,
-        segment: !!SEG, segHits: R.segHits, segWhy: R.segWhy, segT: SEG ? SEG.t : null, segMaxHits: SEG ? SEG.hits : null, helpersLeft: alive,
+        segment: !!SEG, segHits: R.segHits, segWhy: R.segWhy,
+        reach: RCH ? { wave: RAP.wave, win: raWin(), inRange: raIn(raWin()), d: +raD().toFixed(2), dashing: RAP.dashT >= 0, dashes: RAP.dashes, far: RAP.far, dashMiss: RAP.dashMiss, forced: RAP.forced, realGap: [RAP.gMin === 1e9 ? null : +RAP.gMin.toFixed(3), +RAP.gMax.toFixed(3)], by: { tired: RAP.byTired, stun: RAP.byStun, ret: RAP.byReturn }, tiredWaves: RAP.tiredWaves, nearest: +RAP.nearest.toFixed(2), maxD: +RAP.maxD.toFixed(2), retOpen: RAP.retOpen } : null, segT: SEG ? SEG.t : null, segMaxHits: SEG ? SEG.hits : null, helpersLeft: alive,
         phase: R.phase, phases: R.phaseN, team: R.team || 0, kind: ST.kind, strike: ST.strike, feint: ST.feint, nextKind: R.nextKind, doubles: R.doubles, feints: R.feints,
         birds: B.map(function (b) { return { kind: b.kind, name: b.name, state: b.state, target: b.kind === 'friend' && b.state === 'swooping' ? (b.target >= 0 ? B[b.target].name : 'hawk') : b.kind === 'helper' && b.state !== 'perched' && b.alive ? 'rouge' : null, alive: b.alive, swoops: b.swoops, hp: b.hp }; }), plant: R.plant };
     }
@@ -332,6 +399,6 @@ window.WFR_HAWKARENA = (function () {
 
   API = { create: create, last: null, error: null, GAP_MIN: GAP_MIN, GAP_MAX: GAP_MAX, CAP_N: CAP_N, CAP_T: CAP_T, WARN_A: WARN_A, FLY_A: FLY_A, HELPER_WARN: HELPER_WARN, HELPER_FLY: HELPER_FLY,
     SWOOP_MIN: SWOOP_MIN, SWOOP_MAX: SWOOP_MAX, FRIEND_LAND: FRIEND_LAND, FEATHERS: FEATHERS, SIDE_D: SIDE_D, SIDE_T: SIDE_T, STUN_T: STUN_T, STUN_PERFECT: STUN_PERFECT,
-    ROAR_T: ROAR_T, GAP2_MAX: GAP2_MAX, GAP3_MAX: GAP3_MAX, DBL_T: DBL_T, FEINT_T: FEINT_T, HP0: HP0, SEG_T: SEG_T, SEG_HITS: SEG_HITS };
+    ROAR_T: ROAR_T, GAP2_MAX: GAP2_MAX, GAP3_MAX: GAP3_MAX, DBL_T: DBL_T, FEINT_T: FEINT_T, HP0: HP0, SEG_T: SEG_T, SEG_HITS: SEG_HITS, RA_REACH: RA_REACH, RA_WARN: RA_WARN, RA_NOW: RA_NOW };   /* 703p */
   return API;
 }());
