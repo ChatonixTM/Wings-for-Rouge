@@ -18,7 +18,7 @@ window.WFR_ANIMALS = (function () {
   'use strict';
   var T = { passive: 0, curious: 1, sometimes: 2, malicious: 3 };
   var FAIR = { WARN_MIN: 0.6, CAP_N: 3, CAP_T: 5, GOOD: 0.2, PERFECT: 0.1, LOOK: 0.5, LAG_MAX: 0.3, NEST_R: 15, WAKE: 60, SLEEP: 80, MAX_AWAKE: 6,
-    DULL: 0.6, GRACE: 3, XP: 5, UP_MAX: 1.2, DRIVEN_CD: 25, DIZZY: 0.6 };   /* DRAFT: sense x0.6 at night; she must be within 1.2 m of the ground for a land strike */
+    DULL: 0.6, GRACE: 3, XP: 5, UP_MAX: 1.2, DRIVEN_CD: 25, DIZZY: 0.6, LOW: 12 };   /* LOW (714c): "low over the sea" is within 12 m of the water */   /* DRAFT: sense x0.6 at night; she must be within 1.2 m of the ground for a land strike */
   /* the roster's numbers. moves: [slow, quick]; attacks: [simple, heavy]: warn s, fly s (the strike itself), from m (it starts its warning this close),
      reach m (how far the strike travels), hitR m (her distance from where it lands that still counts as a hit), lock s (before contact its aim stops following her) */
   var SP = {
@@ -37,6 +37,21 @@ window.WFR_ANIMALS = (function () {
     gull: { name: 'Laughing gull', temper: T.sometimes, realm: 'air', sense: 13, turn: 1.8, acc: 6, noticeT: 0.5, recover: 1.6, cd: 4, neck: 0, alt: 10, ring: 14, wander: 14, heavyP: 0.4, meanP: 0.25,
       moves: [{ id: 'glide', v: 6 }, { id: 'beat', v: 9.5 }], stalkMv: 1,
       attacks: [{ id: 'swoop', warn: 0.8, fly: 0.42, from: 5.5, reach: 7, hitR: 1.0, lock: 0.35, air: true }, { id: 'divepeck', heavy: true, warn: 1.2, fly: 0.5, from: 7, reach: 9, hitR: 1.2, lock: 0.4, air: true }] },
+  };
+  var SEA = {   /* 714c: the sea's three, kept apart from SPECIES (714a's six: its unit guard reads that list as its whole roster); API.SEA */
+    /* 714c THE SEA (Trunks, Oct 28; PLAN_714's water row). sea3d: they swim in three dimensions (her depth, not the ground's); the html's ok() keeps each
+       in its own water (the dolphins in open water round the boats, the barracuda over the reef's shelf, the shark in the deep by the wind wall: never
+       the shallows, never the lake). Under the water her attack button is gone (atkShown), so the defence is SWIMMING: a sea strike leads her (it aims
+       where she will be at contact), its aim locks with a flash, and a Stroke or a hard turn after the flash takes her out of its hit radius (the one
+       judge, clearOf). give: after that many clean dodges in a row the animal gives up (driven off: a threat's +5 XP, once a day per animal). */
+    dolphin: { name: 'Bottlenose dolphin', temper: T.curious, realm: 'water', sea3d: true, low: 12, escort: true, pods: [3, 2], sense: 24, turn: 2.2, acc: 7, noticeT: 0.5, follow: 12, wander: 30, rad: 0.3, cruiseD: 1.3, leapL: 7, leapH: 1.1,
+      moves: [{ id: 'cruise', v: 2.6 }, { id: 'leap', v: 9.5 }, { id: 'bowride', v: 8.5 }] },   /* Tursiops truncatus, 2.6 m: cruises, PORPOISES (its leaps) when it hurries, BOW-RIDES under a boat's bow wave (a rare leap), leaps beside her */
+    barracuda: { name: 'Great barracuda', temper: T.sometimes, realm: 'water', sea3d: true, onlyDive: true, hang: true, sense: 11, turn: 3.4, acc: 40, noticeT: 0.8, recover: 1.4, cd: 4, wander: 6, heavyP: 0.4, meanP: 0.25, near: [3, 5], follow: 12, rad: 0.09, give: 2,
+      moves: [{ id: 'hang', v: 0.3 }, { id: 'dart', v: 10 }], stalkMv: 1, strikeMv: 1,   /* Sphyraena barracuda, 1.3 m: hangs still over the reef, then darts; it shadows a swimmer */
+      attacks: [{ id: 'snap', warn: 0.7, fly: 0.22, from: 1.9, reach: 3.4, hitR: 0.75, lock: 0.6, sea: true, lead: true }, { id: 'lunge', heavy: true, warn: 1.1, fly: 0.4, from: 3.6, reach: 6.4, hitR: 0.95, lock: 0.65, sea: true, lead: true }] },   /* reach: its keeping distance plus her own cruise (8 m/s) over the strike */
+    shark: { name: 'Caribbean reef shark', temper: T.malicious, realm: 'water', sea3d: true, act: 'night', sense: 18,   /* act: keenest by night (by day its sense x0.6), as real reef sharks hunt */ turn: 1.5, acc: 5, noticeT: 0.9, recover: 1.8, cd: 4.5, wander: 22, heavyP: 0.4, rad: 0.2, ringR: 6.5, give: 3, bed: 1.1,
+      moves: [{ id: 'cruise', v: 1.3 }, { id: 'surge', v: 10 }], stalkMv: 0, strikeMv: 1,   /* Carcharhinus perezi, 2.2 m (its burst 10 m/s: she cruises at 8, a Stroke takes her to 13): patrols the drop-off, circles, hunches (its warning), then bumps or runs in to bite */
+      attacks: [{ id: 'bump', warn: 0.85, fly: 0.3, from: 2.5, reach: 4.6, hitR: 0.85, lock: 0.62, sea: true, lead: true }, { id: 'biterun', heavy: true, warn: 1.35, fly: 0.6, from: 6.0, reach: 9.8, hitR: 1.05, lock: 0.7, sea: true, lead: true }] },
   };
   var TRIES = [0, 0.7, -0.7, 1.5, -1.5];   /* a blocked step tries these turns, in order */
   var BUMP = { id: 'bump', warn: 0.7, fly: 0.2, from: 1.0, reach: 1.2, hitR: 0.8, lock: 0.3 };   /* no gentle animal has an attack: this exists only so plant 'warn' can show one striking */
@@ -63,7 +78,9 @@ window.WFR_ANIMALS = (function () {
     var EVP = [], EV = [], k;
     for (k = 0; k < 32; k++) EVP.push({ type: '', i: -1, heavy: false, atk: '', xp: 0, tgt: '', d: 0 });
     var PEND = [], pendN = 0; for (k = 0; k < 8; k++) PEND.push({ type: '', i: -1, heavy: false, atk: '', xp: 0, tgt: '', d: 0 });   /* events raised between steps (her peck: hit()) wait here for the next step */
-    var IN = { hx: 0, hy: 0, hz: 0, up: 0, chick: false, cx: 0, cy: 0, cz: 0, safe: true, night: false, rain: false, attack: false, lag: 0, fruit: false };
+    var IN = { hx: 0, hy: 0, hz: 0, up: 0, chick: false, cx: 0, cy: 0, cz: 0, safe: true, night: false, rain: false, attack: false, lag: 0, fruit: false,
+      swim: false, vx: 0, vy: 0, vz: 0, lowSea: false };   /* 714c: she swims (under the water); her velocity (a sea strike leads her); she is in the sea or low over it */
+    var BT = []; for (k = 0; k < 3; k++) BT.push({ on: false, x: 0, z: 0, yaw: 0, v: 0, bow: 4 });   /* 714c: the boats the dolphins ride (0 the circling boat, 1 the pirate ship), copied in each step */
     var ST = { events: EV, awake: 0, attacker: -1, t: 0 };
 
     /* WORLD-TICK BEGIN: nothing between these markers allocates (tests/animals714-unit.js reads this text) */
@@ -78,7 +95,7 @@ window.WFR_ANIMALS = (function () {
       if (R.plant === 'nesthunt') return true;   /* plant 'nesthunt': the control for the nest claim */
       return nestD(IN.hx, IN.hz) > FAIR.NEST_R && nestD(a.x, a.z) > FAIR.NEST_R;
     }
-    function reachable(a) { return a.S.realm === 'air' || IN.up <= FAIR.UP_MAX; }   /* a land or sea animal cannot strike her in the air */
+    function reachable(a) { if (IN.swim) return !!a.S.sea3d; if (a.S.sea3d) return false; return a.S.realm === 'air' || IN.up <= FAIR.UP_MAX || R.plant === 'airreach'; }   /* plant 'airreach': a land animal reaches her in the air (the control for 714a U17) */   /* a land or sea animal cannot strike her in the air; under the water only a sea animal can (714c), and a sea animal only there */
     function capOK(arrive) {   /* <= 3 strikes in any 5 s across ALL animals, one attacker at a time */
       if (R.plant === 'nocap') return true;   /* plant 'nocap': the control for the cap */
       var n = 0, j; for (j = 0; j < R.logN; j++) if (R.log[j] > arrive - FAIR.CAP_T - 0.1) n++;   /* 0.1 s spare: a strike lands on the first frame at or after its time */
@@ -95,7 +112,7 @@ window.WFR_ANIMALS = (function () {
       a.tgtChick = false;
       if (R.plant === 'chickTarget' && IN.chick) { var dc = hd(a, IN.cx, IN.cz), dh = hd(a, IN.hx, IN.hz); if (dc < dh) a.tgtChick = true; }   /* plant 'chickTarget': the control for the chick claim */
     }
-    function toIdle(a, cd) { release(a); a.atk = -1; a.cd = Math.max(a.cd, cd || 0); a.mean = false; a.driven = false; a.locked = false; a.mark = 0; a.wT = 0; setState(a, 'idle'); }
+    function toIdle(a, cd) { release(a); a.atk = -1; a.cd = Math.max(a.cd, cd || 0); a.mean = false; a.driven = false; a.locked = false; a.mark = 0; a.wT = 0; a.dodged = 0; a.show = false; setState(a, 'idle'); }
     function cancel(a) { if (a.state === 'warn' || a.state === 'strike') { R.cancels++; ev('cancel', a); } release(a); a.locked = false; a.mark = 0; setState(a, 'recover'); }
     function face(a, x, z, dt, rate) { var want = Math.atan2(x - a.x, z - a.z), df = wrap(want - a.dir); a.dir = wrap(a.dir + clamp(df, -rate * dt, rate * dt)); }
     function stepMove(a, dt, mv) {   /* along a.dir at a.vT (smoothed), the boa weaving, every step tested by the html's ok() and the nest line */
@@ -163,17 +180,20 @@ window.WFR_ANIMALS = (function () {
     }
     function pickAttack(a) {   /* the pattern: after two simple strikes the heavy is due; otherwise the coin (the crab's grab only with fruit in her beak). Plant 'oneatk': the control for both attacks */
       var L = a.S.attacks; if (!L) { a.atk = 0; return; } var hv = L[1], can = !hv.fruit || IN.fruit;
+      if (a.force >= 0 && R.plant !== 'oneatk' && (a.force === 0 || can)) { a.atk = a.force; return; }   /* the bench's lever (W.force): this attack until it reaches contact; never past plant 'oneatk' */
       a.atk = R.plant !== 'oneatk' && can && (a.since >= 2 || rand() < a.S.heavyP) ? 1 : 0; if (a.atk === 1) a.since = 0; else a.since++; }
     function flee(a, dt) {
       var S0 = a.S, d = hd(a, IN.hx, IN.hz);
       if (a.dizzy > 0) { a.dizzy -= dt; a.vT = 0; stepMove(a, dt, 0); return; }
       if (S0.realm === 'water') a.dive = Math.min(1, a.dive + dt * 1.5);
+      if (S0.sea3d) a.ty = ground(a.x, a.z) + 0.5;   /* 714c: away, and down toward the bottom */
       if (S0.realm === 'air') { a.ty = WATER + S0.alt + 6; a.fold = 0; }
       var fm = S0.fleeMv == null ? 1 : S0.fleeMv; go(a, IN.hx, IN.hz, S0.moves[fm].v * (fm === 0 ? 1.4 : 1), fm, dt, true);   /* a pelican escapes soaring, never plunging */
       if ((a.st > 2.5 && d > S0.sense * 1.4) || a.st > 7) toIdle(a, a.driven ? FAIR.DRIVEN_CD : a.sp === 'crab' ? 3 : 8);   /* a cheeky crab is soon back */
     }
     function approach(a, dt) {   /* curious: to 3-5 m, following her <= 12 s (a gull that is not mean circles over her a while) */
       var S0 = a.S, d = hd(a, IN.hx, IN.hz); a.followT += dt;
+      if (S0.sea3d) { seaApproach(a, dt, d); return; }   /* 714c */
       if (S0.realm === 'air') { var far = d > 10; a.ring += dt * 0.6; a.ty = IN.hy + 5; go(a, IN.hx + Math.sin(a.ring) * 6, IN.hz + Math.cos(a.ring) * 6, S0.moves[far ? 1 : 0].v, far ? 1 : 0, dt); if (a.followT > 6) toIdle(a, 15); return; }   /* it beats over to her, then circles */
       var nr = S0.near || [3, 5];
       a.standT = 0;
@@ -185,6 +205,7 @@ window.WFR_ANIMALS = (function () {
     function stalk(a, dt) {
       var S0 = a.S, at = atkOf(a), d = hd(a, IN.hx, IN.hz), smv = S0.stalkMv || 0;
       if (!allowed(a)) { toIdle(a, 2); R.cancels++; return; }
+      if (S0.sea3d) { seaStalk(a, dt, at, d); return; }   /* 714c */
       if (d > S0.sense * 2.2 || a.st > 16) { toIdle(a, 6); return; }
       if (at.fruit && !IN.fruit) { a.atk = 0; at = atkOf(a); }   /* nothing in her beak: the simple attack */
       if (S0.realm === 'air') {   /* the gull: to a point above and behind her, then it waits its turn circling */
@@ -201,7 +222,7 @@ window.WFR_ANIMALS = (function () {
       if (canWarn(a, at)) startWarn(a);
       else a.rear = Math.min(0.4, a.rear + dt);   /* in reach, waiting its turn: coiled */
     }
-    function canWarn(a, at) { return a.atkCd <= 0 && tokenFree(a) && capOK(R.t + warnLen(at) + at.fly) && (R.plant === 'nograce' || R.t >= R.grace); }   /* plant 'nograce': the control for the grace after a hurt */
+    function canWarn(a, at) { return reachable(a) && a.atkCd <= 0 && tokenFree(a) && capOK(R.t + warnLen(at) + at.fly) && (R.plant === 'nograce' || R.t >= R.grace); }   /* plant 'nograce': the control for the grace after a hurt */
     function active(a) {   /* real habits: boas and land crabs by night (crabs in the rain too), mongooses by day; the rest both. Plant 'nohabit': all, always */
       var h = a.S.act; if (R.plant === 'nohabit' || !h || h === 'both') return true; if (a.S.rainOut && IN.rain) return true; return h === 'night' ? IN.night : !IN.night;
     }
@@ -213,27 +234,34 @@ window.WFR_ANIMALS = (function () {
     }
     function atkOf(a) { return a.S.attacks ? a.S.attacks[a.atk < 0 ? 0 : a.atk] : BUMP; }   /* BUMP: only a planted passive one ever uses it */
     function lockNow(a) {   /* the aim stops following her: the strike's landing point is fixed (never further than its reach) */
-      var at = atkOf(a); a.locked = true; a.aim[0] = targetX(a); a.aim[1] = targetY(a); a.aim[2] = targetZ(a);
-      var dx = a.aim[0] - a.x, dy = at.air ? a.aim[1] - a.y : 0, dz = a.aim[2] - a.z, L = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1, r = Math.min(at.reach, L);
-      a.cpt[0] = a.x + dx / L * r; a.cpt[1] = at.air ? a.y + dy / L * r : ground(a.x + dx / L * r, a.z + dz / L * r); a.cpt[2] = a.z + dz / L * r;
-      a.from[0] = a.x; a.from[1] = a.y; a.from[2] = a.z; a.dir = Math.atan2(dx, dz); a.reachL = r;
+      var at = atkOf(a), lt = leadT(a, at); a.locked = true; a.aim[0] = targetX(a) + IN.vx * lt; a.aim[1] = targetY(a) + IN.vy * lt; a.aim[2] = targetZ(a) + IN.vz * lt;
+      var d3 = at.air || at.sea, dx = a.aim[0] - a.x, dy = d3 ? a.aim[1] - a.y : 0, dz = a.aim[2] - a.z, L = Math.sqrt(dx * dx + dy * dy + dz * dz) || 1, r = at.sea ? L : Math.min(at.reach, L);   /* 714c: a sea lock fixes her lead point; its reach applies at the strike's start (seaRebase) */
+      if (at.sea && R.plant !== 'noclamp') { var q; for (q = 0; q < 6 && r > 0.2 && !okAt(a.sp, a.x + dx / L * r, a.z + dz / L * r); q++) r *= 0.75; }   /* 714c: a sea strike ends in its own water (the shark never runs into the shallows; plant 'noclamp': it may) */
+      a.cpt[0] = a.x + dx / L * r; a.cpt[1] = d3 ? a.y + dy / L * r : ground(a.x + dx / L * r, a.z + dz / L * r); a.cpt[2] = a.z + dz / L * r;
+      if (at.sea) a.cpt[1] = clamp(a.cpt[1], ground(a.cpt[0], a.cpt[2]) + 0.2, WATER - 0.15);
+      a.from[0] = a.x; a.from[1] = a.y; a.from[2] = a.z; a.dir = Math.atan2(dx, dz); a.reachL = at.sea ? Math.sqrt((a.cpt[0] - a.x) * (a.cpt[0] - a.x) + (a.cpt[1] - a.y) * (a.cpt[1] - a.y) + (a.cpt[2] - a.z) * (a.cpt[2] - a.z)) : r;
+      if (at.sea) ev('lock', a, r);   /* 714c: the flash: its aim is fixed now (a Stroke from here takes her clear) */
     }
+    function leadT(a, at) { return at.lead && R.plant !== 'nolead' ? Math.max(0, a.arrive - R.t) : 0; }   /* 714c: a sea strike aims where she will be at contact if she holds her course (plant 'nolead': it aims where she is) */
     function track(a, dt) {   /* the aim follows her until it locks */
-      var at = atkOf(a);
+      var at = atkOf(a), lt = leadT(a, at);
       if (a.locked) return;
-      a.aim[0] += (targetX(a) - a.aim[0]) * Math.min(1, dt * 10); a.aim[1] += (targetY(a) - a.aim[1]) * Math.min(1, dt * 10); a.aim[2] += (targetZ(a) - a.aim[2]) * Math.min(1, dt * 10);
+      a.aim[0] += (targetX(a) + IN.vx * lt - a.aim[0]) * Math.min(1, dt * 10); a.aim[1] += (targetY(a) + IN.vy * lt - a.aim[1]) * Math.min(1, dt * 10); a.aim[2] += (targetZ(a) + IN.vz * lt - a.aim[2]) * Math.min(1, dt * 10);
       if (R.t >= a.arrive - at.lock) lockNow(a);
     }
     function warn(a, dt) {
       if (!allowed(a)) { cancel(a); return; }   /* she may hop in its warning: a land strike then lands under her (clearOf) */
+      if (a.S.sea3d && !IN.swim) { cancel(a); return; }   /* 714c: she left the water in its warning */
       track(a, dt); if (!a.locked) face(a, a.aim[0], a.aim[2], dt, a.S.turn * 3);
-      a.rear = Math.min(1, a.rear + dt / Math.max(0.2, a.warnLen * 0.6)); a.vT = 0; stepMove(a, dt, 0);
+      a.rear = Math.min(1, a.rear + dt / Math.max(0.2, a.warnLen * 0.6));
+      if (a.S.sea3d) seaKeep(a, dt); else { a.vT = 0; stepMove(a, dt, 0); }   /* 714c: a sea animal keeps its distance from her as she swims (else every swimmer outruns every warning) */
       if (a.S.realm === 'air') a.ty = a.y;   /* the gull hangs, screaming */
-      if (a.st >= a.warnLen) { if (!a.locked) lockNow(a); setState(a, 'strike'); ev('strike', a); a.ext = 0; R.strikes++; }
+      if (a.st >= a.warnLen) { if (!a.locked) lockNow(a); if (a.S.sea3d) seaRebase(a); setState(a, 'strike'); ev('strike', a); a.ext = 0; R.strikes++; }
     }
     function clearOf(a) {   /* the one judge of a dodge: her distance from where the strike lands (a land strike also misses her in the air) */
-      var at = atkOf(a), dx = IN.hx - a.cpt[0], dz = IN.hz - a.cpt[2], dy = at.air ? IN.hy - a.cpt[1] : 0;
+      var at = atkOf(a), dx = IN.hx - a.cpt[0], dz = IN.hz - a.cpt[2], dy = at.air || at.sea ? IN.hy - a.cpt[1] : 0;
       if (R.plant === 'nododge') return false;   /* plant 'nododge': the control for the sidestep */
+      if (!reachable(a)) return true;   /* out of its element: a land strike misses her in the air, any strike but a sea one misses her under the water, a sea one misses her out of it */
       if (!at.air && IN.up > FAIR.UP_MAX) return true;
       return Math.sqrt(dx * dx + dy * dy + dz * dz) >= at.hitR;
     }
@@ -244,18 +272,32 @@ window.WFR_ANIMALS = (function () {
       var u = clamp(a.st / at.fly, 0, 1), e = u * u, neck = S0.neck || 0, body = Math.max(0, a.reachL - neck), kN = neck > 0 ? Math.min(1, a.reachL / neck) : 0;
       if (a.locked) {   /* the body travels its share; the boa's neck (the kit) the rest */
         var L = a.reachL || 1, ux = (a.cpt[0] - a.from[0]) / L, uy = (a.cpt[1] - a.from[1]) / L, uz = (a.cpt[2] - a.from[2]) / L;
-        a.x = a.from[0] + ux * body * e; a.z = a.from[2] + uz * body * e;
-        if (S0.realm === 'air') { a.y = a.from[1] + uy * body * e; a.ty = a.y; } else a.y = ground(a.x, a.z);
-        a.ext = kN * e; a.used.mv[S0.stalkMv || 0] += dt; a.mv = S0.stalkMv || 0;
+        var nx0 = a.from[0] + ux * body * e, nz0 = a.from[2] + uz * body * e; if (!S0.sea3d || R.plant === 'noclamp' || okAt(a.sp, nx0, nz0)) { a.x = nx0; a.z = nz0; }   /* 714c: a sea strike's path stays in its own water (else it stops at its edge; plant 'noclamp': it may leave) */
+        if (S0.realm === 'air' || S0.sea3d) { a.y = a.from[1] + uy * body * e; a.ty = a.y; } else a.y = ground(a.x, a.z);
+        var smv = S0.strikeMv != null ? S0.strikeMv : S0.stalkMv || 0; a.ext = kN * e; a.used.mv[smv] += dt; a.mv = smv;   /* 714c: a sea strike is its quick move (the dart, the surge) */
         if (a.sp === 'boa') trail(a);
       }
-      if (!a.arrived && R.t >= a.arrive) { a.arrived = true; ev('contact', a);
-        if (clearOf(a)) { R.dodges++; ev('dodge', a); after(a); return; } }   /* a clean sidestep needs no window */
+      if (!a.arrived && R.t >= a.arrive) { a.arrived = true; ev('contact', a); if (a.force === a.atk) a.force = -1;
+        if (clearOf(a)) { R.dodges++; ev('dodge', a); dodged(a); return; }   /* a clean sidestep needs no window */
+        if (at.sea) { R.hurts++; R.grace = R.t + FAIR.GRACE; a.dodged = 0; ev('hurt', a); after(a); return; } }   /* 714c: under the water there is no parry (her attack button is gone), so a sea strike is judged at its contact */
       if (a.arrived && R.t - IN.lag >= a.arrive + FAIR.GOOD) {
-        if (clearOf(a)) { R.dodges++; ev('dodge', a); after(a); return; }
+        if (clearOf(a)) { R.dodges++; ev('dodge', a); dodged(a); return; }
         if (at.fruit && IN.fruit) { R.steals++; R.grace = R.t + FAIR.GRACE; a.carry = true; ev('steal', a); release(a); a.mark = 0; a.driven = false; setState(a, 'flee'); ev('flee', a); return; }
-        R.hurts++; R.grace = R.t + FAIR.GRACE; ev('hurt', a); after(a);
+        R.hurts++; R.grace = R.t + FAIR.GRACE; a.dodged = 0; ev('hurt', a); after(a);
       }
+    }
+    function dodged(a) {   /* 714c: give = clean dodges in a row before it gives up (driven off: drive() pays a threat's XP); every other animal just recovers */
+      a.dodged++; if (a.S.give && a.dodged >= a.S.give && R.plant !== 'nogive') { a.dodged = 0; drive(a); return; }
+      after(a);
+    }
+    function seaRebase(a) {   /* 714c: the strike starts where it is now (it kept pace with her after the lock), toward the point fixed at the lock */
+      a.from[0] = a.x; a.from[1] = a.y; a.from[2] = a.z; var dx = a.cpt[0] - a.x, dy = a.cpt[1] - a.y, dz = a.cpt[2] - a.z, L = Math.sqrt(dx * dx + dy * dy + dz * dz), rc = atkOf(a).reach;
+      if (L > rc && L > 0) { a.cpt[0] = a.x + dx / L * rc; a.cpt[1] = a.y + dy / L * rc; a.cpt[2] = a.z + dz / L * rc; L = rc; }   /* out of its reach now: the strike falls short */
+      a.reachL = L; if (dx || dz) a.dir = Math.atan2(dx, dz);
+    }
+    function seaKeep(a, dt) {   /* 714c: in its warning a sea animal holds its distance (its attack's from x 0.8) as she swims, facing her, its depth hers */
+      var S0 = a.S, at = atkOf(a), d = hd(a, IN.hx, IN.hz), sp = Math.sqrt(IN.vx * IN.vx + IN.vz * IN.vz), k = at.from * 0.8;
+      a.ty = IN.hy; a.vT = d > k ? clamp(sp + (d - k) * 2.5, 0, S0.moves[1].v) : 0; stepMove(a, dt, a.vT > S0.moves[0].v * 1.5 ? 1 : 0);
     }
     function after(a) { release(a); a.atkCd = (a.S.cd || 3) + (a.S.recover || 1.2); a.locked = false; a.mark = 0; setState(a, 'recover'); }
     function recover(a, dt) {
@@ -278,8 +320,9 @@ window.WFR_ANIMALS = (function () {
       if (a.state !== 'warn' && a.state !== 'strike' && a.state !== 'recover' && a.state !== 'stalk') a.rear = Math.max(0, a.rear - dt * 2);
       if (a.state !== 'strike' && a.state !== 'recover') a.ext = Math.max(0, a.ext - dt * 3);
       switch (a.state) {
-        case 'idle': idle(a, dt); if (a.cd <= 0 && d < sense && (a.temper < T.sometimes || reachable(a) || a.S.realm === 'air')) notice(a); break;
-        case 'notice': face(a, IN.hx, IN.hz, dt, S0.turn * 2); a.vT = 0; stepMove(a, dt, 0); if (S0.realm === 'air') { a.ty = a.y; go(a, IN.hx, IN.hz, S0.moves[0].v, 0, dt); }
+        case 'idle': if (S0.sea3d) seaIdle(a, dt); else idle(a, dt);
+          if (a.cd <= 0 && d < sense && (S0.sea3d ? (S0.low ? IN.lowSea : IN.swim) : (a.temper < T.sometimes || reachable(a) || a.S.realm === 'air'))) notice(a); break;   /* 714c: a dolphin notices her in the sea or low over it; a sea hunter only while she swims */
+        case 'notice': if (!S0.escort) face(a, IN.hx, IN.hz, dt, S0.turn * 2); if (S0.sea3d) stepMove(a, dt, a.mv);   /* 714c: a dolphin riding a bow keeps its heading as it notices her */ else { a.vT = 0; stepMove(a, dt, 0); } if (S0.realm === 'air') { a.ty = a.y; go(a, IN.hx, IN.hz, S0.moves[0].v, 0, dt); }
           if (a.sp === 'crab') a.rear = Math.min(1, a.rear + dt * 3);
           if (a.st >= S0.noticeT) { a.mark = 0; decide(a); } break;
         case 'flee': flee(a, dt); break;
@@ -290,13 +333,15 @@ window.WFR_ANIMALS = (function () {
         case 'recover': recover(a, dt); break;
         default: toIdle(a, 0);
       }
-      setY(a, dt);
+      if (S0.sea3d) seaY(a, dt); else setY(a, dt);
       if (a.sp === 'crab') a.yaw = a.state === 'warn' || a.state === 'strike' || a.v < 0.05 && (a.state === 'stalk' || a.state === 'recover') ? a.dir : wrap(a.dir + (a.side > 0 ? 1 : -1) * Math.PI / 2);   /* a crab always moves sideways; it turns its claws to her only standing to strike */
       else a.yaw = a.sp === 'boa' ? (a.head == null ? a.dir : a.head) : a.dir;
     }
     function wake() {   /* awake within 60 m, asleep past 80 m, and never more than the six nearest */
       var n = A.length, j, m, best, bd, want = 0;
-      for (j = 0; j < n; j++) { var a = A[j], d = hd(a, IN.hx, IN.hz); a.dist = d; a.want = (d < FAIR.WAKE || (a.awake && d < FAIR.SLEEP)) && !(a.S.hide && !active(a)); a.pick = false;   /* a crab out of its hours is down its burrow */ if (a.want) want++; }
+      for (j = 0; j < n; j++) if (!A[j].awake && A[j].S.escort) escortSleep(A[j]);   /* 714c: a sleeping pod keeps up with its boat, unseen */
+      for (j = 0; j < n; j++) { var a = A[j], d = hd(a, IN.hx, IN.hz); a.dist = d; a.want = (d < FAIR.WAKE || (a.awake && d < FAIR.SLEEP)) && !(a.S.hide && !active(a))
+          && !(a.S.onlyDive && !IN.swim && R.plant !== 'nodiveonly'); a.pick = false;   /* 714c: the barracuda is there only while she dives (plant 'nodiveonly': always) */   /* a crab out of its hours is down its burrow */ if (a.want) want++; }
       if (R.plant === 'nosleep') { for (j = 0; j < n; j++) A[j].pick = true; }   /* plant 'nosleep': the control for the six */
       else for (m = 0; m < FAIR.MAX_AWAKE && m < want; m++) { best = -1; bd = 1e18; for (j = 0; j < n; j++) if (A[j].want && !A[j].pick && A[j].dist < bd) { bd = A[j].dist; best = j; } if (best >= 0) A[best].pick = true; }
       var c = 0;
@@ -325,6 +370,95 @@ window.WFR_ANIMALS = (function () {
       release(a); a.locked = false; a.mark = 0; a.driven = true; a.mean = false; a.dizzy = xp ? FAIR.DIZZY : 0; a.cd = FAIR.DRIVEN_CD; setState(a, 'flee');
       R.driven++; R.xp += xp; var e = ev('driven', a); if (e) e.xp = xp; return xp;
     }
+    /* ---- 714c THE SEA: the dolphins' boats, the sea's idle, its approach, its hunt, its depth (nothing here allocates) ---- */
+    function boatOf(a) {   /* its pod's boat while shown (pods: the first three ride boat 0, the next two boat 1). Plant 'noescort': none */
+      if (R.plant === 'noescort' || a.boat < 0 || a.boat >= BT.length) return null; var b = BT[a.boat]; return b.on ? b : null; }
+    function station(a, b) {   /* where it rides: in the bow wave while the boat sails (staggered ahead and to each side); a slow ring round it while it waits */
+      var fx = Math.sin(b.yaw), fz = Math.cos(b.yaw), k3 = a.slot % 3, sd = a.slot % 2 ? 1 : -1;
+      if (b.v > 0.8) { var al = b.bow + 1.2 + k3 * 1.6, lat = sd * (1.1 + k3 * 0.8); a.sx = b.x + fx * al + fz * lat; a.sz = b.z + fz * al - fx * lat; return; }
+      var rr = 9 + k3 * 2.5, th = R.t * 0.12 * sd + a.slot * 2.1; a.sx = b.x + Math.sin(th) * rr; a.sz = b.z + Math.cos(th) * rr;
+    }
+    function escortSleep(a) {   /* asleep (hidden) and far from her: it is where its pod would be, so a boat she meets has its dolphins */
+      var b = boatOf(a); if (!b || hd(a, IN.hx, IN.hz) <= FAIR.SLEEP) return;
+      station(a, b); if (!okAt(a.sp, a.sx, a.sz)) return;
+      a.x = a.sx; a.z = a.sz; a.hx = a.sx; a.hz = a.sz; a.y = WATER - a.S.cruiseD; a.ty = a.y; a.dir = b.yaw; a.air = false; a.lp = 0;
+    }
+    function escort(a, b, dt) {   /* awake: it rides its boat; it porpoises (its leap) when it must hurry, cruises round it while it waits */
+      var S0 = a.S, fx = Math.sin(b.yaw), fz = Math.cos(b.yaw); station(a, b);
+      var ex = a.sx - a.x, ez = a.sz - a.z, e = ex * fx + ez * fz, lat = Math.abs(ex * fz - ez * fx), v, mv;
+      a.hx = b.x; a.hz = b.z;
+      if (b.v > 0.8) { v = clamp(b.v + e * 0.9 + lat * 0.3, 0.5, S0.moves[1].v * 1.15); mv = Math.abs(e) < 3 && lat < 3 ? 2 : v > S0.moves[0].v * 1.4 ? 1 : 0; go(a, a.sx + fx * 3, a.sz + fz * 3, v, mv, dt); }   /* on its station: the bow-ride; behind it: it porpoises to catch up */
+      else { var dd = Math.sqrt(ex * ex + ez * ez); v = clamp(dd * 0.6, S0.moves[0].v * 0.6, S0.moves[1].v); mv = v > S0.moves[0].v * 1.4 ? 1 : 0; go(a, a.sx, a.sz, v, mv, dt); }
+      a.hurry = Math.abs(e) > 3 || lat > 3;
+      if (!a.air) a.ty = WATER - (mv === 1 ? 0.7 : S0.cruiseD);
+    }
+    function seaIdle(a, dt) {
+      var S0 = a.S;
+      if (S0.escort) { var b = boatOf(a); if (b) { escort(a, b, dt); return; } }
+      if (a.wT <= 0) { wanderTo(a); a.wT = S0.hang ? 5 + rand() * 7 : 6 + rand() * 8; a.zip = !!S0.hang && rand() < 0.45; a.rest = false; }   /* the barracuda: now and then a dart to its next hanging place */
+      a.wT -= dt;
+      var dw = hd(a, a.wx, a.wz);
+      if (S0.hang) {   /* it hangs still over the reef (a slow scull of its fins), then darts */
+        if (a.zip && dw > 0.6) { go(a, a.wx, a.wz, S0.moves[1].v * 0.6, 1, dt); if (dw < 1.5) a.zip = false; }
+        else { face(a, a.wx, a.wz, dt, 0.4); a.vT = dw > 0.4 ? S0.moves[0].v : 0; stepMove(a, dt, 0); }
+        a.ty = WATER - 1.3 - 0.5 * Math.sin(a.i * 1.7); return; }
+      if (S0.bed) a.ty = ground(a.x, a.z) + S0.bed;   /* the shark patrols low over the bottom */
+      else { a.plT -= dt; if (a.plT < 0) a.plT = 20 + rand() * 15; a.ty = a.plT < 3 ? WATER - 0.35 : WATER - S0.cruiseD; }   /* a lone dolphin cruises, and comes up to breathe */
+      if (dw < 1) a.wT = Math.min(a.wT, 0.3);
+      go(a, a.wx, a.wz, S0.moves[0].v, 0, dt);
+    }
+    function seaApproach(a, dt, d) {   /* curious: the dolphin swims alongside her (it leaps when she flies low); the barracuda shadows a swimmer at 3-5 m */
+      var S0 = a.S, sp = Math.sqrt(IN.vx * IN.vx + IN.vz * IN.vz);
+      if (S0.escort) {
+        var fx = sp > 1 ? IN.vx / sp : (IN.hx - a.x) / (d || 1), fz = sp > 1 ? IN.vz / sp : (IN.hz - a.z) / (d || 1), sd = a.slot % 2 ? 1 : -1, lat = sd * (2.6 + (a.slot % 3) * 1.1);
+        var tx = IN.hx + fx * 1.2 + fz * lat, tz = IN.hz + fz * 1.2 - fx * lat, e = (tx - a.x) * fx + (tz - a.z) * fz, dd = hd(a, tx, tz);
+        var v = clamp(sp + e * 1.0 + dd * 0.3, S0.moves[0].v * 0.5, S0.moves[1].v * 1.15);
+        a.show = !IN.swim && IN.up > 0.5 && d < 10 && R.plant !== 'noleap';   /* beside her as she FLIES low over the sea (never for her on a deck): it leaps (plant 'noleap': never) */
+        go(a, tx + fx * 3, tz + fz * 3, v, a.show ? 1 : v > S0.moves[0].v * 1.4 ? 2 : 0, dt);   /* alongside her it swims fast under the surface; it leaps only for the show */
+        if (!a.air) a.ty = IN.swim ? clamp(IN.hy, ground(a.x, a.z) + 0.6, WATER - 0.6) : WATER - 0.8;
+        if (a.followT > (S0.follow || 12) || d > S0.sense * 2 || (!IN.lowSea && a.followT > 1.5)) toIdle(a, 20);
+        return; }
+      var dy = IN.hy - a.y, d3 = Math.sqrt(d * d + dy * dy), nr = S0.near;
+      a.ty = IN.hy;
+      if (d3 > nr[1] + 2) go(a, IN.hx, IN.hz, S0.moves[1].v, 1, dt);   /* left behind: a dart to catch up */
+      else if (d3 < nr[0]) go(a, IN.hx, IN.hz, S0.moves[0].v * 3, 0, dt, true);   /* too near: it backs off */
+      else { face(a, IN.hx, IN.hz, dt, S0.turn); a.vT = clamp(sp, 0, S0.moves[1].v); stepMove(a, dt, a.vT > S0.moves[0].v * 1.5 ? 1 : 0); }   /* at her side, keeping her pace */
+      if (a.followT > (S0.follow || 12) || !IN.swim || d > S0.sense * 2) toIdle(a, 20);
+    }
+    function seaStalk(a, dt, at, d) {   /* the hunt under the water: the shark circles her, closing (its heavy holds wide, then runs in); the barracuda darts to its range */
+      var S0 = a.S, dy = IN.hy - a.y, d3 = Math.sqrt(d * d + dy * dy), sp = Math.sqrt(IN.vx * IN.vx + IN.vz * IN.vz);
+      if (!IN.swim) { toIdle(a, 3); return; }   /* she left the water */
+      if (d > S0.sense * 2.2 || a.st > 20) { toIdle(a, 6); return; }
+      a.ty = IN.hy;
+      if (S0.ringR) {
+        if (a.st <= dt + 1e-9) a.ring = Math.atan2(a.x - IN.hx, a.z - IN.hz);   /* the circle starts where it is */
+        var want = at.heavy ? at.from * 0.9 : Math.max(at.from * 0.85, S0.ringR - a.st * 1.5), circ = 2.4 + sp;
+        a.ring += dt * circ / Math.max(2, want) * a.side;
+        var cx = IN.hx + Math.sin(a.ring) * want, cz = IN.hz + Math.cos(a.ring) * want, far = d3 > want + 3;
+        if (sp > 4 && far) go(a, IN.hx + IN.vx * 0.5, IN.hz + IN.vz * 0.5, S0.moves[1].v, 1, dt);   /* she swims away fast: it chases from behind (a real shark's run), never orbiting a moving swimmer */
+        else go(a, cx, cz, far ? S0.moves[1].v : Math.min(S0.moves[1].v, circ), far ? 1 : 0, dt);
+        if (a.st > 2.0 && d3 <= at.from + 0.4 && canWarn(a, at)) startWarn(a);
+        return; }
+      if (d3 > at.from) { go(a, IN.hx, IN.hz, clamp(sp + 4, 0, S0.moves[1].v), 1, dt); return; }   /* the barracuda darts in */
+      face(a, IN.hx, IN.hz, dt, S0.turn * 2); a.vT = clamp(sp, 0, S0.moves[1].v); stepMove(a, dt, a.vT > S0.moves[0].v * 1.5 ? 1 : 0);
+      if (canWarn(a, at)) startWarn(a);
+    }
+    function seaY(a, dt) {   /* its depth: toward a.ty between its bed and the surface; a dolphin's leaps (porpoising when it hurries, a show beside her) */
+      var S0 = a.S, g = ground(a.x, a.z), rad = S0.rad || 0.2, lo = g + rad + 0.25, hi = Math.max(lo, WATER - 0.3 - rad), y0 = a.y;
+      if (S0.escort) {
+        var leaping = (a.mv === 1 || a.mv === 2) && a.v > S0.moves[0].v * 1.2 && R.plant !== 'noleap';
+        if (leaping || a.air || a.lp > 0) {
+          a.lp += a.v * dt / (a.show ? S0.leapL * 0.8 : S0.leapL);
+          if (a.lp >= 1) { a.lp = leaping ? a.lp - 1 : 0; a.lpOn = a.show || R.plant === 'leapall' || rand() < (a.mv === 1 ? 0.6 : 0.4); }   /* each cycle a leap or a surf just under the surface: porpoising 60%, bow-riding 40% (airborne ~20% of the time) (plant 'leapall': every cycle) */
+          var f = a.lp, H0 = a.show ? S0.leapH * 1.7 : S0.leapH;
+          if (f < 0.55 || !a.lpOn) { if (a.air) { a.air = false; ev('splash', a, 1); } a.y = Math.max(lo, WATER - 0.25 - 0.65 * Math.sin(Math.PI * Math.min(1, f / 0.55))); }
+          else { var u = (f - 0.55) / 0.45; if (!a.air) { a.air = true; ev('splash', a, 0); } a.y = WATER - 0.25 + (H0 + 0.25) * 4 * u * (1 - u); }
+          if (a.lp > 0) { var vy0 = dt > 0 ? (a.y - y0) / dt : 0; a.pitch3 += (-Math.atan2(vy0, Math.max(0.8, a.v)) - a.pitch3) * Math.min(1, dt * 10); return; }
+        }
+      }
+      a.y += clamp(a.ty - a.y, -2.5 * dt, 2.5 * dt); a.y = clamp(a.y, lo, hi);
+      var vy = dt > 0 ? (a.y - y0) / dt : 0; a.pitch3 += (-Math.atan2(vy, Math.max(0.8, a.v)) - a.pitch3) * Math.min(1, dt * 8);
+    }
     function tick(dt, inp) {
       dt = dt > 0 ? (dt < 0.1 ? dt : 0.1) : 0;
       EV.length = 0;
@@ -332,6 +466,11 @@ window.WFR_ANIMALS = (function () {
       IN.hx = num(inp.hx, -1e6, 1e6); IN.hy = num(inp.hy, -1e6, 1e6); IN.hz = num(inp.hz, -1e6, 1e6); IN.up = num(inp.up, 0, 1e6);
       IN.chick = !!inp.chick; IN.cx = num(inp.cx, -1e6, 1e6); IN.cy = num(inp.cy, -1e6, 1e6); IN.cz = num(inp.cz, -1e6, 1e6);
       IN.safe = inp.safe !== false; IN.night = !!inp.night; IN.rain = !!inp.rain; IN.attack = !!inp.attack; IN.lag = num(inp.lag, 0, FAIR.LAG_MAX); IN.fruit = !!inp.fruit;
+      IN.swim = !!inp.swim; IN.vx = num(inp.vx, -60, 60); IN.vy = num(inp.vy, -60, 60); IN.vz = num(inp.vz, -60, 60);   /* 714c */
+      var nb = inp.boats && inp.boats.length > 0 ? Math.min(inp.boats.length, BT.length) : 0, q2;
+      for (q2 = 0; q2 < BT.length; q2++) { var bi = q2 < nb ? inp.boats[q2] : null, bo = BT[q2]; bo.on = !!(bi && bi.on);
+        if (bo.on) { bo.x = num(bi.x, -1e6, 1e6); bo.z = num(bi.z, -1e6, 1e6); bo.yaw = num(bi.yaw, -1e3, 1e3); bo.v = num(bi.v, 0, 60); bo.bow = num(bi.bow, 0, 40); } }
+      IN.lowSea = IN.swim || (IN.hy - WATER < FAIR.LOW && ground(IN.hx, IN.hz) < WATER - 1);
       R.t += dt;
       wake();
       if (IN.attack) judgeTap();
@@ -343,13 +482,18 @@ window.WFR_ANIMALS = (function () {
     /* WORLD-TICK END */
 
     function newAnimal(sp, x, z) {
-      var S0 = SP[sp]; if (!S0) throw new Error('no species ' + sp);
+      var S0 = SP[sp] || SEA[sp]; if (!S0) throw new Error('no species ' + sp);
       var a = { i: A.length, sp: sp, S: S0, temper: S0.temper, realm: S0.realm, hx: x, hz: z, x: x, y: 0, z: z, ty: 0, dir: rand() * TAU, head: null, yaw: 0, v: 0, vT: 0, mv: 0, k: 0, weave: rand() * TAU,
         state: 'asleep', st: 0, cd: 1, atkCd: 0, atk: -1, warnLen: 0, arrive: 0, locked: false, arrived: false, tapped: false, aim: [0, 0, 0], cpt: [0, 0, 0], from: [0, 0, 0], reachL: 0, tgtChick: false,
         ext: 0, rear: 0, stand: 0, standT: 0, dive: 0, fold: 0, ring: rand() * TAU, pl: 0, plS: 0, plT: 6 + rand() * 10, mark: 0, awake: false, pick: false, want: false, dist: 1e9, wx: x, wz: z, wT: 0, rest: false,
-        mean: false, driven: false, dizzy: 0, carry: false, zip: false, since: 0, doze: false, curl: 0, jaw: 0, followT: 0, blocked: 0, side: rand() < 0.5 ? 1 : -1, used: { mv: [0, 0], atk: [0, 0] }, tr: null, tH: 0, tN: 0 };
+        mean: false, driven: false, dizzy: 0, carry: false, zip: false, since: 0, doze: false, curl: 0, jaw: 0, followT: 0, blocked: 0, side: rand() < 0.5 ? 1 : -1, used: { mv: [0, 0, 0], atk: [0, 0] }, tr: null, tH: 0, tN: 0 };
       if (sp === 'boa') { a.tr = new Float32Array(48 * 3); }
       a.y = S0.realm === 'land' ? ground(x, z) : S0.realm === 'water' ? WATER - 0.1 : WATER + S0.alt; a.ty = a.y;
+      a.dodged = 0; a.show = false; a.hurry = false; a.force = -1;
+      if (S0.sea3d) {   /* 714c: its slot among its kind (the pod's places round the bow), its pod's boat, its depth */
+        var nS = 0, j3, acc = 0; for (j3 = 0; j3 < A.length; j3++) if (A[j3].sp === sp) nS++;
+        a.slot = nS; a.boat = -1; if (S0.pods) for (j3 = 0; j3 < S0.pods.length; j3++) { acc += S0.pods[j3]; if (nS < acc) { a.boat = j3; break; } }
+        a.pitch3 = 0; a.air = false; a.lp = 0; a.lpOn = false; a.sx = x; a.sz = z; a.y = Math.max(ground(x, z) + (S0.rad || 0.2) + 0.25, WATER - (S0.cruiseD || 1.3)); a.ty = a.y; }
       if (a.tr) { var j, bx = -Math.sin(a.dir), bz = -Math.cos(a.dir); for (j = 0; j < 40; j++) { var px = x + bx * j * 0.1 + Math.sin(j * 0.35) * 0.18 * Math.cos(a.dir), pz = z + bz * j * 0.1 - Math.sin(j * 0.35) * 0.18 * Math.sin(a.dir);
         var q = ((40 - j) % 48) * 3; a.tr[q] = px; a.tr[q + 1] = ground(px, pz); a.tr[q + 2] = pz; } a.tH = 40 % 48; a.tN = 41; a.tr[a.tH * 3] = x; a.tr[a.tH * 3 + 1] = a.y; a.tr[a.tH * 3 + 2] = z; }   /* a resting S behind the head */
       A.push(a); return a.i;
@@ -366,19 +510,20 @@ window.WFR_ANIMALS = (function () {
       try { if (a.temper >= T.sometimes || (a.state === 'warn' || a.state === 'strike')) drive(a); else { a.cd = 30; setState(a, 'flee'); ev('flee', a); } } finally { R.outside = false; }
       void how; return 1;
     }
-    function put(i, x, z, home) { var a = A[i]; if (!a) return false; if (a.awake) toIdle(a, 0); a.cd = 0; a.atkCd = 0; a.x = x; a.z = z;   /* the bench's placement: a fresh animal */ if (home !== false) { a.hx = x; a.hz = z; } a.wT = 0; a.y = a.S.realm === 'land' ? ground(x, z) : a.y;
+    function put(i, x, z, home) { var a = A[i]; if (!a) return false; if (a.awake) toIdle(a, 0); a.cd = 0; a.atkCd = 0; a.x = x; a.z = z;   /* the bench's placement: a fresh animal */ if (home !== false) { a.hx = x; a.hz = z; } a.wT = 0; a.y = a.S.realm === 'land' ? ground(x, z) : a.y; if (a.S.sea3d) { a.air = false; a.lp = 0; a.y = clamp(a.y, ground(x, z) + 0.45, WATER - 0.5); a.ty = a.y; }
       if (a.tr) { for (var j = 0; j < a.tr.length; j += 3) { a.tr[j] = x; a.tr[j + 1] = a.y; a.tr[j + 2] = z; } a.tN = 1; } return true; }
     function peekA(a) { return { i: a.i, sp: a.sp, temper: a.temper, state: a.state, awake: a.awake, x: +a.x.toFixed(3), y: +a.y.toFixed(3), z: +a.z.toFixed(3), home: [a.hx, a.hz], v: +a.v.toFixed(3), mv: a.mv, move: a.S.moves[a.mv].id,
       atk: a.atk >= 0 ? atkOf(a).id : null, heavy: a.atk >= 0 ? !!atkOf(a).heavy : false, mark: a.mark, warnT: a.state === 'warn' ? +a.st.toFixed(3) : 0, warnLen: a.warnLen,
       arriveIn: a.state === 'warn' || a.state === 'strike' ? +(a.arrive - R.t).toFixed(3) : null, aim: a.aim.slice(), cpt: a.cpt.slice(), tgt: a.tgtChick ? 'chick' : 'her', mean: a.mean, driven: a.driven, dist: +a.dist.toFixed(2),
-      used: { mv: [+a.used.mv[0].toFixed(2), +a.used.mv[1].toFixed(2)], atk: a.used.atk.slice() }, rear: +a.rear.toFixed(3), ext: +a.ext.toFixed(3), stand: +a.stand.toFixed(3), dive: +a.dive.toFixed(3), carry: a.carry, active: activeP(a), doze: a.doze, curl: +a.curl.toFixed(3) }; }
+      used: { mv: [+a.used.mv[0].toFixed(2), +a.used.mv[1].toFixed(2)], atk: a.used.atk.slice() }, rear: +a.rear.toFixed(3), ext: +a.ext.toFixed(3), stand: +a.stand.toFixed(3), dive: +a.dive.toFixed(3), carry: a.carry, active: activeP(a), doze: a.doze, curl: +a.curl.toFixed(3),
+      sea: a.S.sea3d ? { air: a.air, boat: a.boat, slot: a.slot, dodged: a.dodged, show: a.show, pitch: +a.pitch3.toFixed(3), ty: +a.ty.toFixed(3) } : null }; }   /* 714c */
     function activeP(a) { var h = a.S.act; if (R.plant === 'nohabit' || !h || h === 'both') return true; if (a.S.rainOut && IN.rain) return true; return h === 'night' ? IN.night : !IN.night; }
     function peek() {
       var L = []; for (var j = 0; j < A.length; j++) L.push(peekA(A[j]));
       return { ready: true, dead: R.dead, error: API.error, t: +R.t.toFixed(3), plant: R.plant, awake: R.awake, attacker: R.attacker, strikes: R.strikes, warns: R.warns, hurts: R.hurts, steals: R.steals, parries: R.parries,
         perfect: R.perfect, dodges: R.dodges, driven: R.driven, whiffs: R.whiffs, early: R.early, cancels: R.cancels, xp: R.xp, notices: R.notices, mean: R.mean, animals: L };
     }
-    var W = { dead: false, _plant: null, A: A, now: function () { return R.t; }, add: function (sp, x, z) { return newAnimal(sp, x, z); }, step: step, hit: hit, put: put, peek: peek, mean: function (on) { R.mean = !!on; }, water: WATER };
+    var W = { dead: false, _plant: null, A: A, now: function () { return R.t; }, add: function (sp, x, z) { return newAnimal(sp, x, z); }, step: step, hit: hit, put: put, peek: peek, mean: function (on) { R.mean = !!on; }, force: function (i, k) { var a = A[i]; if (!a || !a.S.attacks) return false; a.force = k === 1 ? 1 : k === 0 ? 0 : -1; return true; },   /* the bench: animal i's next attack is k (0 simple, 1 heavy) until it lands (-1: the coin again) */ water: WATER, boats: BT };   /* boats (714c): what the dolphins were told this step */
     return W;
   }
 
@@ -691,18 +836,226 @@ window.WFR_ANIMALS = (function () {
       setR(m, 6, 0.15 * Math.sin(m.ph * 0.5) - 0.2 * fold, 0, 0);
       bonesPose(m);
     }
-    var B = { boa: buildBoa, crab: buildCrab, mongoose: buildMongoose, turtle: buildTurtle, pelican: function () { return buildBird('pelican'); }, gull: function () { return buildBird('gull'); } };
-    var P = { boa: poseBoa, crab: poseCrab, mongoose: poseMongoose, turtle: poseTurtle, pelican: poseBird, gull: poseBird };
+    /* ---------------- 714c THE SEA'S KIT (Trunks, Oct 28): the same flat faces, the same one material ----------------
+       fin3: a flat fin of any outline in any plane (P: corners star-shaped from P[0]; t thick; hint: the side its top faces).
+       loft: a body of revolution along -z from the snout (z0): prof(u) -> [rx, ry, cy] at u = s / L, col(u, up, side) one colour per face. */
+    function fin3(G, P, t, col, bone, hint, col2) {
+      var n = fnorm(P[0], P[1], P[2]), np = P.length, h = (t || 0.008) / 2, cx = 0, cy = 0, cz = 0, T0 = [], B0 = [], k;
+      if (hint && n[0] * hint[0] + n[1] * hint[1] + n[2] * hint[2] < 0) n = [-n[0], -n[1], -n[2]];
+      var oT = { col: col }, oB = { col: col2 || col }, nb = [-n[0], -n[1], -n[2]];
+      for (k = 0; k < np; k++) { T0.push([P[k][0] + n[0] * h, P[k][1] + n[1] * h, P[k][2] + n[2] * h]); B0.push([P[k][0] - n[0] * h, P[k][1] - n[1] * h, P[k][2] - n[2] * h]); cx += P[k][0] / np; cy += P[k][1] / np; cz += P[k][2] / np; }
+      for (k = 1; k < np - 1; k++) { tri(G, T0[0], T0[k], T0[k + 1], oT, bone, 0, 0, 0, n); tri(G, B0[0], B0[k], B0[k + 1], oB, bone, 0, 0, 0, nb); }
+      for (k = 0; k < np; k++) { var a = k, b = (k + 1) % np, out = [(P[a][0] + P[b][0]) / 2 - cx, (P[a][1] + P[b][1]) / 2 - cy, (P[a][2] + P[b][2]) / 2 - cz];
+        tri(G, T0[a], T0[b], B0[b], oB, bone, 0, 0, 0, out); tri(G, T0[a], B0[b], B0[a], oB, bone, 0, 0, 0, out); }
+    }
+    function loft(G, o) {
+      var n = o.rings, sd = o.sides, V = [], i, j, L = o.L;
+      for (i = 0; i <= n; i++) { var u = Math.pow(i / n, o.pw || 1), Pr = o.prof(u);
+        for (j = 0; j <= sd; j++) { var ph = TAU * j / sd; V.push({ p: [Math.sin(ph) * Pr[0], Pr[2] + Math.cos(ph) * Pr[1], o.z0 - u * L], s: u * L }); } }
+      for (i = 0; i < n; i++) { var um = (V[i * (sd + 1)].s + V[(i + 1) * (sd + 1)].s) / 2 / L;
+        for (j = 0; j < sd; j++) { var a = i * (sd + 1) + j, pm = TAU * (j + 0.5) / sd; quad(G, V, a, a + 1, a + sd + 1, a + sd + 2, { col: o.col(um, Math.cos(pm), Math.sin(pm)) }, 0); } }
+      var P0 = o.prof(0), P1 = o.prof(1), tipF = [0, P0[2], o.z0 + (o.nose || 0)], tipB = [0, P1[2], o.z0 - L - (o.tailX || 0)];
+      for (j = 0; j < sd; j++) { var pj = TAU * (j + 0.5) / sd, b0 = n * (sd + 1) + j;
+        tri(G, V[j + 1].p, V[j].p, tipF, { col: o.col(0, Math.cos(pj), Math.sin(pj)) }, 0); tri(G, V[b0].p, V[b0 + 1].p, tipB, { col: o.col(1, Math.cos(pj), Math.sin(pj)) }, 0); }
+    }
+    function swimDone(G, kind, sw, radius) {   /* every vertex keeps its distance from the snout (s): the swim pose bends the body along it */
+      var m = finish(G, [{ name: 'body', p: [0, 0, 0] }, { name: 'tail', p: [0, 0, 0] }, { name: 'jaw', p: [0, 0, 0] }, { name: 'finL', p: [0, 0, 0] }, { name: 'finR', p: [0, 0, 0] }], kind), i;
+      for (i = 0; i < m.count; i++) m.s[i] = sw.z0 - m.rest[i * 3 + 2];
+      m.sw = sw; m.radius = radius; m.curl = 0; m.jaw = 0; return m;
+    }
+    /* THE BOTTLENOSE DOLPHIN (Tursiops truncatus) at 2.6 m: a short beak, the melon (its rounded forehead), a darker cape down the back, grey flanks, a
+       pale belly, the "smile", a falcate dorsal fin, paddle flippers and wide flukes; it swims by beating its flukes UP AND DOWN (a mammal, never side
+       to side), and it breathes through the blowhole on its head */
+    function buildDolphin() {
+      var G = G0(), L = 2.6, z0 = 1.15, top = hex(0x66737f), cape = hex(0x4e5a65), flank = hex(0x8b97a2), belly = hex(0xdce1e5), beakC = hex(0x5a6672), dark = hex(0x343c44);
+      loft(G, { L: L, z0: z0, rings: 22, sides: 10, nose: 0.012, tailX: 0.02,
+        prof: function (u) { var t, e;
+          if (u < 0.065) { t = u / 0.065; return [0.028 + 0.03 * t, (0.028 + 0.03 * t) * 0.8, -0.04]; }
+          if (u < 0.17) { t = (u - 0.065) / 0.105; e = t * t * (3 - 2 * t); return [0.058 + 0.15 * e, 0.05 + 0.18 * e, -0.04 + 0.05 * e]; }   /* the melon */
+          if (u < 0.42) { e = Math.sin((u - 0.17) / 0.25 * Math.PI / 2); return [0.208 + 0.052 * e, 0.23 + 0.06 * e, 0.01]; }
+          t = (u - 0.42) / 0.58; return [0.24 * Math.pow(Math.max(0, 1 - t), 1.25) + 0.02, 0.26 * Math.pow(Math.max(0, 1 - t), 0.95) + 0.03, 0.01 + 0.02 * t]; },   /* meets the body's 0.26 / 0.29 without a ridge */
+        col: function (u, up) { if (u < 0.065) return up < -0.3 ? belly : beakC; return up > 0.5 ? (u > 0.14 && u < 0.62 ? cape : top) : up > 0.05 ? mixc(top, flank, 0.6) : up > -0.45 ? flank : belly; } });
+      fin3(G, [[0, 0.27, 0.2], [0, 0.45, 0.02], [0, 0.56, -0.12], [0, 0.42, -0.12], [0, 0.27, -0.18]], 0.03, cape, 0, [1, 0, 0]);   /* the dorsal fin, swept back */
+      [1, -1].forEach(function (sd) { fin3(G, [[0.17 * sd, -0.1, 0.66], [0.38 * sd, -0.22, 0.48], [0.42 * sd, -0.26, 0.36], [0.17 * sd, -0.13, 0.48]], 0.025, top, sd > 0 ? 3 : 4, [0, 1, 0], flank);   /* a flipper */
+        fin3(G, [[0, 0.04, -1.36], [0.1 * sd, 0.04, -1.4], [0.33 * sd, 0.04, -1.55], [0.29 * sd, 0.04, -1.61], [0.1 * sd, 0.04, -1.52], [0, 0.04, -1.5]], 0.022, top, 0, [0, 1, 0], flank);   /* a fluke */
+        eye(G, [0.152 * sd, -0.02, 0.8], 0.016, 0, [0.5 * sd, 0, 0.85]);
+        tube(G, { a: [0.026 * sd, -0.058, 1.12], b: [0.12 * sd, -0.052, 0.86], ra: 0.006, rb: 0.005, sides: 3, col: dark, bone: 0 }); });   /* the smile */
+      ell(G, { c: [0, 0.22, 0.65], r: [0.02, 0.008, 0.013], seg: 5, ring: 3, col: dark, bone: 0 });   /* the blowhole, on top of the head behind the melon */
+      return swimDone(G, 'dolphin', { L: L, z0: z0, vert: true, amp: 0.07, kw: 4.2, f0: 0.35, f1: 0.17, vRef: 6, finX: 0.17, finY: -0.11, jawMax: 0 }, 1.95);
+    }
+    /* THE CARIBBEAN REEF SHARK (Carcharhinus perezi) at 2.2 m: grey above with a clean line to a white belly, five gill slits, a rounded snout over an
+       underslung mouth (its jaw drops on the bite), a tall first dorsal fin, long falcate pectorals (they drop in its hunched warning, a real shark's
+       display), and the heterocercal tail (the upper lobe longer); it swims by sweeping SIDE TO SIDE */
+    function buildShark() {
+      var G = G0(), L = 2.2, z0 = 0.95, grey = hex(0x5d6064), greyD = hex(0x4a4c50), white = hex(0xecebe6), gill = hex(0x34363a), mouth = hex(0x2a2626), dusk = hex(0x3c3e42);
+      loft(G, { L: L, z0: z0, rings: 20, sides: 10, nose: 0.01, tailX: 0.02,
+        prof: function (u) { var t, e;
+          if (u < 0.12) { e = Math.sqrt(u / 0.12); return [0.02 + 0.11 * e, 0.015 + 0.085 * e, 0]; }
+          if (u < 0.4) { e = Math.sin((u - 0.12) / 0.28 * Math.PI / 2); return [0.13 + 0.06 * e, 0.1 + 0.1 * e, 0.01]; }
+          if (u < 0.85) { t = (u - 0.4) / 0.45; return [0.155 * Math.pow(Math.max(0, 1 - t), 1.3) + 0.035, 0.16 * Math.pow(Math.max(0, 1 - t), 1.1) + 0.04, 0.01 + 0.01 * t]; }   /* meets 0.19 / 0.2 without a bulge */
+          t = (u - 0.85) / 0.15; return [0.035 - 0.015 * t, 0.04 - 0.01 * t, 0.02 + 0.015 * t]; },
+        col: function (u, up, side) { if (u > 0.055 && u < 0.1 && up < -0.6) return mouth;
+          return up > 0.55 ? greyD : up > -0.2 ? grey : white; } });
+      fin3(G, [[0, 0.19, 0.24], [0, 0.36, 0.08], [0, 0.48, -0.03], [0, 0.4, -0.05], [0, 0.2, -0.08]], 0.025, greyD, 0, [1, 0, 0]);   /* the first dorsal */
+      fin3(G, [[0, 0.07, -0.67], [0, 0.13, -0.72], [0, 0.12, -0.76], [0, 0.065, -0.77]], 0.012, greyD, 0, [1, 0, 0]);   /* the second dorsal */
+      fin3(G, [[0, -0.05, -0.66], [0, -0.11, -0.71], [0, -0.1, -0.75], [0, -0.045, -0.76]], 0.012, grey, 0, [1, 0, 0]);   /* the anal fin */
+      fin3(G, [[0, 0.03, -1.14], [0, 0.38, -1.42], [0, 0.33, -1.48], [0, 0.06, -1.33]], 0.02, greyD, 0, [1, 0, 0]);   /* the tail's upper lobe */
+      fin3(G, [[0, 0.0, -1.16], [0, -0.22, -1.3], [0, -0.18, -1.34], [0, 0.0, -1.27]], 0.02, grey, 0, [1, 0, 0]);   /* its lower lobe */
+      [1, -1].forEach(function (sd) {
+        fin3(G, [[0.15 * sd, -0.08, 0.4], [0.48 * sd, -0.22, 0.18], [0.55 * sd, -0.26, 0.06], [0.15 * sd, -0.09, 0.26]], 0.02, grey, sd > 0 ? 3 : 4, [0, 1, 0], dusk);   /* a pectoral (dusky beneath) */
+        fin3(G, [[0.07 * sd, -0.1, -0.37], [0.18 * sd, -0.16, -0.48], [0.07 * sd, -0.1, -0.45]], 0.012, grey, 0, [0, 1, 0], dusk);   /* a pelvic */
+        eye(G, [0.105 * sd, 0.03, 0.75], 0.012, 0, [0.6 * sd, 0, 0.8]);
+        for (var gi = 0; gi < 5; gi++) { var gz = 0.5 - gi * 0.03, gx = (0.155 + gi * 0.006) * sd; fin3(G, [[gx, -0.045, gz], [gx, 0.055 - gi * 0.004, gz], [gx, 0.055 - gi * 0.004, gz - 0.007], [gx, -0.045, gz - 0.007]], 0.004, gill, 0, [sd, 0, 0]); } });   /* the five gill slits, thin dark strips */
+      ell(G, { c: [0, -0.052, 0.77], r: [0.058, 0.011, 0.058], seg: 6, ring: 3, col: hex(0xb4545e), bone: 0 });   /* the mouth's inside */
+      ell(G, { c: [0, -0.047, 0.8], r: [0.064, 0.006, 0.046], seg: 6, ring: 2, col: hex(0xf4f1ea), bone: 0 });   /* the teeth's row */
+      ell(G, { c: [0, -0.066, 0.78], r: [0.07, 0.014, 0.068], seg: 6, ring: 3, top: hex(0xd9d5ce), belly: white, bone: 2 });   /* the lower jaw */
+      return swimDone(G, 'shark', { L: L, z0: z0, vert: false, amp: 0.085, kw: 5.0, f0: 0.4, f1: 0.25, vRef: 4, finX: 0.15, finY: -0.085, jawMax: 0.55, hy: -0.055, hz: 0.7, hunch: true }, 1.8);
+    }
+    /* THE GREAT BARRACUDA (Sphyraena barracuda) at 1.3 m: long and slim, a pointed head with the lower jaw jutting past the upper and its fangs, dark
+       grey-green above, silver sides crossed by dark diagonal bars, black blotches near the tail, two dorsal fins far apart, a forked dark tail */
+    function buildBarracuda() {
+      var G = G0(), L = 1.3, z0 = 0.6, back = hex(0x3e4d49), silver = hex(0xc3cacd), white = hex(0xeef1f2), bar = hex(0x2f3a37), spot = hex(0x17191a), finC = hex(0x343c3c), fang = hex(0xf6f4ee);
+      loft(G, { L: L, z0: z0, rings: 22, sides: 8, nose: 0.004, tailX: 0.01,
+        prof: function (u) { var t, e;
+          if (u < 0.17) { e = Math.sqrt(u / 0.17); return [0.008 + 0.052 * e, 0.01 + 0.062 * e, 0.004]; }
+          if (u < 0.62) { e = Math.sin((u - 0.17) / 0.45 * Math.PI); return [0.06 + 0.006 * e, 0.072 + 0.013 * e, 0.004]; }
+          t = (u - 0.62) / 0.38; return [0.048 * Math.pow(Math.max(0, 1 - t), 1.1) + 0.012, 0.056 * Math.pow(Math.max(0, 1 - t), 1.0) + 0.016, 0.004]; },   /* meets 0.06 / 0.072 without a bulge */
+        col: function (u, up, side) { if (up > 0.6) return back;
+          var ri = Math.floor(u * 22 + 1e-6); if (up > 0.1 && ri >= 4 && ri <= 16 && ri % 2 === 0) return bar;   /* a dark bar on every other ring: seven along the body */
+          if (u > 0.6 && up < -0.05 && up > -0.65 && Math.sin(u * 97 + side * 5) > 0.72) return spot;
+          return up > 0.1 ? mixc(back, silver, 0.55) : up > -0.55 ? silver : white; } });
+      fin3(G, [[0, 0.075, 0.2], [0, 0.14, 0.17], [0, 0.12, 0.12], [0, 0.07, 0.1]], 0.008, finC, 0, [1, 0, 0]);   /* the first dorsal (spiny) */
+      fin3(G, [[0, 0.055, -0.28], [0, 0.1, -0.31], [0, 0.09, -0.36], [0, 0.05, -0.37]], 0.008, finC, 0, [1, 0, 0]);   /* the second dorsal */
+      fin3(G, [[0, -0.055, -0.29], [0, -0.095, -0.32], [0, -0.085, -0.37], [0, -0.05, -0.37]], 0.008, silver, 0, [1, 0, 0]);   /* the anal fin */
+      fin3(G, [[0, 0.0, -0.67], [0, 0.03, -0.7], [0, 0.15, -0.82], [0, 0.05, -0.79]], 0.008, finC, 0, [1, 0, 0]);   /* the tail's upper fork */
+      fin3(G, [[0, 0.0, -0.67], [0, -0.03, -0.7], [0, -0.15, -0.82], [0, -0.05, -0.79]], 0.008, finC, 0, [1, 0, 0]);   /* its lower fork */
+      fin3(G, [[0, 0.115, -0.79], [0, 0.152, -0.823], [0, 0.135, -0.81]], 0.009, white, 0, [1, 0, 0]); fin3(G, [[0, -0.115, -0.79], [0, -0.152, -0.823], [0, -0.135, -0.81]], 0.009, white, 0, [1, 0, 0]);   /* its white lobe tips */
+      [1, -1].forEach(function (sd) {
+        fin3(G, [[0.05 * sd, -0.02, 0.36], [0.11 * sd, -0.05, 0.3], [0.05 * sd, -0.03, 0.3]], 0.006, silver, sd > 0 ? 3 : 4, [0, 1, 0]);   /* a pectoral */
+        fin3(G, [[0.04 * sd, -0.07, 0.07], [0.09 * sd, -0.1, 0.02], [0.04 * sd, -0.07, 0.01]], 0.006, silver, 0, [0, 1, 0]);   /* a pelvic */
+        eye(G, [0.04 * sd, 0.022, 0.46], 0.011, 0, [0.6 * sd, 0, 0.8]);
+        tube(G, { a: [0.006 * sd, 0.0, 0.58], b: [0.006 * sd, -0.022, 0.585], ra: 0.003, rb: 0.001, sides: 3, col: fang, bone: 0 }); });   /* the upper fangs */
+      tube(G, { a: [0, -0.028, 0.46], b: [0, -0.03, 0.635], ra: 0.024, rb: 0.006, sides: 5, top: silver, belly: white, bone: 2 });   /* the jutting lower jaw */
+      tube(G, { a: [0.008, -0.022, 0.6], b: [0.008, -0.004, 0.603], ra: 0.003, rb: 0.001, sides: 3, col: fang, bone: 2 }); tube(G, { a: [-0.008, -0.022, 0.6], b: [-0.008, -0.004, 0.603], ra: 0.003, rb: 0.001, sides: 3, col: fang, bone: 2 });   /* its fangs */
+      return swimDone(G, 'barracuda', { L: L, z0: z0, vert: false, amp: 0.05, kw: 4.0, f0: 0.3, f1: 0.3, vRef: 6, finX: 0.05, finY: -0.025, jawMax: 0.5, hy: -0.025, hz: 0.46 }, 1.0);
+    }
+    function poseSwim(m, a, dt) {   /* the body bends along s: a travelling wave (tail-heavy), the body curling into its turns; the jaw, the fins; then flat faces again */
+      var W = m.sw, L = W.L, sp = a.v || 0, P0 = m.rest, PO = m.pos, S = m.s, BI = m.bone, j;
+      var hunch = W.hunch && a.state === 'warn' ? ease(a.rear) : 0;   /* the shark's hunch: back arched, pectorals down */
+      m.ph += (dt || 0) * TAU * (W.f0 + sp * W.f1) * (a.state === 'strike' ? 1.6 : 1);
+      var A0 = W.amp * L * (0.3 + 0.7 * Math.min(1, sp / W.vRef)) * (a.air ? 0.25 : 1) * (1 - 0.6 * hunch);
+      var dyaw = dt > 0 && m.yaw0 != null ? wrap(a.yaw - m.yaw0) / dt : 0; m.yaw0 = a.yaw;
+      m.curl += (clamp(-dyaw * 0.05, -0.12, 0.12) * L - m.curl) * Math.min(1, (dt || 0) * 4);
+      var C = W.vert ? 0 : m.curl, jw = clamp(m.jaw || 0, 0, 1) * (W.jawMax || 0), jc = Math.cos(jw), js = Math.sin(jw);
+      var fl = W.vert ? 0.18 * Math.sin(m.ph * 0.5) : -0.55 * hunch, fcL = Math.cos(fl), fsL = Math.sin(fl), arch = hunch * 0.05 * L;
+      for (j = 0; j < m.count; j++) {
+        var k = j * 3, x = P0[k], y = P0[k + 1], z = P0[k + 2], b = BI[j], dx, dy, dz;
+        if (b === 2) { dy = y - W.hy; dz = z - W.hz; y = W.hy + dy * jc - dz * js; z = W.hz + dy * js + dz * jc; }   /* the jaw drops about its hinge */
+        else if (b === 3 || b === 4) { var fx = b === 3 ? W.finX : -W.finX, sn2 = b === 3 ? fsL : -fsL; dx = x - fx; dy = y - W.finY; x = fx + dx * fcL - dy * sn2; y = W.finY + dx * sn2 + dy * fcL; }
+        var u = clamp(S[j] / L, 0, 1.12), q = u - 0.2, w = q > 0 ? q * q / 0.64 : 0, wd = q > 0 ? 2 * q / 0.64 : 0, an = m.ph - W.kw * u, sn = Math.sin(an), cs = Math.cos(an);
+        var off = A0 * w * sn + C * u * u, dd = (A0 * (wd * sn - w * W.kw * cs) + 2 * C * u) / L, cth = 1 / Math.sqrt(1 + dd * dd), sth = dd * cth;
+        if (arch) y += arch * Math.sin(Math.PI * Math.min(1, u));
+        if (W.vert) { PO[k] = x; PO[k + 1] = y * cth + off; PO[k + 2] = z - y * sth; }
+        else { PO[k] = x * cth + off; PO[k + 1] = y; PO[k + 2] = z - x * sth; }
+      }
+      flat(m);
+    }
+    /* THE REEF FISH: ONE batch for the whole school, posed here each frame (the html hands it to THREE as one mesh: one draw). SERGEANT MAJORS
+       (Abudefduf saxatilis, ~17 cm: a yellow back, five black bars, a silver-white belly) and BLUE TANGS (Acanthurus coeruleus, ~24 cm: royal blue,
+       darker lines). A flat-shaded body, a dorsal fin, a forked tail that beats (its own part); they school round the reef by Reynolds' three rules (as
+       the island's silverlings do: keep apart, swim alike, stay together), each kind as its own shoal, and they scatter from her and from a hunter */
+    function fishInto(G, kind) {
+      var SM = kind === 0, len = SM ? 0.17 : 0.24, hz = len / 2, rx = SM ? 0.022 : 0.02, ry = SM ? 0.05 : 0.075;
+      var yel = hex(0xf0cd2a), sil = hex(0xe4e8ea), bar = hex(0x16181b), blu = hex(0x1a5fe0), bluD = hex(0x1546b0), bluL = hex(0x3d7cf0), eyeC = hex(0x0a0a0c);
+      loft(G, { L: len * 0.84, z0: hz * 0.84, rings: 10, sides: 12, nose: 0.004, tailX: 0.002,   /* a deep, flat reef-fish body: rings run nose to tail */
+        prof: function (u) { var e = Math.sin(Math.PI * Math.min(1, u * 1.05 + 0.04)); return [rx * (0.25 + 0.75 * e), ry * (0.25 + 0.75 * e), 0]; },
+        col: function (u, up) { var ri = Math.floor(u * 10 + 1e-6);
+          if (SM) return up < -0.5 ? sil : (ri % 2 === 1 && ri <= 9 ? bar : up > 0.2 ? yel : mixc(yel, sil, 0.5));   /* five black bars, one on every other ring */
+          return up > 0.6 ? bluD : up < -0.6 ? bluD : (ri % 3 === 1 ? bluL : blu); } });
+      fin3(G, [[0, ry * 0.85, hz * 0.35], [0, ry * 1.35, -hz * 0.1], [0, ry * 1.1, -hz * 0.55], [0, ry * 0.7, -hz * 0.6]], 0.004, SM ? hex(0xd2b42c) : bluD, 0, [1, 0, 0]);   /* the dorsal fin */
+      fin3(G, [[0, 0, -hz * 0.78], [0, ry * 0.95, -hz * 1.25], [0, 0, -hz * 1.05], [0, -ry * 0.95, -hz * 1.25]], 0.004, SM ? hex(0xc9b040) : bluD, 1, [1, 0, 0]);   /* the forked tail (its own part) */
+      ell(G, { c: [rx * 0.8, ry * 0.25, hz * 0.55], r: [0.004, 0.006, 0.006], seg: 4, ring: 2, col: eyeC, bone: 0 }); ell(G, { c: [-rx * 0.8, ry * 0.25, hz * 0.55], r: [0.004, 0.006, 0.006], seg: 4, ring: 2, col: eyeC, bone: 0 });
+    }
+    function buildSchool(n, nA) {
+      var G = G0(), FI = [], i, v, v0;
+      for (i = 0; i < n; i++) { v0 = G.p.length / 3; fishInto(G, i < nA ? 0 : 1); for (v = v0; v < G.p.length / 3; v++) FI.push(i); }
+      var m = finish(G, [{ name: 'body', p: [0, 0, 0] }, { name: 'tail', p: [0, 0, 0] }], 'school');
+      m.fi = new Uint16Array(FI); m.n = n; m.nA = nA; m.P = new Float64Array(n * 3); m.V = new Float64Array(n * 3); m.fph = new Float64Array(n); m.yaw = new Float64Array(n); m.pit = new Float64Array(n);
+      m.t = 0; m.tailZ = [-0.085 * 0.78, -0.12 * 0.78]; m.fled = 0; m.c = [0, 0, 0]; return m;
+    }
+    function placeSchool(m, cx, cy, cz, rnd) { var i; for (i = 0; i < m.n; i++) { var a = rnd() * TAU, r = 0.5 + rnd() * 2.5; m.P[i * 3] = cx + Math.sin(a) * r; m.P[i * 3 + 1] = cy + (rnd() - 0.5) * 0.8; m.P[i * 3 + 2] = cz + Math.cos(a) * r; m.V[i * 3] = Math.cos(a) * 0.5; m.V[i * 3 + 2] = -Math.sin(a) * 0.5; m.fph[i] = rnd() * TAU; } }
+    function stepSchool(m, dt, o) {   /* o: cx, cy, cz (the reef), R (the shoals' ring), water, ground(x, z), T (threats, x y z each), nT. Allocates nothing */
+      var n = m.n, Pp = m.P, V = m.V, i, j, fled = 0; m.t += dt; m.c[0] = 0; m.c[1] = 0; m.c[2] = 0;
+      for (i = 0; i < n; i++) {
+        var g = i < m.nA ? 0 : 1, th = m.t * (g ? -0.16 : 0.21) + g * 2.4, rg = o.R * (g ? 0.7 : 1), gx = o.cx + Math.sin(th) * rg, gz = o.cz + Math.cos(th) * rg, gy = o.cy + (g ? -0.4 : 0.3);
+        var k = i * 3, px = Pp[k], py = Pp[k + 1], pz = Pp[k + 2], ax = (gx - px) * 0.5, ay = (gy - py) * 0.8, az = (gz - pz) * 0.5, mx = 0, mz = 0, cnt = 0, fl = 0;
+        for (j = 0; j < n; j++) { if (j === i || (j < m.nA) !== (i < m.nA)) continue; var q = j * 3, ddx = px - Pp[q], ddy = py - Pp[q + 1], ddz = pz - Pp[q + 2], d2 = ddx * ddx + ddy * ddy + ddz * ddz;
+          if (d2 < 0.09 && d2 > 1e-8) { ax += ddx / d2 * 0.06; ay += ddy / d2 * 0.03; az += ddz / d2 * 0.06; }   /* keep apart */
+          if (d2 < 1.5) { mx += V[q]; mz += V[q + 2]; cnt++; } }   /* swim alike */
+        if (cnt) { ax += (mx / cnt - V[k]) * 0.8; az += (mz / cnt - V[k + 2]) * 0.8; }
+        for (j = 0; j < o.nT; j++) { var t3 = j * 3, ex = px - o.T[t3], ey = py - o.T[t3 + 1], ez = pz - o.T[t3 + 2], e2 = ex * ex + ey * ey + ez * ez;
+          if (e2 < 20.25) { var e1 = Math.sqrt(e2) || 0.1, f = (4.5 - e1) * 3; ax += ex / e1 * f; ay += ey / e1 * f * 0.4; az += ez / e1 * f; fl = 1; } }   /* they scatter */
+        V[k] += ax * dt; V[k + 1] += ay * dt; V[k + 2] += az * dt;
+        var spd = Math.sqrt(V[k] * V[k] + V[k + 1] * V[k + 1] + V[k + 2] * V[k + 2]) || 1e-6, s2 = clamp(spd, 0.25, fl ? 3.2 : 1.1) / spd; V[k] *= s2; V[k + 1] *= s2 * 0.6; V[k + 2] *= s2;
+        Pp[k] += V[k] * dt; Pp[k + 1] += V[k + 1] * dt; Pp[k + 2] += V[k + 2] * dt;
+        var bed = o.ground(Pp[k], Pp[k + 2]); Pp[k + 1] = clamp(Pp[k + 1], bed + 0.3, o.water - 0.35); fled += fl;
+        var hs = Math.sqrt(V[k] * V[k] + V[k + 2] * V[k + 2]); m.yaw[i] = Math.atan2(V[k], V[k + 2]); m.pit[i] = -Math.atan2(V[k + 1], Math.max(0.05, hs)); m.fph[i] += dt * (7 + hs * 9);
+        m.c[0] += Pp[k] / n; m.c[1] += Pp[k + 1] / n; m.c[2] += Pp[k + 2] / n;
+      }
+      m.fled = fled;
+      var PO = m.pos, NO = m.nrm, R0 = m.rest, N0 = m.nrest, FI = m.fi, BI = m.bone, vv;
+      for (vv = 0; vv < m.count; vv++) { var fi = FI[vv], k3 = vv * 3, f3 = fi * 3, x = R0[k3], y = R0[k3 + 1], z = R0[k3 + 2], nx = N0[k3], ny = N0[k3 + 1], nz = N0[k3 + 2];
+        if (BI[vv] === 1) { var tz = fi < m.nA ? m.tailZ[0] : m.tailZ[1], wg = 0.5 * Math.sin(m.fph[fi]), cw = Math.cos(wg), sw = Math.sin(wg), dz0 = z - tz, x2 = x * cw + dz0 * sw; z = tz - x * sw + dz0 * cw; x = x2; var nx2 = nx * cw + nz * sw; nz = -nx * sw + nz * cw; nx = nx2; }   /* the tail beats */
+        var cp = Math.cos(m.pit[fi]), sp2 = Math.sin(m.pit[fi]), y2 = y * cp - z * sp2; z = y * sp2 + z * cp; y = y2; var ny2 = ny * cp - nz * sp2; nz = ny * sp2 + nz * cp; ny = ny2;
+        var cy2 = Math.cos(m.yaw[fi]), sy2 = Math.sin(m.yaw[fi]);
+        PO[k3] = Pp[f3] + x * cy2 + z * sy2; PO[k3 + 1] = Pp[f3 + 1] + y; PO[k3 + 2] = Pp[f3 + 2] - x * sy2 + z * cy2;
+        NO[k3] = nx * cy2 + nz * sy2; NO[k3 + 1] = ny; NO[k3 + 2] = -nx * sy2 + nz * cy2; }
+    }
+    /* THE REEF: a Caribbean patch reef on the shelf, in its own frame (o.floor(x, z): the sea floor's height there, relative to its middle): BRAIN CORAL
+       domes (Diploria, their grooves), ELKHORN coral (Acropora palmata, antler branches with pale tips), purple SEA FANS (Gorgonia), TUBE SPONGES with
+       their dark mouths, and STAGHORN thickets. Static: built once, one draw, the same material */
+    function rngK(seed) { var s = seed >>> 0; return function () { s = (s + 0x6D2B79F5) >>> 0; var t = s; t = Math.imul(t ^ (t >>> 15), t | 1); t ^= t + Math.imul(t ^ (t >>> 7), t | 61); return ((t ^ (t >>> 14)) >>> 0) / 4294967296; }; }
+    function buildReef(o) {
+      var G = G0(), R1 = rngK(o.seed || 714), fl = o.floor, k, i, W0 = o.w || 7, D0 = o.d || 4;
+      var spot = function (rMin) { var a = R1() * TAU, r = rMin + R1() * (1 - rMin); return [Math.sin(a) * r * W0, Math.cos(a) * r * D0]; };
+      for (k = 0; k < 7; k++) { var p = spot(0.05), s = 0.35 + R1() * 0.5, y = fl(p[0], p[1]), dk = hex(0x6f6438);
+        ell(G, { c: [p[0], y + s * 0.2, p[1]], r: [s, s * 0.62, s * (0.8 + R1() * 0.3)], seg: 9, ring: 5, squash: 0.25, top: hex(k % 2 ? 0xbfae62 : 0xa89f5a), belly: hex(0x7d7344), bone: 0,
+          pat: function (c, nx, ny, nz, px, py, pz) { return Math.sin(px * 31 + Math.sin(pz * 23) * 2) > 0.55 ? mixc(c, dk, 0.55) : c; } }); }   /* the brain corals */
+      for (k = 0; k < 4; k++) { var p2 = spot(0.2), y2 = fl(p2[0], p2[1]), s2 = 0.7 + R1() * 0.6, top = [p2[0], y2 + 0.35 * s2, p2[1]], a0 = R1() * TAU;
+        tube(G, { a: [p2[0], y2 - 0.05, p2[1]], b: top, ra: 0.1 * s2, rb: 0.07 * s2, sides: 5, top: hex(0xc58f55), belly: hex(0x9c6a3a), bone: 0 });
+        for (i = 0; i < 5; i++) { var b2 = a0 + i * TAU / 5 + R1() * 0.5, L2 = (0.45 + R1() * 0.35) * s2, tip = [top[0] + Math.sin(b2) * L2, top[1] + (0.25 + R1() * 0.35) * s2, top[2] + Math.cos(b2) * L2];
+          tube(G, { a: top, b: tip, ra: 0.06 * s2, rb: 0.035 * s2, sides: 4, top: hex(0xcf9a60), belly: hex(0xa8743f), bone: 0 });
+          ell(G, { c: tip, r: [0.045 * s2, 0.03 * s2, 0.045 * s2], seg: 4, ring: 2, col: hex(0xe9d3a6), bone: 0 }); } }   /* elkhorn */
+      for (k = 0; k < 5; k++) { var p3 = spot(0.1), y3 = fl(p3[0], p3[1]), s3 = 0.5 + R1() * 0.45, yw = R1() * Math.PI, cx = Math.cos(yw), cz = -Math.sin(yw), Pf = [[p3[0], y3 + 0.08, p3[1]]];
+        for (i = 0; i <= 5; i++) { var an = -1.1 + i * 0.44, rr = s3 * (0.85 + 0.15 * Math.cos(an * 2)); Pf.push([p3[0] + cx * Math.sin(an) * rr, y3 + 0.08 + Math.cos(an) * rr, p3[1] + cz * Math.sin(an) * rr]); }
+        fin3(G, Pf, 0.02, hex(k % 2 ? 0x8b3fa6 : 0x9d4b7c), 0, [cz, 0, -cx]);
+        tube(G, { a: [p3[0], y3 - 0.05, p3[1]], b: [p3[0], y3 + 0.12, p3[1]], ra: 0.03, rb: 0.025, sides: 3, col: hex(0x5b2a66), bone: 0 }); }   /* sea fans */
+      var SPC = [0xd9b23a, 0x7b3f8e, 0xd2783a, 0x6b8f3a];
+      for (k = 0; k < 4; k++) { var p4 = spot(0.25);
+        for (i = 0; i < 3; i++) { var ox = p4[0] + (R1() - 0.5) * 0.35, oz = p4[1] + (R1() - 0.5) * 0.35, h = 0.35 + R1() * 0.5, y4 = fl(ox, oz), tp = [ox + (R1() - 0.5) * 0.1, y4 + h, oz + (R1() - 0.5) * 0.1];
+          tube(G, { a: [ox, y4 - 0.05, oz], b: tp, ra: 0.065, rb: 0.08, sides: 6, top: hex(SPC[k]), belly: mixc(hex(SPC[k]), [0, 0, 0], 0.3), bone: 0 });
+          ell(G, { c: [tp[0], tp[1] + 0.05, tp[2]], r: [0.06, 0.012, 0.06], seg: 6, ring: 2, col: hex(0x2a1d14), bone: 0 }); } }   /* tube sponges */
+      for (k = 0; k < 3; k++) { var p5 = spot(0.3), y5 = fl(p5[0], p5[1]);
+        for (i = 0; i < 6; i++) { var b5 = R1() * TAU, L5 = 0.3 + R1() * 0.35, base = [p5[0] + Math.sin(b5) * 0.15, y5 - 0.03, p5[1] + Math.cos(b5) * 0.15], t5 = [base[0] + Math.sin(b5) * L5 * 0.6, y5 + L5, base[2] + Math.cos(b5) * L5 * 0.6];
+          tube(G, { a: base, b: t5, ra: 0.03, rb: 0.016, sides: 4, top: hex(0xd6b07a), belly: hex(0xa88a5a), bone: 0 }); } }   /* staghorn */
+      var m = finish(G, [{ name: 'reef', p: [0, 0, 0] }], 'reef'); m.radius = Math.max(W0, D0) + 1.5; return m;
+    }
+    var B = { boa: buildBoa, crab: buildCrab, mongoose: buildMongoose, turtle: buildTurtle, pelican: function () { return buildBird('pelican'); }, gull: function () { return buildBird('gull'); },
+      dolphin: buildDolphin, shark: buildShark, barracuda: buildBarracuda };
+    var P = { boa: poseBoa, crab: poseCrab, mongoose: poseMongoose, turtle: poseTurtle, pelican: poseBird, gull: poseBird, dolphin: poseSwim, shark: poseSwim, barracuda: poseSwim };
     return {
       build: function (sp) { if (!B[sp]) throw new Error('no model ' + sp); return B[sp](); },
       pose: function (m, a, dt) {   /* the boa's tongue flicks when it notices or warns (now and then otherwise); its jaw gapes in a heavy warning and opens wide on the strike */
         if (a.sp === 'boa') { var on = a.state === 'notice' || a.state === 'warn' || a.state === 'stalk' ? 1 : ((m.tt = (m.tt || 0) + (dt || 0)) % 3.2 < 0.5 ? 1 : 0); m.tng = on ? Math.max(0, Math.sin((m.ph += (dt || 0) * 16))) : Math.max(0, (m.tng || 0) - (dt || 0) * 6);
           var jw = a.state === 'strike' ? 1 : a.state === 'warn' && a.atk === 1 ? 0.3 : 0; m.jaw += (jw - m.jaw) * Math.min(1, (dt || 0) * 14); }
+        if (m.sw && m.sw.jawMax) { var jt = a.state === 'strike' ? 1 : a.state === 'warn' ? (a.atk === 1 ? 0.45 : 0.2) : 0; m.jaw += (jt - m.jaw) * Math.min(1, (dt || 0) * 12); }   /* 714c: the barracuda's and the shark's jaws */
         P[a.sp](m, a, dt || 0); },
       flat: flat,
+      school: { build: buildSchool, place: placeSchool, step: stepSchool },   /* 714c: the reef fish, one batch */
+      reef: buildReef,   /* 714c: the patch reef, static */
     };
   }());
 
-  API = { create: create, last: null, error: null, T: T, FAIR: FAIR, SPECIES: SP, kit: KIT };
+  API = { create: create, last: null, error: null, T: T, FAIR: FAIR, SPECIES: SP, SEA: SEA, kit: KIT };
   return API;
 }());
