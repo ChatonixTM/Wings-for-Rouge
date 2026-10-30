@@ -867,7 +867,7 @@ html.ui716 #pzQuit{border-radius:0;background:var(--u-plate-e)!important;font-fa
     <button class="go" id="go" type="button">Fly</button>
     <div class="pause-row" id="pauseRow" hidden><button class="ghost" id="saveBtn" type="button">💾 Save</button><button class="ghost" id="toTitle" type="button">🏠 Main menu</button><button class="ghost" id="lookBtn" type="button">🧍 Look: Standard</button><button class="ghost" id="journalBtn" type="button">📖 Journal</button><button class="ghost" id="windBtn683" type="button" aria-pressed="true">🌬 Wind sound: on</button><button class="ghost" id="netBtn678" type="button" aria-label="Fly together">🤝 <span class="n678l">Fly together</span><span class="n678s">Together</span></button></div><div class="savebox" id="net678" hidden role="region" aria-label="Fly together"><p id="net678Msg"></p><div class="net678-row"><input id="net678Name" maxlength="12" placeholder="Your name" autocomplete="off" aria-label="Your name"><input id="net678Code" maxlength="6" placeholder="Code" autocomplete="off" autocapitalize="characters" spellcheck="false" aria-label="Room code"></div><div class="savebox-row"><button type="button" id="net678Make">Make a code</button><button type="button" id="net678Join">Enter a code</button><button type="button" class="linkish" id="net678Leave" style="min-height:44px">Leave</button></div><div class="w721" id="w721" role="group" aria-label="Play the story together"><p class="w721-title">🌍 Play the story together</p><p class="w721-msg" id="w721Msg"></p><div class="savebox-row w721-row"><button type="button" class="w721-btn w721-primary" id="w721Make">Make a world</button><button type="button" class="w721-btn" id="w721Join">Enter a world</button><button type="button" class="linkish w721-leave" id="w721Leave" style="min-height:44px" hidden>Leave the world</button></div></div></div><div class="journal" id="journal" hidden role="region" aria-label="Journal"></div>
     <p class="how" id="how"></p>
-    <div class="title-links"><button class="linkish" id="rewatch" type="button" style="min-height:44px" hidden>Watch the story again</button><button class="linkish" id="newGame" type="button" style="min-height:44px">New game</button><button class="linkish" id="backupBtn" type="button" style="min-height:44px">Back up</button><button class="linkish" id="restoreBtn" type="button" style="min-height:44px">Restore</button><button class="linkish" id="netBtn678t" type="button" style="min-height:44px">🤝 Fly with someone</button></div>
+    <div class="title-links"><button class="linkish" id="rewatch" type="button" style="min-height:44px" hidden>Watch the story again</button><button class="linkish" id="newGame" type="button" style="min-height:44px">New game</button><button class="linkish" id="backupBtn" type="button" style="min-height:44px">Back up</button><button class="linkish" id="restoreBtn" type="button" style="min-height:44px">Restore</button><button class="linkish" id="netBtn678t" type="button" style="min-height:44px">🤝 Fly with someone</button><button class="linkish" id="creative712Btn" type="button" style="min-height:44px">🎨 Creative</button></div>
     <div class="savebox" id="saveBox" hidden><p id="saveMsg"></p><textarea id="saveCode" rows="6" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Backup code"></textarea><div class="savebox-row"><button type="button" id="saveGo">Copy</button><button type="button" class="ghost" id="saveShare" hidden style="min-height:44px">Share</button><button type="button" class="linkish" id="saveClose" style="min-height:44px">Close</button></div></div>
     <p class="credit712" id="credit712">Terrain: SRTM/GMTED2010/3DEP courtesy of the U.S. Geological Survey; ETOPO1 NOAA. Terrain tiles: Mapzen/Tilezen via the AWS Open Data registry.</p>
   </div>
@@ -907,53 +907,54 @@ html.ui716 #pzQuit{border-radius:0;background:var(--u-plate-e)!important;font-fa
 <div class="rhRes" id="rhRes" hidden aria-live="polite"><b id="resRank"></b><span id="resLine"></span><small id="resTime"></small><small id="resNew" hidden></small></div>   <!-- 672 OURS/DRAFT words: Paused, Resume, Quit song -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="toon.js?v=32e93132c06e"></script>
+<script src="toon.js?v=4c61465a584e"></script>
 <script>(function () { let classic = false; try { classic = localStorage.getItem('wfr.look') === 'classic'; } catch (e) { /* private mode: Standard */ }
   window.WFR_DOOR = classic ? { w: 1.2, h: 2, classic: true } : { w: 1.5, h: 2.9, classic: false }; }());   /* 683 C1: THE doorway, local units (x HS 1.6: Standard 2.4 x 4.64 m; a villager, drawn 3.67-3.72 m, is 80% of it; the brief's 2.6 left him at 89%). The ring houses, the 641 house, the cabins and the walk read it. Classic is frozen (Marth, Oct 14, board 645): its doors stay 1.2 x 2. The look is read as the game reads it (it reloads on a switch). */</script>
-<script src="gltf-loader.js?v=32e93132c06e"></script>
-<script src="skeleton-utils.js?v=32e93132c06e"></script>
-<script src="meshopt-decoder.js?v=32e93132c06e"></script>
-<script src="models.js?v=32e93132c06e"></script>
-<script src="people.js?v=32e93132c06e"></script>
-<script src="villagers.js?v=32e93132c06e"></script>
-<script src="tex-photos.js?v=32e93132c06e"></script>
-<script src="textures.js?v=32e93132c06e"></script>
-<script src="birds.js?v=32e93132c06e"></script>
-<script src="humans.js?v=32e93132c06e"></script>
-<script src="folk.js?v=32e93132c06e"></script>
-<script src="trees.js?v=32e93132c06e"></script>
-<script src="treehouses.js?v=32e93132c06e"></script>
-<script src="cabins.js?v=32e93132c06e"></script>
-<script src="cave.js?v=32e93132c06e"></script>
-<script src="hermits.js?v=32e93132c06e"></script>
-<script src="sounds.js?v=32e93132c06e"></script>
-<script src="music.js?v=32e93132c06e"></script>
-<script src="battle703-song.js?v=32e93132c06e"></script>
-<script src="music-orchestra.js?v=32e93132c06e"></script>
-<script src="rhythm.js?v=32e93132c06e"></script>
-<script src="pictograms.js?v=32e93132c06e"></script>
-<script src="chick-wear.js?v=32e93132c06e"></script>
-<script src="hedgehogs.js?v=32e93132c06e"></script>
-<script src="opening.js?v=32e93132c06e"></script>
-<script src="skypiea.js?v=32e93132c06e"></script>
-<script src="pirate.js?v=32e93132c06e"></script>
-<script src="atmo.js?v=32e93132c06e"></script>
-<script src="boat.js?v=32e93132c06e"></script>
-<script src="weather.js?v=32e93132c06e"></script>
-<script src="village-build.js?v=32e93132c06e"></script>
-<script src="runes.js?v=32e93132c06e"></script>
-<script src="hearts714.js?v=32e93132c06e"></script>
-<script src="world712-frame.js?v=32e93132c06e"></script>
-<script src="world712-carib.js?v=32e93132c06e"></script>
-<script src="world712-dunns.js?v=32e93132c06e"></script>
-<script src="hawkwake.js?v=32e93132c06e"></script>
-<script src="hawkfight.js?v=32e93132c06e"></script>
-<script src="hawkarena.js?v=32e93132c06e"></script>
-<script src="orchard.js?v=32e93132c06e"></script>
-<script src="net678.js?v=32e93132c06e"></script>
-<script src="net678-config.js?v=32e93132c06e"></script>
-<script src="net721.js?v=32e93132c06e"></script>
-<script src="animals714.js?v=32e93132c06e"></script>
+<script src="gltf-loader.js?v=4c61465a584e"></script>
+<script src="skeleton-utils.js?v=4c61465a584e"></script>
+<script src="meshopt-decoder.js?v=4c61465a584e"></script>
+<script src="models.js?v=4c61465a584e"></script>
+<script src="people.js?v=4c61465a584e"></script>
+<script src="villagers.js?v=4c61465a584e"></script>
+<script src="tex-photos.js?v=4c61465a584e"></script>
+<script src="textures.js?v=4c61465a584e"></script>
+<script src="birds.js?v=4c61465a584e"></script>
+<script src="humans.js?v=4c61465a584e"></script>
+<script src="folk.js?v=4c61465a584e"></script>
+<script src="trees.js?v=4c61465a584e"></script>
+<script src="treehouses.js?v=4c61465a584e"></script>
+<script src="cabins.js?v=4c61465a584e"></script>
+<script src="cave.js?v=4c61465a584e"></script>
+<script src="hermits.js?v=4c61465a584e"></script>
+<script src="sounds.js?v=4c61465a584e"></script>
+<script src="music.js?v=4c61465a584e"></script>
+<script src="battle703-song.js?v=4c61465a584e"></script>
+<script src="music-orchestra.js?v=4c61465a584e"></script>
+<script src="rhythm.js?v=4c61465a584e"></script>
+<script src="pictograms.js?v=4c61465a584e"></script>
+<script src="chick-wear.js?v=4c61465a584e"></script>
+<script src="hedgehogs.js?v=4c61465a584e"></script>
+<script src="opening.js?v=4c61465a584e"></script>
+<script src="skypiea.js?v=4c61465a584e"></script>
+<script src="pirate.js?v=4c61465a584e"></script>
+<script src="atmo.js?v=4c61465a584e"></script>
+<script src="boat.js?v=4c61465a584e"></script>
+<script src="weather.js?v=4c61465a584e"></script>
+<script src="village-build.js?v=4c61465a584e"></script>
+<script src="runes.js?v=4c61465a584e"></script>
+<script src="hearts714.js?v=4c61465a584e"></script>
+<script src="world712-frame.js?v=4c61465a584e"></script>
+<script src="creative712.js?v=4c61465a584e"></script>
+<script src="world712-carib.js?v=4c61465a584e"></script>
+<script src="world712-dunns.js?v=4c61465a584e"></script>
+<script src="hawkwake.js?v=4c61465a584e"></script>
+<script src="hawkfight.js?v=4c61465a584e"></script>
+<script src="hawkarena.js?v=4c61465a584e"></script>
+<script src="orchard.js?v=4c61465a584e"></script>
+<script src="net678.js?v=4c61465a584e"></script>
+<script src="net678-config.js?v=4c61465a584e"></script>
+<script src="net721.js?v=4c61465a584e"></script>
+<script src="animals714.js?v=4c61465a584e"></script>
 <script>
 (() => {
 'use strict';
@@ -1404,7 +1405,7 @@ function markTargets701() {
   const out = [];
   if (FAR682.where) { const Rg = FAR682.regions[FAR682.where]; if (Rg) out.push({ id: 'home', name: 'Home', kind: 'place', p: Rg.home ? [Rg.home[0], 30, Rg.home[1]] : [Rg.c[0] - Math.sin(Rg.b) * (Rg.W || FAR682_W) / 2, 30, Rg.c[1] - Math.cos(Rg.b) * (Rg.W || FAR682_W) / 2] }); }
   /* 711 (Marth, Oct 24: "I wanted it to more so show when you're over THERE not home"): at home no place markers; Tahoe and Antigua stand on the horizon themselves */
-  NV.foes.forEach((f, i) => { if (!f.visible || !f.parent) return; MARK701.v.setFromMatrixPosition(f.matrixWorld);   /* read only: getWorldPosition recomputes the world matrix, which overwrites night vision lifting its stand-ins */ if (MARK701.v.distanceTo(S.pos) < 90) out.push({ id: 'foe' + i, name: '', kind: 'foe', p: MARK701.v.toArray() }); });
+  if (!creative712On()) NV.foes.forEach((f, i) => { if (!f.visible || !f.parent) return; MARK701.v.setFromMatrixPosition(f.matrixWorld);   /* read only: getWorldPosition recomputes the world matrix, which overwrites night vision lifting its stand-ins */ if (MARK701.v.distanceTo(S.pos) < 90) out.push({ id: 'foe' + i, name: '', kind: 'foe', p: MARK701.v.toArray() }); });
   return out;
 }
 function markTick701() {
@@ -1835,7 +1836,7 @@ function climb712Cap() {   // in rain the deck stays shut (the sky island's own 
   CLIMB712.rcap = null; return CLIMB712.TOP;
 }
 function climb712K() { return CLIMB712.shipB && climb712On() && !climb712Away() && !FOLLOW.with ? 1 + (CLIMB712.SPEED - 1) * smooth(CLIMB712.DECK, CLIMB712.TOP, S.pos.y) : 1; }   // ship B: height sets the speed. With her chick along she flies at its pace (followK), never the climb's (its trail resets past 6 m a frame)
-function climb712High() { return CLIMB712.shipB && climb712On() && !climb712Away() && S.pos.y >= CLIMB712.DECK; }   // ship B: the high air's 1,500 m box
+function climb712High() { return creative712On() || (CLIMB712.shipB && climb712On() && !climb712Away() && S.pos.y >= CLIMB712.DECK); }   // 712 S2: in the creative world the 1,500 m box at every height (no 330 m wind, no white crossing); the flight's own line is left as it was (climb712.js P14 anchors it)   // ship B: the high air's 1,500 m box
 function climb712Clouds() { if (CLIMB712.cl && CLIMB712.cl.length) return CLIMB712.cl; const m = WX.heaven, out = []; if (m) for (const c of scene.children) if (c.isGroup && c.children.length && c.children[0].material === m) out.push(c); return (CLIMB712.cl = out); }   // his nine clouds, found, never rebuilt
 function climb712Pass() {   // above 163 after the gate: the first time, the clouds part and the two lines; never a bonk
   if (S.seen.part712) return; S.seen.part712 = 1; save(); CLIMB712.passes++;
@@ -1853,7 +1854,7 @@ function climb712Air() {   // in the flight, after the caps: Skypiea's column (A
     const dx = S.pos.x - peakPt.x, dz = S.pos.z - peakPt.z, d = Math.hypot(dx, dz);
     if (d < CLIMB712.PUSH_R) { const f = CLIMB712.PUSH_R / (d || 1); S.pos.x = peakPt.x + (d ? dx * f : CLIMB712.PUSH_R); S.pos.z = peakPt.z + (d ? dz * f : 0); CLIMB712.pushes++; }
   }
-  if (!CLIMB712.shipB) return;
+  if (!CLIMB712.shipB || creative712On()) return;   // 712 S2: no 190 m floor in the creative world
   const dc = Math.hypot(S.pos.x, S.pos.z);
   if (S.pos.y >= CLIMB712.FLOOR) CLIMB712.high = true; else if (dc <= EDGE) CLIMB712.high = false;
   if (CLIMB712.high && dc > EDGE && S.pos.y < CLIMB712.FLOOR) { S.pos.y = CLIMB712.FLOOR; S.pitch = Math.max(S.pitch, 0); CLIMB712.floors++; }   // "the air holds her up": below the deck she is always home (dc <= 330)
@@ -2202,6 +2203,7 @@ function groundAt(x, z) {
     }
   }
   if (CAVE) g = Math.max(g, CAVE.ledgeAt(x, z));   // the cave's stone ledge (cave.js)
+  if (CREATIVE712_ON && CREATIVE712) g = Math.max(g, creative712Ground(x, z));   // 712 S2: what she placed in the creative world
   for (const t of trees) if (Math.abs(x - t.x) < t.r && Math.abs(z - t.z) < t.r) g = Math.max(g, t.top);
   if (Math.hypot(x - LIGHT.x, z - LIGHT.z) < 2.4) g = Math.max(g, lightY + 18.6);
   if (PIR669) g = Math.max(g, PIR669.deck(x, z));   // 669 U2: the pirate ship's deck while it lies settled at anchor (nothing otherwise; one distance test first)
@@ -2334,13 +2336,23 @@ const teachKey = (b) => Object.keys(BIRDS).find((k) => BIRDS[k] === b);
 const isOpen = (b) => b.unlock === 'hawk' ? !!S.lessons.hawk || !!(S.sky && S.sky.ended && S.lessons && S.lessons[teachKey(b)]) : b.unlock <= S.level;
 
 /* ---------- state, and what is remembered on her phone ---------- */
+/* 712 S2 · CREATIVE (tools/wiring/wire-712s2-creative.js): a world of its own, opened from the title (sessionStorage wfr.creative712.on). While it is
+   open the game boots from this seed, never her file, and save() writes no storage (665 P1's lock): her story save is never touched. */
+var CREATIVE712_ON = false, CREATIVE712_SEED = null;
+try { if (sessionStorage.getItem('wfr.creative712.on') === '1') { CREATIVE712_ON = true; window.__wfrWxTest = window.__wfrWxTest || 'creative712';   // the lock: save() writes nothing
+  document.documentElement.classList.add('c712');   // from the first paint: her files, Back up, Restore and the title's links are not on the glass in this world (Obito W35)
+  let k0 = null; try { k0 = sessionStorage.getItem('wfr.creative712.kind') || (JSON.parse(localStorage.getItem('wfr.save') || 'null') || {}).kind || null; } catch (e) { k0 = null; }   // her bird, read only
+  const SEEN712 = { end667: true, build: true, fish: true, grown: true, hold: true, prologue: true, call625: true, call625up: true, follow621: true, coldGrace632: -1, coldWord632: 1, atk614: true, nv663: true, runes632: true, rain: true, hermits632: true, beandie632: true, house641: true, evo636: 2, teach610: true, scout614: true, rail632: true, chickComes621: 3, wet632: 1, bag703: 1, falcon673: true, climb712: 1, part712: 1 };   // every first-time word already said (the guards' own list), the sky open (712 S4a)
+  CREATIVE712_SEED = JSON.stringify({ level: 60, xp: 0, grown: 5, seen: SEEN712, nestDone: true, storySeen: true, tutDone: true, given: 9, lessons: { crow: true, falcon: true, owl: true, zoom: true }, nestTier: 5, kind: k0 || 'cardinal', found: { peak: true }, eagleFound: true, clock: 600, dawns: 5, built: 6,
+    sky: { seen: true, ended: true, told: true, where: 'home' }, inv: {}, runes: 10, world: { hawk: { won: 1, friend: 1, told: 1, visits: 0, nextVisit: 1e9, call: { day: 0, played: true, voy: 2, arena: 2 } } }, choices: [{ id: 'hawk703', pick: 'friend' }] });   // Itachi's Q2: the true layout from day one (the Hawk beaten and befriended)
+} } catch (e) { CREATIVE712_ON = false; CREATIVE712_SEED = null; }
 const S = { mode: 'menu', pos: new THREE.Vector3(-110, 30, -60), yaw: 0.6, pitch: 0, speed: 14, flapT: 0, got: 0, warmth: 0, t: 0, turnBack: 0,
   inside: null, carry: [], level: 1, xp: 0, nestDone: false, found: {}, singCd: 0, distAcc: 0, warnCd: 0,
   storySeen: false, tutDone: false, built: 0, tut: 0, tutAcc: 0, tutUp: 0, tutDown: 0, noWalk: false, cineT: 0, flutT: 0, flutCd: 0,
   lessons: {}, hopV: 0, hopY: 0, landT: 0, bonkCd: 0, nestTier: 1, mats: {}, eagleFound: false, evFocus: 'peak',
   chick: { stats: { fly: 0, run: 0, str: 0, sta: 0, swim: 0 }, happy: 60, food: 70, stage: 0, pets: 0, at: Date.now() }, fruit: null, chickFeel: 2, chickFeelT: 0, petCd: 0 };
 const input = { sx: 0, sy: 0 };
-(function load() { try { const s = JSON.parse(localStorage.getItem('wfr.save') || 'null'); if (s && s.level) { S.level = Math.min(LEVEL_MAX, s.level); S.xp = s.xp || 0; S.nestDone = !!s.nestDone; S.found = s.found || {}; S.storySeen = !!s.storySeen; S.tutDone = !!s.tutDone; S.built = s.built || 0; S.lessons = s.lessons || {}; S.owlLv = typeof s.owlLv === 'number' ? s.owlLv : null; S.nestTier = s.nestTier || 1; S.mats = s.mats || {}; S.eagleFound = !!s.eagleFound; S.treatsTaken = s.treats || []; S.fishCaught = s.fish || 0; S.clock = typeof s.clock === 'number' ? s.clock % 2700 : 600; S.beakWas = s.beak || null; S.cutPending = s.cutQ || []; S.twigsTaken = s.twigs || []; S.read = s.read || {}; S.seen = s.seen || {}; S.inv = s.inv || {}; S.hearts = window.WFR_HEARTS ? WFR_HEARTS.clean(s.hearts) : null; /* 714 */ S.ani714 = s.ani714 && typeof s.ani714 === 'object' && s.ani714.xp && typeof s.ani714.xp === 'object' ? { xp: s.ani714.xp } : null; /* 714a: the days each animal paid its XP */ S.toolIn = s.toolIn || 0; S.played = typeof s.played === 'number' ? s.played : 0;   /* 631 */ S.given = typeof s.given === 'number' ? s.given : (s.built || 0) + (s.toolIn || 0); /* 581: every build and every tool in hand took a tool given */ S.grown = typeof s.grown === 'number' ? s.grown : 0; S.marks = Array.isArray(s.marks) ? s.marks : []; S.village = s.village && typeof s.village === 'object' ? s.village : null; /* 641 §G + 646 */   /* 641 U1 */ S.world = s.world && typeof s.world === 'object' ? s.world : {}; S.choices = Array.isArray(s.choices) ? s.choices : [];   /* 703 ship 10 */ S.dawns = typeof s.dawns === 'number' ? s.dawns : 0; S.runes = typeof s.runes === 'number' ? s.runes : 0; S.huethers = typeof s.huethers === 'number' ? s.huethers : 0; S.runeRec = s.runeRec && typeof s.runeRec === 'object' ? s.runeRec : {};   /* 632 U4 */ S.songs = s.songs && typeof s.songs === 'object' ? s.songs : {};   /* 658: the songs she has opened */ S.songBest = s.songBest && typeof s.songBest === 'object' ? s.songBest : {};   /* 658 U2: her best per song and row */ S.orchard = s.orchard && typeof s.orchard === 'object' ? s.orchard : {};   /* 637: the dawn each fruit was picked */   /* 643 worlds */ S.sky = s.sky && typeof s.sky === 'object' ? { seen: !!s.sky.seen, ended: !!s.sky.ended, told: !!s.sky.told, where: s.sky.where === 'temple' ? 'temple' : 'home', ...(typeof s.sky.toldDay === 'number' ? { toldDay: s.sky.toldDay } : {}) } : null;   /* 627: toldDay kept across a reload */   /* 610: where = home | temple */   // 627: told = the evening's word was said
+(function load() { try { const s = JSON.parse(CREATIVE712_SEED || localStorage.getItem('wfr.save') || 'null');   /* 712 S2: in the creative world its own seed, never her file */ if (s && s.level) { S.level = Math.min(LEVEL_MAX, s.level); S.xp = s.xp || 0; S.nestDone = !!s.nestDone; S.found = s.found || {}; S.storySeen = !!s.storySeen; S.tutDone = !!s.tutDone; S.built = s.built || 0; S.lessons = s.lessons || {}; S.owlLv = typeof s.owlLv === 'number' ? s.owlLv : null; S.nestTier = s.nestTier || 1; S.mats = s.mats || {}; S.eagleFound = !!s.eagleFound; S.treatsTaken = s.treats || []; S.fishCaught = s.fish || 0; S.clock = typeof s.clock === 'number' ? s.clock % 2700 : 600; S.beakWas = s.beak || null; S.cutPending = s.cutQ || []; S.twigsTaken = s.twigs || []; S.read = s.read || {}; S.seen = s.seen || {}; S.inv = s.inv || {}; S.hearts = window.WFR_HEARTS ? WFR_HEARTS.clean(s.hearts) : null; /* 714 */ S.ani714 = s.ani714 && typeof s.ani714 === 'object' && s.ani714.xp && typeof s.ani714.xp === 'object' ? { xp: s.ani714.xp } : null; /* 714a: the days each animal paid its XP */ S.toolIn = s.toolIn || 0; S.played = typeof s.played === 'number' ? s.played : 0;   /* 631 */ S.given = typeof s.given === 'number' ? s.given : (s.built || 0) + (s.toolIn || 0); /* 581: every build and every tool in hand took a tool given */ S.grown = typeof s.grown === 'number' ? s.grown : 0; S.marks = Array.isArray(s.marks) ? s.marks : []; S.village = s.village && typeof s.village === 'object' ? s.village : null; /* 641 §G + 646 */   /* 641 U1 */ S.world = s.world && typeof s.world === 'object' ? s.world : {}; S.choices = Array.isArray(s.choices) ? s.choices : [];   /* 703 ship 10 */ S.dawns = typeof s.dawns === 'number' ? s.dawns : 0; S.runes = typeof s.runes === 'number' ? s.runes : 0; S.huethers = typeof s.huethers === 'number' ? s.huethers : 0; S.runeRec = s.runeRec && typeof s.runeRec === 'object' ? s.runeRec : {};   /* 632 U4 */ S.songs = s.songs && typeof s.songs === 'object' ? s.songs : {};   /* 658: the songs she has opened */ S.songBest = s.songBest && typeof s.songBest === 'object' ? s.songBest : {};   /* 658 U2: her best per song and row */ S.orchard = s.orchard && typeof s.orchard === 'object' ? s.orchard : {};   /* 637: the dawn each fruit was picked */   /* 643 worlds */ S.sky = s.sky && typeof s.sky === 'object' ? { seen: !!s.sky.seen, ended: !!s.sky.ended, told: !!s.sky.told, where: s.sky.where === 'temple' ? 'temple' : 'home', ...(typeof s.sky.toldDay === 'number' ? { toldDay: s.sky.toldDay } : {}) } : null;   /* 627: toldDay kept across a reload */   /* 610: where = home | temple */   // 627: told = the evening's word was said
   if (s.chick && s.chick.stats) { S.chick = Object.assign(S.chick, s.chick);   // time away: a little hungrier, never harmed (floors at 10)
     const mins = Math.max(0, (Date.now() - (s.chick.at || Date.now())) / 60000); S.chick.food = Math.max(10, S.chick.food - mins / 3); S.chick.happy = Math.max(10, S.chick.happy - mins / 5); }
   if (s.kind && BIRDS[s.kind] && isOpen(BIRDS[s.kind])) kind = s.kind; } } catch (e) { /* a fresh start */ } }());
@@ -3244,6 +3256,7 @@ function drawFiles() {
   $('newGame').textContent = fileMode === 'new' ? 'Cancel' : 'New game';
 }
 function pickFile(n) {
+  if (CREATIVE712_ON) return;   // 712 S2: a file is never switched, erased or started from the creative world
   const f = readFile(n);
   if (fileMode === 'new') {
     if (f && fileArmed !== n) { fileArmed = n; drawFiles(); return; }   // a full file: only the second tap erases it
@@ -3291,6 +3304,7 @@ $('saveGo').addEventListener('click', () => {
     const byHand = () => { let ok = false; try { ok = document.execCommand('copy'); } catch (e) { ok = false; } said(ok); };
     try { if (navigator.clipboard && navigator.clipboard.writeText) navigator.clipboard.writeText(ta.value).then(() => said(true), byHand); else byHand(); } catch (e) { byHand(); }
     return; }
+  if (CREATIVE712_ON) { msg.textContent = 'Restore is for your story: leave Creative first. Nothing changed.'; return; }   // 712 S2: never from the creative world
   const j = SAVECODE.dec(ta.value); if (!j) { restoreArmed = false; go.textContent = 'Restore'; msg.textContent = 'That is not a whole backup code (or it was cut short). Nothing changed.'; return; }
   const o = JSON.parse(j), cur = readFile(ACTIVE);
   if (cur && !restoreArmed) { restoreArmed = true; go.textContent = 'Tap again to replace'; msg.textContent = 'File ' + ACTIVE + ' holds ' + birdName(cur) + '. Replace it with ' + birdName(o) + '?'; return; }
@@ -3979,8 +3993,8 @@ function map705El() {
   return m;
 }
 function wmap712Hook(m) {   // 712e (Marth, Oct 28: "Not just Jamaica, the whole world."): the chart's World tab; world712-mapview.js draws it, the island chart is untouched
-  let data = 'world712-map.js'; { const ORCH_SRC = 'world712-map.js?v=32e93132c06e'; data = ORCH_SRC; }   // named as build-site.js finds a lazy file, so her app carries it offline
-  { const ORCH_SRC = 'world712-mapview.js?v=32e93132c06e'; const s = document.createElement('script'); s.src = ORCH_SRC; s.async = true; s.onload = () => { if (window.WMAP712) WMAP712.attach(m, data, () => { if (MAP705.open) { map705Size(); map705Draw(); } }); }; document.head.appendChild(s); }
+  let data = 'world712-map.js'; { const ORCH_SRC = 'world712-map.js?v=4c61465a584e'; data = ORCH_SRC; }   // named as build-site.js finds a lazy file, so her app carries it offline
+  { const ORCH_SRC = 'world712-mapview.js?v=4c61465a584e'; const s = document.createElement('script'); s.src = ORCH_SRC; s.async = true; s.onload = () => { if (window.WMAP712) WMAP712.attach(m, data, () => { if (MAP705.open) { map705Size(); map705Draw(); } }); }; document.head.appendChild(s); }
 }
 function map705Size() {   // the chart's side in CSS px: as big as fits, upright on a phone held up, the head and foot kept on a phone on its side
   const cv = $('map705cv'), side = Math.round(innerWidth > innerHeight && innerHeight <= 520 ? Math.max(150, Math.min(innerHeight - 96, innerWidth * 0.6)) : Math.max(180, Math.min(innerWidth - 44, innerHeight - 150, 460)));
@@ -4564,7 +4578,7 @@ function ani714Tick(dt, live) {   /* atkTick, after the scout, game time */
     const on = !A.off && !FAR682.where && world703Won() && S.mode !== 'menu';
     if (!on) { if (A.shown) ani714Hide(); return; }
     A.shown = true;
-    const safe = !live || S.tut !== 0 || !!S.talking || !!S.inside || !!S.insideTH || scoutCovered() || !!S.morph || !!S.inSky || !!S.inEagle || !!S.climb || !!CALL.ph || (typeof hearts714Busy === 'function' && hearts714Busy()) || !['walk', 'fly', 'hover', 'swim', 'landing'].includes(S.mode);
+    const safe = creative712On() || !live || S.tut !== 0 || !!S.talking || !!S.inside || !!S.insideTH || scoutCovered() || !!S.morph || !!S.inSky || !!S.inEagle || !!S.climb || !!CALL.ph || (typeof hearts714Busy === 'function' && hearts714Busy()) || !['walk', 'fly', 'hover', 'swim', 'landing'].includes(S.mode);
     const up = S.mode === 'walk' || S.mode === 'swim' ? 0 : Math.max(0, S.pos.y - standOf(kind) - groundAt(S.pos.x, S.pos.z)), starts = ATK.starts.peck + ATK.starts.sweep, attack = A.s0 >= 0 && starts > A.s0;
     A.s0 = starts; A.safe = safe;
     const st = A.W.step(live ? dt : 0, { hx: S.pos.x, hy: S.pos.y, hz: S.pos.z, up, chick: !!chick, cx: chick ? chick.position.x : 0, cy: chick ? chick.position.y : 0, cz: chick ? chick.position.z : 0,
@@ -4691,7 +4705,7 @@ function scoutClear(ax, ay, az, bx, by, bz, skip) {   // a straight leg stays cl
   return true;
 }
 const SCOUT_BEARINGS = [0, 0.785, -0.785, 1.571, -1.571, 2.356, -2.356, 3.142];   // from behind her first, then round to the front
-function scoutSpawn() {
+function scoutSpawn() { if (creative712On()) { CREATIVE712.refused.scout++; return; }   /* 712 S2: no wild hawk in the creative world */
   if (!SCO) return 'no scout'; if (SCO.st !== 'off') return 'busy';
   if (!S.fruit || !FRUITS.includes(S.fruit.type)) return 'no tree fruit';
   if (!atkShown()) return 'no attack now'; if (scoutCovered()) return 'covered';
@@ -6103,7 +6117,7 @@ function bgMusicTick(dt) {
    after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
    music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
    menu, a cutscene), the orchestra bows out. */
-const ORCH_SRC = 'orch-samples.js?v=32e93132c06e';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const ORCH_SRC = 'orch-samples.js?v=4c61465a584e';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
 const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
 window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
 const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
@@ -6538,7 +6552,7 @@ const VGW = window.WFR_VILLAGE || null, VG_R = 6.5, NC_SPEED = 1.5, NC_NAME = 'W
 const NC_PAL = { shirt: 0x6a8f3c, pants: 0x3a4a5a, shoes: 0x2a2a2a, skin: 0xd9a77a, hair: 0x3b2414 };   // DRAFT colours
 const VG_SAY = { 1: 'Two trees came down and the plot is cleared!', 2: 'The frame is up!' };   // DRAFT words
 if (VGW) S.village = VGW.clean(S.village);
-function vgOpen() { return !!VGW && !!S.nestDone && (S.built >= BUILDS.length || S.level >= 20); }   // DRAFT gate: after the village's six builds, or from the Eagle's level
+function vgOpen() { return !creative712On() && !!VGW && !!S.nestDone && (S.built >= BUILDS.length || S.level >= 20); }   // DRAFT gate: after the village's six builds, or from the Eagle's level
 function vgOn() { return !!(VG && VG.on); }
 function vgPlot() { const c = S.village.cur || 1; return c === 1 ? S.village.plot1 : (S.village['plot' + c] || (S.village['plot' + c] = { got: {}, stage: 0 })); }   /* 704: the plot being built now (plot1 first, then plot2, plot3...) */
 function vgWants(k) { return vgOn() && vgPlot().stage < VGW.LAST ? Math.max(0, (VGW.TOTAL[k] || 0) - (vgPlot().got[k] || 0)) : 0; }
@@ -7517,6 +7531,7 @@ try { if (localStorage.getItem('wfr.debug') === '1') window.__wfr = { eagle: () 
   carib712Time: (n) => {   /* the bench's stopwatch: n forced renders each finished on the GPU (gl.finish), shown vs hidden, ms per render */
     const m = CARIB712.mesh; if (!m) return null; const gl = renderer.getContext(), vis = m.visible, t = (on) => { m.visible = on; renderer.render(scene, camera); gl.finish(); const t0 = performance.now(); for (let k = 0; k < n; k++) { renderer.render(scene, camera); gl.finish(); } return (performance.now() - t0) / n; };
     const off1 = t(false), on1 = t(true), off2 = t(false), on2 = t(true); m.visible = vis; return { on: +((on1 + on2) / 2).toFixed(3), off: +((off1 + off2) / 2).toFixed(3) }; },
+  creative712: (o) => creative712Door(o),   /* 712 S2 bench */
   climb712: () => climb712Peek(),
   climb712Win: () => { S.world = S.world || {}; S.world.hawk = Object.assign(S.world.hawk || {}, { won: 1, friend: 1, told: 1, nextVisit: 9999 }); return true; },   /* a SETUP door (never the player's): the Hawk beaten mid-page, for the gate's own moment */
   climb712Sun: () => { const v = sun.position.clone().sub(sun.target.position); return +((((Math.PI - Math.atan2(v.x, v.z)) * 180 / Math.PI) % 360 + 360) % 360).toFixed(1); },   /* the sun's compass bearing (WFR_WORLD.yawOf inverted) */
@@ -8058,6 +8073,7 @@ function call703Tick(real) {   // real seconds, once a frame (before the ship's 
   const C = CALL703;
   try {
     if (!call703Open() || S.mode === 'menu') return;
+    if (creative712On()) { CREATIVE712.refused.call++; return; }   // 712 S2: no Call in the creative world (counted: frames held)
     const h = call703Hawk();
     if (!h.call) { if (!ACT703_TEST && (!call703Qual() || !$('toast').hidden)) return; h.call = { day: wxDay() + (ACT703_TEST ? 0 : 1), played: !!ACT703_TEST && ACT703_TEST !== 'call' }; C.books++; save(); if (!ACT703_TEST) toast(CALL703_WORDS.booked, 4200); return; }
     if (C.ph == null && h.call.voy === 1 && !VOY703.ph) { h.call = { day: wxDay() + 1, played: false }; C.books++; save(); return; }
@@ -8652,6 +8668,7 @@ function choice703Dove() { const C = CHOICE703; if (!C.dove) { const dv = buildB
   C.dove.visible = true; C.doveT = 0; C.dove.position.set(S.pos.x + 3, S.pos.y + 40, S.pos.z + 3); }
 function choice703HawkAway() { CHOICE703.leaveT = 0; }
 function choice703Tick(real) {
+  if (creative712On()) { CREATIVE712.refused.visit++; return; }   /* 712 S2: no visit from the Hawk in the creative world */
   const C = CHOICE703, h = (S.world && S.world.hawk) || null, hk = VOY703 && VOY703.hawk;
   if (C.dove && C.dove.visible && C.doveT >= 0) { C.doveT += real; const u = Math.min(1, C.doveT / 2.5), e = u * u * (3 - 2 * u), hy = hk ? hk.position.y : S.pos.y;   // down through the rain, beside the Hawk
     const tx = (hk ? hk.position.x : S.pos.x) + 2.2, tz = (hk ? hk.position.z : S.pos.z) + 1.2; C.dove.position.set(S.pos.x + 3 + (tx - S.pos.x - 3) * e, S.pos.y + 40 + (hy + 1.6 - S.pos.y - 40) * e, S.pos.z + 3 + (tz - S.pos.z - 3) * e);
@@ -9110,6 +9127,373 @@ function netTick678(dt) {
   if (S.mode !== 'paused' && S.mode !== 'menu' && !$('net678').hidden) $('net678').hidden = true;   /* v1.1: the sheet lives on the title and the Pause screen */
   const tb = $('netBtn678t'); if (tb.hidden !== (S.mode === 'paused')) tb.hidden = S.mode === 'paused';   /* under Pause the row has its own Fly together button */
 }
+const CREATIVE712_CSS = `html.c712 #lvPill{visibility:hidden!important}
+#c712pill{position:fixed;left:calc(env(safe-area-inset-left,0px) + 16px);top:calc(env(safe-area-inset-top,0px) + 12px);width:180px;box-sizing:border-box;padding:6px;border-radius:18px;background:rgba(255,253,247,.94);box-shadow:0 6px 16px rgba(34,49,74,.2);pointer-events:auto;z-index:31;display:grid;grid-template-columns:1fr 1fr;gap:6px;font-family:var(--display,system-ui)}
+#c712pill b{grid-column:1 / 3;font-size:13px;line-height:16px;color:#2b1430;padding-left:4px;font-weight:700}
+#c712pill button{height:44px;border:0;border-radius:14px;padding:0 6px;font:700 15px/1 var(--display,system-ui);background:#eef6ff;color:#2f5fb0;touch-action:manipulation}
+#c712build.on{background:#ffd25e;color:#3a2a00}#c712leave{background:#f6efe4;color:#6e4529}#c712leave.armed{background:#c8314a;color:#fff}
+#c712pal,#c712place,#c712rot,#c712undo,#c712ret,#c712why{display:none}
+html.c712b #c712pal{display:flex}html.c712b #c712place,html.c712b #c712rot,html.c712b #c712undo{display:grid}html.c712b #c712ret{display:block}
+#c712pal{position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 8px);width:max-content;max-width:calc(100vw - 16px - env(safe-area-inset-left,0px) - env(safe-area-inset-right,0px));height:72px;box-sizing:border-box;gap:6px;padding:6px;border-radius:18px;background:rgba(20,24,34,.62);overflow-x:auto;overflow-y:hidden;touch-action:pan-x;z-index:31;scrollbar-width:none;-webkit-overflow-scrolling:touch;scroll-snap-type:x mandatory;scroll-padding:6px}
+#c712pal::-webkit-scrollbar{display:none}
+.c712t{flex:0 0 60px;width:60px;height:60px;border:0;border-radius:12px;padding:0;position:relative;overflow:hidden;background:#cfe8f4;box-shadow:inset 0 0 0 2px rgba(255,255,255,.35);touch-action:pan-x;scroll-snap-align:start}
+.c712t canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+.c712t span{position:absolute;left:0;right:0;bottom:0;padding:2px 0 3px;font:700 10px/1 var(--display,system-ui);color:#fff;background:linear-gradient(transparent,rgba(20,24,34,.78));pointer-events:none;text-align:center}
+.c712t.on{box-shadow:inset 0 0 0 3px #ffd25e,0 0 0 2px #ffd25e}.c712t.rm{background:#f3d6d6;font-size:26px}.c712t.rm.on{box-shadow:inset 0 0 0 3px #ff6b6b,0 0 0 2px #ff6b6b}
+#c712place,#c712rot,#c712undo{position:fixed;place-items:center;border:0;border-radius:50%;padding:0;pointer-events:auto;z-index:31;touch-action:manipulation;font-family:var(--display,system-ui);font-weight:800;box-shadow:0 8px 18px rgba(34,49,74,.28)}
+#c712place{width:84px;height:84px;right:calc(env(safe-area-inset-right,0px) + 28px);bottom:calc(env(safe-area-inset-bottom,0px) + 232px);background:#3f9a4a;color:#fff;font-size:17px}
+#c712place.rm{background:#c8314a}#c712place.no{opacity:.55}
+#c712rot,#c712undo{width:56px;height:56px;right:calc(env(safe-area-inset-right,0px) + 124px);background:#fffdf7;color:#2b1430;font-size:24px}
+#c712rot{bottom:calc(env(safe-area-inset-bottom,0px) + 246px)}#c712undo{bottom:calc(env(safe-area-inset-bottom,0px) + 312px)}#c712undo.no,#c712rot.no{opacity:.5}
+@media (orientation:landscape) and (max-height:520px){#c712place{right:calc(env(safe-area-inset-right,0px) + 130px);bottom:calc(env(safe-area-inset-bottom,0px) + 228px)}#c712rot{right:calc(env(safe-area-inset-right,0px) + 228px);bottom:calc(env(safe-area-inset-bottom,0px) + 138px)}#c712undo{right:calc(env(safe-area-inset-right,0px) + 294px);bottom:calc(env(safe-area-inset-bottom,0px) + 138px)}}
+html.c712b .stick{bottom:calc(env(safe-area-inset-bottom,0px) + 88px)}
+html.c712b #flutter,html.c712b #jump,html.c712b #atkBtn,html.c712b #zoom,html.c712b #nightBtn,html.c712b #sing,html.c712b #emoBtn633,html.c712b #read,html.c712b #home,html.c712b #thBtn,html.c712b #care{display:none!important}
+#c712ret{position:fixed;left:50%;top:50%;width:34px;height:34px;margin:-17px 0 0 -17px;border-radius:50%;box-sizing:border-box;border:3px solid #fff;box-shadow:0 0 0 2px rgba(20,24,34,.45);pointer-events:none;z-index:30}
+#c712ret::before,#c712ret::after{content:'';position:absolute;left:50%;top:50%;background:#fff;box-shadow:0 0 0 1px rgba(20,24,34,.35)}#c712ret::before{width:3px;height:10px;margin:-5px 0 0 -1.5px}#c712ret::after{width:10px;height:3px;margin:-1.5px 0 0 -5px}
+#c712ret.ok{border-color:#7dff8a}#c712ret.no{border-color:#ffb3b3}#c712ret.rm{border-color:#ff6b6b}
+html.c712b #c712why:not(:empty){display:block}#c712why{position:fixed;left:50%;top:calc(50% + 26px);transform:translateX(-50%);padding:3px 9px;border-radius:10px;background:rgba(20,24,34,.72);color:#fff;font:700 12px/1.3 var(--display,system-ui);pointer-events:none;z-index:30;white-space:nowrap}
+html.c712 #files,html.c712 .title-links,html.c712 #saveBtn,html.c712 #netBtn678,html.c712 #journalBtn,html.c712 #net678{display:none!important}`;
+/* 712 S2 · CREATIVE MODE v1 (Marth, Oct 28: "creative mode"; "don’t cut any corners"; PLAN_712 section 4, Itachi; tools/wiring/wire-712s2-creative.js).
+   A world of its own (see CREATIVE712_ON above S): no enemies, no costs, no EDGE, the climb's ceiling, a palette of the game's own pieces placed
+   under the reticle, one edit record per piece (creative712.js) under wfr.creative712. Every number and word here is DRAFT, his to rule on. */
+var CREATIVE712 = { on: CREATIVE712_ON, booted: false, ready: false, R: 1500, CAP: 64, MAX: 400, CELL: 12, CLOCK: 600,
+  kinds: {}, order: [], pieces: [], byId: {}, grid: new Map(), sel: 'house', tool: 'place', rot: 0, build: false, aim: null, hist: null, doc: null,
+  dropped: [], places: 0, removes: 0, undos: 0, rotates: 0, writes: 0, refused: { scout: 0, visit: 0, call: 0 }, faults: [], fault: null, el: {}, ring: null, fr: [], frT: 0, leaveT: 0, progs: null, thumbs: 0, saveFails: 0, hold: false, bak: false, failed: null };
+const CREATIVE712_WORDS = { hello: 'Creative: build anything you like. Your story is safe.', water: 'In the water', steep: 'Too steep here', nest: 'Too close to your nest', you: 'Too close to you', here: 'Something is already here', full: 'This world is full', sky: 'Aim at the ground', none: 'Nothing to remove here', leave: 'Tap again to leave', store: 'This phone has no room left: that change was not kept.', hold: 'Your old world could not be copied safely, so nothing new is saved.', failed: 'Creative could not open just now. Your story is safe.',
+  undoTake: (l) => 'Undone: ' + l + ' taken away.', undoBack: (l) => 'Undone: ' + l + ' put back.', undoNo: (w) => 'Cannot undo here: ' + w.toLowerCase() + '.', kept: (n) => 'Creative: ' + n + ' piece' + (n === 1 ? '' : 's') + ' could not load. A copy of your world is kept.' };   // DRAFT
+function creative712On() { return !!CREATIVE712_ON; }
+function c712Hash(s) { let h = 2166136261; for (let i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619); } return ((h >>> 0) % 10000) / 10000; }   // a piece's own shade from its id (never Math.random)
+/* ---------- the pieces: each built once by its own builder, baked into one geometry per material ---------- */
+function c712Bake(root) {
+  root.updateMatrixWorld(true); const inv = new THREE.Matrix4().copy(root.matrixWorld).invert(), groups = new Map(), MI = new THREE.Matrix4(), skipped = [];
+  root.traverseVisible((o) => {
+    if (o.isSprite || o.isLine || o.isPoints) { skipped.push(o.type); return; }
+    if (!o.isMesh || !o.geometry || !o.geometry.attributes.position) return;
+    if (Array.isArray(o.material)) { skipped.push('multi'); return; }
+    const n = o.isInstancedMesh ? o.count : 1;
+    for (let j = 0; j < n; j++) { const m = new THREE.Matrix4().multiplyMatrices(inv, o.matrixWorld); let c = null;
+      if (o.isInstancedMesh) { o.getMatrixAt(j, MI); m.multiply(MI); if (o.instanceColor) { c = new THREE.Color(); o.getColorAt(j, c); } }
+      let G = groups.get(o.material); if (!G) groups.set(o.material, (G = { items: [], cast: false, recv: false })); G.items.push({ geo: o.geometry, m, c }); G.cast = G.cast || !!o.castShadow; G.recv = G.recv || !!o.receiveShadow; }
+  });
+  const parts = [], v = new THREE.Vector3(), nm = new THREE.Matrix3();
+  for (const [mat, G] of groups) {
+    const wantUV = G.items.some((it) => !!it.geo.attributes.uv), wantC = !!mat.vertexColors; let n = 0;
+    const flat = G.items.map((it) => { const g = it.geo.index ? it.geo.toNonIndexed() : it.geo; n += g.attributes.position.count; return g; });
+    const P = new Float32Array(n * 3), N = new Float32Array(n * 3), U = wantUV ? new Float32Array(n * 2) : null, C = wantC ? new Float32Array(n * 3) : null; let o3 = 0;
+    flat.forEach((g, i) => { const it = G.items[i], pa = g.attributes.position, na = g.attributes.normal, ua = g.attributes.uv, ca = g.attributes.color, flip = it.m.determinant() < 0, cnt = pa.count; nm.getNormalMatrix(it.m);
+      for (let k = 0; k < cnt; k++) { const s = flip ? k - (k % 3) + (2 - (k % 3)) : k, q = o3 + k;   // a mirrored part keeps its faces outward
+        v.fromBufferAttribute(pa, s).applyMatrix4(it.m); P[q * 3] = v.x; P[q * 3 + 1] = v.y; P[q * 3 + 2] = v.z;
+        if (na) v.fromBufferAttribute(na, s).applyMatrix3(nm).normalize(); else v.set(0, 1, 0); N[q * 3] = v.x; N[q * 3 + 1] = v.y; N[q * 3 + 2] = v.z;
+        if (U) { U[q * 2] = ua ? ua.getX(s) : 0; U[q * 2 + 1] = ua ? ua.getY(s) : 0; }
+        if (C) { let r = 1, gg = 1, b = 1; if (ca) { r = ca.getX(s); gg = ca.getY(s); b = ca.getZ(s); } if (it.c) { r *= it.c.r; gg *= it.c.g; b *= it.c.b; } C[q * 3] = r; C[q * 3 + 1] = gg; C[q * 3 + 2] = b; } }
+      o3 += cnt; if (g !== it.geo) g.dispose(); });
+    const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.BufferAttribute(P, 3)); geo.setAttribute('normal', new THREE.BufferAttribute(N, 3));
+    if (U) geo.setAttribute('uv', new THREE.BufferAttribute(U, 2)); if (C) geo.setAttribute('color', new THREE.BufferAttribute(C, 3)); geo.computeBoundingSphere();
+    parts.push({ geo, mat, cast: G.cast, recv: G.recv, verts: n });
+  }
+  return { parts, skipped };
+}
+function c712PartsBox(parts) { const b = new THREE.Box3(); for (const p of parts) { p.geo.computeBoundingBox(); b.union(p.geo.boundingBox); } const c = b.getCenter(new THREE.Vector3()); return { hx: (b.max.x - b.min.x) / 2, hz: (b.max.z - b.min.z) / 2, cx: c.x, cz: c.z, top: b.max.y, sphere: b.getBoundingSphere(new THREE.Sphere()) }; }   // the baked parts' own box (trees.js draws unit shapes scaled per instance: a Box3 of its meshes would be one unit tall)
+function c712Rect(root) { const b = new THREE.Box3().setFromObject(root), c = b.getCenter(new THREE.Vector3()), s = b.getBoundingSphere(new THREE.Sphere()); return { hx: (b.max.x - b.min.x) / 2, hz: (b.max.z - b.min.z) / 2, cx: c.x, cz: c.z, top: b.max.y, sphere: s }; }
+function c712Trees(kd, s) {   // trees.js's own tree, one of it, at the origin (its foot at y 0)
+  const T = WFR_TREES.plant(THREE, [{ x: 0, z: 0, s, y: -0.2 }], { renderer, kindOf: () => kd, understory: false, shadows: false, fruitEvery: 0 }), root = new THREE.Group();
+  for (const m of T.meshes) { m.castShadow = true; m.receiveShadow = true; root.add(m); } return { root, top: T.tops[0], r: T.radii[0], fruit: T.fruit[0] };   // trees.js's tops and fruit are world heights over a ground at 0 (the spec's y is ground - 0.2)
+}
+function c712Rock() {   // the cave's lumpy stone, its idea copied (cave.js keeps its own builder private): three mossy blobs, the cave's own material
+  const cave = scene.getObjectByName('cave:rock'), mat = cave && cave.material ? cave.material : (ANI714 && ANI714.mat) || new THREE.MeshLambertMaterial({ vertexColors: true }), root = new THREE.Group();
+  const grey = new THREE.Color(0x938c80), moss = new THREE.Color(0x6f8d48), col = new THREE.Color();
+  for (const [x, z, r, sy, k] of [[0, 0, 1.25, 0.72, 1], [1.35, 0.55, 0.75, 0.66, 2], [-0.95, 0.9, 0.6, 0.6, 3]]) {
+    const g = new THREE.IcosahedronGeometry(1, 2), p = g.attributes.position, C = new Float32Array(p.count * 3);
+    for (let i = 0; i < p.count; i++) { const a = p.getX(i), b = p.getY(i), c = p.getZ(i), f = 1 + 0.17 * Math.sin(a * 5.1 + k) * Math.sin(b * 4.3 + k * 1.7) * Math.sin(c * 3.7 + k * 2.3); p.setXYZ(i, a * f * r, (b * f * sy + 0.2) * r, c * f * r);
+      const vv = 0.5 + 0.5 * Math.sin(a * 9 + b * 7 + c * 5 + k); col.copy(grey).multiplyScalar(0.82 + 0.22 * vv).lerp(moss, smooth(0.55, 0.9, b) * 0.7); C[i * 3] = col.r; C[i * 3 + 1] = col.g; C[i * 3 + 2] = col.b; }
+    g.setAttribute('color', new THREE.BufferAttribute(C, 3)); g.computeVertexNormals(); const m = new THREE.Mesh(g, mat); m.position.set(x, 0, z); m.castShadow = true; m.receiveShadow = true; root.add(m); }
+  return root;
+}
+function c712Kinds() {   // the palette, in order (Marth's "existing pieces only": each from its own builder)
+  const K = [];
+  K.push({ k: 'house', label: 'House', make: () => {   // 704's house queue builder (vgMake: the clearing, the frame, the roof, dressed as the village is)
+    const root = new THREE.Group(), keep = VG; let pad = null; VG = { root, g: [], on: false };
+    try { for (const i of [1, 2, VGW.LAST]) { const o = vgMake(i); if (i === 1) pad = o; } } finally { VG = keep; }
+    const p0 = pad.children[0].children[0], plinth = new THREE.Mesh(new THREE.BoxGeometry(VG_W + 0.8, 2.0, VG_D + 0.8), p0.material); plinth.position.set(0, -1.5, 0); plinth.receiveShadow = true; pad.children[0].add(plinth);   // the dirt pad reaches down 3 m more: a gentle slope never shows a gap under the floor
+    const rr = Math.max(VG_W, VG_D) * 0.78 / Math.SQRT2;
+    return { root, slope: 3.0, base: 'max', r: 5.4, top: (P, lx, lz) => { const ux = Math.abs(lx) / HS, uz = Math.abs(lz) / HS; if (ux < VG_W / 2 + 0.06 && uz < VG_D / 2 + 0.06) return P.y + HS * (VG_HT + 2.6 * Math.max(0, 1 - Math.max(ux, uz) / rr)); if (ux < VG_W / 2 + 0.4 && uz < VG_D / 2 + 0.4) return P.y + 0.05; return -1e9; } }; } });
+  K.push({ k: 'oak', label: 'Oak', make: () => { const t = c712Trees('oak', 1.15); return { root: t.root, slope: 99, base: 'mid', r: 2.4, tint: true, top: (P, lx, lz) => (Math.abs(lx) < t.r && Math.abs(lz) < t.r ? P.y + t.top : -1e9) }; } });
+  K.push({ k: 'pine', label: 'Pine', make: () => { const t = c712Trees('pine', 1.2); return { root: t.root, slope: 99, base: 'mid', r: 2.2, tint: true, top: (P, lx, lz) => (Math.abs(lx) < t.r && Math.abs(lz) < t.r ? P.y + t.top : -1e9) }; } });
+  K.push({ k: 'cabin', label: 'Cabin', make: () => {   // cabins.js, June's (site 3), with a footing 2.2 units deep; the keepsake left out, its door shut (no one lives here yet)
+    const cab = WFR_CABINS.build(THREE, 3, { renderer, foundation: 2.2 }), root = new THREE.Group(); if (cab.keepsake && cab.keepsake.g) cab.keepsake.g.visible = false; cab.g.scale.setScalar(HS); root.add(cab.g);
+    if (cab.windowMat && !WINDOW_MATS.includes(cab.windowMat)) WINDOW_MATS.push(cab.windowMat);
+    const rc = c712Rect(cab.g); return { root, slope: 3.0, base: 'max', r: Math.max(rc.hx, rc.hz) * 0.95, top: (P, lx, lz) => { if (Math.abs(lx - rc.cx) > rc.hx || Math.abs(lz - rc.cz) > rc.hz) return -1e9; const t = cab.roofAt ? cab.roofAt(lx / HS, lz / HS) : null; return typeof t === 'number' && isFinite(t) ? P.y + t * HS : P.y + rc.top * 0.7; } }; } });
+  K.push({ k: 'treehouse', label: 'Tree house', make: () => {   // treehouses.js, Bo's (variant 1), on its own tree
+    const th = WFR_TREEHOUSES.build(THREE, 1, { renderer }), root = new THREE.Group(); root.add(th.g); th.g.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    return { root, slope: 99, base: 'mid', dy: -0.1, r: 3.6, top: (P, lx, lz) => (Math.hypot(lx, lz) < 3.0 ? P.y + th.platformTop : -1e9) }; } });
+  K.push({ k: 'fruit', label: 'Fruit tree', make: () => { const t = c712Trees('birch', 1.1), fr = t.fruit ? Math.hypot(t.fruit.x, t.fruit.z) : 1.6, fy = t.fruit ? t.fruit.y : 4;
+    return { root: t.root, slope: 99, base: 'mid', r: 2.2, tint: true, fruitAt: [0, 2.1, 4.2].map((a) => [Math.cos(a + 0.4) * fr, fy - (a > 2 ? 0.5 : 0), Math.sin(a + 0.4) * fr]), top: (P, lx, lz) => (Math.abs(lx) < t.r && Math.abs(lz) < t.r ? P.y + t.top : -1e9) }; } });
+  K.push({ k: 'rocks', label: 'Rocks', make: () => ({ root: c712Rock(), slope: 99, base: 'min', dy: -0.15, r: 2.2, top: (P, lx, lz) => { const d = Math.hypot(lx, lz); return d < 1.7 ? P.y + 1.15 * (1 - (d / 1.7) * (d / 1.7)) + 0.1 : -1e9; } }) });
+  return K;
+}
+function c712Batch(K) {   // a batch: one InstancedMesh per material. Each has its OWN geometry object over the kind's shared buffers (one upload), so its
+  // bounding sphere can hold all its instances and three's frustum test culls it like any mesh (r128 tests an InstancedMesh by its geometry's sphere)
+  const C = CREATIVE712, b = K.parts.map((pt, i) => { const g = new THREE.BufferGeometry(); for (const a in pt.geo.attributes) g.setAttribute(a, pt.geo.attributes[a]); g.boundingSphere = new THREE.Sphere(new THREE.Vector3(), -1);
+    const im = new THREE.InstancedMesh(g, pt.mat, C.CAP); im.count = 0; im.visible = false; im.castShadow = pt.cast; im.receiveShadow = pt.recv; im.name = 'c712:' + K.k + ':' + i; im.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+    if (K.tint) { im.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(C.CAP * 3).fill(1), 3); im.instanceColor.setUsage(THREE.DynamicDrawUsage); }   // the forest's own kind of program (instance colours): each tree its own shade. Made whole here: r128's setColorAt sizes a new buffer by the CURRENT count (0 here), and an empty one is ANGLE's "vertex buffer is not big enough"
+    scene.add(im); return im; });
+  K.batches.push(b); return b;
+}
+const C712_M = new THREE.Matrix4(), C712_Q = new THREE.Quaternion(), C712_P = new THREE.Vector3(), C712_S = new THREE.Vector3(1, 1, 1), C712_UP = new THREE.Vector3(0, 1, 0), C712_COL = new THREE.Color();
+function c712Write(K, slot, x, y, z, yaw, sc, shade) {
+  const C = CREATIVE712, bi = Math.floor(slot / C.CAP), j = slot % C.CAP; while (K.batches.length <= bi) c712Batch(K);
+  C712_M.compose(C712_P.set(x, y, z), C712_Q.setFromAxisAngle(C712_UP, yaw), C712_S.setScalar(sc || 1));
+  if (K.tint) C712_COL.setHSL(0, 0, 1).multiplyScalar(0.9 + 0.2 * (shade == null ? 0.5 : shade));
+  for (const im of K.batches[bi]) { im.setMatrixAt(j, C712_M); im.instanceMatrix.needsUpdate = true; if (K.tint && im.instanceColor) { im.setColorAt(j, C712_COL); im.instanceColor.needsUpdate = true; } }
+  (K.dirty || (K.dirty = new Set())).add(bi);
+}
+function c712Counts(K) { const C = CREATIVE712, n = K.list.length + (K.prevOn ? 1 : 0); K.batches.forEach((b, bi) => { const c = Math.max(0, Math.min(C.CAP, n - bi * C.CAP)); for (const im of b) { if (im.count !== c) im.count = c; const v = c > 0; if (im.visible !== v) im.visible = v; } (K.dirty || (K.dirty = new Set())).add(bi); }); }   // an empty batch is no draw at all
+const C712_BS = new THREE.Sphere(), C712_BM = new THREE.Matrix4(), C712_BV = new THREE.Vector3();
+function c712Union(a, b) { if (a.radius < 0) { a.copy(b); return; } const d = a.center.distanceTo(b.center); if (d + b.radius <= a.radius) return; if (d + a.radius <= b.radius) { a.copy(b); return; } const r = (d + a.radius + b.radius) / 2; C712_BV.subVectors(b.center, a.center).normalize(); a.center.addScaledVector(C712_BV, r - a.radius); a.radius = r; }   // r128 has no Sphere.union
+function c712Bounds() {   // each changed batch's sphere holds every instance it draws (the piece's own sphere, moved), so the camera and the sun's shadow cull it honestly
+  const C = CREATIVE712;
+  for (const k of C.order) { const K = C.kinds[k]; if (!K.dirty || !K.dirty.size) continue;
+    for (const bi of K.dirty) { const b = K.batches[bi]; if (!b || !b[0]) continue; const n = b[0].count, s = b[0].geometry.boundingSphere; s.makeEmpty();
+      for (let j = 0; j < n; j++) { b[0].getMatrixAt(j, C712_BM); C712_BS.copy(K.sphere).applyMatrix4(C712_BM); c712Union(s, C712_BS); }
+      for (let i = 1; i < b.length; i++) b[i].geometry.boundingSphere.copy(s); }
+    K.dirty.clear(); }
+}
+/* ---------- where a piece may stand ---------- */
+function c712Local(P, x, z) { const dx = x - P.x, dz = z - P.z, c = Math.cos(P.yaw), s = Math.sin(P.yaw); return [dx * c - dz * s, dx * s + dz * c]; }   // the inverse of the game's toWorld (x = lx cos + lz sin, z = -lx sin + lz cos)
+function c712Foot(K, x, z, yaw) {   // the ground under the footprint (centre, corners, edge middles), and anything built or grown on it
+  const c = Math.cos(yaw), s = Math.sin(yaw), pts = [[0, 0]], out = { lo: 1e9, hi: -1e9, mid: H(x, z), wet: false, solid: 0 };
+  if (K.rect) for (const a of [-1, 0, 1]) for (const b of [-1, 0, 1]) pts.push([K.rect.cx + a * K.rect.hx, K.rect.cz + b * K.rect.hz]); else for (let i = 0; i < 8; i++) { const a = i / 8 * Math.PI * 2; pts.push([Math.cos(a) * K.r * 0.55, Math.sin(a) * K.r * 0.55]); }
+  for (const [lx, lz] of pts) { const wx = x + lx * c + lz * s, wz = z - lx * s + lz * c, h = H(wx, wz); out.lo = Math.min(out.lo, h); out.hi = Math.max(out.hi, h); if (h <= WATER + 0.25) out.wet = true; out.solid = Math.max(out.solid, groundAt(wx, wz) - h); }
+  return out;
+}
+function c712Check(k, x, z, yaw, skip) {   // skip: a piece id the test ignores (Undo putting that piece back)
+  const C = CREATIVE712, K = C.kinds[k]; if (!K) return { ok: false, why: 'no piece' };
+  if (C.pieces.length >= C.MAX) return { ok: false, why: CREATIVE712_WORDS.full };
+  const f = c712Foot(K, x, z, yaw); if (f.wet) return { ok: false, why: CREATIVE712_WORDS.water };
+  if (f.hi - f.lo > K.slope) return { ok: false, why: CREATIVE712_WORDS.steep };
+  if (Math.hypot(x - NEST.x, z - NEST.z) < 6 + K.r) return { ok: false, why: CREATIVE712_WORDS.nest };
+  if (Math.hypot(x - S.pos.x, z - S.pos.z) < K.r + 0.6) return { ok: false, why: CREATIVE712_WORDS.you };
+  if (f.solid > 0.3) return { ok: false, why: CREATIVE712_WORDS.here };   // Obito: no piece through a house, a tree, the cave's ledge, the lighthouse, a placed roof (groundAt stands 0.3 m+ over the ground there)
+  for (const P of c712Near(x, z)) if (P.id !== skip && Math.hypot(P.x - x, P.z - z) < (P.K.r + K.r) * 0.8) return { ok: false, why: CREATIVE712_WORDS.here };
+  const y = (K.base === 'max' ? f.hi + 0.02 : K.base === 'min' ? f.lo : f.mid) + (K.dy || 0);
+  return { ok: true, why: '', y };
+}
+/* ---------- the pieces she has placed: a coarse grid, so groundAt asks only the few near a point ---------- */
+function c712Keys(x, z, r) { const C = CREATIVE712, out = []; for (let i = Math.floor((x - r) / C.CELL); i <= Math.floor((x + r) / C.CELL); i++) for (let j = Math.floor((z - r) / C.CELL); j <= Math.floor((z + r) / C.CELL); j++) out.push(i + ',' + j); return out; }
+function c712Near(x, z) { const C = CREATIVE712, near = new Set(); for (const key of c712Keys(x, z, 12)) { const M = C.grid.get(key); if (M) for (const P of M) near.add(P); } return [...near]; }
+function creative712Ground(x, z) {   // groundAt's share: a placed roof, deck, crown or stone is ground she can land on
+  const C = CREATIVE712; if (!C.ready || !C.pieces.length) return -1e9; const L = C.grid.get(Math.floor(x / C.CELL) + ',' + Math.floor(z / C.CELL)); if (!L) return -1e9;
+  let g = -1e9; for (const P of L) { const l = c712Local(P, x, z), t = P.K.top(P, l[0], l[1]); if (t > g) g = t; } return g;
+}
+function c712Put(rec) {   // a record drawn and made solid (no writing)
+  const C = CREATIVE712, K = C.kinds[rec.k], w = WFR_CREATIVE.where(WFR_WORLD, rec); if (!K || w.bad || C.byId[rec.id]) return null;
+  const y = H(w.x, w.z), chk = c712Foot(K, w.x, w.z, w.yaw), base = (K.base === 'max' ? chk.hi + 0.02 : K.base === 'min' ? chk.lo : chk.mid) + (K.dy || 0);   // snapped to H() again on every load (the terrain is the same every boot)
+  const P = { id: rec.id, k: rec.k, K, x: w.x, y: base, z: w.z, yaw: w.yaw, rec, shade: c712Hash(rec.id), keys: c712Keys(w.x, w.z, K.r + 1), slot: K.list.length, h0: y };
+  if (K.prevOn) K.prevOn = false;   // the preview gives its slot back first (it is redrawn after)
+  K.list.push(P); c712Write(K, P.slot, P.x, P.y, P.z, P.yaw, 1, P.shade); c712Counts(K);
+  for (const key of P.keys) { let L = C.grid.get(key); if (!L) C.grid.set(key, (L = [])); L.push(P); }
+  C.pieces.push(P); C.byId[P.id] = P; return P;
+}
+function c712Take(id) {   // a piece undrawn and no longer solid (no writing): its slot filled by its kind's last
+  const C = CREATIVE712, P = C.byId[id]; if (!P) return null; const K = P.K, last = K.list[K.list.length - 1];
+  if (K.prevOn) K.prevOn = false;
+  if (last !== P) { K.list[P.slot] = last; last.slot = P.slot; c712Write(K, last.slot, last.x, last.y, last.z, last.yaw, 1, last.shade); }
+  K.list.pop(); c712Counts(K);
+  for (const key of P.keys) { const L = C.grid.get(key); if (L) { const i = L.indexOf(P); if (i >= 0) L.splice(i, 1); if (!L.length) C.grid.delete(key); } }
+  C.pieces.splice(C.pieces.indexOf(P), 1); delete C.byId[id]; return P;
+}
+/* a change is written first, then kept: a write the phone refuses takes the change back and says so (Obito: "a failed save tells her and takes the piece back") */
+function c712Add(rec) { const C = CREATIVE712, P = c712Put(rec); if (!P) return null; C.doc.edits.push(rec); if (c712Save()) return P; C.doc.edits.pop(); c712Take(rec.id); return null; }
+function c712Drop(id) { const C = CREATIVE712, P = C.byId[id]; if (!P) return null; const i = C.doc.edits.findIndex((r) => r.id === id), r0 = i >= 0 ? C.doc.edits.splice(i, 1)[0] : null; c712Take(id); if (c712Save()) return P; if (r0) C.doc.edits.splice(i, 0, r0); c712Put(P.rec); return null; }
+function c712Save() {
+  const C = CREATIVE712; if (C.hold) { toast(CREATIVE712_WORDS.hold, 3600); return false; }
+  try { localStorage.setItem(WFR_CREATIVE.KEY, JSON.stringify(C.doc)); C.writes++; return true; } catch (e) { C.saveFails++; toast(CREATIVE712_WORDS.store, 3600); return false; }
+}
+/* ---------- the reticle: the screen's middle, where the camera looks; marched along the ray to the first ground ---------- */
+const C712_V = new THREE.Vector3(), C712_D = new THREE.Vector3();
+function c712Ray(sx, sy, solid) {   // sx, sy in CSS pixels; solid: placed pieces count as ground (remove), else H() only (place)
+  C712_D.set(sx / innerWidth * 2 - 1, -(sy / innerHeight) * 2 + 1, 0.5).unproject(camera).sub(camera.position).normalize();
+  const o = camera.position, surf = (x, z) => (solid ? Math.max(H(x, z), WATER, creative712Ground(x, z)) : Math.max(H(x, z), WATER - 0.4)); let t = 0.5, prev = 0;
+  if (o.y < surf(o.x, o.z)) return null;
+  while (t < 260) { const x = o.x + C712_D.x * t, y = o.y + C712_D.y * t, z = o.z + C712_D.z * t; if (y <= surf(x, z)) { let a = prev, b = t; for (let k = 0; k < 10; k++) { const m = (a + b) / 2, mx = o.x + C712_D.x * m, my = o.y + C712_D.y * m, mz = o.z + C712_D.z * m; if (my <= surf(mx, mz)) b = m; else a = m; } return { x: o.x + C712_D.x * b, y: o.y + C712_D.y * b, z: o.z + C712_D.z * b, t: b }; } prev = t; t += Math.max(0.35, t * 0.025); }
+  return null;
+}
+function c712RetXY() { return [innerWidth / 2, innerHeight / 2]; }   // the reticle's own place (#c712ret: left 50%, top 50%)
+function c712Aim() {
+  const C = CREATIVE712, K = C.kinds[C.sel]; C.aim = null; if (!C.build || !$('ui') || $('ui').hidden || !(S.mode === 'walk' || S.mode === 'fly' || S.mode === 'swim')) return;
+  const [sx, sy] = c712RetXY(), rm = C.tool === 'remove', hit = c712Ray(sx, sy, rm), camYaw = Math.atan2(camera.position.x - (hit ? hit.x : S.pos.x), camera.position.z - (hit ? hit.z : S.pos.z));
+  if (!hit) { C.aim = { ok: false, why: CREATIVE712_WORDS.sky, rm }; return; }
+  if (rm) { let best = null, bd = 1e9; for (const P of c712Near(hit.x, hit.z)) { const d = Math.hypot(P.x - hit.x, P.z - hit.z); if (d < P.K.r + 1.5 && d < bd) { bd = d; best = P; } }
+    C.aim = { ok: !!best, why: best ? '' : CREATIVE712_WORDS.none, rm, x: hit.x, y: hit.y, z: hit.z, target: best ? best.id : null }; return; }
+  if (!K) return; const yaw = camYaw + C.rot * Math.PI / 4, ch = c712Check(C.sel, hit.x, hit.z, yaw);   // a piece faces her by default; Rotate turns it 45 degrees a tap
+  C.aim = { ok: ch.ok, why: ch.why, rm, x: hit.x, y: ch.ok ? ch.y : hit.y, z: hit.z, yaw, h: H(hit.x, hit.z) };
+}
+function c712Preview() {   // the piece itself under the reticle (its kind's next slot), breathing; a ring at its foot, green or red
+  const C = CREATIVE712, A = C.aim, R = C.ring;
+  for (const k of C.order) { const K = C.kinds[k], want = !!(A && A.ok && !A.rm && k === C.sel); if (want) { c712Write(K, K.list.length, A.x, A.y, A.z, A.yaw, 1 + 0.025 * Math.sin(S.t * 5), 0.5); }
+    if (K.prevOn !== want) { K.prevOn = want; c712Counts(K); } }
+  if (!R) return; R.visible = !!A && A.x != null;
+  if (R.visible) { const tg = A.rm && A.target ? C.byId[A.target] : null, r = tg ? tg.K.r : A.rm ? 1.2 : (C.kinds[C.sel] ? C.kinds[C.sel].r : 2); R.position.set(tg ? tg.x : A.x, (tg ? tg.y : A.y) + 0.12, tg ? tg.z : A.z); R.scale.setScalar(r * (1 + 0.04 * Math.sin(S.t * 6)));
+    R.material.color.setHex(A.rm ? (A.ok ? 0xff5a5a : 0xb0b0b0) : A.ok ? 0x6dff7a : 0xff8a8a); }
+}
+function c712Fruit(dt) {   // the orchard's fruit: drawn sprites, hung on the nearest fruit trees (a small shared pool, never one per tree)
+  const C = CREATIVE712, K = C.kinds.fruit; if (!K || !C.fr.length) return; if ((C.frT -= dt) > 0) return; C.frT = 0.25;
+  const near = K.list.slice().sort((a, b) => Math.hypot(a.x - S.pos.x, a.z - S.pos.z) - Math.hypot(b.x - S.pos.x, b.z - S.pos.z));
+  C.fr.forEach((s, i) => { const P = near[Math.floor(i / 3)], f = K.fruitAt[i % 3]; s.visible = !!P && Math.hypot(P.x - S.pos.x, P.z - S.pos.z) < 70;
+    if (s.visible) { const c = Math.cos(P.yaw), sn = Math.sin(P.yaw); s.position.set(P.x + f[0] * c + f[2] * sn, P.y + f[1], P.z - f[0] * sn + f[2] * c); } });
+}
+/* ---------- the actions (the buttons and the bench's doors take the same road) ---------- */
+function c712PlaceAt(k, x, z, yaw) {
+  const C = CREATIVE712, ch = c712Check(k, x, z, yaw); if (!ch.ok) return { ok: false, why: ch.why };
+  const rec = WFR_CREATIVE.make(WFR_WORLD, k, x, ch.y, z, yaw, C.doc.by, Date.now()), P = c712Add(rec); if (!P) return { ok: false, why: C.hold ? CREATIVE712_WORDS.hold : CREATIVE712_WORDS.store };
+  C.hist.push({ undo: 'drop', id: rec.id }); C.places++; return { ok: true, id: rec.id, rec, y: P.y };
+}
+function c712RemoveId(id) { const C = CREATIVE712, P = C.byId[id]; if (!P) return { ok: false }; const rec = P.rec; if (!c712Drop(id)) return { ok: false, why: CREATIVE712_WORDS.store }; C.hist.push({ undo: 'add', rec }); C.removes++; return { ok: true, id }; }
+function c712Undo() {   // Obito: Undo checks the spot again (she may stand there, or have built there since) and says what it did
+  const C = CREATIVE712, s = C.hist.pop(); if (!s) return { ok: false };
+  if (s.undo === 'drop') { const P = C.byId[s.id], lbl = P ? P.K.label : 'piece'; if (!c712Drop(s.id)) { C.hist.push(s); return { ok: false, why: CREATIVE712_WORDS.store }; } C.undos++; toast(CREATIVE712_WORDS.undoTake(lbl), 1800); return { ok: true, did: 'drop' }; }
+  const w = WFR_CREATIVE.where(WFR_WORLD, s.rec), K = C.kinds[s.rec.k], ch = w.bad || !K ? { ok: false, why: 'no piece' } : c712Check(s.rec.k, w.x, w.z, w.yaw, s.rec.id);
+  if (!ch.ok) { C.hist.push(s); toast(CREATIVE712_WORDS.undoNo(ch.why), 2400); return { ok: false, why: ch.why }; }   // kept: she can move and Undo again
+  if (!c712Add(s.rec)) { C.hist.push(s); return { ok: false, why: CREATIVE712_WORDS.store }; }
+  C.undos++; toast(CREATIVE712_WORDS.undoBack(K.label), 1800); return { ok: true, did: 'add' };
+}
+function c712Act() {   // Place, or Remove in the eraser's mode
+  const C = CREATIVE712, A = C.aim; if (!A || !A.ok) { if (A && A.why) toast(A.why, 1400); return null; }
+  if (A.rm) return c712RemoveId(A.target);
+  const r = c712PlaceAt(C.sel, A.x, A.z, A.yaw); if (r.ok) tone(523, 0, 0.06, 'triangle', 0.05); return r;
+}
+function c712Leave() { try { sessionStorage.removeItem('wfr.creative712.on'); sessionStorage.removeItem('wfr.creative712.kind'); sessionStorage.setItem('wfr.toStart', '1'); } catch (e) {} location.reload(); }
+function c712Enter() { try { sessionStorage.setItem('wfr.creative712.on', '1'); sessionStorage.setItem('wfr.creative712.kind', kind); sessionStorage.setItem('wfr.toStart', '1'); } catch (e) { toast('This phone keeps no storage, so Creative cannot open.', 3600); return; } location.reload(); }
+function c712Fail(why) {   // Obito: never stuck in a level-60 seed bird. The world is closed and she is taken back to her title, which tells her
+  const C = CREATIVE712; C.failed = String(why || 'unknown'); C.fault = C.fault || C.failed;
+  try { sessionStorage.removeItem('wfr.creative712.on'); sessionStorage.setItem('wfr.creative712.fail', C.failed.slice(0, 120)); sessionStorage.setItem('wfr.toStart', '1'); } catch (e) {}
+  console.warn('creative 712 could not open: ' + C.failed); setTimeout(() => location.reload(), 60);
+}
+/* ---------- the glass: a thumb-first build kit; never over another control, upright or on its side ---------- */
+const c712Mk = (tag, id, cls, html) => { const e = document.createElement(tag); if (id) e.id = id; if (cls) e.className = cls; if (html != null) e.innerHTML = html; return e; };
+function c712DomPill() {   // FIRST (Obito): the way out exists before anything that could fail
+  const C = CREATIVE712, ui = $('ui'), st = document.createElement('style'); st.id = 'c712css'; st.textContent = CREATIVE712_CSS; document.head.appendChild(st);
+  const pill = c712Mk('div', 'c712pill', '', '<b>🎨 Creative</b>'), bb = c712Mk('button', 'c712build', '', '🧱 Build'), lv = c712Mk('button', 'c712leave', '', '🚪 Leave'); bb.type = lv.type = 'button'; bb.setAttribute('aria-pressed', 'false'); pill.append(bb, lv); ui.append(pill); Object.assign(C.el, { pill, bb, lv });
+  bb.addEventListener('click', () => { if (!C.ready) return; C.build = !C.build; document.documentElement.classList.toggle('c712b', C.build); bb.classList.toggle('on', C.build); bb.setAttribute('aria-pressed', String(C.build)); c712Ui(true); c712Lift(); });
+  addEventListener('resize', () => c712Lift());
+  lv.addEventListener('click', () => { if (C.leaveT > performance.now()) { c712Leave(); return; } C.leaveT = performance.now() + 3000; lv.classList.add('armed'); lv.textContent = 'Sure?'; toast(CREATIVE712_WORDS.leave, 2400); setTimeout(() => { if (C.leaveT <= performance.now()) { lv.classList.remove('armed'); lv.textContent = '🚪 Leave'; } }, 3100); });
+  $('toTitle').addEventListener('click', (e) => { e.stopImmediatePropagation(); e.preventDefault(); c712Leave(); }, true);   // the pause's Main menu leaves the creative world for her title
+  $('toTitle').textContent = '🚪 Leave Creative';
+}
+function c712DomKit() {
+  const C = CREATIVE712, ui = $('ui'), pal = c712Mk('div', 'c712pal'); pal.setAttribute('role', 'toolbar'); pal.setAttribute('aria-label', 'Pieces');
+  const er = c712Mk('button', '', 'c712t rm', '✋<span>Remove</span>'); er.type = 'button'; er.dataset.k = 'remove'; er.setAttribute('aria-label', 'Remove'); pal.appendChild(er);   // Obito: Remove FIRST
+  for (const k of C.order) { const K = C.kinds[k], t = c712Mk('button', '', 'c712t'); t.type = 'button'; t.dataset.k = k; t.setAttribute('aria-label', K.label); const cv = document.createElement('canvas'); cv.width = cv.height = 120; K.cv = cv; t.append(cv, c712Mk('span', '', '', K.label)); pal.appendChild(t); }
+  const place = c712Mk('button', 'c712place', '', 'Place'), rot = c712Mk('button', 'c712rot', '', '⟳'), undo = c712Mk('button', 'c712undo', '', '↶'); place.type = rot.type = undo.type = 'button'; rot.setAttribute('aria-label', 'Rotate'); undo.setAttribute('aria-label', 'Undo');
+  const ret = c712Mk('div', 'c712ret'), why = c712Mk('div', 'c712why'); ret.setAttribute('aria-hidden', 'true');
+  ui.append(pal, place, rot, undo, ret, why); Object.assign(C.el, { pal, place, rot, undo, ret, why, er });
+  pal.addEventListener('click', (e) => { const t = e.target.closest('.c712t'); if (!t) return; if (t.dataset.k === 'remove') C.tool = 'remove'; else { C.tool = 'place'; C.sel = t.dataset.k; } c712Ui(true); });
+  place.addEventListener('click', () => c712Act());
+  rot.addEventListener('click', () => { if (C.tool !== 'place') return; C.rot = (C.rot + 1) % 8; C.rotates++; });
+  undo.addEventListener('click', () => c712Undo());
+}
+/* the palette never covers Flap or Land, whatever the theme puts where (716's Relic layout moved Flap with !important): each is lifted
+   only if it overlaps the strip, by exactly that much, with the independent translate property (no theme here sets it) */
+function c712Lift() {
+  const C = CREATIVE712, pal = C.el.pal, els = [$('flap'), $('land')].filter(Boolean);
+  for (const e of els) if (e.style.translate) e.style.translate = '';
+  if (!C.build || !pal) return; const p = pal.getBoundingClientRect(); if (!p.width) return;
+  for (const e of els) { const r = e.getBoundingClientRect(); if (r.width && r.right > p.left && r.left < p.right && r.bottom > p.top - 8) e.style.translate = '0 ' + Math.round(-(r.bottom - p.top + 10)) + 'px'; }
+}
+function c712Ui(force) {
+  const C = CREATIVE712, E = C.el, A = C.aim; if (!E.place) return;
+  const rm = C.tool === 'remove', ok = !!(A && A.ok), lbl = rm ? 'Remove' : 'Place';
+  if (E.place.textContent !== lbl) E.place.textContent = lbl; E.place.classList.toggle('rm', rm); E.place.classList.toggle('no', !ok); E.rot.classList.toggle('no', rm); E.undo.classList.toggle('no', !C.hist.size());
+  const rc = !A ? '' : rm ? (ok ? 'rm' : 'no') : ok ? 'ok' : 'no'; if (E.ret.className !== rc) E.ret.className = rc; const w = A && !A.ok ? A.why : ''; if (E.why.textContent !== w) E.why.textContent = w;
+  if (force) for (const t of E.pal.children) t.classList.toggle('on', t.dataset.k === 'remove' ? rm : !rm && t.dataset.k === C.sel);
+}
+/* ---------- mode entry: the pieces built and baked, their batches made, every program compiled by drawing each one's thumbnail ---------- */
+function c712Thumbs() {   // each piece drawn once into a corner of the game's own canvas (the same programs as in the world), copied to its tile
+  const C = CREATIVE712, cam = new THREE.PerspectiveCamera(34, 1, 0.1, 500), keep = new Set(), hid = [], size = renderer.getSize(new THREE.Vector2()), pr = renderer.getPixelRatio(), T = 120, culled = [];
+  for (const k of C.order) for (const b of C.kinds[k].batches) for (const im of b) keep.add(im);
+  if (C.ring) keep.add(C.ring); for (const s of C.fr) keep.add(s);
+  for (const o of scene.children) if (!o.isLight && !keep.has(o) && o.visible) { o.visible = false; hid.push(o); }
+  for (const o of keep) { culled.push([o, o.frustumCulled]); o.frustumCulled = false; }   // for these renders only: every program, the sun's shadow pass included, compiles here, wherever the sun's box stands
+  const at = new THREE.Vector3(S.pos.x, S.pos.y - 60, S.pos.z);
+  try {
+    renderer.setScissorTest(true);
+    for (const k of C.order) { const K = C.kinds[k]; for (const k2 of C.order) { const K2 = C.kinds[k2]; K2.prevOn = false; c712Counts(K2); }
+      c712Write(K, 0, at.x, at.y, at.z, -0.6, 1, 0.5); K.prevOn = true; c712Counts(K); const sp = K.sphere, c = sp.center.clone().add(at), d = sp.radius / Math.sin(cam.fov * Math.PI / 360) * 1.05;
+      cam.position.set(c.x + d * 0.62, c.y + d * 0.42, c.z + d * 0.66); cam.lookAt(c); cam.updateMatrixWorld();
+      if (C.ring) { C.ring.visible = k === C.order[0]; C.ring.position.copy(cam.position).addScaledVector(c.clone().sub(cam.position), -0.5); }   // drawn once for its program, behind the thumbnail's eye (never in a tile)
+      for (const s of C.fr) { s.visible = k === 'fruit'; } if (k === 'fruit') C.fr.forEach((s, i) => { const f = K.fruitAt[i % 3], cc = Math.cos(-0.6), sn = Math.sin(-0.6); s.position.set(at.x + f[0] * cc + f[2] * sn, at.y + f[1], at.z - f[0] * sn + f[2] * cc); });
+      renderer.setViewport(0, 0, T, T); renderer.setScissor(0, 0, T, T); renderer.render(scene, cam);
+      const g = K.cv && K.cv.getContext('2d'); if (g) { g.clearRect(0, 0, 120, 120); g.drawImage(renderer.domElement, 0, renderer.domElement.height - T * pr, T * pr, T * pr, 0, 0, 120, 120); C.thumbs++; } }
+  } finally {
+    renderer.setScissorTest(false); renderer.setViewport(0, 0, size.x, size.y);
+    for (const o of hid) o.visible = true; for (const [o, f] of culled) o.frustumCulled = f; for (const k of C.order) { const K = C.kinds[k]; K.prevOn = false; c712Counts(K); } if (C.ring) C.ring.visible = false; for (const s of C.fr) s.visible = false;
+  }
+}
+function c712Backup(raw) {   // Obito: anything dropped at load is copied, as it was stored, BEFORE the first write can lose it (the oldest copy is never overwritten)
+  const C = CREATIVE712, KEY = WFR_CREATIVE.KEY;
+  try { const b0 = localStorage.getItem(KEY + '.bak'); if (b0 == null) localStorage.setItem(KEY + '.bak', raw); else if (b0 !== raw) localStorage.setItem(KEY + '.bak2', raw); C.bak = true; }
+  catch (e) { C.hold = true; toast(CREATIVE712_WORDS.hold, 5200); }   // no room for the copy: nothing new is written over the old world
+}
+function c712Boot() {
+  const C = CREATIVE712; document.documentElement.classList.add('c712');
+  addEventListener('pagehide', () => { try { if (sessionStorage.getItem('wfr.creative712.on') === '1') sessionStorage.setItem('wfr.toStart', '1'); } catch (e) {} });   // a reload stays in the world, past the title's cinematic
+  if (CINE.phase !== 'off' && CINE.phase !== 'done') { cinePhase('done'); document.documentElement.classList.remove('cine'); $('cine').hidden = true; $('boot').hidden = true; }
+  c712DomPill();
+  if (!window.WFR_CREATIVE || !window.WFR_WORLD || !WFR_WORLD.HOMEF) throw new Error(!window.WFR_CREATIVE ? 'creative712.js did not load' : 'world712-frame.js did not load');
+  S.timeScale = 0; S.clock = C.CLOCK; SKY.lastPaint = -9; if (!WX.force) WX.force = 'clear'; ATK.auto = false;   // DRAFT: a clear, still mid-morning to build in
+  C.hist = new WFR_CREATIVE.History();
+  let raw = null; try { raw = localStorage.getItem(WFR_CREATIVE.KEY); } catch (e) { raw = null; }
+  const cl = WFR_CREATIVE.clean(WFR_WORLD, raw); C.doc = cl.doc; C.dropped = cl.dropped;
+  for (const D of c712Kinds()) { try { const m = D.make(), b = c712Bake(m.root), rc = c712PartsBox(b.parts); const K = Object.assign({ k: D.k, label: D.label, batches: [], list: [], prevOn: false, parts: b.parts, skipped: b.skipped, sphere: rc.sphere, verts: b.parts.reduce((s, p) => s + p.verts, 0) }, m);
+    if (D.k === 'house' || D.k === 'cabin') K.rect = { hx: rc.hx, hz: rc.hz, cx: rc.cx, cz: rc.cz }; delete K.root; delete K.make; c712Batch(K); C.kinds[D.k] = K; C.order.push(D.k); } catch (e) { C.faults.push(D.k + ': ' + String(e && e.message || e)); } }
+  if (!C.order.length) throw new Error('no piece could be built');
+  if (C.kinds.fruit && typeof ORCH637 === 'object' && ORCH637 && ORCH637.sprite) for (let i = 0; i < 18; i++) { const s = ORCH637.sprite(ORCH637.types[i % ORCH637.types.length], 1.0); s.visible = false; scene.add(s); C.fr.push(s); }
+  const rg = new THREE.Mesh(new THREE.RingGeometry(0.9, 1.0, 48), new THREE.MeshBasicMaterial({ color: 0x6dff7a, transparent: true, opacity: 0.9, depthTest: false, depthWrite: false, side: THREE.DoubleSide })); rg.rotation.x = -Math.PI / 2; rg.renderOrder = 999; rg.visible = false; rg.name = 'c712:ring'; scene.add(rg); C.ring = rg;
+  c712DomKit(); c712Thumbs();
+  for (const r of C.doc.edits.slice()) { if (!c712Put(r)) { C.dropped.push('could not place ' + r.id + ' (' + r.k + ')'); C.doc.edits.splice(C.doc.edits.indexOf(r), 1); } }   // a builder that failed: its pieces wait in the backup
+  if (C.dropped.length && raw != null) c712Backup(raw);
+  c712Bounds();
+  if (!$('start').hidden) { S.started = true; $('go').click(); }
+  C.ready = true; c712Ui(true); toast(C.dropped.length ? CREATIVE712_WORDS.kept(C.dropped.length) : CREATIVE712_WORDS.hello, 4200);
+}
+function creative712Tick(dt) {   // each frame, after the camera has moved, before the picture; never throws; nothing at all outside the creative world
+  if (!CREATIVE712_ON) return; const C = CREATIVE712;
+  if (!C.booted) { C.booted = true; try { c712Boot(); } catch (e) { c712Fail(String(e && e.message || e)); return; } }
+  if (!C.ready) return;
+  try { c712Aim(); c712Preview(); c712Fruit(dt); c712Ui(false); c712Bounds(); if (C.build && (C.liftT = (C.liftT || 0) - (S.real || dt)) <= 0) { C.liftT = 0.25; c712Lift(); } }   // Land comes and goes in flight: looked at four times a second while building
+  catch (e) { if (!C.fault) { C.fault = String(e && e.message || e); console.warn('creative 712 stopped: ' + C.fault); } }
+}
+function c712Hawks() { const vis = (o) => !!(o && o.visible); return { scout: !!(typeof SCO === 'object' && SCO && vis(SCO.g)), hawk703: !!(VOY703 && vis(VOY703.hawk)), call: !!(CALL703 && CALL703.ph), visit: !!(CHOICE703 && CHOICE703.visitOn), arena: !!(ARENA703S && ARENA703S.on), fight: !!(FIGHT703S && FIGHT703S.on), wake: !!(WAKE703S && WAKE703S.on) }; }
+function creative712Peek() {
+  const C = CREATIVE712, A = C.aim, pools = {}; for (const k of C.order) { const K = C.kinds[k]; pools[k] = { n: K.list.length, prev: !!K.prevOn, batches: K.batches.length, parts: K.parts.length, drawn: K.batches.reduce((s, b) => s + (b[0] ? b[0].count : 0), 0), verts: K.verts, skipped: K.skipped.length, sphere: K.batches[0] && K.batches[0][0] ? +K.batches[0][0].geometry.boundingSphere.radius.toFixed(1) : null }; }
+  const ls = (k) => { try { return localStorage.getItem(k); } catch (e) { return null; } }, KEY = 'wfr.creative712';   // the key spelt here too: the peek answers even where creative712.js did not load
+  return { on: !!CREATIVE712_ON, booted: C.booted, ready: C.ready, failed: C.failed || null, build: C.build, tool: C.tool, sel: C.sel, rot: C.rot, n: C.pieces.length, pools, aim: A ? Object.assign({}, A) : null, ret: c712RetXY(),
+    doc: C.doc ? JSON.parse(JSON.stringify(C.doc)) : null, stored: ls(KEY), bak: ls(KEY + '.bak'), bak2: ls(KEY + '.bak2'), hold: !!C.hold, saveFails: C.saveFails || 0, dropped: C.dropped.slice(), hist: C.hist ? C.hist.size() : 0,
+    places: C.places, removes: C.removes, undos: C.undos, rotates: C.rotates, writes: C.writes, refused: Object.assign({}, C.refused), hawks: c712Hawks(), faults: C.faults.slice(), fault: C.fault, thumbs: C.thumbs, toast: $('toast').hidden ? '' : $('toast').textContent,
+    lock: window.__wfrWxTest || null, mode: S.mode, pos: [S.pos.x, S.pos.y, S.pos.z], clock: S.clock, timeScale: S.timeScale, wx: WX.force || null, won: world703Won(), layout: !!WORLD703.on, programs: renderer.info.programs.length, calls: renderer.info.render.calls, tris: renderer.info.render.triangles,
+    pieces: C.pieces.map((P) => ({ id: P.id, k: P.k, x: +P.x.toFixed(3), y: +P.y.toFixed(3), z: +P.z.toFixed(3), yaw: +P.yaw.toFixed(4), slot: P.slot, h: +P.h0.toFixed(3) })) };
+}
+function creative712Door(o) {   /* the bench's doors (never the player's) */
+  const C = CREATIVE712; o = o || {};
+  if (o.place) { const [k, x, z, yaw] = o.place; return c712PlaceAt(k, x, z, yaw == null ? 0 : yaw); }
+  if (o.remove) return c712RemoveId(o.remove);
+  if (o.check) { const [k, x, z, yaw] = o.check; return c712Check(k, x, z, yaw == null ? 0 : yaw); }
+  if (o.clear) { for (const P of C.pieces.slice()) c712Drop(P.id); C.hist = new WFR_CREATIVE.History(); return true; }
+  if (o.slot) { const P = C.byId[o.slot]; if (!P) return null; const b = P.K.batches[Math.floor(P.slot / C.CAP)], m = new THREE.Matrix4(), p = new THREE.Vector3(), q = new THREE.Quaternion(), s = new THREE.Vector3(); b[0].getMatrixAt(P.slot % C.CAP, m); m.decompose(p, q, s); const e = new THREE.Euler().setFromQuaternion(q, 'YXZ'); const bs = b[0].geometry.boundingSphere; return { x: p.x, y: p.y, z: p.z, yaw: e.y, drawn: P.slot % C.CAP < b[0].count, inSphere: bs.radius > 0 && bs.center.distanceTo(p) <= bs.radius + 1e-3 }; }
+  if (o.ground) return creative712Ground(o.ground[0], o.ground[1]);
+  if (o.groundAt) return groundAt(o.groundAt[0], o.groundAt[1]);
+  if (o.H) return H(o.H[0], o.H[1]);
+  if (o.proj) { const v = new THREE.Vector3(o.proj[0], o.proj[1], o.proj[2]).project(camera); return [(v.x + 1) / 2 * innerWidth, (1 - v.y) / 2 * innerHeight, v.z]; }
+  if (o.hawkVisit) { const h = call703Hawk(); h.nextVisit = 0; return true; }   /* a SETUP door: the Hawk's visit due today */
+  if (o.callDue) { const h = call703Hawk(); h.call = { day: wxDay(), played: false }; WX.force = 'storm'; SKY.lastPaint = -9; return true; }   /* a SETUP door: the Call booked for today, unplayed, in a storm */
+  if (o.time) { const gl = renderer.getContext(); renderer.render(scene, camera); gl.finish(); const t0 = performance.now(); for (let k = 0; k < o.time; k++) { renderer.render(scene, camera); gl.finish(); } return { ms: +((performance.now() - t0) / o.time).toFixed(3), calls: renderer.info.render.calls, tris: renderer.info.render.triangles }; }
+  if (o.face) { S.yaw = o.face; S.camYaw = o.face; return true; }
+  if (o.houses) return houses.slice(0, 12).map((h) => [h.x, h.z]);   /* the village's houses (where a piece must be refused) */
+  if (o.trees) return trees.slice(0, 40).map((t) => [t.x, t.z, t.r]);
+  return creative712Peek();
+}
+if (!CREATIVE712_ON) { const b = $('creative712Btn'); if (b) b.addEventListener('click', () => { audio(); c712Enter(); });   // the title's door into the world
+  try { const f = sessionStorage.getItem('wfr.creative712.fail'); if (f) { sessionStorage.removeItem('wfr.creative712.fail'); $('kicker').textContent = CREATIVE712_WORDS.failed; } } catch (e) { /* no storage */ } }   // a world that could not open says so on her title
 function frame(now) {
   if (PZ.on) { last = now; pzFrame(now); requestAnimationFrame(frame); return; }   /* 672: paused: no rule runs and nothing new is drawn */
   pzBtnTick();
@@ -9424,6 +9808,7 @@ function frame(now) {
   horizonTick700();   // 700: the far islands take the sky's haze
   carib712Tick();   // 712 S1: the real Caribbean, hidden under water and in a far place
   climb712Tick(S.real || dt);   // 712 S4a: the climb's planes, air, open sea, veil and the clouds' parting
+  creative712Tick(S.real || dt);   // 712 S2: the creative world (its reticle, the preview, the fruit); nothing outside it
   farTick682(S.real || dt);   // 682 B: the crossing, a far place's edge, a reload while away
   dunns712Tick(S.real || dt);   // 712 S5.1: Dunn's River (in, out, the water's clock, the roar)
   markTick701();   // 701: the markers (places gold, enemies red)
@@ -9617,7 +10002,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build 32e93132c06e): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build 4c61465a584e): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>
