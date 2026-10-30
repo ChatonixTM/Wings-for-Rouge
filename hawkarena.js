@@ -82,7 +82,7 @@ window.WFR_HAWKARENA = (function () {
     for (var hi = 0; hi < NH; hi++) bird('helper', 'crow of Damned ' + (hi + 1), perchAt(pp.helpers, hi, Math.PI - 0.7 + hi * 0.45));
     var NB = B.length;
     var sg = o.segment && typeof o.segment === 'object' ? o.segment : null, SEG = null;   /* THE SWITCH: the chick's turn (null: the fight exactly as before) */
-    if (sg) { var ha = sg.hawkAt || {}; SEG = { t: num(sg.t, 5, 300) || SEG_T, hits: Math.round(num(sg.hits, 1, 9)) || SEG_HITS, hawk: { x: ha.x != null ? +ha.x || 0 : RING.cx, y: ha.y != null ? +ha.y || 0 : RING.ceil - SOFT, z: ha.z != null ? +ha.z || 0 : RING.cz + RING.r } };
+    if (sg) { var ha = sg.hawkAt || {}; SEG = { keep: !!sg.keep, t: num(sg.t, 5, 300) || SEG_T, hits: Math.round(num(sg.hits, 1, 9)) || SEG_HITS, hawk: { x: ha.x != null ? +ha.x || 0 : RING.cx, y: ha.y != null ? +ha.y || 0 : RING.ceil - SOFT, z: ha.z != null ? +ha.z || 0 : RING.cz + RING.r } };
       (Array.isArray(sg.bench) ? sg.bench : []).forEach(function (k) { var fb = B[k | 0]; if (fb && fb.kind === 'friend') fb.bench = true; }); }
 
     var R = { on: false, dead: false, plant: null, t: 0, act: 0, mode: 'idle', mt: 0, hp: HP0, hits: 0, feathers: FEATHERS, lag: 0, hold: false, hAct: -1, fAct: -1, hRot: -1, fRot: -1, hNext: 0, fNext: 0,
@@ -350,7 +350,7 @@ window.WFR_HAWKARENA = (function () {
       else if (R.mode === 'roar') { HK.y += 2.5 * dt; if (R.mt >= ROAR_T) setMode('circle'); }   /* he rises and roars; the storm thickens (the game's) */
       for (i = 0; i < NB; i++) birdStep(B[i], dt);
       groupStep();
-      if (SEG && !done()) { if (R.t >= SEG.t) segEnd('time'); else if (helpersLeft() === 0) segEnd('helpers'); }   /* the chick's turn ends on time, or when his helpers are gone */
+      if (SEG && !done()) { if (R.t >= SEG.t) segEnd('time'); else if (helpersLeft() === 0 && !SEG.keep) segEnd('helpers');   /* 703t: keep: the turn goes on without crows */ }   /* the chick's turn ends on time, or when his helpers are gone */
       var hs = 1e9; for (i = 0; i < NB; i++) { b = B[i]; if (helperIncoming(b) && b.arrive < hs) hs = b.arrive; }
       if (RCH) raPost();   /* 703p */
       ST.helperIncoming = hs < 1e9; ST.helperArriveIn = hs < 1e9 ? hs - R.t : 0; ST.hold = R.hold;
@@ -395,7 +395,8 @@ window.WFR_HAWKARENA = (function () {
         phase: R.phase, phases: R.phaseN, team: R.team || 0, kind: ST.kind, strike: ST.strike, feint: ST.feint, nextKind: R.nextKind, doubles: R.doubles, feints: R.feints,
         birds: B.map(function (b) { return { kind: b.kind, name: b.name, state: b.state, target: b.kind === 'friend' && b.state === 'swooping' ? (b.target >= 0 ? B[b.target].name : 'hawk') : b.kind === 'helper' && b.state !== 'perched' && b.alive ? 'rouge' : null, alive: b.alive, swoops: b.swoops, hp: b.hp }; }), plant: R.plant };
     }
-    var A = { dead: false, _plant: null, start: start, stop: function () { R.on = false; }, on: function () { return R.on && !R.dead; }, step: step, peek: peek, birds: B };
+    var A = { dead: false, _plant: null, start: start, stop: function () { R.on = false; }, on: function () { return R.on && !R.dead; }, step: step, peek: peek, birds: B,
+      allyHit: function () { if (!R.on || R.dead || done()) return false; hitHawk(); return true; } };   /* 703t: the chick's strike counts as hers */
     return A;
   }
 
