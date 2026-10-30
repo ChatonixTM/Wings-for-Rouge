@@ -43,6 +43,8 @@ window.WFR_HAWKFIGHT = (function () {
   var STUN_BACK = 4;                        /* m: a stunned zoom can tumble just behind her; still in reach */
   var R_SIDE_OFF = 2.6;                     /* m: a sidestep lands this far off his committed line */
   var R_SIDE_T = 0.75;                      /* s: on the rail the sidestep holds her out until he has passed (a dodge started 0.6-0.15 s before contact clears him: a window a thumb can hit) */
+  var R_DUE0 = 4.5, R_TIRED_DUE = 7.4;   /* an untaken tired spell holds his strike to 7.4 s (a dash in flight: <= 7.9 s, inside his 8) */
+  var R_FORCE = 6.4;                        /* 703r: HIS REAL SECONDS (Marth's ruling: "every 0.8 seconds - 8 seconds" is real time): 6.4 s after his last warning he strikes (a dash in flight finishes first: <= 6.9 s) */
   var NOW_T = 0.7;                          /* s before contact the game says '↔️ NOW' (a thumb 0.25 s late still slides 2.3 m+ on the rail before he lands) */
   var API = null;
   function clamp(x, a, b) { return x < a ? a : x > b ? b : x; }
@@ -64,7 +66,7 @@ window.WFR_HAWKFIGHT = (function () {
       reach: false, wave: '', win: '', inRange: false, far: 0, dashWind: false, dashLeft: 0, now: '', hitsLeft: 0 };   /* 703p: what the screen shows (win: 'tired'|'stun'|'return'|''; now: 'side'|'atk'|'') */
     var RCH = !!o.reach;   /* 703p: the catchable fight (off: the fight exactly as before) */
     var RP = { wave: 'burst', waveEnd: 0, hv: 0, lastProg: -1e9, rr: AHEAD, flyFrom: AHEAD, dashT: -1, dashWin: '', tiredHit: false, retOpen: false, retFrom: 0, retHit: false,
-      dashes: 0, far: 0, byTired: 0, byStun: 0, byReturn: 0, dashMiss: 0, tiredWaves: 0, bursts: 0, maxRel: -1e9, nearest: 1e9 };
+      dashes: 0, due: 6.4, lastWarnT: -1, gMin: 1e9, gMax: 0, forced: 0, far: 0, byTired: 0, byStun: 0, byReturn: 0, dashMiss: 0, tiredWaves: 0, bursts: 0, maxRel: -1e9, nearest: 1e9 };
 
     /* FIGHT-TICK BEGIN: nothing between these markers allocates (tests/hawkfight-unit.js reads this text) */
     function warnLen() { return R.plant === 'nowarn' ? 0.2 : WARN_T; }   /* plant 'nowarn': the control for claim 2 */
@@ -118,6 +120,7 @@ window.WFR_HAWKFIGHT = (function () {
       var a = clamp(R.aim + R_SIDE_OFF, -RAIL_W, RAIL_W), b = clamp(R.aim - R_SIDE_OFF, -RAIL_W, RAIL_W), da = a - R.aim, db = R.aim - b, ca = da >= DODGE_CLEAR + 0.2, cb = db >= DODGE_CLEAR + 0.2;
       if (ca && cb) return (a - R.off < 0 ? R.off - a : a - R.off) <= (b - R.off < 0 ? R.off - b : b - R.off) ? a : b;
       return ca ? a : b; }
+    function rDue() { return RCH && R.plant !== 'nocap8' && RP.lastWarnT >= 0 && R.t - RP.lastWarnT >= (rTired() ? R_TIRED_DUE : RP.due) && R.mode !== 'won' && R.mode !== 'down'; }   /* plant 'nocap8': no deadline, the control */
     function rTired() { return R.phase === 'chase' && RP.wave === 'tired' && !RP.tiredHit; }   /* tired, he holds his swoop: a clear window (Marth: "deteriorate or slow down ... so u can land a hit") */
     function rIn(w) { return RP.rr >= -STUN_BACK && RP.rr <= (w === 'stun' ? REL_MAX : REACH); }   /* in reach: beside her or ahead; a dizzy Hawk anywhere inside the band (he is helpless), else within REACH */
     function rAtk() {   /* ⚔️: a parry while he strikes; the dash when a window is open and he is in reach; else a whiff ('far': a window, but out of reach) */
@@ -152,8 +155,12 @@ window.WFR_HAWKFIGHT = (function () {
     }
     function rPost(dt, hd, held) {   /* after his machine: the return window, his place, what the screen shows */
       for (var i = 0; i < EV.length; i++) { var e = EV[i];
-        if (e === 'shakeoff' || e === 'miss') { RP.retOpen = true; RP.retHit = false; RP.retFrom = RP.rr; } else if (e === 'hurt' || e === 'struck' || e === 'secondwind') RP.retOpen = false; }
+        if (e === 'struck') RP.struck = true;
+        if (e === 'shakeoff' || e === 'miss') { RP.retOpen = true; RP.retHit = false; RP.retFrom = RP.rr; } else if (e === 'hurt' || e === 'struck' || e === 'secondwind') RP.retOpen = false;
+        if (e === 'warn' || e === 'zoomwarn') { if (RP.lastWarnT >= 0) { var gg = R.t - RP.lastWarnT; if (gg < RP.gMin) RP.gMin = gg; if (gg > RP.gMax) RP.gMax = gg; } RP.lastWarnT = R.t; RP.due = R_DUE0 + num(rand(), 0, 1) * (R_FORCE - R_DUE0); } }   /* each strike draws its own deadline, 4.5-6.4 s: never a metronome */
+      if (rDue() && RP.dashT < 0 && (R.mode === 'stun' || R.mode === 'recover' || R.mode === 'drop')) { RP.retOpen = false; setMode('wait'); R.nextT = R.t; }   /* his real seconds outrank a dizzy spell, his way back, the drop */
       if (R.mode !== 'recover') RP.retOpen = false;
+      if (RP.pm !== R.mode) { if (R.mode === 'wait' && RP.pm === 'recover' && R.phase === 'chase' && !RP.struck && R.plant !== 'noslow' && RP.wave !== 'tired') { RP.wave = 'tired'; RP.tiredHit = false; RP.tiredWaves++; RP.waveEnd = R.t + WAVE_T[1]; ev('tired'); } if (R.mode === 'wait') RP.struck = false; RP.pm = R.mode; }   /* 703r: in the chase he tires after striking (a window his own rhythm opens, every cycle) */
       if (R.phase === 'chase' && !held) rWave();
       if (held) { RP.rr += RP.hv * dt - hd; if (RP.rr < 1.2) RP.rr = 1.2; } else rMove(dt, hd);
       R.rel = RP.rr; if (RP.rr > RP.maxRel) RP.maxRel = RP.rr; if (RP.rr >= 0 && RP.rr < RP.nearest) RP.nearest = RP.rr;
@@ -187,7 +194,7 @@ window.WFR_HAWKFIGHT = (function () {
       if (held) R.rel = RP.rr;
       else if (R.mode === 'wait') {
         R.rel += (b - R.rel) * Math.min(1, dt * 2); R.lat = 1.5 * Math.sin(R.t * 0.9);
-        if (R.t >= R.nextT && !(RCH && rTired())) { setMode('warn'); R.warnStart = R.t; R.arrive = R.t + warnLen() + FLY_T; R.aim = R.off; R.side = num(rand(), 0, 1) < 0.5 ? -1 : 1; R.tapped = false; R.arrived = false;
+        if ((R.t >= R.nextT && !(RCH && rTired())) || rDue()) { if (rDue()) RP.forced++; setMode('warn'); R.warnStart = R.t; R.arrive = R.t + warnLen() + FLY_T; R.aim = R.off; R.side = num(rand(), 0, 1) < 0.5 ? -1 : 1; R.tapped = false; R.arrived = false;
           R.swoops++; if (R.phase === 'second') R.zooms++; ev(R.phase === 'second' ? 'zoomwarn' : 'warn'); }
       }
       if (held) R.rel = RP.rr;   /* 703p: held */
@@ -223,7 +230,7 @@ window.WFR_HAWKFIGHT = (function () {
       R.tapped = false; R.arrived = false; R.sideT = 0; R.sideCd = 0; R.lastSide = -99; R.stunT = 0; R.stunHit = false; R.swoops = 0; R.zooms = 0; R.parG = 0; R.parP = 0;
       R.dodges = 0; R.misses = 0; R.hurts = 0; R.whiffs = 0; R.lastJudge = ''; R.dmgN = 0; setMode('wait');
       RP.wave = 'burst'; RP.waveEnd = R.t + WAVE_B[0]; RP.hv = RV0 * V_BURST; RP.lastProg = -1e9; RP.rr = AHEAD; RP.flyFrom = AHEAD; RP.dashT = -1; RP.dashWin = ''; RP.tiredHit = false; RP.retOpen = false; RP.retHit = false;   /* 703p */
-      RP.dashes = 0; RP.far = 0; RP.byTired = 0; RP.byStun = 0; RP.byReturn = 0; RP.dashMiss = 0; RP.tiredWaves = 0; RP.bursts = 0; RP.maxRel = -1e9; RP.nearest = 1e9; if (RCH) R.rel = REL_MAX * 0.75; RP.rr = R.rel; return true;
+      RP.dashes = 0; RP.lastWarnT = -1; RP.gMin = 1e9; RP.gMax = 0; RP.forced = 0; RP.far = 0; RP.pm = 'wait'; RP.struck = false; RP.byTired = 0; RP.byStun = 0; RP.byReturn = 0; RP.dashMiss = 0; RP.tiredWaves = 0; RP.bursts = 0; RP.maxRel = -1e9; RP.nearest = 1e9; if (RCH) R.rel = REL_MAX * 0.75; RP.rr = R.rel; return true;
     }
     function step(dt, input) {   /* a fault stops the fight, never the game */
       if (!R.on || R.dead) return null;
@@ -234,7 +241,7 @@ window.WFR_HAWKFIGHT = (function () {
         stunT: +R.stunT.toFixed(3), stunLen: R.stunLen, warnT: incoming() ? +(R.t - R.warnStart).toFixed(3) : 0, arriveIn: incoming() ? +(R.arrive - R.t).toFixed(3) : null,
         feathers: R.feathers, swoops: R.swoops, zooms: R.zooms, parries: { good: R.parG, perfect: R.parP }, dodges: R.dodges, misses: R.misses, hurts: R.hurts, whiffs: R.whiffs,
         lastJudge: R.lastJudge, rel: +R.rel.toFixed(3), lat: +R.lat.toFixed(3), aim: +R.aim.toFixed(3), side: R.side, t: +R.t.toFixed(3), dmg: DMG_LOG.slice(0, R.dmgN), plant: R.plant,
-        reach: RCH ? { wave: RP.wave, win: rWin(), inRange: rIn(rWin()), rel: +RP.rr.toFixed(3), hv: +RP.hv.toFixed(3), dashing: RP.dashT >= 0, dashes: RP.dashes, far: RP.far, dashMiss: RP.dashMiss, by: { tired: RP.byTired, stun: RP.byStun, ret: RP.byReturn },
+        reach: RCH ? { wave: RP.wave, win: rWin(), inRange: rIn(rWin()), rel: +RP.rr.toFixed(3), hv: +RP.hv.toFixed(3), dashing: RP.dashT >= 0, dashes: RP.dashes, far: RP.far, dashMiss: RP.dashMiss, forced: RP.forced, realGap: [RP.gMin === 1e9 ? null : +RP.gMin.toFixed(3), +RP.gMax.toFixed(3)], by: { tired: RP.byTired, stun: RP.byStun, ret: RP.byReturn },
           tiredWaves: RP.tiredWaves, bursts: RP.bursts, maxRel: +RP.maxRel.toFixed(2), nearest: +RP.nearest.toFixed(2), retOpen: RP.retOpen } : null };
     }
     var F = { dead: false, _plant: null, start: start, stop: function () { R.on = false; }, on: function () { return R.on && !R.dead; }, step: step, peek: peek };

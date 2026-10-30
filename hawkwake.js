@@ -131,7 +131,7 @@ window.WFR_HAWKWAKE = (function () {
     /* ride state and scratch, made once */
     var R = { on: false, dead: false, plant: null, t: 0, s: 0, lat: 0, latV: 0, v: V0, burstT: 0, cd: 0, band: -1, push: 0, gate: 0, wave: -WAVE_GAP0, restarts: 0, done: false, doneT: 0,
       jt: 1, alpha: 0, roll: 0, ox: 0, oy: 0, oz: 0, yaw0: 0, c: 1, sn: 0, offX: 0, offY: 0, offZ: 0, cut: false, maxS: 0, startedAt: 0, hawkS: 0 };
-    var POSE = { x: 0, y: 0, z: 0, yaw: 0, pitch: 0, roll: 0, v: 0, cut: false, done: false };
+    var POSE = { x: 0, y: 0, z: 0, yaw: 0, pitch: 0, roll: 0, v: 0, cut: false, done: false, lineYaw: 0 };   /* 703r: lineYaw, the line's own heading (her nose turns with her slide; a camera follows the line) */
     var HAWK = { x: 0, y: 0, z: 0, yaw: 0, pitch: 0, roll: 0, s: 0, lat: 0, visible: false, thrown: false };
 
     function bandAt(s) { for (var b = 0; b < BANDS.length; b++) if (s >= BANDS[b][0] && s <= BANDS[b][1]) return b; return -1; }
@@ -210,7 +210,7 @@ window.WFR_HAWKWAKE = (function () {
       POSE.pitch = Math.atan2(LD.y, hz);
       R.roll += (clamp(R.latV * ROLL_K, -ROLL_MAX, ROLL_MAX) - R.roll) * Math.min(1, dt * 6);
       POSE.roll = R.roll + SHAKE * Math.sin(R.t * 9) * Math.abs(push) / SHOVE;   /* roll > 0 = banking toward her right (+offset); the shake is the turbulence */
-      POSE.v = R.v; POSE.cut = R.cut; POSE.done = R.done;
+      POSE.v = R.v; POSE.cut = R.cut; POSE.done = R.done; POSE.lineYaw = R.yaw0 + Math.atan2(LD.x, LD.z);
       /* the Hawk: ahead, out of reach; at the end the wind throws him into the cloud */
       if (!R.done) {
         R.hawkS = Math.min(R.s + HAWK_LEAD + HAWK_SWAY * Math.sin(R.t * 0.7), L); lineAt(R.hawkS, WP, WD); var hh = Math.hypot(WD.x, WD.z) || 1;

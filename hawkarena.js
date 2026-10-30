@@ -96,7 +96,7 @@ window.WFR_HAWKARENA = (function () {
       phase: 1, kind: '', strike: 0, feint: false, segment: !!SEG, segHits: 0, segWhy: '',
       reach: false, wave: '', win: '', inRange: false, far: 0, dashWind: false, dashLeft: 0, now: '', hitsLeft: 0 };   /* 703p: what the screen shows */
     var RCH = !!o.reach && !SEG;   /* 703p: the catchable arena (never in the chick's turn) */
-    var RAP = { lastWarnT: -1, minArr: 0, forced: 0, gMin: 1e9, gMax: 0, wave: 'burst', waveEnd: 0, dashT: -1, dashWin: '', tiredHit: false, retOpen: false, retHit: false, dashes: 0, far: 0, byTired: 0, byStun: 0, byReturn: 0, dashMiss: 0, tiredWaves: 0, nearest: 1e9, maxD: 0 };
+    var RAP = { pm: 'idle', struckNow: false, lastWarnT: -1, minArr: 0, forced: 0, gMin: 1e9, gMax: 0, wave: 'burst', waveEnd: 0, dashT: -1, dashWin: '', tiredHit: false, retOpen: false, retHit: false, dashes: 0, far: 0, byTired: 0, byStun: 0, byReturn: 0, dashMiss: 0, tiredWaves: 0, nearest: 1e9, maxD: 0 };
 
     /* ARENA-TICK BEGIN: nothing between these markers allocates (tests/hawkarena-unit.js reads this text) */
     function rnd() { return num(rand(), 0, 0.999999); }
@@ -179,7 +179,7 @@ window.WFR_HAWKARENA = (function () {
     function hawkIncoming() { return R.mode === 'warn' || R.mode === 'dive'; }
     function helperIncoming(b) { return b.kind === 'helper' && b.alive && (b.state === 'warn' || b.state === 'swooping'); }
     function capFits(k) {   /* the 3-in-5 s budget counts STRIKES: a double spends 2, a feint only its real strike (in phase 1 this is the old test: the 3rd last strike inside 5 s refuses) */
-      var n = k === 'double' ? 2 : 1, t0 = k === 'feint' ? R.t + FEINT_T : R.t, lim = R.plant === 'cap4' ? CAP_N + 1 : CAP_N, j, i, c, tj;   /* plant 'cap4': a 4-in-5 s budget, the control */
+      var n = k === 'double' ? 2 : 1, t0 = k === 'feint' ? R.t + FEINT_T : R.t, lim = R.plant === 'cap4' || R.plant === 'cap4noslow' ? CAP_N + 1 : CAP_N, j, i, c, tj;   /* plant 'cap4': a 4-in-5 s budget, the control */
       for (j = 0; j < n; j++) { tj = t0 + j * DBL_T; c = j + 1; for (i = 0; i < 8; i++) if (tj - W8[i] <= CAP_T + 0.001) c++; if (c > lim) return false; }
       return true;
     }
@@ -250,7 +250,7 @@ window.WFR_HAWKARENA = (function () {
     }
     /* 703p REACH: the catchable arena (only when RCH; nothing here allocates) */
     function raWave() { if (R.t < RAP.waveEnd) return; var r = rnd();   /* plant 'noslow': he never tires, the control */
-      if (RAP.wave === 'burst' && R.plant !== 'noslow') { RAP.wave = 'tired'; RAP.tiredHit = false; RAP.tiredWaves++; RAP.waveEnd = R.t + RA_T[0] + r * (RA_T[1] - RA_T[0]); ev('tired'); }
+      if (RAP.wave === 'burst' && R.plant !== 'noslow' && R.plant !== 'cap4noslow') { RAP.wave = 'tired'; RAP.tiredHit = false; RAP.tiredWaves++; RAP.waveEnd = R.t + RA_T[0] + r * (RA_T[1] - RA_T[0]); ev('tired'); }
       else { RAP.wave = 'burst'; RAP.waveEnd = R.t + RA_B[0] + r * (RA_B[1] - RA_B[0]); ev('burst'); } }
     function raWin() {
       if (stunned() && !R.stunHit) return 'stun';
@@ -279,10 +279,12 @@ window.WFR_HAWKARENA = (function () {
     function raBand() { var dx = HK.x - ME.x, dy = HK.y - ME.y, dz = HK.z - ME.z, d = Math.sqrt(dx * dx + dy * dy + dz * dz); if (d > RA_BAND) { var k = RA_BAND / d; HK.x = ME.x + dx * k; HK.y = ME.y + dy * k; HK.z = ME.z + dz * k; } }
     function raReturn(dt) { var e = Math.min(1, dt * RA_RET_E); HK.x += (ME.x + Math.sin(R.ang) * RA_RB - HK.x) * e; HK.y += (ME.y + HAWK_UP - HK.y) * e; HK.z += (ME.z + Math.cos(R.ang) * RA_RB - HK.z) * e; }
     function raPost() {
-      for (var i = 0; i < EV.length; i++) { var e = EV[i]; if (e === 'shakeoff' || e === 'miss') { RAP.retOpen = true; RAP.retHit = false; } else if (e === 'struck') RAP.retOpen = false;
+      for (var i = 0; i < EV.length; i++) { var e = EV[i]; if (e === 'shakeoff' || e === 'miss') { RAP.retOpen = true; RAP.retHit = false; } else if (e === 'struck') { RAP.retOpen = false; RAP.struckNow = true; }
         else if (e === 'warn') { if (RAP.lastWarnT >= 0) { var gg = R.t - RAP.lastWarnT; if (gg < RAP.gMin) RAP.gMin = gg; if (gg > RAP.gMax) RAP.gMax = gg; } RAP.lastWarnT = R.t; } }
       if (raDue() && RAP.dashT < 0 && (R.mode === 'stun' || R.mode === 'recover' || R.mode === 'roar')) { RAP.retOpen = false; setMode('circle'); }   /* his 8 real seconds outrank a dizzy spell, the way back, a roar */
       if (R.mode !== 'recover') RAP.retOpen = false;
+      if (RAP.pm !== R.mode) { if (R.mode === 'circle' && (RAP.pm === 'dive' || RAP.pm === 'warn' || RAP.pm === 'recover') && R.plant !== 'noslow' && R.plant !== 'cap4noslow' && !RAP.struckNow && !done()) { RAP.wave = 'tired'; RAP.tiredHit = false; RAP.tiredWaves++; RAP.waveEnd = R.t + RA_T[1]; ev('tired'); } RAP.pm = R.mode; }   /* 703r: he tires after striking (a window his own rhythm opens, whatever the frame time) */
+      RAP.struckNow = false;
       var w = raWin(), d = raD(), inc = hawkIncoming(), ai = inc ? R.arrive - R.t : 9, hs = 9;
       for (i = 0; i < NB; i++) { var b = B[i]; if (helperIncoming(b) && b.arrive - R.t < hs) hs = b.arrive - R.t; }
       if (d < RAP.nearest) RAP.nearest = d; if (d > RAP.maxD) RAP.maxD = d;
