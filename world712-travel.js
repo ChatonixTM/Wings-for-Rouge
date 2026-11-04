@@ -77,11 +77,13 @@ window.WFR_TRAVEL712 = (function () {
 
   /* ---------- the far pass's material: carib712's shrink toward the eye and the Earth's curve, at true-distance fog (ONE program for every tile) ---------- */
   function makeMaterial(THREE, u, tag) {
-    var m = new THREE.MeshLambertMaterial({ vertexColors: true });
+    var m = new THREE.MeshLambertMaterial({ vertexColors: true }); if (!u.uHole) u.uHole = { value: new THREE.Vector4(1, 1, -1, -1) };   /* 723d: one rectangle of world metres (x0, z0, x1, z1) cut out of the far ground: the Dunn's patch draws there */
     m.onBeforeCompile = function (sh) {
-      sh.uniforms.uEye712t = u.uEye; sh.uniforms.uInvK712t = u.uInvK;
+      sh.uniforms.uEye712t = u.uEye; sh.uniforms.uInvK712t = u.uInvK; sh.uniforms.uHole712t = u.uHole; var NL723 = String.fromCharCode(10);
+      sh.vertexShader = 'varying vec2 vW712t;' + NL723 + sh.vertexShader;
+      sh.fragmentShader = 'uniform vec4 uHole712t; varying vec2 vW712t;' + NL723 + sh.fragmentShader.replace('void main() {', 'void main() {' + NL723 + '  if ( vW712t.x > uHole712t.x && vW712t.x < uHole712t.z && vW712t.y > uHole712t.y && vW712t.y < uHole712t.w ) discard;');
       sh.vertexShader = 'uniform vec3 uEye712t; uniform float uInvK712t;\n' + sh.vertexShader.replace('#include <project_vertex>', [
-        'vec4 wp712t = modelMatrix * vec4( transformed, 1.0 );',
+        'vec4 wp712t = modelMatrix * vec4( transformed, 1.0 );', 'vW712t = wp712t.xz;',
         'vec3 r712t = wp712t.xyz - uEye712t; float d712t = length( r712t.xz );',
         'r712t.y -= d712t * d712t / ( 2.0 * ' + C.REFR.toFixed(1) + ' );',   // the Earth's curve (carib712's refraction radius)
         'wp712t.xyz = uEye712t + r712t * uInvK712t;',   // shrunk toward the eye: the same picture, inside the near and far planes
@@ -200,7 +202,7 @@ window.WFR_TRAVEL712 = (function () {
       var budget = o.unbounded ? 1e9 : C.KEPT, g2 = tiles.size;
       while (tiles.size > budget && g2-- > 0) { var victim = null; for (var kk of tiles.keys()) if (!protect.has(kk)) { victim = kk; break; } if (!victim) { stats.overBudget++; break; } drop(tiles.get(victim)); }
       stats.drawn = drawn.length; stats.kept = tiles.size; if (stats.drawn > stats.drawnMax) stats.drawnMax = stats.drawn; if (stats.kept > stats.keptMax) stats.keptMax = stats.kept; stats.updates++;
-      var K = Math.max(1, Math.min(F / 1400, Math.max(1, (cam.y - groundUnder(cam.x, cam.z)) * 0.5)));   // shrunk inside 1.4 km, the ground below never nearer the eye than half a metre per metre of K
+      var K = opt.k1 ? 1 : Math.max(1, Math.min(F / 1400, Math.max(1, (cam.y - groundUnder(cam.x, cam.z)) * 0.5)));   // shrunk inside 1.4 km, the ground below never nearer the eye than half a metre per metre of K
       u.uInvK.value = 1 / K; u.uEye.value.set(cam.x, cam.y, cam.z); stats.K = K; stats.F = F;
       return drawn;
     }
