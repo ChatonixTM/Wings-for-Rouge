@@ -16,6 +16,7 @@
   var KEY = 'wfr.creative712', Z = 14, V = 1, MAX = 400;
   var KINDS = ['house', 'oak', 'pine', 'cabin', 'treehouse', 'fruit', 'rocks'];
   function frameOk(W) { return !!(W && W.HOMEF && typeof W.tileIndexAt === 'function' && typeof W.tileBounds === 'function'); }
+  function cf(W) { return W.CREATIVE_FRAME || W.HOMEF; }   // 725b: the saves' frame is FROZEN Mercator (world712-frame.js CREATIVE_FRAME); the flip never moves a piece
   function uid(prefix) {   /* 12 base-36 characters from crypto (Math.random only where crypto is absent, never on the guards' pages) */
     var a = '', c = root.crypto, b;
     if (c && c.getRandomValues) { b = new Uint8Array(12); c.getRandomValues(b); for (var i = 0; i < 12; i++) a += (b[i] % 36).toString(36); }
@@ -23,7 +24,7 @@
     return (prefix || 'e') + '-' + a;
   }
   function r3(v) { return Math.round(v * 1000) / 1000; }
-  function cellOf(W, x, z) { var t = W.tileIndexAt(W.HOMEF, Z, x, z), b = W.tileBounds(W.HOMEF, Z, t.x, t.y); return { c: [t.x, t.y], x0: b.x0, z0: b.z0, size: b.size }; }
+  function cellOf(W, x, z) { var t = W.tileIndexAt(cf(W), Z, x, z), b = W.tileBounds(cf(W), Z, t.x, t.y); return { c: [t.x, t.y], x0: b.x0, z0: b.z0, size: b.size }; }
   /* the record for a piece of kind k at game metres (x, h, z), yaw */
   function make(W, k, x, h, z, yaw, by, t, id) {
     var q = cellOf(W, x, z);
@@ -37,7 +38,7 @@
     if (!Array.isArray(r.c) || r.c.length !== 2 || !Number.isInteger(r.c[0]) || !Number.isInteger(r.c[1]) || r.c[0] < 0 || r.c[1] < 0 || r.c[0] >= (1 << Z) || r.c[1] >= (1 << Z)) return { bad: 'no cell' };
     if (!Array.isArray(r.p) || r.p.length !== 3 || !r.p.every(function (v) { return typeof v === 'number' && isFinite(v); })) return { bad: 'no place' };
     if (typeof r.y !== 'number' || !isFinite(r.y)) return { bad: 'no yaw' };
-    var b = W.tileBounds(W.HOMEF, Z, r.c[0], r.c[1]);
+    var b = W.tileBounds(cf(W), Z, r.c[0], r.c[1]);
     if (r.p[0] < -0.01 || r.p[2] < -0.01 || r.p[0] > b.size + 0.01 || r.p[2] > b.size + 0.01) return { bad: 'outside its cell' };
     return { x: b.x0 + r.p[0], h: r.p[1], z: b.z0 + r.p[2], yaw: r.y };
   }

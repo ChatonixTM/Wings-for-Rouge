@@ -22,7 +22,7 @@ window.WFR_TRAVEL712 = (function () {
   var W = window.WFR_WORLD, PX = 256, WORLD = 2 * Math.PI * 6378137;
   /* Every number DRAFT (plan section 3: the iPhone 12 budget, unmeasured on the phone). */
   var C = { ON: 20000, OFF: 18000, RECENTRE: 10000, TOP: 1800, TOP2: 20000, KNOTS: [[1800, 60], [6000, 600], [20000, 6000]], XP_V: 30,
-    DRAWN: 64, KEPT: 96, LOADS: 4, BUILDS: 1, GRID: 32, SPLIT: 1.25, VDEPTH: 3, FLOOR: 30, LAYER: 7, REFR: 7432843, FAR_MIN: 60000, FAR_MAX: 800000, FAR_PAD: 150000 };
+    DRAWN: 64, KEPT: 96, LOADS: 4, BUILDS: 1, GRID: 32, SPLIT: 1.25, VDEPTH: 3, FLOOR: 30, LAYER: 7, REFR: !W ? 7432843 : isFinite(W.curveR()) ? W.curveR() : 1e30, FAR_MIN: 60000, FAR_MAX: 800000, FAR_PAD: 150000 };
 
   /* ---------- the height sets the speed (plan section 2): S4a's x1-x4 below 1,800 m stays the page's; above it, log-even between the knots ---------- */
   function speedAt(y) {
@@ -44,11 +44,7 @@ window.WFR_TRAVEL712 = (function () {
     return (a * (1 - tx) + b * tx) * (1 - ty) + (c * (1 - tx) + d * tx) * ty;
   }
   /* a tile's square in a frame, the antimeridian wrapped to the copy nearest the frame's origin: x0 its west edge, z0 its NORTH edge, size its side */
-  function boundsOf(f, z, x, y) {
-    var s = WORLD / Math.pow(2, z), mx = x * s - WORLD / 2, myTop = WORLD / 2 - y * s, dx = mx + s / 2 - f.ox;
-    if (dx > WORLD / 2) mx -= WORLD; else if (dx < -WORLD / 2) mx += WORLD;
-    return { x0: (mx - f.ox) * f.k, z0: (f.oy - myTop) * f.k, size: s * f.k, s: s };
-  }
+  function boundsOf(f, z, x, y) { return W.tileBox(f, z, x, y); }   // 725b: the door's (world712-frame.js mTileBox: these lines, moved in whole)
 
   /* ---------- the atlas made 3D (world712-mapview.js SEA / LAND; tiles.js's meadow at the low end; sand at the coast; snow by latitude) ---------- */
   var SEA = [[-8000, 22, 52, 104], [-5000, 38, 82, 140], [-3000, 62, 116, 172], [-1000, 104, 160, 206], [-200, 150, 199, 228], [0, 196, 228, 240]];
@@ -73,15 +69,17 @@ window.WFR_TRAVEL712 = (function () {
     }
     out[k] = cA[0] / 255; out[k + 1] = cA[1] / 255; out[k + 2] = cA[2] / 255;
   }
-  function latOfV(f, z0, size, v) { var my = f.oy - (z0 + v * size) / f.k; return (2 * Math.atan(Math.exp(my / 6378137)) - Math.PI / 2) * 180 / Math.PI; }
+  /* 725b: latOfV moved into the door (W.tileRowLats) */
 
   /* ---------- the far pass's material: carib712's shrink toward the eye and the Earth's curve, at true-distance fog (ONE program for every tile) ---------- */
   function makeMaterial(THREE, u, tag) {
-    var m = new THREE.MeshLambertMaterial({ vertexColors: true }); if (!u.uHole) u.uHole = { value: new THREE.Vector4(1, 1, -1, -1) };   /* 723d: one rectangle of world metres (x0, z0, x1, z1) cut out of the far ground: the Dunn's patch draws there */
+    var m = new THREE.MeshLambertMaterial({ vertexColors: true }); if (!u.uHole) u.uHole = { value: new THREE.Vector4(1, 1, -1, -1) }; if (!u.uPhoto) u.uPhoto = { value: null };   /* 723d: one rectangle of world metres (x0, z0, x1, z1) cut out of the far ground: the Dunn's patch draws there */
     m.onBeforeCompile = function (sh) {
       sh.uniforms.uEye712t = u.uEye; sh.uniforms.uInvK712t = u.uInvK; sh.uniforms.uHole712t = u.uHole; var NL723 = String.fromCharCode(10);
       sh.vertexShader = 'varying vec2 vW712t;' + NL723 + sh.vertexShader;
       sh.fragmentShader = 'uniform vec4 uHole712t; varying vec2 vW712t;' + NL723 + sh.fragmentShader.replace('void main() {', 'void main() {' + NL723 + '  if ( vW712t.x > uHole712t.x && vW712t.x < uHole712t.z && vW712t.y > uHole712t.y && vW712t.y < uHole712t.w ) discard;');
+      sh.uniforms.uPhoto712t = u.uPhoto; sh.vertexShader = 'attribute vec3 aPh712t; varying vec3 vPh712t;' + NL723 + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>' + NL723 + 'vPh712t = aPh712t;');   /* 723e: the photo layer (world712-photo.js) */
+      sh.fragmentShader = 'uniform sampler2D uPhoto712t; varying vec3 vPh712t;' + NL723 + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>' + NL723 + '  if ( vPh712t.z > 0.5 ) { vec3 ph712t = texture2D( uPhoto712t, vPh712t.xy ).rgb; if ( ph712t.r + ph712t.g + ph712t.b > 0.03 ) diffuseColor.rgb = ph712t; }');   /* 723e: the atlas where aPh712t.z is 1; pure black is the tiler's no-data, the vertex colour stays */
       sh.vertexShader = 'uniform vec3 uEye712t; uniform float uInvK712t;\n' + sh.vertexShader.replace('#include <project_vertex>', [
         'vec4 wp712t = modelMatrix * vec4( transformed, 1.0 );', 'vW712t = wp712t.xz;',
         'vec3 r712t = wp712t.xyz - uEye712t; float d712t = length( r712t.xz );',
@@ -124,9 +122,9 @@ window.WFR_TRAVEL712 = (function () {
       var N = C.GRID, V = (N + 1) * (N + 1), E = 4 * (N + 1), s = WORLD / Math.pow(2, rec.z), b = boundsOf(f, rec.z, rec.x, rec.y), skirt = Math.max(30, b.size * 0.04);
       var pos = new Float32Array((V + E) * 3), col = new Float32Array((V + E) * 3), hv = new Float32Array(V), idx = [], fld = rec.field, U0 = rec.u0, V0 = rec.v0, SS = rec.s, minH = 1e9, maxH = -1e9, eps = 0.5 / N;
       for (var j = 0; j <= N; j++) for (var i = 0; i <= N; i++) { var h = sampleField(fld, U0 + i / N * SS, V0 + j / N * SS), q = j * (N + 1) + i; hv[q] = h; }
-      var latTop = latOfV(f, b.z0, b.size, 0), latBot = latOfV(f, b.z0, b.size, 1);
+      var lats = W.tileRowLats(f, rec.z, rec.x, rec.y, b), latTop = lats[0], latBot = lats[1], o725 = W.tilePlace(f, rec.z, rec.x, rec.y);
       for (j = 0; j <= N; j++) for (i = 0; i <= N; i++) { q = j * (N + 1) + i; var k = q * 3, hh = hv[q], y = Math.max(0, hh);
-        pos[k] = i / N * s; pos[k + 1] = y; pos[k + 2] = j / N * s; if (y < minH) minH = y; if (y > maxH) maxH = y;
+        var tl = W.tileLocal(f, rec.z, rec.x, rec.y, i / N, j / N, o725); pos[k] = tl.x; pos[k + 1] = y; pos[k + 2] = tl.z; if (y < minH) minH = y; if (y > maxH) maxH = y;
         var hx = hv[j * (N + 1) + Math.min(N, i + 1)] - hv[j * (N + 1) + Math.max(0, i - 1)], hz = hv[Math.min(N, j + 1) * (N + 1) + i] - hv[Math.max(0, j - 1) * (N + 1) + i], step = 2 * b.size / N;
         tint(hh, Math.hypot(hx, hz) / step, latTop + (latBot - latTop) * j / N, col, k); }
       for (j = 0; j < N; j++) for (i = 0; i < N; i++) { var a = j * (N + 1) + i, c = a + N + 1; idx.push(a, c, a + 1, a + 1, c, c + 1); }   // tiles.js's diagonal (H() below reads the same two triangles)
@@ -145,7 +143,7 @@ window.WFR_TRAVEL712 = (function () {
       rec.mesh = mesh; rec.hv = hv; rec.skirt = skirt; rec.minH = minH; rec.maxH = maxH; rec.tris = idx.length / 3; place(rec); group.add(mesh); stats.built++; if (!rec.real) stats.virt++;
       for (var L = 0; L < layers.length; L++) try { if (layers[L].onTile) layers[L].onTile(rec, api); } catch (err) { stats.fault = 'layer ' + layers[L].id + ': ' + (err && err.message || err); }
     }
-    function place(rec) { var b = boundsOf(f, rec.z, rec.x, rec.y); rec.b = b; rec.mesh.position.set(b.x0, 0, b.z0); rec.mesh.scale.set(f.k, 1, f.k); rec.mesh.updateMatrix(); rec.mesh.matrixWorld.copy(rec.mesh.matrix); }
+    function place(rec) { var b = boundsOf(f, rec.z, rec.x, rec.y), tp = W.tilePlace(f, rec.z, rec.x, rec.y); rec.b = b; rec.mesh.position.set(tp.x, 0, tp.z); rec.mesh.scale.set(tp.scale, 1, tp.scale); rec.mesh.updateMatrix(); rec.mesh.matrixWorld.copy(rec.mesh.matrix); }
     function drop(rec) { for (var L = 0; L < layers.length; L++) try { if (layers[L].onDrop) layers[L].onDrop(rec, api); } catch (err) { stats.fault = 'layer ' + layers[L].id + ': ' + (err && err.message || err); }
       if (rec.mesh) { group.remove(rec.mesh); rec.mesh.geometry.dispose(); } tiles.delete(rec.key); stats.evicted++; }
 
@@ -211,11 +209,11 @@ window.WFR_TRAVEL712 = (function () {
     function recAt(x, z, onlyDrawn) {   // the drawn tile under a point (else the finest built one)
       var best = null; for (var i = 0; i < drawn.length; i++) { var r = drawn[i], b = r.b; if (x >= b.x0 && x < b.x0 + b.size && z >= b.z0 && z < b.z0 + b.size) { best = r; break; } }
       if (best || onlyDrawn) return best;
-      for (var zz = MAXZ + C.VDEPTH; zz >= 0; zz--) { var s = WORLD / Math.pow(2, zz), mx = x / f.k + f.ox, my = f.oy - z / f.k, tx = Math.floor((((mx + WORLD / 2) % WORLD) + WORLD) % WORLD / s), ty = Math.floor((WORLD / 2 - my) / s), r2 = tiles.get(keyOf(zz, tx, ty)); if (r2 && r2.mesh) return r2; }
+      for (var zz = MAXZ + C.VDEPTH; zz >= 0; zz--) { var ti = W.tileIndexAtWrapped(f, zz, x, z), r2 = tiles.get(keyOf(zz, ti.x, ti.y)); if (r2 && r2.mesh) return r2; }
       return null;
     }
     function surf(r, x, z) {   // the height of the DRAWN sheet at a point: its two triangles (tiles.js's diagonal), the sea at 0
-      var N = C.GRID, fx = Math.min(N - 1e-9, Math.max(0, (x - r.b.x0) / r.b.size * N)), fz = Math.min(N - 1e-9, Math.max(0, (z - r.b.z0) / r.b.size * N)), i = Math.floor(fx), j = Math.floor(fz), a = fx - i, c = fz - j, hv = r.hv;
+      var N = C.GRID, uv = W.tileUV(f, r.z, r.x, r.y, x, z), fx = Math.min(N - 1e-9, Math.max(0, uv.u * N)), fz = Math.min(N - 1e-9, Math.max(0, uv.v * N)), i = Math.floor(fx), j = Math.floor(fz), a = fx - i, c = fz - j, hv = r.hv;
       var h00 = Math.max(0, hv[j * (N + 1) + i]), h10 = Math.max(0, hv[j * (N + 1) + i + 1]), h01 = Math.max(0, hv[(j + 1) * (N + 1) + i]), h11 = Math.max(0, hv[(j + 1) * (N + 1) + i + 1]);
       return a + c <= 1 ? h00 + (h10 - h00) * a + (h01 - h00) * c : h11 + (h01 - h11) * (1 - a) + (h10 - h11) * (1 - c);
     }
