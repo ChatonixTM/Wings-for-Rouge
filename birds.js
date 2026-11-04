@@ -8,7 +8,8 @@
 
    API
      WFR_BIRDS.build(THREE, k, def, opts) → { g, wingL, wingR, tail, legs:[L,R], head }
-       k    'cardinal' | 'bluejay' | 'crow' | 'falcon' | 'owl' | 'eagle'
+       k    'cardinal' | 'bluejay' | 'crow' | 'falcon' | 'owl' | 'eagle' | 'hawk'
+            ('hawk' is THE Hawk of the story (board 723b), never a bird she flies: it has no row in the game's BIRDS table)
        def  the game's BIRDS[k] row (body/wing/head/beak/legs/chest colours,
             legLen, size, crest, mask, owl). Unknown keys fall back to cardinal.
        opts { renderer, linear, folded }
@@ -89,7 +90,13 @@ window.WFR_BIRDS = (function () {
     eagle: { body: [0.9, 0.95, 1.15], head: 0.45, headAt: [0, 0.44, 1.2],
       beak: { len: 0.46, rad: 0.2, hook: 0.3, squash: 0.7 }, eye: 'eagle',
       wing: { arm: 1.24, hand: 0.5, prim: 1.26, sec: 0.92, n: 6, aOut: -0.32, aIn: 0.88, w: 0.25, shape: 'finger' },
-      tail: { len: 0.95, n: 8, spread: 0.3, w: 0.27, white: true }, collar: true, rough: 0.8, trousers: 2.4 }
+      tail: { len: 0.95, n: 8, spread: 0.3, w: 0.27, white: true }, collar: true, rough: 0.8, trousers: 2.4 },
+    /* 723b THE HAWK (Trunks, Nov 4 2026): a goshawk, never an eagle. Short, broad, rounded wings; a long tail with four dark bands and a pale tip; a dark cap over a
+       pale brow; a finely barred pale chest (painted below); yellow legs; an amber eye, no glow. Menacing, never glamorous. Never a bird she flies. DRAFT shapes. */
+    hawk: { body: [0.76, 0.84, 0.96], head: 0.35, headAt: [0, 0.56, 0.93],
+      beak: { len: 0.27, rad: 0.135, hook: 0.36, squash: 0.72, tip: true }, eye: 'hawk',
+      wing: { arm: 0.92, hand: 0.4, prim: 0.82, sec: 0.82, n: 6, aOut: 0.04, aIn: 1.2, w: 0.37, shape: 'round', bars: true },
+      tail: { len: 2.2, n: 10, spread: 0.17, w: 0.33, bars: true }, rough: 0.82, trousers: 1.2 }
   };
   API.SPEC = SPEC;
   /* which WFR_TEX surfaces the birds wear (null = plain colour); tintable near-white maps, multiplied into the colour */
@@ -100,7 +107,8 @@ window.WFR_BIRDS = (function () {
     crow: { body: 0x1f1f26, wing: 0x18181e, head: 0x24242c, beak: 0x2c2c2c, legs: 0x2c2c2c, legLen: 0.45, size: 0.5 },
     falcon: { body: 0x5d6b78, wing: 0x4b5763, head: 0x3a4550, beak: 0xf2c230, legs: 0xf2c230, legLen: 0.45, size: 0.5, chest: 0xf0ece4 },
     owl: { body: 0x9a7a55, wing: 0x86683f, head: 0x9a7a55, beak: 0xe0a83a, legs: 0x9a7a55, legLen: 0.3, size: 0.55, owl: true },
-    eagle: { body: 0x6b4426, wing: 0x5a3820, head: 0xf5f1e6, beak: 0xf2b134, legs: 0xf2b134, legLen: 1.35, size: 0.6 }
+    eagle: { body: 0x6b4426, wing: 0x5a3820, head: 0xf5f1e6, beak: 0xf2b134, legs: 0xf2b134, legLen: 1.35, size: 0.6 },
+    hawk: { body: 0x6f7b87, wing: 0x66717d, head: 0x454b54, beak: 0x3b3e44, legs: 0xf2c230, legLen: 0.6, size: 0.6, chest: 0xece9e2 }   /* 723b: the game builds THE Hawk from this row. DRAFT colours */
   };
   API.DEF = DEF;
 
@@ -244,6 +252,10 @@ window.WFR_BIRDS = (function () {
       }
       if (k === 'owl') m = mix(m, ratio(chestHex, D.body), smooth(0.05, -0.3, y) * smooth(-0.8, -0.3, z));
       if (k === 'eagle') m = mix(m, 0.8, smooth(-0.6, -1.1, z));
+      if (k === 'hawk') {   // 723b: slate above; pale below (the chest carries the bars); white under the tail
+        m = mix(m, ratio(chestHex || 0xe8e5de, D.body), smooth(-0.12, -0.42, y) * smooth(-1.05, -0.7, z));
+        m = mix(m, ratio(0xf2f0ea, D.body), smooth(-0.1, -0.3, y) * smooth(-0.75, -1.05, z));
+      }
       return m;
     };
     var bodyGeo = cached('body:' + K, function () {
@@ -258,6 +270,12 @@ window.WFR_BIRDS = (function () {
     if (k === 'falcon') {   // the Peregrine's pale, barred breast and belly
       var ch = add(g, cached('chest', function () { return new THREE.SphereGeometry(1, 18, 14); }), mat(chestHex || 0xf0ece4, { map: stripeMap(THREE, 'bars', lin) }), 'chest');
       ch.scale.set(0.6 * bx, 0.56 * by, 0.86 * bz); ch.position.set(0, -0.14 * by, 0.22 * bz);
+    }
+    if (k === 'hawk') {   // 723b: the Hawk's pale chest, finely barred across (vertex colours, the beak's own program: no new shader)
+      var hc = add(g, cached('chest:' + K, function () {
+        return new Acc().add(THREE, new THREE.SphereGeometry(1, 22, 44), M4(THREE, 0, 0, 0, Math.PI / 2, 0, 0), function (lx, ly) { var f = (ly * 5 + 10.25) % 1; return ly > 0.62 ? 1 : (f < 0.36 ? 0.42 : 1); }).geo(THREE, lin);
+      }), mat(chestHex || 0xe8e5de, { vc: true }), 'chest');
+      hc.scale.set(0.62 * bx, 0.58 * by, 0.92 * bz); hc.position.set(0, -0.15 * by, 0.16 * bz);
     }
 
     /* ── head: painted too (the cardinal's mask, the jay's face and necklace, the Peregrine's hood and moustache) ── */
@@ -278,6 +296,12 @@ window.WFR_BIRDS = (function () {
         var pl = Math.max(near(n, [0, -0.75, 0.6], 0.55), near(na, [0.85, -0.35, 0.05], 0.38));
         var ms = near(na, [0.55, -0.32, 0.72], 0.24, 0.07);   // the moustache stays dark
         m = mix(m, ratio(chestHex || 0xf0ece4, D.head), pl * (1 - ms));
+      }
+      if (k === 'hawk') {   // 723b: a dark cap; a pale brow over the eye (his scowl); a pale throat; the nape slate
+        var brow = smooth(0.24, 0.36, n.y) * smooth(0.7, 0.56, n.y) * smooth(0.22, 0.42, ax) * smooth(-0.75, -0.45, n.z);   // a broad band over the eye, front to back (the head has ~14 degrees between vertices)
+        m = mix(m, ratio(0xf4f2ec, D.head), brow);
+        m = mix(m, ratio(chestHex || 0xe8e5de, D.head), near(n, [0, -0.85, 0.5], 0.55));
+        m = mix(m, ratio(D.body, D.head), smooth(-0.2, -0.6, n.z) * smooth(0.5, 0.1, n.y));
       }
       if (k === 'crow' || k === 'eagle') m = 1 + 0.04 * n.y;
       return m;
@@ -330,7 +354,7 @@ window.WFR_BIRDS = (function () {
     /* eyes: eyeball, pupil, a catch-light (merged per kind) */
     var E = { song: { at: [0.6, 0.2, 0.64], ball: 0.16, iris: null, pup: 0.16 }, dark: { at: [0.6, 0.22, 0.62], ball: 0.14, iris: null, pup: 0.12 },
       falcon: { at: [0.55, 0.18, 0.7], ball: 0.16, iris: 0xf2c230, pup: 0.125 }, eagle: { at: [0.56, 0.18, 0.66], ball: 0.13, iris: 0xf2e6a0, pup: 0.075 },
-      owl: { at: [0.3, 0.05, 0.9], ball: 0.15, iris: 0xffc21a, pup: 0.1 } }[S.eye];
+      owl: { at: [0.3, 0.05, 0.9], ball: 0.15, iris: 0xffc21a, pup: 0.1 }, hawk: { at: [0.56, 0.2, 0.67], ball: 0.18, iris: 0xd9861c, pup: 0.075 } }[S.eye];
     var eyeGeo = function (part) { return cached('eye' + part + ':' + k, function () {
       var a = new Acc();
       [-1, 1].forEach(function (s) {
@@ -345,6 +369,9 @@ window.WFR_BIRDS = (function () {
     if (E.iris) add(head, eyeGeo('ball'), mat(E.iris, { rough: 0.35 }), 'iris').userData.keepColor = true;
     add(head, E.iris ? eyeGeo('pup') : eyeGeo('ball'), mat(0x0c0a0a, { rough: 0.25 }), 'eye').userData.keepColor = true;
     var hi = add(head, eyeGeo('hi'), new THREE.MeshBasicMaterial({ color: 0xffffff }), 'catchlight'); hi.userData.keepColor = true;
+    if (k === 'hawk') {   // 723b: his pale brow, a ridge over each eye running back (the goshawk's scowl); a plain material, the iris's own program: no new shader
+      add(head, cached('brow:' + K, function () { var a = new Acc(); [-1, 1].forEach(function (s) { a.add(THREE, new THREE.SphereGeometry(1, 12, 8), M4(THREE, s * 0.6 * hr, 0.42 * hr, 0.66 * hr, 0, -s * 0.85, 0, 0.1 * hr, 0.07 * hr, 0.5 * hr), 1); }); return a.geo(THREE, lin); }), mat(0xf4f2ec, { rough: 0.9 }), 'brow');
+    }
 
     /* ── wings ── */
     var W = S.wing;
@@ -352,7 +379,7 @@ window.WFR_BIRDS = (function () {
       return function (lx, ly, lz, u, v) {
         var m = part === 'prim' ? lerp(0.86, 0.58, smooth(0.35, 1, u)) - 0.04 * j : part === 'sec' ? lerp(0.95, 0.78, smooth(0.5, 1, u)) : 1.0;
         if (k === 'crow') m = part === 'cov' ? 1.05 : 0.95;
-        if (W.bars && part !== 'cov') { var f = (u * (part === 'prim' ? 5 : 4) + 0.3) % 1; if (f < (k === 'owl' ? 0.35 : 0.22)) m *= k === 'owl' ? 0.62 : 0.18; }
+        if (W.bars && part !== 'cov') { var f = (u * (part === 'prim' ? 5 : 4) + 0.3) % 1; if (f < (k === 'owl' || k === 'hawk' ? 0.35 : 0.22)) m *= k === 'owl' ? 0.62 : k === 'hawk' ? 0.7 : 0.18; }
         if (k === 'bluejay' && part === 'prim') m *= lerp(1, 0.55, u);
         if (k === 'falcon' && part !== 'cov') { var f2 = (u * 6) % 1; if (f2 < 0.3) m *= 0.78; }
         if (part === 'cov' && v > 0.75) m *= 0.9;   // a soft shadow where the coverts lie over the flight feathers
@@ -430,10 +457,11 @@ window.WFR_BIRDS = (function () {
       var order = []; for (var j = 0; j < n; j++) order.push(j); order.sort(function (p, q) { return Math.abs(q - (n - 1) / 2) - Math.abs(p - (n - 1) / 2); });   // outer first, centre on top
       order.forEach(function (j, idx) {
         var u = n > 1 ? j / (n - 1) * 2 - 1 : 0;
-        var L = T.len * (k === 'crow' || k === 'owl' ? 1 - 0.1 * Math.abs(u) : k === 'bluejay' ? 1 - 0.12 * Math.abs(u) : 1 - 0.04 * Math.abs(u));
+        var L = T.len * (k === 'crow' || k === 'owl' || k === 'hawk' ? 1 - 0.1 * Math.abs(u) : k === 'bluejay' ? 1 - 0.12 * Math.abs(u) : 1 - 0.04 * Math.abs(u));
         a.add(THREE, featherGeo(THREE, L, T.w, false), M4(THREE, u * 0.08, 0.005 * idx, 0, 0, Math.PI / 2 - T.spread * u, 0), function (lx, ly, lz, uu) {
           var m = lerp(1, 0.85, uu);
-          if (T.bars) { var f = (uu * (k === 'owl' ? 4 : 6) + 0.2) % 1; if (f < 0.25) m *= k === 'bluejay' ? 0.2 : 0.62; }
+          if (T.bars && k !== 'hawk') { var f = (uu * (k === 'owl' ? 4 : 6) + 0.2) % 1; if (f < 0.25) m *= k === 'bluejay' ? 0.2 : 0.62; }
+          if (k === 'hawk') { if (Math.abs(uu - 0.3) < 0.06 || Math.abs(uu - 0.75) < 0.06 || Math.abs(uu - 0.96) < 0.03) m *= 0.4; if (uu > 0.99) m = 1.5; }   // 723b: his dark bands on the feather's own stations (0.3, 0.75, 0.96), and a pale tip
           if (k === 'bluejay' && uu > 0.88 && Math.abs(u) > 0.5) m = 2.6;   // white tail corners
           return m;
         });
@@ -444,11 +472,11 @@ window.WFR_BIRDS = (function () {
     tail.rotation.x = 0.08;   // a touch above the line of the back
 
     /* ── legs: hip pivot → (trousers) tarsus → foot pivot with toes and claws ── */
-    var hipY = -0.32 * by, footY = -(0.58 + D.legLen), ankleY = footY + 0.05 - hipY, raptor = k === 'falcon' || k === 'eagle' || k === 'owl';
+    var hipY = -0.32 * by, footY = -(0.58 + D.legLen), ankleY = footY + 0.05 - hipY, raptor = k === 'falcon' || k === 'eagle' || k === 'owl' || k === 'hawk';
     var legs = [-1, 1].map(function (s) {
       var leg = new THREE.Group(); leg.position.set(s * 0.27 * bx, hipY, 0.12); leg.name = s > 0 ? 'legL' : 'legR'; g.add(leg);
       var tr = S.trousers || 1;
-      add(leg, cached('thigh:' + k, function () { var gg = new THREE.SphereGeometry(0.2, 10, 8); gg.scale(1, tr, 1.05); gg.translate(0, -0.06 - 0.12 * (tr - 1), 0); return gg; }), mat(D.body), 'thigh');
+      add(leg, cached('thigh:' + k, function () { var gg = new THREE.SphereGeometry(0.2, 10, 8); gg.scale(1, tr, 1.05); gg.translate(0, -0.06 - 0.12 * (tr - 1), 0); return gg; }), mat(k === 'hawk' && chestHex != null ? chestHex : D.body), 'thigh');   // 723b: his feathered thighs are pale
       var tw = raptor ? (k === 'eagle' ? 0.075 : 0.06) : 0.045;
       add(leg, cached('tarsus:' + k + D.legLen, function () { var gg = new THREE.CylinderGeometry(tw * 0.9, tw, -ankleY, 7); gg.translate(0, ankleY / 2, 0); return gg; }), mat(D.legs, { rough: 0.6 }), 'tarsus');
       var foot = new THREE.Group(); foot.position.set(0, ankleY, 0); leg.add(foot); leg.userData.foot = foot;

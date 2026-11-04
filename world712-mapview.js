@@ -10,14 +10,27 @@
    A 2-D canvas only: no WebGL, no shader. Lines are Path2D objects built once per projection in "plane" units (degrees), drawn under one transform,
    so a pan or pinch costs a transform, not a rebuild. Her home (WFR_WORLD.HOME) and the places she knows (WFR_WORLD.PLACES) are always marked;
    a tapped place shows its great-circle distance from home (WFR_WORLD.distance) and the great circle itself, the way an airliner flies it.
-   Nothing here runs per game frame: it draws only while the world view is open and something changed. */
+   Nothing here runs per game frame: it draws only while the world view is open and something changed.
+   725a (Nov 4 2026), THE MAP IN GLEASON'S LOOK. Marth, verbatim: "i just think the earth is flat based on pilot flights os make it kinda like the gleasons
+   with the topography from the maps"; "make sure antartica is the highest continent on avrg too". Trunks. The World tab now opens on Gleason's disc (the
+   North-pole view) and names it "Gleason's New Standard Map of the World (1892)"; the old words "the true globe seen from above" are retired. The ice is
+   painted by its OWN height (raster.ice, baked by bake-712e from the tiles' ice-top zoom), white at the top of the dome, with 500 m contours and its own
+   light, so Antarctica reads as the high ice ring it is. A switch lays the 1892 paper itself (assets/gleason/, "No known copyright restrictions") under the
+   marks, at its pixel-measured pole (1009, 1021), with the turn and scale fitted to six of its own painted islands. Guards: tests/map725.js,
+   tests/continents725.js.
+   76 REVIEW FIXES (Nov 4 2026, Trunks; wiring tools/wiring/wire-76-review-fixes.js). His ruling: "in this game the disc IS the world", so the second tab is
+   plain "Globe" (no "true", no "real"). The 1892 paper is decoded OFF the page's thread (createImageBitmap / img.decode) behind the "Drawing the world…" card,
+   laid ONCE into a canvas the size of the map's own disc, in strips, then the full decode is let go; a scan that fails turns the switch back off and the next
+   tap tries again. The switch is 44 px tall in both looks. The ice mask is decoded in slices like the heights. Every new word on the map is a DRAFT for Marth
+   (marked where it stands). */
 window.WMAP712 = (function () {
   'use strict';
   var D2R = Math.PI / 180, PAPER = '#f1e2b8', INK = '#3a1d0c';
+  var PAPER_CREDIT = 'The 1892 paper: Gleason\'s New Standard Map of the World, scanned by the Norman B. Leventhal Map & Education Center at the Boston Public Library (no known copyright restrictions).';   // 725a: LICENSES.md's line, word for word
   var NE_CREDIT = 'Natural Earth (public domain).';   // the terrain half of the credit is read from the page's own #credit712 (board 712 S0), the line LICENSES.md records
   function credit() { var t = document.getElementById('credit712'); return NE_CREDIT + (t ? ' ' + t.textContent.trim() : ''); }
   var OCEANS = [['Pacific Ocean', 0, -150, 0], ['Pacific Ocean', 18, 165, 1], ['Atlantic Ocean', 30, -42, 0], ['Atlantic Ocean', -22, -14, 1], ['Indian Ocean', -20, 78, 0], ['Arctic Ocean', 81, 150, 0], ['Southern Ocean', -60, 60, 1], ['Southern Ocean', -60, -110, 1], ['Caribbean Sea', 14.6, -73.5, 2], ['Gulf of Mexico', 25.3, -90.2, 2], ['Mediterranean Sea', 34.6, 18, 2]];   // ours: the oceans' names (Natural Earth's sea polygons were not downloaded)
-  var S = { el: null, src: null, view: 'island', proj: 'globe', k: 1, cX: 0, cY: 0, cw: 0, ch: 0, dpr: 1, loaded: false, loading: false, failed: false, built: {}, sel: null,
+  var S = { el: null, src: null, view: 'island', proj: 'pole', k: 1, cX: 0, cY: 0, cw: 0, ch: 0, dpr: 1, loaded: false, loading: false, failed: false, built: {}, sel: null,
     draws: 0, ms: 0, want: false, made: 0, cvs: [], waits: 0, jobs: [], job: null, next: null, progress: 0, error: null, base: {}, detail: null, rjob: null, dt: 0, renders: [], opens: 0, toggles: 0, needHome: true, gestures: 0 };
   var D = null;   // the decoded world: rings and lines as Float64Array [lat, lon, ...], cities, regions, the raster
   var $ = function (id) { return document.getElementById(id); };
@@ -65,6 +78,9 @@ window.WMAP712 = (function () {
   var SEA = [[-8000, 22, 52, 104], [-5000, 38, 82, 140], [-3000, 62, 116, 172], [-1000, 104, 160, 206], [-200, 150, 199, 228], [0, 196, 228, 240]];
   var LAND = [[0, 112, 168, 98], [150, 142, 186, 108], [400, 196, 206, 128], [800, 226, 206, 142], [1300, 214, 170, 112], [2000, 182, 130, 88], [3000, 150, 104, 78], [4000, 196, 184, 176], [4800, 244, 244, 244]];
   var SHADE_LAND = 12, SHADE_SEA = 5;   // how strongly a slope turned to the north-west lights (and one turned away darkens): 0 would be a flat map
+  /* 725a: the ice by its own height (the topographic look: colour by height, the light on the slopes, contours), pale blue-grey at the coast to white on
+     the dome. The ice sheets slope gently (a few metres a kilometre), so their light is stronger, and a faint line marks every 500 m. */
+  var ICE = [[0, 178, 198, 218], [1000, 204, 219, 234], [2000, 224, 233, 243], [3000, 240, 245, 250], [4000, 255, 255, 255]], SHADE_ICE = 40, ICE_CONTOUR = 500;
   function ramp(R, e) { if (e <= R[0][0]) return R[0]; for (var k = 1; k < R.length; k++) if (e <= R[k][0]) { var a = R[k - 1], b = R[k], t = (e - a[0]) / (b[0] - a[0]); return [0, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t, a[3] + (b[3] - a[3]) * t]; } return R[R.length - 1]; }
   function mk() { S.made++; var c = document.createElement('canvas'); S.cvs.push(c); return c; }   // every canvas the map makes is counted (the bench holds the count bounded)
   var POOL = {};
@@ -87,7 +103,7 @@ window.WMAP712 = (function () {
     path.moveTo(q[0], q[1]); for (var i = 2; i < q.length; i += 2) path.lineTo(q[i], q[i + 1]);
   }
   function stepsFor(proj) {   // the work list for one projection (the decode and the relief's colours are shared: done by the first)
-    var st = [], W = window.WFR_WORLDMAP712, q = W.q, w = W.raster.w, h = W.raster.h, bin = null, B = null, ROWS = 32;
+    var st = [], W = window.WFR_WORLDMAP712, q = W.q, w = W.raster.w, h = W.raster.h, bin = null, ib = null, B = null, ROWS = 32;
     if (!D) {
       st.push(function () { D = { land: [], coast: [], lakes: [], glaciers: [], rivers: [], countries: W.countries, cities: [], regions: [], ras: null }; });
       ['land', 'coast', 'lakes', 'glaciers', 'rivers'].forEach(function (key) { var arr = W[key];
@@ -96,7 +112,9 @@ window.WMAP712 = (function () {
         D.regions = W.regions.map(function (r) { return { name: r[0], kind: r[1], lat: r[2] / q, lon: r[3] / q, rank: r[4] }; }); });
       st.push(function () { bin = atob(W.raster.b64); D.ras = { w: w, h: h, e: new Float32Array(w * h) }; });
       for (var r0 = 0; r0 < h; r0 += ROWS * 2) (function (r0) { st.push(function () { var e = D.ras.e; for (var k = r0 * w; k < Math.min(h, r0 + ROWS * 2) * w; k++) { var b = bin.charCodeAt(k); e[k] = b < 128 ? -11000 * Math.pow((127 - b) / 127, 2) : 9000 * Math.pow((b - 128) / 127, 2); } }); })(r0);
-      st.push(function () { bin = null; S.loaded = true; });
+      st.push(function () { bin = null; ib = W.raster.ice ? atob(W.raster.ice) : null; if (ib) D.ras.ice = new Uint8Array(w * h); });   // 725a: the ice mask, one bit a cell (76 review: unpacked in slices of rows, as the heights are)
+      for (var i0 = 0; i0 < h; i0 += ROWS * 2) (function (i0) { st.push(function () { if (!ib) return; var m = D.ras.ice; for (var k = i0 * w; k < Math.min(h, i0 + ROWS * 2) * w; k++) m[k] = (ib.charCodeAt(k >> 3) >> (k & 7)) & 1; }); })(i0);
+      st.push(function () { ib = null; S.loaded = true; });
     }
     if (!RIMG) {
       st.push(function () { RIMG = { w: w, h: h, sea: new Uint8ClampedArray(w * h * 4), land: new Uint8ClampedArray(w * h * 4), done: false }; });
@@ -119,25 +137,26 @@ window.WMAP712 = (function () {
     var plans = OVS.map(function (o) { return overlayPlan(o, proj); });
     plans.forEach(function (L) { for (var r0 = 0; r0 < L.H; r0 += 24) (function (r0) { st.push(function () { overlayRows(L, r0, Math.min(L.H, r0 + 24)); }); })(r0);
       st.push(function () { B.ov.push({ id: L.o.id, sea: toCanvas(L.sea, L.W, L.H), land: toCanvas(L.land, L.W, L.H), x0: L.x0, y0: L.y0, ww: L.W / L.d, hh: L.H / L.d }); L.sea = L.land = null; }); });
-    st.push(function () { B.R = { land: [], coast: [], lakes: [], glaciers: [], riv0: [], riv1: [], riv2: [] }; B.path = { land: new Path2D(), coast: new Path2D(), lakes: new Path2D(), glaciers: new Path2D(), riv0: new Path2D(), riv1: new Path2D(), riv2: new Path2D() }; });
+    st.push(function () { B.R = { land: [], coast: [], lakes: [], glaciers: [], icebig: [], riv0: [], riv1: [], riv2: [] }; B.path = { land: new Path2D(), coast: new Path2D(), lakes: new Path2D(), glaciers: new Path2D(), icebig: new Path2D(), riv0: new Path2D(), riv1: new Path2D(), riv2: new Path2D() }; });
     ['land', 'coast', 'lakes', 'glaciers', 'rivers'].forEach(function (key) { var n = (W[key] || []).length;
       for (var a = 0; a < n; a += 250) (function (a) { st.push(function () { var arr = D[key];
-        for (var i = a; i < Math.min(arr.length, a + 250); i++) { var to = key === 'rivers' ? 'riv' + (arr[i].rank <= 3 ? 0 : arr[i].rank <= 5 ? 1 : 2) : key, r = ringPlane(key === 'rivers' ? arr[i].p : arr[i]); if (!r) continue; B.R[to].push(r); addPts(B.path[to], r.p); } }); })(a); });
+        for (var i = a; i < Math.min(arr.length, a + 250); i++) { var to = key === 'rivers' ? 'riv' + (arr[i].rank <= 3 ? 0 : arr[i].rank <= 5 ? 1 : 2) : key, r = ringPlane(key === 'rivers' ? arr[i].p : arr[i]); if (!r) continue; if (to === 'glaciers' && D.ras.ice && Math.max(r.b[2] - r.b[0], r.b[3] - r.b[1]) > 6) to = 'icebig'; B.R[to].push(r); addPts(B.path[to], r.p); } }); })(a); });
     st.push(function () { var o = { x: 0, y: 0 };
       D.cities.forEach(function (c) { P(c.lat, c.lon, o); B.city.push(o.x, o.y); }); D.regions.forEach(function (c) { P(c.lat, c.lon, o); B.region.push(o.x, o.y); });
       OCEANS.forEach(function (c) { P(c[1], c[2], o); B.ocean.push(o.x, o.y); }); S.built[proj] = B; });
     return st;
   }
-  function shadeInto(e, w, h, j0, j1, sea, land, cellWf, cellH, contour, wrap) {   // sea by depth, land by height, the light from the north-west, the paper's grain, faint contours if asked
+  function shadeInto(e, w, h, j0, j1, sea, land, cellWf, cellH, contour, wrap, ice) {   // sea by depth, land by height, the light from the north-west, the paper's grain, faint contours if asked; ice (725a) by its own ramp
     for (var j = j0; j < j1; j++) { var cellW = cellWf(j);
       for (var i = 0; i < w; i++) { var k = j * w + i, v = e[k], W_ = e[j * w + (wrap ? (i + w - 1) % w : Math.max(0, i - 1))], E_ = e[j * w + (wrap ? (i + 1) % w : Math.min(w - 1, i + 1))], N_ = e[Math.max(0, j - 1) * w + i], S_ = e[Math.min(h - 1, j + 1) * w + i];
         var slope = (E_ - W_) / (2 * cellW) + (S_ - N_) / (2 * cellH), n = (((i * 73856093) ^ (j * 19349663)) >>> 0) % 5 - 2;   // rising to the east and the south: a face turned to the north-west, lit. The grain a hash: the same on every load
-        var cs = ramp(SEA, Math.min(-30, v)), ss = Math.max(0.86, Math.min(1.14, 1 + slope * SHADE_SEA)), cl = ramp(LAND, Math.max(0, v)), sl = Math.max(0.6, Math.min(1.36, 1 + slope * SHADE_LAND)), o = k * 4;
-        if (contour && v > 0 && (Math.floor(v / contour) !== Math.floor(E_ / contour) || Math.floor(v / contour) !== Math.floor(S_ / contour))) sl *= 0.88;   // a faint contour
+        var onIce = !!(ice && ice[k]), cs = ramp(SEA, Math.min(-30, v)), ss = Math.max(0.86, Math.min(1.14, 1 + slope * SHADE_SEA)), cl = ramp(onIce ? ICE : LAND, Math.max(0, v)), sl = Math.max(0.6, Math.min(1.36, 1 + slope * (onIce ? SHADE_ICE : SHADE_LAND))), o = k * 4;
+        var ct = onIce ? ICE_CONTOUR : contour;
+        if (ct && v > 0 && (Math.floor(v / ct) !== Math.floor(E_ / ct) || Math.floor(v / ct) !== Math.floor(S_ / ct))) sl *= onIce ? 0.95 : 0.88;   // a faint contour
         sea[o] = cs[1] * ss * 0.94 + 14.6 + n; sea[o + 1] = cs[2] * ss * 0.94 + 13.6 + n; sea[o + 2] = cs[3] * ss * 0.94 + 11 + n; sea[o + 3] = 255;
         land[o] = cl[1] * sl * 0.94 + 14.6 + n; land[o + 1] = cl[2] * sl * 0.94 + 13.6 + n; land[o + 2] = cl[3] * sl * 0.94 + 11 + n; land[o + 3] = 255; } }
   }
-  function colourRows(j0, j1) { var r = D.ras; shadeInto(r.e, r.w, r.h, j0, j1, RIMG.sea, RIMG.land, function (j) { return Math.max(2000, 40030174 / r.w * Math.cos((90 - (j + 0.5) * 180 / r.h) * D2R)); }, 20015087 / r.h, 0, true); }
+  function colourRows(j0, j1) { var r = D.ras; shadeInto(r.e, r.w, r.h, j0, j1, RIMG.sea, RIMG.land, function (j) { return Math.max(2000, 40030174 / r.w * Math.cos((90 - (j + 0.5) * 180 / r.h) * D2R)); }, 20015087 / r.h, 0, true, r.ice); }
   /* DETAIL SHARPENS WITH ZOOM: the Caribbean at 0.1 degree (baked into world712-map.js) and, round home, the 4 km true-scale grid the game already carries
      (world712-carib.js, azimuthal equidistant round home: no new bytes), each shaded like the world and laid over it, feathered over its last 3 cells */
   var OV_DENSITY = { carib: 12, carib4: 30 };   // a picture's pixels per plane degree
@@ -192,7 +211,7 @@ window.WMAP712 = (function () {
     var nx = S.next; S.next = null; if (nx) ensure(nx); want();
   }
   var CACHE = true;   // the still world drawn once into a picture and slid while her thumb moves (false: every frame draws it all, as before Oct 28)
-  var KEYS = ['land', 'coast', 'lakes', 'glaciers', 'riv0', 'riv1', 'riv2'];
+  var KEYS = ['land', 'coast', 'lakes', 'glaciers', 'icebig', 'riv0', 'riv1', 'riv2'];
   function copiesFor(proj, V) { if (proj === 'pole') return [0]; var out = [], half = V.w / 2 / V.k; for (var n = -2; n <= 2; n++) { var o = n * 360; if (o - 180 < V.cX + half && o + 180 > V.cX - half) out.push(o); } return out; }
   function culled(B, V, off) {   // only the rings whose box meets the view (one degree to spare)
     var x0 = V.cX - V.w / 2 / V.k - off - 1, x1 = V.cX + V.w / 2 / V.k - off + 1, y0 = V.cY - V.h / 2 / V.k - 1, y1 = V.cY + V.h / 2 / V.k + 1, out = {};
@@ -206,7 +225,7 @@ window.WMAP712 = (function () {
     st.push(function () { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = PAPER; ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height); ctx.imageSmoothingEnabled = true;
       offs.forEach(function (off, i) { paths[i] = cull ? culled(B, V, off) : B.path; }); each(function () { ctx.drawImage(I.sea, I.x0, I.y0, I.ww, I.hh); B.ov.forEach(function (ov) { ctx.drawImage(ov.sea, ov.x0, ov.y0, ov.ww, ov.hh); }); }); });   // the sharper reliefs over the world's
     st.push(function () { each(function (q) { ctx.save(); ctx.clip(q.land); ctx.drawImage(I.land, I.x0, I.y0, I.ww, I.hh); B.ov.forEach(function (ov) { ctx.drawImage(ov.land, ov.x0, ov.y0, ov.ww, ov.hh); }); ctx.restore(); }); });
-    st.push(function () { each(function (q) { ctx.fillStyle = 'rgba(250,252,255,.88)'; ctx.fill(q.glaciers); ctx.lineWidth = 0.7 * px; ctx.strokeStyle = 'rgba(140,170,196,.55)'; ctx.stroke(q.glaciers);
+    st.push(function () { each(function (q) { ctx.fillStyle = 'rgba(250,252,255,.88)'; ctx.fill(q.glaciers); ctx.lineWidth = 0.7 * px; ctx.strokeStyle = 'rgba(140,170,196,.55)'; ctx.stroke(q.glaciers); ctx.strokeStyle = 'rgba(112,146,178,.6)'; ctx.stroke(q.icebig);
       ctx.fillStyle = 'rgb(150,192,210)'; ctx.fill(q.lakes); ctx.lineWidth = 0.7 * px; ctx.strokeStyle = 'rgba(47,95,134,.7)'; ctx.stroke(q.lakes); }); });
     st.push(function () { each(function (q) { ctx.lineJoin = 'round'; ctx.lineCap = 'round';
       for (var rv = 0; rv < 3; rv++) { var a = rv === 0 ? 1 : fadeAt(rv === 1 ? 3 : 5, V.k); if (a <= 0) continue; ctx.globalAlpha = a * 0.85; ctx.strokeStyle = 'rgb(62,118,168)'; ctx.lineWidth = (rv === 0 ? 1.2 : rv === 1 ? 0.9 : 0.7) * px; ctx.stroke(q['riv' + rv]); }
@@ -252,13 +271,13 @@ window.WMAP712 = (function () {
     clearTimeout(S.dt); S.dt = setTimeout(function () { S.dt = 0; if (S.view !== 'world' || !S.built[S.proj]) return; if (S.rjob && S.rjob.kind === 'base') { wantDetail(); return; }
       startRender('detail', S.proj, curV()); }, 140);
   }
-  function drawWaiting(g) {   // the soft state while the world is drawn: a paper card, the words, a filling bar
-    var w = S.cw, h = S.ch, bw = Math.min(220, w - 60), x = (w - bw) / 2, y = h / 2 + 14;
+  function drawWaiting(g, prog) {   // the soft state while the world is drawn: a paper card, the words, a filling bar (prog given: the 1892 paper's own bar, 76 review)
+    var w = S.cw, h = S.ch, bw = Math.min(220, w - 60), x = (w - bw) / 2, y = h / 2 + 14, own = prog != null;
     g.font = 'italic 700 15px Georgia, serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
-    text(g, S.failed ? 'The world map could not load.' : 'Drawing the world…', w / 2, h / 2 - 10, 1);
-    if (S.failed) return;
-    g.fillStyle = 'rgba(58,29,12,.14)'; g.fillRect(x, y, bw, 7); g.fillStyle = '#c0821e'; g.fillRect(x, y, Math.max(4, bw * (S.progress || 0)), 7); g.strokeStyle = 'rgba(58,29,12,.5)'; g.lineWidth = 1; g.strokeRect(x - 0.5, y - 0.5, bw + 1, 8);
-    S.waits++;
+    text(g, S.failed && !own ? 'The world map could not load.' : 'Drawing the world…', w / 2, h / 2 - 10, 1);
+    if (S.failed && !own) return;
+    g.fillStyle = 'rgba(58,29,12,.14)'; g.fillRect(x, y, bw, 7); g.fillStyle = '#c0821e'; g.fillRect(x, y, Math.max(4, bw * ((own ? prog : S.progress) || 0)), 7); g.strokeStyle = 'rgba(58,29,12,.5)'; g.lineWidth = 1; g.strokeRect(x - 0.5, y - 0.5, bw + 1, 8);
+    if (own) PP.waits++; else S.waits++;
   }
 
   /* ---------- drawing ---------- */
@@ -289,15 +308,18 @@ window.WMAP712 = (function () {
     if (!ensure(S.proj)) { g.setTransform(dpr, 0, 0, dpr, 0, 0); drawWaiting(g); return; }
     if (S.needHome) { S.needHome = false; homeView(); }   // the first look, once the canvas has its size
     clampView(); var B = S.built[S.proj], px = 1 / S.k, offs = copies(), bs = S.base[S.proj], V = curV();
+    var paperUp = S.proj === 'pole' && PP.on && !!PP.cv;   // 76 review: the laid paper covers the whole disc (r 869 px = 182 deg), so nothing is drawn or sharpened under it
     if (!CACHE) layerSteps(B, S.proj, V, g, false).forEach(function (f) { f(); });
     else {
       var bv = baseV(S.proj);
       if (!bs || bs.V.k !== bv.k || bs.V.dpr !== bv.dpr) { if (!S.rjob) startRender('base', S.proj, bv); if (!bs) { g.setTransform(dpr, 0, 0, dpr, 0, 0); drawWaiting(g); return; } }   // the base is the last part of the opening
-      g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true; blit(g, bs);
-      var dt = S.detail && S.detail.proj === S.proj ? S.detail : null; if (dt) blit(g, dt);
-      if (!(bs.V.k === S.k && bs.V.w > 0) && !(dt && sameV(dt.V, V))) wantDetail();
+      g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true; if (!paperUp) blit(g, bs);
+      var dt = S.detail && S.detail.proj === S.proj ? S.detail : null; if (dt && !paperUp) blit(g, dt);
+      if (paperUp) { if (S.dt) { clearTimeout(S.dt); S.dt = 0; } if (S.rjob && S.rjob.kind === 'detail') S.rjob = null; }
+      else if (!(bs.V.k === S.k && bs.V.w > 0) && !(dt && sameV(dt.V, V))) wantDetail();
       else if (S.rjob && S.rjob.kind === 'detail' && !sameV(S.rjob.V, V)) S.rjob = null;
     }
+    var paper = paperUp && drawPaper(g);   // 725a: the 1892 paper over the relief, under every mark
     if (S.sel && S.home) { var pts = gcPoints(S.home, S.sel);   // her flight: the great circle home -> the place, live over the pictures
       for (var c = 0; c < offs.length; c++) { setPlane(g, offs[c]); var arc = new Path2D(), o = { x: 0, y: 0 };
         for (var i = 0; i < pts.length; i++) { P(pts[i][0], pts[i][1], o); if (i) arc.lineTo(o.x, o.y); else arc.moveTo(o.x, o.y); }
@@ -320,13 +342,13 @@ window.WMAP712 = (function () {
     if (S.sel) { var sq = toScreen(S.sel.lat, S.sel.lon); fits(sq.x - 9, sq.y - 9, 18, 18); }
     var dots = [];
     g.textAlign = 'left';
-    for (var ci = 0; ci < D.cities.length; ci++) { var C = D.cities[ci], ca = fade(C.rank); if (ca <= 0.05) continue; var cp = scr(B.city, ci); if (!onScreen(cp.x, cp.y, 4)) continue;
+    for (var ci = 0; ci < D.cities.length; ci++) { var C = D.cities[ci], ca = paper ? 0 : fade(C.rank); if (ca <= 0.05) continue; var cp = scr(B.city, ci); if (!onScreen(cp.x, cp.y, 4)) continue;
       if (!fits(cp.x - 3, cp.y - 3, 6, 6)) continue; dots.push([cp.x, cp.y, ca, C.cap]); C.sx = cp.x; C.sy = cp.y; C.shown = ca; C.drawnAt = S.draws;
       g.font = (C.cap ? '700 ' : '600 ') + (C.rank <= 1 ? 11 : 10) + 'px Georgia, serif'; var cw = g.measureText(C.name).width; if (fits(cp.x + 5, cp.y - 6, cw + 2, 12)) text(g, C.name, cp.x + 5, cp.y, ca); }
     g.font = 'italic 600 12px Georgia, serif'; g.textAlign = 'center';
-    for (var oc = 0; oc < OCEANS.length; oc++) { var oa = OCEANS[oc][3] === 2 ? fade(3) : OCEANS[oc][3] === 1 ? fade(2) : 1; if (oa <= 0) continue; var op = scr(B.ocean, oc); if (!onScreen(op.x, op.y, 40)) continue; var ow = g.measureText(OCEANS[oc][0]).width; if (fits(op.x - ow / 2, op.y - 7, ow, 14)) text(g, OCEANS[oc][0], op.x, op.y, oa * 0.8, '#2f5f86'); }
+    for (var oc = 0; oc < OCEANS.length; oc++) { var oa = paper ? 0 : OCEANS[oc][3] === 2 ? fade(3) : OCEANS[oc][3] === 1 ? fade(2) : 1; if (oa <= 0) continue; var op = scr(B.ocean, oc); if (!onScreen(op.x, op.y, 40)) continue; var ow = g.measureText(OCEANS[oc][0]).width; if (fits(op.x - ow / 2, op.y - 7, ow, 14)) text(g, OCEANS[oc][0], op.x, op.y, oa * 0.8, '#2f5f86'); }
     g.font = 'italic 600 10.5px Georgia, serif';
-    for (var r = 0; r < D.regions.length; r++) { var R = D.regions[r], ra = fade(R.rank); if (ra <= 0.05) continue; var rp = scr(B.region, r); if (!onScreen(rp.x, rp.y, 30)) continue; var rw = g.measureText(R.name).width; if (fits(rp.x - rw / 2, rp.y - 6, rw, 12)) text(g, R.name, rp.x, rp.y, ra * 0.75, '#6e4c2a'); }
+    for (var r = 0; r < D.regions.length; r++) { var R = D.regions[r], ra = paper ? 0 : fade(R.rank); if (ra <= 0.05) continue; var rp = scr(B.region, r); if (!onScreen(rp.x, rp.y, 30)) continue; var rw = g.measureText(R.name).width; if (fits(rp.x - rw / 2, rp.y - 6, rw, 12)) text(g, R.name, rp.x, rp.y, ra * 0.75, '#6e4c2a'); }
     for (var dd = 0; dd < dots.length; dd++) { var d = dots[dd]; g.globalAlpha = d[2]; g.beginPath(); g.arc(d[0], d[1], d[3] ? 3.2 : 2.6, 0, 6.2832); g.fillStyle = '#fff8e8'; g.fill(); g.lineWidth = 1.1; g.strokeStyle = INK; g.stroke(); if (d[3]) { g.beginPath(); g.arc(d[0], d[1], 1, 0, 6.2832); g.fillStyle = INK; g.fill(); } }   // the dots last, over every name
     g.globalAlpha = 1;
     if (np) { g.save(); g.translate(np.x, np.y); g.fillStyle = '#1f8a8a'; g.strokeStyle = '#fff2c2'; g.lineWidth = 1.2; g.beginPath();   // the North Pole: a teal star at the centre, over every name
@@ -340,9 +362,52 @@ window.WMAP712 = (function () {
       g.restore(); });
     if (S.sel) { var ss = toScreen(S.sel.lat, S.sel.lon); g.beginPath(); g.arc(ss.x, ss.y, 9, 0, 6.2832); g.lineWidth = 2; g.strokeStyle = '#c0821e'; g.stroke(); g.beginPath(); g.arc(ss.x, ss.y, 11, 0, 6.2832); g.lineWidth = 1; g.strokeStyle = 'rgba(255,242,194,.9)'; g.stroke(); }
     g.strokeStyle = INK; g.lineWidth = 1.2; g.strokeRect(0.6, 0.6, S.cw - 1.2, S.ch - 1.2);
+    if (S.proj === 'pole' && PP.on && !PP.cv) drawWaiting(g, PP.progress);   // 76 review: the paper is being decoded and laid: the soft card, never a frozen frame
     S.marks = marks; S.draws++; S.ms = Math.round((performance.now() - t0) * 10) / 10;
   }
   function want() { if (S.want) return; S.want = true; requestAnimationFrame(draw); }
+
+  /* ---------- 725a: THE 1892 PAPER under the marks (the Gleason view only). The scan's pole is the PIXEL-measured pin (1009, 1021), never the eye's
+     (969, 979); its map edge r = 869 (the two black rings at 860 and 878); its scale and turn are fitted to six of its painted islands (PAPER725.s
+     pixels a degree from the pole, PAPER725.a the turn: the sheet puts Greenwich to the RIGHT, this map puts it DOWN). Paper pixel = pole + s * Rot(a) *
+     plane, plane in degrees (x = c sin lon, y = c cos lon); drawn under one transform, clipped to the map's edge (the hour dial left off). ---------- */
+  var PAPER725 = { src: 'assets/gleason/gleason-1892-disc-2048.jpg', cx: 1009, cy: 1021, r: 869, s: 4.7765, a: -89.775 * D2R };   // s, a: fitted Nov 4 to six painted islands (tests/map725-paper.json), rms 1.9 deg
+  /* 76 REVIEW (Nov 4 2026, Trunks): her first tap on the switch never freezes the map. The 2048 px scan is DECODED OFF THE PAGE'S THREAD (createImageBitmap, or
+     img.decode() where that is missing) while the map shows its "Drawing the world…" card; then it is laid ONCE, turned to the map (Greenwich down) and clipped to
+     its edge, into PP.cv, a canvas the size of the map's own disc (2 x 869 px, the scan's own pixels a degree), PAPER_STRIPS strips, one a frame; then the full
+     decode is let go. Every later frame draws PP.cv under one plain transform (no turn, no clip, no 2048 px source). A scan that fails to load turns the switch
+     back off (aria-pressed false, the credit hidden) and the next tap tries again. */
+  var PP = { on: false, img: null, cv: null, build: null, loading: false, failed: false, fails: 0, tries: 0, draws: 0, waits: 0, progress: 0, decodeMs: 0, stripMs: 0, strips: 0, released: false, path: '' };
+  var PAPER_STRIPS = 6;
+  function paperImg() {   // start the decode (once at a time); nothing is drawn from the scan until it is decoded and laid
+    if (PP.cv || PP.loading) return; PP.loading = true; PP.failed = false; PP.tries++; PP.progress = 0.05; var im = new Image(), t0 = performance.now(), done = false;
+    var fail = function () { if (done) return; done = true; im.onload = im.onerror = null; PP.loading = false; PP.failed = true; PP.fails++; PP.img = null; PP.build = null; paperSwitch(false); };
+    var laid = function (src, how) { if (done) return; done = true; im.onload = im.onerror = null; PP.decodeMs = Math.round(performance.now() - t0); PP.path = how; PP.img = src; PP.progress = 0.3; want(); requestAnimationFrame(function () { paperStrip(0); }); };
+    if (window.fetch && window.createImageBitmap && location.protocol !== 'file:') {   // served (her app, the site): the bytes fetched, decoded by the browser's own decoder threads
+      fetch(PAPER725.src).then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.blob(); }).then(function (bl) { return createImageBitmap(bl); }).then(function (bm) { laid(bm, 'blob'); }, fail); return; }
+    var decoded = function () { laid(im, 'img'); };   // a file:// page (a bench's copy): img.decode() decodes off the thread, then the image itself is laid
+    im.onerror = fail; im.onload = im.decode ? null : decoded; im.src = PAPER725.src;
+    if (im.decode) im.decode().then(decoded, function () { if (im.complete && im.naturalWidth > 0) decoded(); else fail(); });
+  }
+  function paperStrip(k) {   // one strip of the laid paper a frame: the scan turned and clipped into PP.build, rows [k, k + 1) / PAPER_STRIPS
+    var P7 = PAPER725, src = PP.img; if (!src) return; var N = 2 * P7.r, t = performance.now();
+    if (!PP.build) { PP.build = mk(); PP.build.width = N; PP.build.height = N; }
+    var g = PP.build.getContext('2d'), ca = Math.cos(P7.a), sa = Math.sin(P7.a), y0 = Math.floor(N * k / PAPER_STRIPS), y1 = Math.floor(N * (k + 1) / PAPER_STRIPS);
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.beginPath(); g.rect(0, y0, N, y1 - y0); g.clip();
+    g.setTransform(ca, -sa, sa, ca, N / 2 - (ca * P7.cx + sa * P7.cy), N / 2 - (-sa * P7.cx + ca * P7.cy)); g.beginPath(); g.arc(P7.cx, P7.cy, P7.r, 0, 6.2832); g.clip();
+    g.imageSmoothingEnabled = true; g.drawImage(src, 0, 0); g.restore();
+    PP.stripMs = Math.max(PP.stripMs, Math.round((performance.now() - t) * 10) / 10); PP.strips++; PP.progress = 0.3 + 0.7 * (k + 1) / PAPER_STRIPS;
+    if (k + 1 < PAPER_STRIPS) { want(); requestAnimationFrame(function () { paperStrip(k + 1); }); return; }
+    PP.cv = PP.build; PP.build = null; PP.loading = false; if (src.close) src.close(); PP.img = null; PP.released = true; want();   // laid: the full decode let go
+  }
+  function drawPaper(g) {   // the laid paper: one picture, plain scale and offset (the plane's origin at the disc's centre, P7.s of its pixels a degree)
+    if (!PP.cv) return false; var P7 = PAPER725, N = PP.cv.width, ks = S.k / P7.s, d = S.dpr, ox = S.cw / 2 - S.cX * S.k, oy = S.ch / 2 - S.cY * S.k;
+    g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true; g.drawImage(PP.cv, d * (ox - N / 2 * ks), d * (oy - N / 2 * ks), d * N * ks, d * N * ks); g.restore(); PP.draws++; return true;
+  }
+  function paperSwitch(on) {
+    PP.on = !!on; var b = $('wmap725paper'), c = $('wmap725credit'); if (b) b.setAttribute('aria-pressed', String(PP.on)); if (c) c.hidden = !(PP.on && S.proj === 'pole');
+    if (PP.on) paperImg(); want();
+  }
 
   /* ---------- picking: what is under her thumb is what is drawn there (trap 66), hit-tested against the drawn marks, nearest first ---------- */
   function pick(sx, sy) {
@@ -396,13 +461,15 @@ window.WMAP712 = (function () {
     '#wmap712 .wmProj{position:absolute;left:6px;bottom:6px;display:flex;border-radius:19px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.25)}#wmap712 .wmProj button{height:38px;padding:0 10px;white-space:nowrap;border:0;background:rgba(246,236,214,.94);color:var(--ink);font:700 12px/38px var(--body);touch-action:manipulation}' +
     '#wmap712 .wmProj button[aria-pressed="true"]{background:#c8314a;color:#fff6e2}#wmap712 .wmZoom{position:absolute;right:6px;bottom:6px;display:grid;gap:6px}#wmap712 .wmZoom button{width:40px;height:40px;padding:0;border:0;border-radius:50%;background:rgba(246,236,214,.94);color:var(--ink);font:800 19px/40px var(--body);box-shadow:0 2px 8px rgba(0,0,0,.25);touch-action:manipulation}' +
     '#wmap712foot{display:none;margin:2px 0 0;max-width:100%;font:600 13px/1.3 var(--body);text-align:center}#map705.wm712 #wmap712foot{display:grid;gap:1px}#wmap712foot .wmNote{font-size:11.5px;opacity:.8}#wmap712sel{min-height:3.9em}#wmap712foot .wmCredit{font-size:11px;opacity:.72}' +
+    '#wmap725paper{position:absolute;right:6px;top:6px;height:44px;min-height:44px;min-width:44px;padding:0 12px;border:0;border-radius:22px;background:rgba(246,236,214,.94);color:var(--ink);font:700 12px/44px var(--body);box-shadow:0 2px 8px rgba(0,0,0,.25);touch-action:manipulation}#wmap725paper[aria-pressed="true"]{background:#c8314a;color:#fff6e2}#wmap712.wmGlobe #wmap725paper{display:none}#wmap725credit[hidden]{display:none}' +   // 76 review: a 44 px thumb target in both looks
+    'html.ui716 #wmap725paper{height:44px!important;line-height:44px!important;padding-top:0!important;padding-bottom:0!important;background:linear-gradient(180deg,#26316c,#141a4a)!important;color:var(--u-ivory)!important}html.ui716 #wmap725paper[aria-pressed="true"]{background:linear-gradient(180deg,#e04a62,#c8314a 45%,#8a1a2e)!important;color:#fff8ea!important}' +   // 76 review: in Standard, the projection buttons' own plates, its words centred
     '@media (orientation:landscape) and (max-height:520px){#map705.wm712 .m705win{grid-template-columns:auto minmax(150px,210px);column-gap:12px;align-items:center}#map705.wm712 .m705win h3{grid-column:1/-1}#map705.wm712 #wmap712{grid-column:1;grid-row:2}#map705.wm712 #wmap712foot{grid-column:2;grid-row:2;text-align:left;align-self:center}}';
   function sizeCanvas() {   // as big as the island chart (map705Size's side), and wider on a phone on its side
     var isl = $('map705cv'), side = isl && parseFloat(isl.style.width) || Math.max(180, Math.min(innerWidth - 44, innerHeight - 150, 460)), land = innerWidth > innerHeight && innerHeight <= 520;
     var cv = $('wmap712cv'), w = land ? Math.round(Math.max(200, Math.min(innerWidth - 60 - 222, side * 1.6))) : side, h = side;   // on its side the card sits beside the map (the landscape grid in CSS)
     cv.style.width = w + 'px'; cv.style.height = h + 'px';
   }
-  function note() { var n = $('wmap712note'); if (n) n.textContent = S.proj === 'pole' ? 'Gleason\'s layout: the true globe seen from above the North Pole; every distance from the pole is true, and the rim is the South Pole.' : 'Globe-true: every place at its real latitude and longitude.'; }
+  function note() { var n = $('wmap712note'); if (n) n.textContent = S.proj === 'pole' ? 'Gleason\'s New Standard Map of the World (1892): the North Pole at the centre, Antarctica the ring of ice at the rim, painted by its height.' : 'Globe: the round world unrolled flat, latitude and longitude drawn as a square grid.'; }   // DRAFT for Marth (76 review): only the title is his ruling; the pole note's tail and the whole Globe note are ours. The Globe note never calls the globe "true" or "real": in this game the disc IS the world
   function load(cb) {
     if (window.WFR_WORLDMAP712 || S.failed) return cb(); if (S.loading) return; S.loading = true; var sc = document.createElement('script'); sc.src = S.src || 'world712-map.js';
     sc.onload = function () { S.loading = false; if (!window.WFR_WORLDMAP712) S.failed = true; cb(); };
@@ -415,31 +482,35 @@ window.WMAP712 = (function () {
     else { b.textContent = '🌍 World'; b.setAttribute('aria-label', 'Show the whole world'); if (h3) h3.textContent = 'The island'; m.setAttribute('aria-label', 'Map of the island');
       if (S.redraw) S.redraw(); }   // back to the island chart, drawn by 705's own map705Size and map705Draw (the hook hands them over: they are not globals)
   }
-  function setProj(p) { if (p !== 'globe' && p !== 'pole') return; S.proj = p; S.toggles++; document.querySelectorAll('#wmap712 .wmProj button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.proj === p)); }); note(); S.needHome = true; want(); }
+  function setProj(p) { if (p !== 'globe' && p !== 'pole') return; S.proj = p; S.toggles++; var wr = $('wmap712'); if (wr) wr.classList.toggle('wmGlobe', p === 'globe'); var pc = $('wmap725credit'); if (pc) pc.hidden = !(PP.on && p === 'pole'); document.querySelectorAll('#wmap712 .wmProj button').forEach(function (b) { b.setAttribute('aria-pressed', String(b.dataset.proj === p)); }); note(); S.needHome = true; want(); }
   function attach(m, src, redraw) {
     if (S.el) return; S.el = m; S.src = src || 'world712-map.js'; S.redraw = typeof redraw === 'function' ? redraw : null;
     var st = document.createElement('style'); st.id = 'wmap712css'; st.textContent = CSS; document.head.appendChild(st);
     var win = m.querySelector('.m705win'), b = document.createElement('button'); b.type = 'button'; b.id = 'wmap712Btn'; b.textContent = '🌍 World'; b.setAttribute('aria-label', 'Show the whole world'); win.appendChild(b);
     var wrap = document.createElement('div'); wrap.id = 'wmap712';
     wrap.innerHTML = '<canvas id="wmap712cv" width="8" height="8" aria-label="The whole world: drag to move, pinch to zoom, tap a place"></canvas>' +
-      '<div class="wmProj" role="group" aria-label="Projection"><button type="button" data-proj="globe" aria-pressed="true">Globe-true</button><button type="button" data-proj="pole" aria-pressed="false">North-pole (Gleason style)</button></div>' +
-      '<div class="wmZoom"><button type="button" id="wmap712in" aria-label="Zoom in">+</button><button type="button" id="wmap712out" aria-label="Zoom out">−</button><button type="button" id="wmap712home" aria-label="Back to home">⌂</button></div>';
+      '<div class="wmProj" role="group" aria-label="Projection"><button type="button" data-proj="pole" aria-pressed="true">Gleason (1892)</button><button type="button" data-proj="globe" aria-pressed="false">Globe</button></div>' +   // DRAFT for Marth (76 review): the tab words "Gleason (1892)" and "Globe" (was "Globe-true")
+      '<div class="wmZoom"><button type="button" id="wmap712in" aria-label="Zoom in">+</button><button type="button" id="wmap712out" aria-label="Zoom out">−</button><button type="button" id="wmap712home" aria-label="Back to home">⌂</button></div>' +
+      '<button type="button" id="wmap725paper" aria-pressed="false" aria-label="Lay the 1892 paper map under the marks">1892 paper</button>';   // DRAFT for Marth (76 review): the switch's words "1892 paper" and its spoken label
     var foot = document.createElement('p'); foot.id = 'wmap712foot';
-    foot.innerHTML = '<span id="wmap712sel">Tap a place: how far it is from home</span><span class="wmNote" id="wmap712note"></span><span class="wmCredit" id="wmap712credit"></span>'; foot.querySelector('#wmap712credit').textContent = credit();
+    foot.innerHTML = '<span id="wmap712sel">Tap a place: how far it is from home</span><span class="wmNote" id="wmap712note"></span><span class="wmCredit" id="wmap712credit"></span><span class="wmCredit" id="wmap725credit" hidden></span>'; foot.querySelector('#wmap712credit').textContent = credit(); foot.querySelector('#wmap725credit').textContent = PAPER_CREDIT;
     var isl = $('map705cv'); win.insertBefore(wrap, isl.nextSibling); win.insertBefore(foot, win.querySelector('.m705foot').nextSibling); note();
     tapButton(b, function () { show(S.view === 'world' ? 'island' : 'world'); });
     wrap.querySelectorAll('.wmProj button').forEach(function (pb) { tapButton(pb, function () { setProj(pb.dataset.proj); }); });
+    tapButton($('wmap725paper'), function () { paperSwitch(!PP.on); var pc = $('wmap725credit'); if (pc) pc.hidden = !(PP.on && S.proj === 'pole'); });
     tapButton($('wmap712in'), function () { zoomAt(S.cw / 2, S.ch / 2, 1.6); }); tapButton($('wmap712out'), function () { zoomAt(S.cw / 2, S.ch / 2, 1 / 1.6); });
     tapButton($('wmap712home'), function () { var H = WFR_WORLD.HOME; S.k = Math.max(S.k, 24); P(H.lat, H.lon, tmp); S.cX = tmp.x; S.cY = tmp.y; clampView(); want(); });
     wireGestures($('wmap712cv'));
     new MutationObserver(function () { if (m.hidden) { if (S.view !== 'island') show('island'); } else S.opens++; }).observe(m, { attributes: true, attributeFilter: ['hidden'] });   // every opening starts on the island chart
     addEventListener('resize', function () { if (S.view === 'world' && !m.hidden) { sizeCanvas(); want(); } });
   }
-  return { attach: attach, show: show, setProj: setProj, credit: credit,
+  return { attach: attach, show: show, setProj: setProj, credit: credit, paper: paperSwitch, PAPER725: PAPER725,
     choose: function (lat, lon) { select({ name: null, lat: lat, lon: lon, kind: 'point' }); want(); return S.sel; },   // the bench's door for a place no thumb can hit exactly (home's antipode)
     look: function (lat, lon, k) { S.needHome = false; P(lat, lon, tmp); S.k = k; S.cX = tmp.x; S.cY = tmp.y; clampView(); draw(); return { k: S.k, cX: S.cX, cY: S.cY }; },   // the bench's and the home button's way to aim the view
     state: function () { var cv = $('wmap712cv'), r = cv ? cv.getBoundingClientRect() : null; return { view: S.view, proj: S.proj, k: S.k, kMin: S.cw ? kMin() : null, cX: S.cX, cY: S.cY, cw: S.cw, ch: S.ch, dpr: S.dpr, loaded: S.loaded, failed: S.failed,
       draws: S.draws, ms: S.ms, opens: S.opens, toggles: S.toggles, gestures: S.gestures, sel: S.sel ? { name: S.sel.name, lat: S.sel.lat, lon: S.sel.lon, km: S.sel.km, kind: S.sel.kind, word: S.sel.word, bearing: S.sel.bearing, anti: S.sel.anti } : null, canvases: S.made, canvasBytes: S.cvs.reduce(function (a, c) { return a + c.width * c.height * 4; }, 0), overlays: Object.keys(S.built).map(function (k) { return k + ':' + S.built[k].ov.map(function (o) { return o.id; }).join('+'); }), rect: r ? { l: r.left, t: r.top, w: r.width, h: r.height } : null,
+      citiesShown: D ? D.cities.filter(function (c) { return c.drawnAt === S.draws - 1 && c.shown > 0.3; }).map(function (c) { return c.name; }) : null,
+      paper: { on: PP.on, loaded: !!PP.cv, failed: PP.failed, fails: PP.fails, tries: PP.tries, loading: PP.loading, draws: PP.draws, waits: PP.waits, path: PP.path, decodeMs: PP.decodeMs, strips: PP.strips, stripMs: PP.stripMs, holdsFull: !!PP.img, released: PP.released, cacheSide: PP.cv ? PP.cv.width : 0, cx: PAPER725.cx, cy: PAPER725.cy, r: PAPER725.r, s: PAPER725.s, a: PAPER725.a },
       ready: Object.keys(S.built), building: S.job ? S.job.proj : (S.rjob && S.rjob.kind === 'base' ? S.rjob.proj : null), rendering: !!(S.rjob || S.dt), base: Object.keys(S.base), renders: S.renders.slice(), progress: S.progress, waits: S.waits, jobs: S.jobs.slice(), error: S.error, counts: D ? { land: D.land.length, coast: D.coast.length, lakes: D.lakes.length, glaciers: D.glaciers.length, rivers: D.rivers.length, cities: D.cities.length, regions: D.regions.length } : null }; },
     project: toScreen, unproject: fromScreen };
 })();
