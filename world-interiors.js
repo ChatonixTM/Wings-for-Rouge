@@ -690,7 +690,7 @@ window.WFR_INTERIORS729 = (function () {
       placeHer(dt, false);
       var rig = X.rig(), B = X.birdObj(), go;
       if (window.WFR_BIRDS && WFR_BIRDS.walk && rig && B) { var ws = moved > 1e-4 && dt > 0 ? Math.min(12, moved / dt) * (sy < 0 ? -1 : 1) : 0; go = WFR_BIRDS.walk(rig, dt, { speed: ws, turn: S.talking ? 0 : sx, air: false, rest: false, still: !!S.talking, shake: false }); B.position.y += go.y * X.size(); B.rotation.x = go.pitch; B.rotation.z = go.roll; B.rotation.y += go.yaw; }
-      var wg = X.wings ? X.wings() : null; if (wg && wg[0] && wg[1]) { wg[0].rotation.z = 0.35; wg[1].rotation.z = -0.35; }   // folded after the gait, as the island's walk does
+      var wg = X.wings ? X.wings() : null; if (wg && wg[0] && wg[1]) { var fo = S.fold = (S.fold || 0) + (1 - (S.fold || 0)) * Math.min(1, dt * 6); wg[0].rotation.x *= 1 - fo; wg[1].rotation.x *= 1 - fo; wg[0].rotation.y = 1.3 * fo; wg[1].rotation.y = -1.3 * fo; wg[0].rotation.z = wg[0].rotation.z * (1 - fo) - 0.18 * fo; wg[1].rotation.z = wg[1].rotation.z * (1 - fo) + 0.18 * fo; }   // refine-1: folded after the gait by the island's own rule (S.fold eased to 1; rotation.y is the rig's fold, the hand tucks from it)
       if (R.view && Math.hypot(c.lx - R.view.at[0], c.lz - R.view.at[1]) < (R.view.r || C.VIEW_R)) { if (!st.atView) { st.atView = { room: c.I.id + ':' + c.ri, name: R.view.name, t: +(S.t || 0).toFixed(2) }; st.viewsSeen[c.I.id + ':' + c.ri] = 1; ev('view ' + R.view.name); } } else st.atView = null;
     } catch (e) { st.fault = 'frame: ' + (e && e.message || e); try { teardown(); } catch (e2) { /* the flight takes over */ } return false; }
     var ms = now() - t0; st.ms.push(ms); if (st.ms.length > 4000) st.ms.shift(); if (ms > st.msMax) st.msMax = ms;

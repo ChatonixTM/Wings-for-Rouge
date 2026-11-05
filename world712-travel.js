@@ -22,7 +22,8 @@ window.WFR_TRAVEL712 = (function () {
   var W = window.WFR_WORLD, PX = 256, WORLD = 2 * Math.PI * 6378137;
   /* Every number DRAFT (plan section 3: the iPhone 12 budget, unmeasured on the phone). */
   var C = { ON: 20000, OFF: 18000, RECENTRE: 10000, TOP: 1800, TOP2: 20000, KNOTS: [[1800, 60], [6000, 600], [20000, 6000]], XP_V: 30,
-    DRAWN: 64, KEPT: 96, LOADS: 4, BUILDS: 1, GRID: 32, SPLIT: 1.25, VDEPTH: 3, FLOOR: 30, LAYER: 7, REFR: !W ? 7432843 : isFinite(W.curveR()) ? W.curveR() : 1e30, FAR_MIN: 60000, FAR_MAX: 800000, FAR_PAD: 150000 };
+    DRAWN: 64, KEPT: 96, LOADS: 4, BUILDS: 1, GRID: 32, SPLIT: 1.25, VDEPTH: 3, FLOOR: 30, LAYER: 7, REFR: !W ? 7432843 : isFinite(W.curveR()) ? W.curveR() : 1e30, FAR_MIN: 60000, FAR_MAX: 800000, FAR_PAD: 150000,
+    FLAT: 0.25, SEA_Z: 8, SKIRT_K: 4, FETCH_MS: 12000, FAR_NEAR: 8000, FAR_P: 0.5, DRAWN_DEEP: 44 };   /* W-TERRAIN (Nov 4): the LOD's error is the sheet's spacing scaled by the ground's own relief (never below FLAT of it); an all-sea tile stops at SEA_Z; skirts reach SKIRT_K coarser spacings of the edge's slope */
 
   /* ---------- the height sets the speed (plan section 2): S4a's x1-x4 below 1,800 m stays the page's; above it, log-even between the knots ---------- */
   function speedAt(y) {
@@ -42,6 +43,11 @@ window.WFR_TRAVEL712 = (function () {
     var x0 = Math.floor(fx), y0 = Math.floor(fy), x1 = Math.min(PX - 1, x0 + 1), y1 = Math.min(PX - 1, y0 + 1), tx = fx - x0, ty = fy - y0;
     var a = h[y0 * PX + x0], b = h[y0 * PX + x1], c = h[y1 * PX + x0], d = h[y1 * PX + x1];
     return (a * (1 - tx) + b * tx) * (1 - ty) + (c * (1 - tx) + d * tx) * ty;
+  }
+  function reliefOf(h, u0, v0, s) {   // W-TERRAIN: the lowest and highest pixel of a field under a window (u0, v0, side s), the sea at 0
+    var a = Math.max(0, Math.floor(u0 * PX)), b = Math.min(PX, Math.ceil((u0 + s) * PX)), c = Math.max(0, Math.floor(v0 * PX)), d = Math.min(PX, Math.ceil((v0 + s) * PX)), lo = 1e9, hi = -1e9;
+    for (var y = c; y < d; y++) for (var x = a, r = y * PX; x < b; x++) { var v = h[r + x]; if (v < lo) lo = v; if (v > hi) hi = v; }
+    return [Math.max(0, lo), Math.max(0, hi)];
   }
   /* a tile's square in a frame, the antimeridian wrapped to the copy nearest the frame's origin: x0 its west edge, z0 its NORTH edge, size its side */
   function boundsOf(f, z, x, y) { return W.tileBox(f, z, x, y); }   // 725b: the door's (world712-frame.js mTileBox: these lines, moved in whole)
@@ -106,27 +112,42 @@ window.WFR_TRAVEL712 = (function () {
     var canvas = document.createElement('canvas'); canvas.width = PX; canvas.height = PX;
     var ctx = canvas.getContext('2d', { willReadFrequently: true });
     var MAXZ = 0; deep.forEach(function (z) { if (z > MAXZ) MAXZ = z; });
+    /* W-TERRAIN (Nov 4): o.remote is a set holding EVERY tile from minZ to maxZ, fetched at runtime ({ url(z,x,y), minZ, maxZ, up(), ok(), fail(), decode? });
+       the local sets still come first (offline, despiked). o.capZ(z,x,y) is the ice top: a tile deeper than its cap is never real, its heights are cut from the cap. */
+    var R = o.remote || null, FN = o.farNear != null ? o.farNear : (R ? C.FAR_NEAR : 0), FP = o.farP != null ? o.farP : C.FAR_P, DRAWN = o.drawn || (R ? C.DRAWN_DEEP : C.DRAWN), capOf = o.capZ || function () { return null; }, splitWait = new Set();
+    if (R && R.maxZ > MAXZ) MAXZ = R.maxZ;
 
     function decode(blob) {   // the PNG's bytes to heights, through the browser's own decoder (no colour management: the bytes ARE the heights)
       if (window.createImageBitmap) return createImageBitmap(blob, { premultiplyAlpha: 'none', colorSpaceConversion: 'none' }).then(function (bmp) { ctx.clearRect(0, 0, PX, PX); ctx.drawImage(bmp, 0, 0); if (bmp.close) bmp.close(); return fieldOf(ctx.getImageData(0, 0, PX, PX).data, 4); });
       return new Promise(function (res, rej) { var url = URL.createObjectURL(blob), im = new Image(); im.onload = function () { ctx.clearRect(0, 0, PX, PX); ctx.drawImage(im, 0, 0); URL.revokeObjectURL(url); res(fieldOf(ctx.getImageData(0, 0, PX, PX).data, 4)); }; im.onerror = function () { URL.revokeObjectURL(url); rej(new Error('image')); }; im.src = url; });
     }
-    function real(k) { return have.has(k) && !missing.has(k); }
+    var upAt = -1, upNow = false;   // W-TERRAIN: R.up() asked ONCE a frame (it reads localStorage; asked per leaf it cost the Alps 8 ms a frame at 3x throttle)
+    function remoteHas(z) { if (!R || z < R.minZ || z > R.maxZ) return false; if (upAt !== stats.updates) { upAt = stats.updates; upNow = !!R.up(); } return upNow; }   // offline or backing off: the remote set is not there (its tiles are cut from their ancestors)
+    function real(k) { if (missing.has(k)) return false; var a = k.split('/'), z = +a[0], cap = capOf(z, +a[1], +a[2]); if (cap != null && z > cap) return false; return have.has(k) || remoteHas(z); }
+    function urlOf(k) { if (have.has(k)) return have.get(k); var a = k.split('/'); return R.url(+a[0], +a[1], +a[2]); }
     function srcOf(t) {   // the nearest REAL ancestor that is built (or t itself): its field and the window of it that t covers
       for (var dz = 1; dz <= t.z; dz++) { var z = t.z - dz, x = t.x >> dz, y = t.y >> dz, r = tiles.get(keyOf(z, x, y)); if (r && r.field && r.real) { var n = 1 << dz; return { rec: r, s: 1 / n, u0: (t.x - x * n) / n, v0: (t.y - y * n) / n }; } }
       return null;
     }
-    function limitOf(rec) { return Math.max(deep.get(rec.key) != null ? deep.get(rec.key) : -1, rec.srcZ + C.VDEPTH); }   // real data deeper, or the source's own pixels not yet all used
+    function deepOf(rec) { var cap = capOf(rec.z, rec.x, rec.y), d = deep.get(rec.key); if (cap != null && rec.z >= cap) return cap; d = d != null ? d : -1; return remoteHas(rec.z) ? Math.max(d, R.maxZ) : d; }   // W-TERRAIN: the remote set is real data under every tile (the ice top stops it)
+    function limitOf(rec) { return Math.max(deepOf(rec), rec.srcZ + C.VDEPTH); }   // real data deeper, or the source's own pixels not yet all used
+    function errOf(rec) {   // W-TERRAIN: the sheet's geometric error in metres: its spacing, scaled by how much the ground there really moves (a flat plain or the open sea needs no fine sheet)
+      var sp = rec.b.size / C.GRID; if (rec.fmax <= 0 && rec.z >= C.SEA_Z) return 0;
+      return sp * C.GRID * Math.min(1, Math.max(C.FLAT, (rec.fmax - Math.max(0, rec.fmin)) / sp)); }
 
     function build(rec) {   // one tile: a GRID x GRID sheet in the tile's own mercator metres (scaled by the frame's k), plus a skirt round its edge
       var N = C.GRID, V = (N + 1) * (N + 1), E = 4 * (N + 1), s = WORLD / Math.pow(2, rec.z), b = boundsOf(f, rec.z, rec.x, rec.y), skirt = Math.max(30, b.size * 0.04);
       var pos = new Float32Array((V + E) * 3), col = new Float32Array((V + E) * 3), hv = new Float32Array(V), idx = [], fld = rec.field, U0 = rec.u0, V0 = rec.v0, SS = rec.s, minH = 1e9, maxH = -1e9, eps = 0.5 / N;
       for (var j = 0; j <= N; j++) for (var i = 0; i <= N; i++) { var h = sampleField(fld, U0 + i / N * SS, V0 + j / N * SS), q = j * (N + 1) + i; hv[q] = h; }
       var lats = W.tileRowLats(f, rec.z, rec.x, rec.y, b), latTop = lats[0], latBot = lats[1], o725 = W.tilePlace(f, rec.z, rec.x, rec.y);
+      var edgeSlope = 0;   // W-TERRAIN: the steepest ground along the edge (the skirt must hide a coarser neighbour's step there)
       for (j = 0; j <= N; j++) for (i = 0; i <= N; i++) { q = j * (N + 1) + i; var k = q * 3, hh = hv[q], y = Math.max(0, hh);
         var tl = W.tileLocal(f, rec.z, rec.x, rec.y, i / N, j / N, o725); pos[k] = tl.x; pos[k + 1] = y; pos[k + 2] = tl.z; if (y < minH) minH = y; if (y > maxH) maxH = y;
         var hx = hv[j * (N + 1) + Math.min(N, i + 1)] - hv[j * (N + 1) + Math.max(0, i - 1)], hz = hv[Math.min(N, j + 1) * (N + 1) + i] - hv[Math.max(0, j - 1) * (N + 1) + i], step = 2 * b.size / N;
+        if ((i === 0 || j === 0 || i === N || j === N) && hh > 0) edgeSlope = Math.max(edgeSlope, Math.hypot(hx, hz) / step);
         tint(hh, Math.hypot(hx, hz) / step, latTop + (latBot - latTop) * j / N, col, k); }
+      var fr = reliefOf(fld, U0, V0, SS); rec.fmin = fr[0]; rec.fmax = fr[1];   // the field's own range under the tile (every pixel, not the sheet's 33 x 33): the LOD's relief
+      skirt = Math.max(skirt, Math.min(maxH - minH + 30, C.SKIRT_K * b.size / N * edgeSlope));
       for (j = 0; j < N; j++) for (i = 0; i < N; i++) { var a = j * (N + 1) + i, c = a + N + 1; idx.push(a, c, a + 1, a + 1, c, c + 1); }   // tiles.js's diagonal (H() below reads the same two triangles)
       var gridFaces = idx.length, edges = [[], [], [], []], vs = V;
       for (i = 0; i <= N; i++) { edges[0].push(i); edges[1].push(N * (N + 1) + i); edges[2].push(i * (N + 1)); edges[3].push(i * (N + 1) + N); }
@@ -148,7 +169,7 @@ window.WFR_TRAVEL712 = (function () {
       if (rec.mesh) { group.remove(rec.mesh); rec.mesh.geometry.dispose(); } tiles.delete(rec.key); stats.evicted++; }
 
     function want(t, d) {   // a tile is needed: a real one is fetched, a virtual one (or one whose file is missing) is cut from its ancestor
-      var k = keyOf(t.z, t.x, t.y); if (tiles.has(k) || inflight.has(k) || waiting.has(k)) return;   // decoded and waiting its turn to build: never fetched twice
+      var k = keyOf(t.z, t.x, t.y), had = tiles.get(k); if ((had && (had.real || !real(k))) || inflight.has(k) || waiting.has(k)) return;   // decoded and waiting its turn to build: never fetched twice (W-TERRAIN: a virtual stand-in is fetched for real once the remote is back)
       if (real(k)) { for (var i = 0; i < fetchQ.length; i++) if (fetchQ[i].k === k) { fetchQ[i].d = Math.min(fetchQ[i].d, d); return; } fetchQ.push({ k: k, t: t, d: d }); return; }
       var src = srcOf(t); if (!src) return; for (i = 0; i < buildQ.length; i++) if (buildQ[i].key === k) { buildQ[i].d = Math.min(buildQ[i].d, d); return; }
       buildQ.push({ key: k, z: t.z, x: t.x, y: t.y, real: false, field: src.rec.field, u0: src.u0, v0: src.v0, s: src.s, srcZ: src.rec.z, srcKey: src.rec.key, d: d });
@@ -156,16 +177,21 @@ window.WFR_TRAVEL712 = (function () {
     function pump() {
       fetchQ.sort(function (a, b) { return a.t.z - b.t.z || a.d - b.d; });   // coarse first, then near (tiles.js: the ground shows at once and sharpens)
       while (inflight.size < C.LOADS && fetchQ.length) {
-        (function (q) { var url = have.get(q.k), p = (o.fetch || fetch)(url).then(function (r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.blob(); })
+        (function (q) { var rem = !have.has(q.k), url = urlOf(q.k), ac = typeof AbortController !== 'undefined' ? new AbortController() : null, tm = null;   // W-TERRAIN: a request that never answers is given up after FETCH_MS (a weak phone line must not hold a load slot for good)
+          var got = (o.fetch || fetch)(url, ac ? { signal: ac.signal } : undefined).then(function (r) { if (!r.ok) { var he = new Error('HTTP ' + r.status); he.http = true; throw he; } if (rem && R.saw) R.saw(q.k, r.headers.get('x-amz-meta-x-imagery-sources')); return r.blob(); });
+          var p = Promise.race([got, new Promise(function (res, rej) { tm = setTimeout(function () { var te = new Error('timeout ' + C.FETCH_MS + ' ms'); te.timeout = true; stats.timeouts = (stats.timeouts || 0) + 1; if (ac) try { ac.abort(); } catch (e) { /* gone */ } rej(te); }, C.FETCH_MS); })])
+          .then(function (bl) { clearTimeout(tm); return bl; }, function (e) { clearTimeout(tm); throw e; })
           .then(function (bl) { stats.bytes += bl.size; if (!seen.has(q.k)) { seen.add(q.k); stats.uniq++; stats.uniqBytes += bl.size; } return decode(bl); })
-          .then(function (fl) { stats.loaded++; waiting.add(q.k); buildQ.push({ key: q.k, z: q.t.z, x: q.t.x, y: q.t.y, real: true, field: fl, u0: 0, v0: 0, s: 1, srcZ: q.t.z, srcKey: q.k, d: q.d }); })
-          .catch(function (e) { stats.errors++; stats.missing++; missing.add(q.k); stats.lastError = q.k + ': ' + (e && e.message || e); })   // a missing tile: its parent stands in (it becomes virtual)
+          .then(function (fl) { stats.loaded++; if (rem) { stats.remote = (stats.remote || 0) + 1; if (R.clean) R.clean(fl, q.t.z, q.t.x, q.t.y); if (R.ok) R.ok(); } waiting.add(q.k); buildQ.push({ key: q.k, z: q.t.z, x: q.t.x, y: q.t.y, real: true, field: fl, u0: 0, v0: 0, s: 1, srcZ: q.t.z, srcKey: q.k, d: q.d }); })
+          .catch(function (e) { stats.errors++; stats.lastError = q.k + ': ' + (e && e.message || e);   // a missing tile: its parent stands in (it becomes virtual)
+            if (rem && !(e && e.http)) { if (R.fail) R.fail(); return; } if (e && e.timeout) return;   // W-TERRAIN: the network, not the tile (offline, a tunnel): never marked missing; the remote backs off and the coarse world stands in
+            stats.missing++; missing.add(q.k); })
           .then(function () { inflight.delete(q.k); stats.inflight = inflight.size; });
           inflight.set(q.k, p); stats.inflight = inflight.size; if (inflight.size > stats.inflightMax) stats.inflightMax = inflight.size; })(fetchQ.shift());
       }
       fetchQ.length = 0;   // asked again next frame by the walk, so the queue is always this frame's need
       buildQ.sort(function (a, b) { return a.z - b.z || a.d - b.d; });
-      var n = 0; while (n < C.BUILDS && buildQ.length) { var r = buildQ.shift(); waiting.delete(r.key); if (tiles.has(r.key)) continue; tiles.set(r.key, r); build(r); n++; }
+      var n = 0; while (n < C.BUILDS && buildQ.length) { var r = buildQ.shift(), old = tiles.get(r.key); waiting.delete(r.key); if (old && (old.real || !r.real)) continue; if (old) { drop(old); stats.upgraded = (stats.upgraded || 0) + 1; } tiles.set(r.key, r); build(r); n++; }   // W-TERRAIN: a real field replaces its virtual stand-in
       if (n > stats.buildsMax) stats.buildsMax = n;
       for (var i = buildQ.length - 1; i >= 0; i--) if (!buildQ[i].real) buildQ.splice(i, 1);   // virtual asks are re-made each frame; decoded real fields wait their turn
     }
@@ -176,15 +202,16 @@ window.WFR_TRAVEL712 = (function () {
       cam.x = camPos.x; cam.y = camPos.y; cam.z = camPos.z; var F = farOf(cam.y), opt = o2 || {};
       var root = tiles.get('0/0/0'); drawn.length = 0;
       if (!root) { want({ z: 0, x: 0, y: 0 }, 0); pump(); stats.updates++; return drawn; }
-      var leaves = [root], stuck = new Set(), protect = new Set(['0/0/0']), waits = [], guard = 0;
+      var leaves = [root], stuck = new Set(), protect = new Set(['0/0/0']), waits = [], guard = 0, reserved = 0; splitWait.clear();
       while (guard++ < 400) {
         var best = -1, be = 0;
-        for (var i = 0; i < leaves.length; i++) { var L = leaves[i]; if (stuck.has(L.key) || L.z >= Math.min(limitOf(L), MAXZ + C.VDEPTH)) continue; var d = distOf(L.b, L.maxH), e = L.b.size / Math.max(1, d); if (e > 1 / C.SPLIT && e > be) { be = e; best = i; } }
+        for (var i = 0; i < leaves.length; i++) { var L = leaves[i]; if (stuck.has(L.key)) continue; if (L._ef !== stats.updates) { L._ef = stats.updates; L._lim = L.z >= Math.min(limitOf(L), MAXZ + C.VDEPTH); var dd = Math.max(1, distOf(L.b, L.maxH)); L._e = errOf(L) / dd * (FN > 0 && dd > FN ? Math.pow(FN / dd, FP) : 1); }   /* W-TERRAIN (Su 37, Nov 5): past FAR_NEAR the deep set splits less (coarser far tiles, the frame gap within +25% of HEAD); near her untouched; no remote set, no change */ if (L._lim) continue; var e = L._e; if (e > 1 / C.SPLIT && e > be) { be = e; best = i; } }   // W-TERRAIN: the screen error (relief-scaled), the largest first; once a frame per leaf (a split that does not fit no longer ends the walk)
         if (best < 0) break;
         var P = leaves[best], kids = childrenOf(P), ready = [], need = [];
         for (i = 0; i < 4; i++) { var t = kids[i], kb = boundsOf(f, t.z, t.x, t.y), kd = distOf(kb, P.maxH); if (kd > F + kb.size * 0.5) continue;   // past the haze and the curve: nothing to draw there
           var r = tiles.get(keyOf(t.z, t.x, t.y)); if (r && r.mesh) ready.push(r); else need.push({ t: t, d: kd }); }
-        if (need.length || leaves.length - 1 + ready.length > C.DRAWN) { stuck.add(P.key); if (need.length) waits.push({ ready: ready, need: need }); else stats.overBudget++; continue; }   // the PARENT stays drawn while a child loads (no hole, no pop)
+        if (leaves.length - 1 + ready.length + need.length + reserved > DRAWN) { stats.overBudget++; stuck.add(P.key); continue; }   // W-TERRAIN: this split does not fit; a cheaper one (children past the haze) still may: a hard stop here left a z5 beside a z10 over Antigua (a 1.9 km step, seams 1.16). The thrash (1,527 loads for 88 tiles over Everest) is held by the waiting splits' reserve above, not by stopping (node, 30 s circles: 32 loads either way)
+        if (need.length) { stuck.add(P.key); waits.push({ ready: ready, need: need }); splitWait.add(P.key); reserved += ready.length + need.length - 1; continue; }   // the PARENT stays drawn while a child loads (no hole, no pop); its leaves are held for it
         protect.add(P.key); leaves.splice(best, 1); for (i = 0; i < ready.length; i++) leaves.push(ready[i]);
       }
       for (i = 0; i < leaves.length; i++) { drawn.push(leaves[i]); protect.add(leaves[i].key); }
@@ -193,7 +220,9 @@ window.WFR_TRAVEL712 = (function () {
          siblings load, and the split never happens: Antigua's cut was never reached, Oct 29), and only their missing children are asked for */
       for (i = 0; i < waits.length; i++) { var wq = waits[i]; if (protect.size + wq.ready.length + wq.need.length > (o.unbounded ? 1e9 : C.KEPT) - 2) break;
         for (var q2 = 0; q2 < wq.ready.length; q2++) protect.add(wq.ready[q2].key); for (q2 = 0; q2 < wq.need.length; q2++) { var nt = wq.need[q2].t; protect.add(keyOf(nt.z, nt.x, nt.y)); want(nt, wq.need[q2].d); } }
+      for (i = 0; i < drawn.length; i++) if (!drawn[i].real && remoteHas(drawn[i].z) && real(drawn[i].key)) want(drawn[i], distOf(drawn[i].b, drawn[i].maxH));   // W-TERRAIN: back online, a drawn stand-in is fetched for real (the third state: real data, cut while the network was away)
       pump();
+      for (i = 0; i < drawn.length; i++) { var nr = tiles.get(drawn[i].key); if (nr && nr !== drawn[i] && nr.mesh) drawn[i] = nr; }   // a stand-in replaced this frame: its real sheet is the drawn one (never a frame's hole)
       drawnSet.clear(); stats.tris = 0; for (i = 0; i < drawn.length; i++) { drawnSet.add(drawn[i].key); stats.tris += drawn[i].tris; }
       protect.forEach(function (k) { var r = tiles.get(k); if (r) { tiles.delete(k); tiles.set(k, r); } });   // touch: most recent at the end
       tiles.forEach(function (r, k) { var v = drawnSet.has(k) && !opt.hide; if (r.mesh && r.mesh.visible !== v) r.mesh.visible = v; });
@@ -219,7 +248,7 @@ window.WFR_TRAVEL712 = (function () {
     }
     function groundUnder(x, z) { var r = recAt(x, z, false); return r ? surf(r, x, z) : 0; }
     function probe(x, z) { var r = recAt(x, z, false); if (!r) return null; return { h: surf(r, x, z), key: r.key, zoom: r.z, real: r.real, srcKey: r.srcKey, u0: r.u0, v0: r.v0, s: r.s, b: { x0: r.b.x0, z0: r.b.z0, size: r.b.size }, grid: C.GRID, drawn: drawnSet.has(r.key) }; }
-    function loadingUnder(x, z) { var r = recAt(x, z, true); return !r || r.z < Math.min(limitOf(r), MAXZ); }   // the finest tile there is not drawn yet (the descent waits for it)
+    function loadingUnder(x, z) { var r = recAt(x, z, true); return !r || splitWait.has(r.key); }   // the tile the LOD wants there is still loading (the descent waits for it). W-TERRAIN: was "finer real data exists", which with the whole world z13 is ALWAYS true up high
 
     function seams() {   // every drawn pair sharing an edge: the largest height step along it, against the smaller skirt that must hide it (tiles.js)
       var D = drawn, pairs = 0, worst = null, maxRatio = 0;
@@ -233,7 +262,8 @@ window.WFR_TRAVEL712 = (function () {
     }
     var api = { update: update, setFrame: setFrame, H: groundUnder, probe: probe, loadingUnder: loadingUnder, seams: seams, stats: stats, group: group, material: material, u: u, tiles: tiles,
       frame: function () { return f; }, drawnKeys: function () { return drawn.map(function (r) { return r.key; }); }, liveKeys: function () { return Array.from(tiles.keys()); }, inflightKeys: function () { return Array.from(inflight.keys()); },
-      missingKeys: function () { return Array.from(missing); }, maxZ: MAXZ, sets: sets.map(function (s) { return s.id; }), have: have.size };
+      missingKeys: function () { return Array.from(missing); }, maxZ: MAXZ, sets: sets.map(function (s) { return s.id; }), have: have.size,
+      remote: R, real: real, errOf: errOf };   // W-TERRAIN: the remote set (its health and credits) and the tree's own answers, for the bench
     return api;
   }
 

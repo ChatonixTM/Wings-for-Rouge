@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Wings for Rouge</title>
-<meta name="theme-color" content="#9fd3f0">
+<meta name="theme-color" content="#17242b">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -67,12 +67,13 @@
 :root{
   --sky:#9fd3f0; --ink:#22314a; --paper:#fff8ec; --gold:#f2b134; --rouge:#c8314a; --leaf:#5f9e4a; --mute:#6b7a93;
   --shade:rgba(34,49,74,.55);
+  --floor:#17242b;   /* refine-1: under the canvas (html, body): a deep sea-slate, never the light-blue band (DRAFT) */
   --display:'Fredoka', 'Trebuchet MS', system-ui, sans-serif;
   --body:'Nunito', system-ui, -apple-system, 'Segoe UI', sans-serif;
   color-scheme:light;
 }
 [hidden]{display:none!important}   /* every hidden screen really goes away, whatever page hosts this */
-html,body{height:100%;margin:0;overflow:hidden;background:var(--sky);color:var(--ink);font-family:var(--body);
+html,body{height:100%;margin:0;overflow:hidden;background:var(--floor);color:var(--ink);font-family:var(--body);
   -webkit-user-select:none;user-select:none;-webkit-touch-callout:none;touch-action:none}
 canvas{display:block;position:fixed;inset:0;width:100%;height:100%;touch-action:none}
 .layer{position:fixed;inset:0;pointer-events:none}
@@ -907,65 +908,68 @@ html.ui716 #pzQuit{border-radius:0;background:var(--u-plate-e)!important;font-fa
 <div class="rhRes" id="rhRes" hidden aria-live="polite"><b id="resRank"></b><span id="resLine"></span><small id="resTime"></small><small id="resNew" hidden></small></div>   <!-- 672 OURS/DRAFT words: Paused, Resume, Quit song -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="toon.js?v=1d1d3b3b5090"></script>
+<script src="toon.js?v=ebe3ba3c9df8"></script>
 <script>(function () { let classic = false; try { classic = localStorage.getItem('wfr.look') === 'classic'; } catch (e) { /* private mode: Standard */ }
   window.WFR_DOOR = classic ? { w: 1.2, h: 2, classic: true } : { w: 1.5, h: 2.9, classic: false }; }());   /* 683 C1: THE doorway, local units (x HS 1.6: Standard 2.4 x 4.64 m; a villager, drawn 3.67-3.72 m, is 80% of it; the brief's 2.6 left him at 89%). The ring houses, the 641 house, the cabins and the walk read it. Classic is frozen (Marth, Oct 14, board 645): its doors stay 1.2 x 2. The look is read as the game reads it (it reloads on a switch). */</script>
-<script src="gltf-loader.js?v=1d1d3b3b5090"></script>
-<script src="skeleton-utils.js?v=1d1d3b3b5090"></script>
-<script src="meshopt-decoder.js?v=1d1d3b3b5090"></script>
-<script src="models.js?v=1d1d3b3b5090"></script>
-<script src="people.js?v=1d1d3b3b5090"></script>
-<script src="villagers.js?v=1d1d3b3b5090"></script>
-<script src="tex-photos.js?v=1d1d3b3b5090"></script>
-<script src="textures.js?v=1d1d3b3b5090"></script>
-<script src="birds.js?v=1d1d3b3b5090"></script>
-<script src="humans.js?v=1d1d3b3b5090"></script>
-<script src="folk.js?v=1d1d3b3b5090"></script>
-<script src="trees.js?v=1d1d3b3b5090"></script>
-<script src="treehouses.js?v=1d1d3b3b5090"></script>
-<script src="cabins.js?v=1d1d3b3b5090"></script>
-<script src="cave.js?v=1d1d3b3b5090"></script>
-<script src="hermits.js?v=1d1d3b3b5090"></script>
-<script src="sounds.js?v=1d1d3b3b5090"></script>
-<script src="music.js?v=1d1d3b3b5090"></script>
-<script src="battle703-song.js?v=1d1d3b3b5090"></script>
-<script src="music-orchestra.js?v=1d1d3b3b5090"></script>
-<script src="rhythm.js?v=1d1d3b3b5090"></script>
-<script src="pictograms.js?v=1d1d3b3b5090"></script>
-<script src="chick-wear.js?v=1d1d3b3b5090"></script>
-<script src="hedgehogs.js?v=1d1d3b3b5090"></script>
-<script src="opening.js?v=1d1d3b3b5090"></script>
-<script src="skypiea.js?v=1d1d3b3b5090"></script>
-<script src="pirate.js?v=1d1d3b3b5090"></script>
-<script src="atmo.js?v=1d1d3b3b5090"></script>
-<script src="world-realism.js?v=1d1d3b3b5090"></script>
-<script src="boat.js?v=1d1d3b3b5090"></script>
-<script src="weather.js?v=1d1d3b3b5090"></script>
-<script src="village-build.js?v=1d1d3b3b5090"></script>
-<script src="runes.js?v=1d1d3b3b5090"></script>
-<script src="hearts714.js?v=1d1d3b3b5090"></script>
-<script src="world712-frame.js?v=1d1d3b3b5090"></script>
-<script src="creative712.js?v=1d1d3b3b5090"></script>
-<script src="world712-carib.js?v=1d1d3b3b5090"></script>
-<script src="world712-dunns.js?v=1d1d3b3b5090"></script>
-<script src="world712-travel.js?v=1d1d3b3b5090"></script>
-<script src="world-features.js?v=1d1d3b3b5090"></script>
-<script src="world725d-fast.js?v=1d1d3b3b5090"></script>
-<script src="world-chicks.js?v=1d1d3b3b5090"></script>
-<script src="world-imagery.js?v=1d1d3b3b5090"></script>
-<script src="world712-photo.js?v=1d1d3b3b5090"></script>
-<script src="hawkwake.js?v=1d1d3b3b5090"></script>
-<script src="hawkfight.js?v=1d1d3b3b5090"></script>
-<script src="hawkarena.js?v=1d1d3b3b5090"></script>
-<script src="orchard.js?v=1d1d3b3b5090"></script>
-<script src="net678.js?v=1d1d3b3b5090"></script>
-<script src="net678-config.js?v=1d1d3b3b5090"></script>
-<script src="net721.js?v=1d1d3b3b5090"></script>
-<script src="animals714.js?v=1d1d3b3b5090"></script>
-<script src="world-people.js?v=1d1d3b3b5090"></script>
-<script src="world-animals.js?v=1d1d3b3b5090"></script>
-<script src="world-interiors.js?v=1d1d3b3b5090"></script>
-<script src="world-quests.js?v=1d1d3b3b5090"></script>
+<script src="gltf-loader.js?v=ebe3ba3c9df8"></script>
+<script src="skeleton-utils.js?v=ebe3ba3c9df8"></script>
+<script src="meshopt-decoder.js?v=ebe3ba3c9df8"></script>
+<script src="models.js?v=ebe3ba3c9df8"></script>
+<script src="people.js?v=ebe3ba3c9df8"></script>
+<script src="villagers.js?v=ebe3ba3c9df8"></script>
+<script src="tex-photos.js?v=ebe3ba3c9df8"></script>
+<script src="textures.js?v=ebe3ba3c9df8"></script>
+<script src="birds.js?v=ebe3ba3c9df8"></script>
+<script src="humans.js?v=ebe3ba3c9df8"></script>
+<script src="folk.js?v=ebe3ba3c9df8"></script>
+<script src="trees.js?v=ebe3ba3c9df8"></script>
+<script src="treehouses.js?v=ebe3ba3c9df8"></script>
+<script src="cabins.js?v=ebe3ba3c9df8"></script>
+<script src="cave.js?v=ebe3ba3c9df8"></script>
+<script src="hermits.js?v=ebe3ba3c9df8"></script>
+<script src="sounds.js?v=ebe3ba3c9df8"></script>
+<script src="music.js?v=ebe3ba3c9df8"></script>
+<script src="battle703-song.js?v=ebe3ba3c9df8"></script>
+<script src="music-orchestra.js?v=ebe3ba3c9df8"></script>
+<script src="rhythm.js?v=ebe3ba3c9df8"></script>
+<script src="pictograms.js?v=ebe3ba3c9df8"></script>
+<script src="chick-wear.js?v=ebe3ba3c9df8"></script>
+<script src="hedgehogs.js?v=ebe3ba3c9df8"></script>
+<script src="opening.js?v=ebe3ba3c9df8"></script>
+<script src="skypiea.js?v=ebe3ba3c9df8"></script>
+<script src="pirate.js?v=ebe3ba3c9df8"></script>
+<script src="atmo.js?v=ebe3ba3c9df8"></script>
+<script src="world-realism.js?v=ebe3ba3c9df8"></script>
+<script src="boat.js?v=ebe3ba3c9df8"></script>
+<script src="weather.js?v=ebe3ba3c9df8"></script>
+<script src="village-build.js?v=ebe3ba3c9df8"></script>
+<script src="runes.js?v=ebe3ba3c9df8"></script>
+<script src="hearts714.js?v=ebe3ba3c9df8"></script>
+<script src="world712-frame.js?v=ebe3ba3c9df8"></script>
+<script src="creative712.js?v=ebe3ba3c9df8"></script>
+<script src="world712-carib.js?v=ebe3ba3c9df8"></script>
+<script src="world712-dunns.js?v=ebe3ba3c9df8"></script>
+<script src="world712-travel.js?v=ebe3ba3c9df8"></script>
+<script src="world-terrain.js?v=ebe3ba3c9df8"></script>
+<script src="world-features.js?v=ebe3ba3c9df8"></script>
+<script src="world-vegetation.js?v=ebe3ba3c9df8"></script>
+<script src="world725d-fast.js?v=ebe3ba3c9df8"></script>
+<script src="world-chicks.js?v=ebe3ba3c9df8"></script>
+<script src="world-imagery.js?v=ebe3ba3c9df8"></script>
+<script src="world712-photo.js?v=ebe3ba3c9df8"></script>
+<script src="hawkwake.js?v=ebe3ba3c9df8"></script>
+<script src="hawkfight.js?v=ebe3ba3c9df8"></script>
+<script src="hawkarena.js?v=ebe3ba3c9df8"></script>
+<script src="orchard.js?v=ebe3ba3c9df8"></script>
+<script src="net678.js?v=ebe3ba3c9df8"></script>
+<script src="net678-config.js?v=ebe3ba3c9df8"></script>
+<script src="net721.js?v=ebe3ba3c9df8"></script>
+<script src="animals714.js?v=ebe3ba3c9df8"></script>
+<script src="world-people.js?v=ebe3ba3c9df8"></script>
+<script src="world-animals.js?v=ebe3ba3c9df8"></script>
+<script src="world-huts.js?v=ebe3ba3c9df8"></script>
+<script src="world-interiors.js?v=ebe3ba3c9df8"></script>
+<script src="world-quests.js?v=ebe3ba3c9df8"></script>
 <script>
 (() => {
 'use strict';
@@ -2024,6 +2028,7 @@ if (TRAVEL712_C) {   // made at load, so the travel programs are compiled with e
   T.warm = new THREE.Mesh(g, T.mat); T.warm.name = 'travel712:warm'; T.warm.visible = false; T.warm.frustumCulled = false; T.warm.layers.set(L); scene.add(T.warm);
   T.clear = WFR_TRAVEL712.makeClearer(THREE, L); scene.add(T.clear); if (window.WFR_IMAGERY) WFR_IMAGERY.hook(T);   // w-imagery: every travel tile wears the Earth's real colour (world-imagery.js, NASA Blue Marble via GIBS)
   if (window.WFR_FEATURES) WFR_FEATURES.attach(THREE, scene, T, camera);   // the real streets (world-features.js): its layer joins T.layers before the streamer is made; its walls' program compiles with the ground's at the gate
+  if (window.WFR_VEG) WFR_VEG.attach(THREE, scene, renderer, T, { island: { H, water: WATER, dunes: DUNES, village: VILLAGE, groundAt }, wind: () => (WX.k || 0) * (wxKind() === 'storm' ? 1 : 0.55) });   /* veg (Nov 4): real forests from the features feed and the moving grass (island + world); two programs, made at load; its tint layer joins T.layers */
 }
 function travel712Prep() {   // the four sets' manifests, once; then the streamer (its group on layer 7: the island's camera never sees it)
   const T = TRAVEL712; if (T.st || T.loading || T.fault || !TRAVEL712_C) return;
@@ -2130,7 +2135,7 @@ function travel712Frame(dt, real) {   // THE ALLOW-LIST: nothing of the island r
     else if (NOWHITE725.on && (S.mode === 'landing' || S.mode === 'walk' || S.mode === 'swim')) { S.mode = 'fly'; NOWHITE725.flown++; }   // 725: no ground out here yet: she flies on
     else if (S.mode !== 'paused') travel712Leave('nest');
     if (T.on) {
-      travel712Recentre(); tf723Dunns(dt); T.st.update(camera.position, (window.WFR_INTERIORS729 && WFR_INTERIORS729.k1()) || TF723.stOpt); travel712Air(); travel712Hud(); if (window.WFR_FAST725D) WFR_FAST725D.hud(T, viewYaw()); if (window.WFR_QUESTS720) WFR_QUESTS720.travelHud(T, viewYaw()); sunFollow();
+      travel712Recentre(); tf723Dunns(dt); T.st.update(camera.position, (window.WFR_INTERIORS729 && WFR_INTERIORS729.k1()) || TF723.stOpt); if (window.WFR_VEG) WFR_VEG.tick(camera.position, dt); travel712Air(); travel712Hud(); if (window.WFR_FAST725D) WFR_FAST725D.hud(T, viewYaw()); if (window.WFR_QUESTS720) WFR_QUESTS720.travelHud(T, viewYaw()); sunFollow();
       if (WXR) WXR.tick(dt, real);   // the weather goes with her
       T.maxY = Math.max(T.maxY, S.pos.y);
       if (T.homeKm < TRAVEL712_C.OFF / 1000 && S.pos.y <= TRAVEL712_C.TOP2 + 1) travel712Leave('home');   // 725d: the island's ceiling (TOP2) would snap a higher bird down in one frame
@@ -4268,8 +4273,8 @@ function map705El() {
   return m;
 }
 function wmap712Hook(m) {   // 712e (Marth, Oct 28: "Not just Jamaica, the whole world."): the chart's World tab; world712-mapview.js draws it, the island chart is untouched
-  let data = 'world712-map.js'; { const ORCH_SRC = 'world712-map.js?v=1d1d3b3b5090'; data = ORCH_SRC; }   // named as build-site.js finds a lazy file, so her app carries it offline
-  { const ORCH_SRC = 'world712-mapview.js?v=1d1d3b3b5090'; const s = document.createElement('script'); s.src = ORCH_SRC; s.async = true; s.onload = () => { if (window.WMAP712) WMAP712.attach(m, data, () => { if (MAP705.open) { map705Size(); map705Draw(); } }); }; document.head.appendChild(s); }
+  let data = 'world712-map.js'; { const ORCH_SRC = 'world712-map.js?v=ebe3ba3c9df8'; data = ORCH_SRC; }   // named as build-site.js finds a lazy file, so her app carries it offline
+  { const ORCH_SRC = 'world712-mapview.js?v=ebe3ba3c9df8'; const s = document.createElement('script'); s.src = ORCH_SRC; s.async = true; s.onload = () => { if (window.WMAP712) WMAP712.attach(m, data, () => { if (MAP705.open) { map705Size(); map705Draw(); } }); }; document.head.appendChild(s); }
 }
 function map705Size() {   // the chart's side in CSS px: as big as fits, upright on a phone held up, the head and foot kept on a phone on its side
   const cv = $('map705cv'), side = Math.round(innerWidth > innerHeight && innerHeight <= 520 ? Math.max(150, Math.min(innerHeight - 96, innerWidth * 0.6)) : Math.max(180, Math.min(innerWidth - 44, innerHeight - 150, 460)));
@@ -6507,7 +6512,7 @@ function bgMusicTick(dt) {
    after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
    music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
    menu, a cutscene), the orchestra bows out. */
-const ORCH_SRC = 'orch-samples.js?v=1d1d3b3b5090';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const ORCH_SRC = 'orch-samples.js?v=ebe3ba3c9df8';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
 const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
 window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
 const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
@@ -8154,7 +8159,17 @@ var RUNES = (() => { try { const st = SKYEND ? SKYEND.state() : null; return win
 /* ---------- the loop ---------- */
 const fwd = new THREE.Vector3(), camPos = new THREE.Vector3(), look = new THREE.Vector3(), tmp = new THREE.Vector3(), v3 = new THREE.Vector3();
 function resize() { const c = renderer.domElement; if (!c.style.height && window.CSS && CSS.supports && CSS.supports('height', '100lvh')) c.style.height = '100lvh';   /* 722b: the whole screen (iOS's home-screen app lays the page out one status bar short; Marth's light-blue band) */
+  cover722c(c);   /* refine-1: in the home-screen app, measured: the canvas reaches the screen's own bottom */
   const w = c.clientWidth || innerWidth, h = c.clientHeight || innerHeight; renderer.setSize(w, h, false); camera.aspect = w / h; camera.updateProjectionMatrix(); }   /* 722: the canvas box, not innerWidth/innerHeight: on an iPhone they can differ, and the picture stretched ("squished") */
+/* refine-1 (Nov 5; the light-blue band, back in Marth's Nov 4 recordings): on an iPhone's home-screen app (black-translucent status bar) the page can be laid out one
+   status bar SHORT, and 100lvh is that same short height, so the strip under the canvas showed the page's own background. Only there (standalone), each resize
+   measures the canvas against the screen's full height for this orientation and stretches it over the shortfall (at most 160 px; never in a browser tab, where the
+   layout is the screen's). The camera follows the box, so nothing squashes. COVER722C is the bench's read. */
+var COVER722C = window.COVER722C = { standalone: false, short: 0, h: 0, full: 0, n: 0 };   // on window: the page runs inside one function
+function cover722c(c) { const K = COVER722C; K.standalone = navigator.standalone === true || !!(window.matchMedia && matchMedia('(display-mode: standalone)').matches); if (!K.standalone || !window.screen) return;
+  if (/px$/.test(c.style.height) || !c.style.height) c.style.height = window.CSS && CSS.supports && CSS.supports('height', '100lvh') ? '100lvh' : '100%';
+  const land = innerWidth > innerHeight, full = land ? Math.min(screen.width, screen.height) : Math.max(screen.width, screen.height), h = c.getBoundingClientRect().height, short = full - h;
+  K.full = full; K.h = h; K.short = short > 0.5 && short <= 160 ? Math.round(short) : 0; if (K.short) { c.style.height = full + 'px'; K.n++; } }
 addEventListener('resize', resize); resize();
 if (window.visualViewport) visualViewport.addEventListener('resize', resize); addEventListener('orientationchange', () => setTimeout(resize, 250)); addEventListener('pageshow', resize); setTimeout(resize, 400); setTimeout(resize, 1500);
 let last = performance.now(), mumbleT = 0;
@@ -10160,10 +10175,11 @@ function frame(now) {
   frameLog(now - last, real);   /* 651: the raw frame, for the water bench */
   if (window.WFR_PEOPLE724) WFR_PEOPLE724.tick(dt); if (CH728) chicks728Tick(dt);   /* 724: the people of the world (world-people.js), above the travel branch so they live in both zones */
   if (window.WFR_WORLDANIMALS) WFR_WORLDANIMALS.tick(dt);   /* 714 world: the animals of the real world (world-animals.js), in both zones */
+  if (window.WFR_HUTS) WFR_HUTS.tick(dt);   /* 730: the dwellings native to each region (world-huts.js), in both zones */
   if (window.WFR_QUESTS720) WFR_QUESTS720.tick(dt);   /* 720: quests (world-quests.js): landmarks and lost things by her real position, in both zones */
   if (window.WFR_INTERIORS729) WFR_INTERIORS729.tick(dt);   /* 729: doors, interiors, the cities' crowds (world-interiors.js), both zones */
   if (TRAVEL712 && (TRAVEL712.on || TRAVEL712.want)) { S.real = real; last = now; S.t += dt; musicDuckTick(); travel712Frame(dt, real); requestAnimationFrame(frame); return; }   /* 712 S4b: the travel zone's allow-list; nothing below runs out there */
-  S.real = real; last = now; musicDuckTick(); S.t += dt; if (window.WFR_TREES) WFR_TREES.update(S.t);
+  S.real = real; last = now; musicDuckTick(); S.t += dt; if (window.WFR_TREES) WFR_TREES.update(S.t); if (window.WFR_VEG) WFR_VEG.island(camera.position, dt);
   if (S.mode !== 'fly' && S.hold) { S.hold = false; S.holdT = 0; }   // a hold belongs to flight
   S.warnCd = Math.max(0, S.warnCd - dt); S.singCd = Math.max(0, S.singCd - dt); S.turnBack = Math.max(0, S.turnBack - dt); S.bonkCd = Math.max(0, S.bonkCd - dt);
   waterTick(dt); panTick(dt); clockTick(dt);
@@ -10666,13 +10682,14 @@ if (UI716) { try {
 hud();
 if (window.WFR_PEOPLE724) WFR_PEOPLE724.init({ THREE, scene, renderer, camera, S, say, near676: nearPeople676, H, groundAt, D: DUNNS712, dG: dunns712G, dData: dunns712Data, WATER, TR: TRAVEL712, classic: () => classicLook });   /* 724 */
 if (window.WFR_WORLDANIMALS) WFR_WORLDANIMALS.init({ THREE, scene, renderer, camera, S, TR: TRAVEL712, H: travel712H, D: DUNNS712, dG: dunns712G, dData: dunns712Data, WATER, classic: () => classicLook });   /* 714 world */
+if (window.WFR_HUTS) WFR_HUTS.init({ THREE, scene, renderer, camera, S, TR: TRAVEL712, H: travel712H, night: () => nightAmt(S.clock), classic: () => classicLook });   /* 730 */
 if (window.WFR_QUESTS720) WFR_QUESTS720.init({ THREE, S, say, toast, xp: gainXP, hud, save, ding, P: window.WFR_PEOPLE724 || null, npcs, doorFront, H, camera, scene, TR: TRAVEL712, travelH: travel712H, D: DUNNS712, openQuick, canWorld: () => !!(TRAVEL712_C && (TRAVEL712.on || travel712Open())) });   /* 720 */
 if (window.WFR_INTERIORS729) WFR_INTERIORS729.init({ THREE, S, scene, camera, TR: TRAVEL712, travelH: travel712H, P: window.WFR_PEOPLE724 || null, toast, say, steer, standOf: () => standOf(kind), size: () => BIRDS[kind].size, bird: () => bird, birdObj: () => bird, rig: () => birdRig, wings: () => [wingL, wingR], floorBase: () => (TRAVEL712_C ? TRAVEL712_C.FLOOR : 30), sunDir: () => [sun.position.x - sun.target.position.x, sun.position.y - sun.target.position.y, sun.position.z - sun.target.position.z] });   /* 729 */
 requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build 1d1d3b3b5090): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build ebe3ba3c9df8): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>

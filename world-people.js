@@ -228,7 +228,7 @@ window.WFR_PEOPLE724 = (function () {
     if (role === 'guide') { top = rgb(GUIDE_TOP); bot = rgb(GUIDE_BOT); }
     else if (role === 'bather' || role === 'swimmer' || role === 'climber' || (role === 'beach' && r() < 0.5)) { top = fem ? rgb(pick(r, SWIM)) : (r() < 0.7 ? skin.slice() : rgb(pick(r, TOPS))); bot = rgb(pick(r, SWIM)); }
     else { top = r() < 0.15 ? null : rgb(pick(r, TOPS)); bot = r() < 0.15 ? null : rgb(pick(r, BOTS)); }
-    var names = loc === 'gt' ? NAMES_GT : loc === 'us' ? NAMES_US : visitor ? NAMES_VISIT : NAMES_JM, R0 = ROLE[role] || ROLE.local, lines = p.lines || (loc === 'gt' ? LINES_GT : loc === 'us' ? LINES_US : R0[2]);
+    var names = loc === 'gt' ? NAMES_GT : loc === 'us' ? NAMES_US : (visitor || loc === 'world') ? NAMES_VISIT : NAMES_JM, R0 = ROLE[role] || ROLE.local, lines = p.lines || (loc === 'gt' ? LINES_GT : loc === 'us' ? LINES_US : loc === 'world' ? ROLE.local[2].slice(0, 2) : R0[2]);   // refine-1: 'world' = a features tile beyond Jamaica (no falls, no Tahoe in its words)
     var sp = { id: p.id + ':' + p.spawns.length, place: p.id, role: role, model: model, scale: (0.92 + r() * 0.16) * (o.child ? 0.72 : 1), skin: skin, top: top, bot: bot,
       kind: o.kind || 'stand', clip: o.clip || 'idle', x: o.x || 0, z: o.z || 0, yaw: o.yaw != null ? o.yaw : r() * Math.PI * 2, phase: r() * 8, name: pick(r, names), line: pick(r, lines), emoji: R0[1], title: R0[0] };
     if (o.path) { sp.kind = 'walk'; sp.clip = 'walk'; sp.path = o.path; sp.cum = polyLen(o.path); sp.L = sp.cum[sp.cum.length - 1]; sp.v = o.v || (0.95 + r() * 0.45); sp.s0 = r() * sp.L * 2; sp.side = o.side || 0;
@@ -314,7 +314,25 @@ window.WFR_PEOPLE724 = (function () {
   /* ---------- 4. the world features hook (buildings anywhere she lands): spec in the header; a stub until the module lands ---------- */
   function hookFeatures() {
     var F = window.WFR_FEATURES; if (st.featHooked || !F || typeof F.onTile !== 'function') return; st.featHooked = true;
-    try { F.onTile(function (tile) { featureTile(tile); }); if (typeof F.onDrop === 'function') F.onDrop(function (tile) { featureDrop(tile && (tile.key || [tile.z, tile.x, tile.y].join('/'))); }); } catch (e) { st.featFault = String(e && e.message || e); }
+    try { F.onTile(function (a, x, y, feed) { featureTile(typeof a === 'object' ? a : fromFeed(a, x, y, feed)); }); if (typeof F.onDrop === 'function') F.onDrop(function (a, x, y) { featureDrop(typeof a === 'object' ? a && (a.key || [a.z, a.x, a.y].join('/')) : [a, x, y].join('/')); }); } catch (e) { st.featFault = String(e && e.message || e); }
+  }
+  /* refine-1 (Nov 5): world-features.js calls cb(z, x, y, feed) and onDrop cb(z, x, y); feed.buildings = [{ h, id, rings: [Float64Array lon, lat, ...] }],
+     feed.landuse / landcover = [{ cls, subclass, rings }]. Read into the spec's tile: each footprint's middle and half-size (m), the near ring (z14) only,
+     capped (BMAX footprints, LMAX landuse); townsfolk by Jamaica's own are Jamaican, elsewhere the world's (visitors' names, the place-free lines). */
+  var BMAX = 240, LMAX = 6, JM_BOX = [17.6, -78.5, 18.6, -76.1];
+  function ringMid(r) { var n = r.length >> 1, a = [1e9, 1e9, -1e9, -1e9]; for (var i = 0; i < n; i++) { var o = r[2 * i], l = r[2 * i + 1]; a[0] = Math.min(a[0], o); a[1] = Math.min(a[1], l); a[2] = Math.max(a[2], o); a[3] = Math.max(a[3], l); }
+    if (!n) return null; var la = (a[1] + a[3]) / 2, lo = (a[0] + a[2]) / 2; return { lat: la, lon: lo, w: (a[2] - a[0]) * 111320 * Math.cos(la * Math.PI / 180), d: (a[3] - a[1]) * 111320 }; }   // the box's middle (an OSM ring is closed: its first vertex comes twice, so a vertex mean leans to a corner)
+  function inBuilt(lat, lon) {   // inside a hand-built place (Dunn's, Antigua, Tahoe: their own crowds, and Dunn's baked shore): no tile townsfolk there (they stood on its water)
+    for (var i = 0; i < st.places.length; i++) { var p = st.places[i]; if (p.world || p.lat == null || String(p.id).indexOf('f:') === 0 || p.id === 'guard724') continue;
+      var dx = (lon - p.lon) * 111320 * Math.cos(p.lat * Math.PI / 180), dz = (lat - p.lat) * 111320; if (dx * dx + dz * dz < p.r * p.r) return true; }
+    return false; }
+  function fromFeed(z, x, y, feed) {
+    if (!feed || !(z >= 14)) return null; var B = [], lu = [], i, m;
+    for (i = 0; i < (feed.buildings || []).length && B.length < BMAX; i++) { var r = feed.buildings[i].rings && feed.buildings[i].rings[0]; if (!r || r.length < 6 || !(m = ringMid(r)) || inBuilt(m.lat, m.lon)) continue; B.push({ lat: m.lat, lon: m.lon, r: Math.min(40, Math.max(3, Math.max(m.w, m.d) / 2)) }); }
+    [feed.landuse || [], feed.landcover || []].forEach(function (L) { for (var j = 0; j < L.length && lu.length < LMAX; j++) { var k = (L[j].cls || '') + ' ' + (L[j].subclass || ''), q = L[j].rings && L[j].rings[0];
+      if (!/park|grass|retail|commercial|square|beach/.test(k) || !q || q.length < 6 || !(m = ringMid(q)) || inBuilt(m.lat, m.lon)) continue; lu.push({ kind: k, lat: m.lat, lon: m.lon }); } });
+    var c = B[0] || lu[0], jm = c && c.lat > JM_BOX[0] && c.lat < JM_BOX[2] && c.lon > JM_BOX[1] && c.lon < JM_BOX[3];
+    return { key: z + '/' + x + '/' + y, buildings: B, landuse: lu, folk: jm ? 'jm' : 'world' };
   }
   function featureTile(tile) {
     try {
