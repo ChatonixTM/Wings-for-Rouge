@@ -406,8 +406,8 @@ window.WFR_FEATURES = (function () {
   function mk() { var el = document.createElement('div'); el.className = 'feat-label'; el.style.cssText = 'position:absolute;left:0;top:0;white-space:nowrap;color:#fffef6;font-weight:700;font-family:system-ui,-apple-system,sans-serif;letter-spacing:.02em;text-shadow:0 1px 2px rgba(0,0,0,.75),0 0 6px rgba(0,0,0,.35)'; labelsEl.appendChild(el); return el; }
   function credit(on) {
     if (!creditEl) { creditEl = document.createElement('div'); creditEl.id = 'credit-features'; creditEl.setAttribute('role', 'note'); creditEl.textContent = C.CREDIT;
-      creditEl.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 3px);z-index:7;box-sizing:border-box;width:max-content;max-width:min(96vw,560px);padding:2px 8px;border-radius:7px;background:rgba(18,30,26,.45);color:#fffef6;font:600 9.5px/1.3 system-ui,-apple-system,sans-serif;text-align:center;text-shadow:0 1px 1px rgba(0,0,0,.45);pointer-events:none'; creditEl.hidden = true; document.body.appendChild(creditEl); }
-    var d = document.getElementById('credit712d'), lift = d && !d.hidden ? 30 : 3, want = 'calc(env(safe-area-inset-bottom,0px) + ' + lift + 'px)'; if (creditEl.style.bottom !== want) creditEl.style.bottom = want;   // above the Dunn's credit when both show
+      creditEl.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:max(2px,calc(env(safe-area-inset-bottom,0px) - 32px));z-index:7;box-sizing:border-box;width:max-content;max-width:min(98vw,560px);padding:0 4px;border-radius:4px;background:none;color:rgba(255,254,246,.72);font:500 7.5px/1.2 system-ui,-apple-system,sans-serif;text-align:center;text-shadow:0 1px 1px rgba(0,0,0,.45);pointer-events:none'; creditEl.hidden = true; document.body.appendChild(creditEl); }
+    var d = document.getElementById('credit712d'), lift = d && !d.hidden ? 30 : 0, want = 'calc(max(2px,calc(env(safe-area-inset-bottom,0px) - 32px)) + ' + lift + 'px)'; if (creditEl.style.bottom !== want) creditEl.style.bottom = want;   // above the Dunn's credit when both show
     if (creditEl.hidden !== !on) creditEl.hidden = !on;
   }
 

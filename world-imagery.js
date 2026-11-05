@@ -110,11 +110,12 @@ window.WFR_IMAGERY = (function () {
   function credit() {
     var v = !!(T0 && T0.on) && shown();
     if (!el && v) { el = document.createElement('div'); el.id = 'creditImagery'; el.setAttribute('role', 'note'); el.textContent = CREDIT;
-      el.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 3px);z-index:7;box-sizing:border-box;width:max-content;max-width:min(96vw,560px);white-space:normal;padding:2px 8px;border-radius:7px;background:rgba(18,30,26,.45);color:#fffef6;font:600 9px/1.3 system-ui,-apple-system,sans-serif;text-align:center;text-shadow:0 1px 1px rgba(0,0,0,.45);pointer-events:none';
+      el.style.cssText = 'position:fixed;left:50%;transform:translateX(-50%);bottom:max(2px,calc(env(safe-area-inset-bottom,0px) - 32px));z-index:7;box-sizing:border-box;width:max-content;max-width:min(98vw,560px);white-space:normal;padding:0 4px;border-radius:4px;background:none;color:rgba(255,254,246,.72);font:500 7.5px/1.2 system-ui,-apple-system,sans-serif;text-align:center;text-shadow:0 1px 1px rgba(0,0,0,.45);pointer-events:none';
       el.hidden = true; document.body.appendChild(el); }
     if (!el) return v;
-    if (v) { var up = 3; ['credit712d', 'credit723e'].forEach(function (id) { var o = document.getElementById(id); if (o && !o.hidden) up += o.getBoundingClientRect().height + 3; });
-      var b = 'calc(env(safe-area-inset-bottom,0px) + ' + Math.round(up) + 'px)'; if (el.style.bottom !== b) el.style.bottom = b; }
+    if (v) { var up = 0; ['credit712d', 'credit723e', 'credit-features'].forEach(function (id) {   /* 739: credit-features joined the stack: the two lines printed on top of each other, over Attack and Flap */
+      var o = document.getElementById(id); if (o && !o.hidden) up += o.getBoundingClientRect().height + 3; });
+      var b = 'calc(max(2px,calc(env(safe-area-inset-bottom,0px) - 32px)) + ' + Math.round(up) + 'px)'; if (el.style.bottom !== b) el.style.bottom = b; }
     if (el.hidden === v) el.hidden = !v; return v;
   }
   /* the page's one call (tools/wiring/wire-w-imagery.js): the layer into the travel zone's layer list, the coarse Earth fetched, the credit watched */

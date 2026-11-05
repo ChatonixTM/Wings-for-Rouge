@@ -1050,6 +1050,11 @@ html.ui716.ui726 .warm{border-radius:12px;font-family:var(--k-sans);filter:none;
     <div class="title-links"><button class="linkish" id="rewatch" type="button" style="min-height:44px" hidden>Watch the story again</button><button class="linkish" id="newGame" type="button" style="min-height:44px">New game</button><button class="linkish" id="backupBtn" type="button" style="min-height:44px">Back up</button><button class="linkish" id="restoreBtn" type="button" style="min-height:44px">Restore</button><button class="linkish" id="netBtn678t" type="button" style="min-height:44px">🤝 Fly with someone</button><button class="linkish" id="creative712Btn" type="button" style="min-height:44px">🎨 Creative</button></div>
     <div class="savebox" id="saveBox" hidden><p id="saveMsg"></p><textarea id="saveCode" rows="6" spellcheck="false" autocapitalize="off" autocomplete="off" aria-label="Backup code"></textarea><div class="savebox-row"><button type="button" id="saveGo">Copy</button><button type="button" class="ghost" id="saveShare" hidden style="min-height:44px">Share</button><button type="button" class="linkish" id="saveClose" style="min-height:44px">Close</button></div></div>
     <p class="credit712" id="credit712">Terrain: SRTM/GMTED2010/3DEP courtesy of the U.S. Geological Survey; ETOPO1 NOAA. Terrain tiles: Mapzen/Tilezen via the AWS Open Data registry.</p>
+    <p class="credit712" id="credit739">Earth imagery: Blue Marble, NASA Earth Observatory (MODIS). We acknowledge the use of imagery provided by services from NASA's Global Imagery Browse Services (GIBS), part of NASA's Earth Science Data and Information System (ESDIS). Map data: OpenFreeMap · © OpenMapTiles (openmaptiles.org) · © OpenStreetMap contributors (openstreetmap.org/copyright). Photographs of Lake Tahoe: USDA NAIP.</p>
+    <script>/* 739 (Marth, Nov 5 2026: "only show the credits / disclaimer only for 2-4 seconds and make it fade away. Very distracting / ugly"): every on-screen credit shows 3 s once a launch, then fades; the words stay here in the menu (OSMF Attribution Guidelines 1.5.10: a game may credit in a splash, the menu or a credits page). The modules keep their own hidden flag; this only owns opacity. */
+    (function () { var IDS = ['creditImagery', 'credit-features', 'credit712d', 'credit723e'], SHOW = 3000, seen = {}; window.WFR_CREDIT739 = { SHOW: SHOW, seen: seen };
+      setInterval(function () { var now = performance.now(); IDS.forEach(function (id) { var e = document.getElementById(id); if (!e) return; if (e.hidden) { if (seen[id] && now - seen[id] < SHOW) seen[id] = now; return; } if (!seen[id]) { seen[id] = now; e.style.transition = 'opacity .6s'; e.style.opacity = '1'; } else if (now - seen[id] >= SHOW && e.style.opacity !== '0') e.style.opacity = '0'; }); }, 250); })();
+    </script>
   </div>
 </div>
 
@@ -1087,69 +1092,69 @@ html.ui716.ui726 .warm{border-radius:12px;font-family:var(--k-sans);filter:none;
 <div class="rhRes" id="rhRes" hidden aria-live="polite"><b id="resRank"></b><span id="resLine"></span><small id="resTime"></small><small id="resNew" hidden></small></div>   <!-- 672 OURS/DRAFT words: Paused, Resume, Quit song -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="toon.js?v=2e16f17ada68"></script>
+<script src="toon.js?v=800106aac91b"></script>
 <script>(function () { let classic = false; try { classic = localStorage.getItem('wfr.look') === 'classic'; } catch (e) { /* private mode: Standard */ }
   window.WFR_DOOR = classic ? { w: 1.2, h: 2, classic: true } : { w: 1.5, h: 2.9, classic: false }; }());   /* 683 C1: THE doorway, local units (x HS 1.6: Standard 2.4 x 4.64 m; a villager, drawn 3.67-3.72 m, is 80% of it; the brief's 2.6 left him at 89%). The ring houses, the 641 house, the cabins and the walk read it. Classic is frozen (Marth, Oct 14, board 645): its doors stay 1.2 x 2. The look is read as the game reads it (it reloads on a switch). */</script>
-<script src="gltf-loader.js?v=2e16f17ada68"></script>
-<script src="skeleton-utils.js?v=2e16f17ada68"></script>
-<script src="meshopt-decoder.js?v=2e16f17ada68"></script>
-<script src="models.js?v=2e16f17ada68"></script>
-<script src="people.js?v=2e16f17ada68"></script>
-<script src="villagers.js?v=2e16f17ada68"></script>
-<script src="tex-photos.js?v=2e16f17ada68"></script>
-<script src="textures.js?v=2e16f17ada68"></script>
-<script src="birds.js?v=2e16f17ada68"></script>
-<script src="humans.js?v=2e16f17ada68"></script>
-<script src="folk.js?v=2e16f17ada68"></script>
-<script src="trees.js?v=2e16f17ada68"></script>
-<script src="treehouses.js?v=2e16f17ada68"></script>
-<script src="cabins.js?v=2e16f17ada68"></script>
-<script src="cave.js?v=2e16f17ada68"></script>
-<script src="hermits.js?v=2e16f17ada68"></script>
-<script src="sounds.js?v=2e16f17ada68"></script>
-<script src="music.js?v=2e16f17ada68"></script>
-<script src="battle703-song.js?v=2e16f17ada68"></script>
-<script src="music-orchestra.js?v=2e16f17ada68"></script>
-<script src="rhythm.js?v=2e16f17ada68"></script>
-<script src="pictograms.js?v=2e16f17ada68"></script>
-<script src="chick-wear.js?v=2e16f17ada68"></script>
-<script src="hedgehogs.js?v=2e16f17ada68"></script>
-<script src="opening.js?v=2e16f17ada68"></script>
-<script src="skypiea.js?v=2e16f17ada68"></script>
-<script src="pirate.js?v=2e16f17ada68"></script>
-<script src="atmo.js?v=2e16f17ada68"></script>
-<script src="world-realism.js?v=2e16f17ada68"></script>
-<script src="boat.js?v=2e16f17ada68"></script>
-<script src="weather.js?v=2e16f17ada68"></script>
-<script src="village-build.js?v=2e16f17ada68"></script>
-<script src="runes.js?v=2e16f17ada68"></script>
-<script src="hearts714.js?v=2e16f17ada68"></script>
-<script src="world712-frame.js?v=2e16f17ada68"></script>
-<script src="creative712.js?v=2e16f17ada68"></script>
-<script src="world712-carib.js?v=2e16f17ada68"></script>
-<script src="world712-dunns.js?v=2e16f17ada68"></script>
-<script src="world712-travel.js?v=2e16f17ada68"></script>
-<script src="world-surfaces732.js?v=2e16f17ada68"></script>
-<script src="world-terrain.js?v=2e16f17ada68"></script>
-<script src="world-features.js?v=2e16f17ada68"></script>
-<script src="world-vegetation.js?v=2e16f17ada68"></script>
-<script src="world725d-fast.js?v=2e16f17ada68"></script>
-<script src="world-chicks.js?v=2e16f17ada68"></script>
-<script src="world-imagery.js?v=2e16f17ada68"></script>
-<script src="world712-photo.js?v=2e16f17ada68"></script>
-<script src="hawkwake.js?v=2e16f17ada68"></script>
-<script src="hawkfight.js?v=2e16f17ada68"></script>
-<script src="hawkarena.js?v=2e16f17ada68"></script>
-<script src="orchard.js?v=2e16f17ada68"></script>
-<script src="net678.js?v=2e16f17ada68"></script>
-<script src="net678-config.js?v=2e16f17ada68"></script>
-<script src="net721.js?v=2e16f17ada68"></script>
-<script src="animals714.js?v=2e16f17ada68"></script>
-<script src="world-people.js?v=2e16f17ada68"></script>
-<script src="world-animals.js?v=2e16f17ada68"></script>
-<script src="world-huts.js?v=2e16f17ada68"></script>
-<script src="world-interiors.js?v=2e16f17ada68"></script>
-<script src="world-quests.js?v=2e16f17ada68"></script>
+<script src="gltf-loader.js?v=800106aac91b"></script>
+<script src="skeleton-utils.js?v=800106aac91b"></script>
+<script src="meshopt-decoder.js?v=800106aac91b"></script>
+<script src="models.js?v=800106aac91b"></script>
+<script src="people.js?v=800106aac91b"></script>
+<script src="villagers.js?v=800106aac91b"></script>
+<script src="tex-photos.js?v=800106aac91b"></script>
+<script src="textures.js?v=800106aac91b"></script>
+<script src="birds.js?v=800106aac91b"></script>
+<script src="humans.js?v=800106aac91b"></script>
+<script src="folk.js?v=800106aac91b"></script>
+<script src="trees.js?v=800106aac91b"></script>
+<script src="treehouses.js?v=800106aac91b"></script>
+<script src="cabins.js?v=800106aac91b"></script>
+<script src="cave.js?v=800106aac91b"></script>
+<script src="hermits.js?v=800106aac91b"></script>
+<script src="sounds.js?v=800106aac91b"></script>
+<script src="music.js?v=800106aac91b"></script>
+<script src="battle703-song.js?v=800106aac91b"></script>
+<script src="music-orchestra.js?v=800106aac91b"></script>
+<script src="rhythm.js?v=800106aac91b"></script>
+<script src="pictograms.js?v=800106aac91b"></script>
+<script src="chick-wear.js?v=800106aac91b"></script>
+<script src="hedgehogs.js?v=800106aac91b"></script>
+<script src="opening.js?v=800106aac91b"></script>
+<script src="skypiea.js?v=800106aac91b"></script>
+<script src="pirate.js?v=800106aac91b"></script>
+<script src="atmo.js?v=800106aac91b"></script>
+<script src="world-realism.js?v=800106aac91b"></script>
+<script src="boat.js?v=800106aac91b"></script>
+<script src="weather.js?v=800106aac91b"></script>
+<script src="village-build.js?v=800106aac91b"></script>
+<script src="runes.js?v=800106aac91b"></script>
+<script src="hearts714.js?v=800106aac91b"></script>
+<script src="world712-frame.js?v=800106aac91b"></script>
+<script src="creative712.js?v=800106aac91b"></script>
+<script src="world712-carib.js?v=800106aac91b"></script>
+<script src="world712-dunns.js?v=800106aac91b"></script>
+<script src="world712-travel.js?v=800106aac91b"></script>
+<script src="world-surfaces732.js?v=800106aac91b"></script>
+<script src="world-terrain.js?v=800106aac91b"></script>
+<script src="world-features.js?v=800106aac91b"></script>
+<script src="world-vegetation.js?v=800106aac91b"></script>
+<script src="world725d-fast.js?v=800106aac91b"></script>
+<script src="world-chicks.js?v=800106aac91b"></script>
+<script src="world-imagery.js?v=800106aac91b"></script>
+<script src="world712-photo.js?v=800106aac91b"></script>
+<script src="hawkwake.js?v=800106aac91b"></script>
+<script src="hawkfight.js?v=800106aac91b"></script>
+<script src="hawkarena.js?v=800106aac91b"></script>
+<script src="orchard.js?v=800106aac91b"></script>
+<script src="net678.js?v=800106aac91b"></script>
+<script src="net678-config.js?v=800106aac91b"></script>
+<script src="net721.js?v=800106aac91b"></script>
+<script src="animals714.js?v=800106aac91b"></script>
+<script src="world-people.js?v=800106aac91b"></script>
+<script src="world-animals.js?v=800106aac91b"></script>
+<script src="world-huts.js?v=800106aac91b"></script>
+<script src="world-interiors.js?v=800106aac91b"></script>
+<script src="world-quests.js?v=800106aac91b"></script>
 <script>
 (() => {
 'use strict';
@@ -4555,8 +4560,8 @@ function map705El() {
   return m;
 }
 function wmap712Hook(m) {   // 712e (Marth, Oct 28: "Not just Jamaica, the whole world."): the chart's World tab; world712-mapview.js draws it, the island chart is untouched
-  let data = 'world712-map.js'; { const ORCH_SRC = 'world712-map.js?v=2e16f17ada68'; data = ORCH_SRC; }   // named as build-site.js finds a lazy file, so her app carries it offline
-  { const ORCH_SRC = 'world712-mapview.js?v=2e16f17ada68'; const s = document.createElement('script'); s.src = ORCH_SRC; s.async = true; s.onload = () => { if (window.WMAP712) WMAP712.attach(m, data, () => { if (MAP705.open) { map705Size(); map705Draw(); } }); }; document.head.appendChild(s); }
+  let data = 'world712-map.js'; { const ORCH_SRC = 'world712-map.js?v=800106aac91b'; data = ORCH_SRC; }   // named as build-site.js finds a lazy file, so her app carries it offline
+  { const ORCH_SRC = 'world712-mapview.js?v=800106aac91b'; const s = document.createElement('script'); s.src = ORCH_SRC; s.async = true; s.onload = () => { if (window.WMAP712) WMAP712.attach(m, data, () => { if (MAP705.open) { map705Size(); map705Draw(); } }); }; document.head.appendChild(s); }
 }
 function map705Size() {   // the chart's side in CSS px: as big as fits, upright on a phone held up, the head and foot kept on a phone on its side
   const cv = $('map705cv'), side = Math.round(innerWidth > innerHeight && innerHeight <= 520 ? Math.max(150, Math.min(innerHeight - 96, innerWidth * 0.6)) : Math.max(180, Math.min(innerWidth - 44, innerHeight - 150, 460)));
@@ -6794,7 +6799,7 @@ function bgMusicTick(dt) {
    after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
    music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
    menu, a cutscene), the orchestra bows out. */
-const ORCH_SRC = 'orch-samples.js?v=2e16f17ada68';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const ORCH_SRC = 'orch-samples.js?v=800106aac91b';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
 const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
 window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
 const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
@@ -11154,7 +11159,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build 2e16f17ada68): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build 800106aac91b): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>
