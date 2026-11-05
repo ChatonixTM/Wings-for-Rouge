@@ -31,7 +31,7 @@
    Every number and every name is DRAFT for Marth's pen. */
 window.WFR_WORLDANIMALS = (function () {
   'use strict';
-  var C = { CELL: 0.02, R_SPAWN: 1500, R_DROP: 2400, AGL_MAX: 2500, POP: 2, IMG_WAIT: 4, CAP: 128, LAYER: 7, KEEP: 400, LAND_MIN: 2, SLOPE: 0.45,
+  var C = { CELL: 0.02, R_SPAWN: 1500, R_DROP: 2400, AGL_MAX: 2500, POP: 1, POP_MS: 0.6, IMG_WAIT: 4, CAP: 128, LAYER: 7, KEEP: 400, LAND_MIN: 2, SLOPE: 0.45,
     FLEE_R: 60, FLEE_Y: 70, RUN: 2.6, FLEE_MAX: 30, NOTICE: 80, SHARK_Y: 50, LOAD_MAX: 6, ESC_R: 240, ESC_Y: 45, ESC_V: 9, ESC_MAX: 450, TAHOE_LV: 1897.6, WATER_COL: [0.08, 0.27, 0.37] };
   var D2R = Math.PI / 180, TAU = Math.PI * 2;
   var X = null, KIT = null, PR = null;
@@ -47,7 +47,13 @@ window.WFR_WORLDANIMALS = (function () {
   function inBox(lat, lon, B) { return lat >= B[0] && lat <= B[1] && lon >= B[2] && lon <= B[3]; }
 
   /* ---------- the real regions (rough boxes, DRAFT for Izumi's atlas check) ---------- */
-  var RG = { africa: [-35, 37, -18, 52], caribbean: [10, 27, -90, -59], namerica: [15, 75, -170, -52], samerica: [-56, 13, -82, -34], europe: [35, 72, -12, 45], tahoe: [38.9, 39.28, -120.2, -119.9] };
+  var RG = { africa: [-35, 37, -18, 52], caribbean: [10, 27, -90, -59], namerica: [15, 75, -170, -52], samerica: [-56, 13, -82, -34], europe: [35, 72, -25, 45], tahoe: [38.9, 39.28, -120.2, -119.9],
+    australia: [-44, -10, 112, 155], nz: [-48, -34, 165, 179], congo: [-6, 6, 9, 31], sichuan: [27.5, 34.5, 101, 106], india: [6, 30, 68, 92], japan: [30, 46, 129, 146], crane: [33, 54, 120, 146],
+    plains: [30, 50, -106, -94], florida: [24.5, 31, -87.6, -80], amazon: [-16, 6, -79, -44], andes: [-40, 10, -82, -62] };
+  var PACIFIC = [[30, 42, -126, -116], [-46, -3, -82, -70], [-2, 1, -92, -89], [-40, -30, 113, 150], [-48, -34, 165, 179]];   // the sea lions' coasts: California, Peru and Chile, the Galapagos, southern Australia, New Zealand
+  function regionOf(lat, lon) {   // the continent a point is on (rough boxes, DRAFT): its animals are its own
+    if (lat > 66) return 'arctic'; if (lat < -60) return 'antarctic'; if (inBox(lat, lon, RG.australia)) return 'australia'; if (inBox(lat, lon, RG.nz)) return 'oceania'; if (lon < -30) return 'americas';
+    if (inBox(lat, lon, RG.africa) && lat < 36 && !(lat > 29 && lon > 32)) return 'africa'; if (inBox(lat, lon, RG.europe)) return 'europe'; return 'asia'; }
   var DESERTS = [[16, 31, -16, 33], [12, 32, 35, 60], [37, 47, 88, 115], [-32, -19, 118, 142], [24, 29.5, 69, 73.5]];   // Sahara, Arabia, the Gobi, Australia's interior, the Thar (camels' real range)
   function americas(lat, lon) { return lon < -30; }
 
@@ -77,7 +83,42 @@ window.WFR_WORLDANIMALS = (function () {
     zebra: { name: 'Plains zebra', make: 'zebra', sp: 'mongoose', realm: 'land', temper: 'passive', v: 1.3, stride: 1.8, spread: 6 },
     giraffe: { name: 'Masai giraffe', make: 'giraffe', sp: 'mongoose', realm: 'land', temper: 'passive', v: 1.1, stride: 3.2, spread: 12 },
     elephant: { name: 'African bush elephant', make: 'elephant', sp: 'mongoose', realm: 'land', temper: 'sometimes', v: 1.0, stride: 3.0, spread: 10 },
-    camel: { name: 'Dromedary camel', make: 'camel', sp: 'mongoose', realm: 'land', temper: 'passive', v: 1.1, stride: 2.6, spread: 8 }
+    camel: { name: 'Dromedary camel', make: 'camel', sp: 'mongoose', realm: 'land', temper: 'passive', v: 1.1, stride: 2.6, spread: 8 },
+    /* EVERY REGION ITS OWN (Marth, Nov 4: "make sure to put the animals in their regions"): the same rigs, the same poses, new bodies */
+    kangaroo: { name: 'Red kangaroo', make: 'kangaroo', sp: 'mongoose', realm: 'land', temper: 'passive', v: 2.2, stride: 2.4, spread: 9, bound: true, region: 'australia' },
+    koala: { name: 'Koala (on the ground: no trees out there to climb)', make: 'koala', sp: 'mongoose', realm: 'land', temper: 'passive', v: 0.3, stride: 0.4, spread: 7, rest: 0.85, region: 'australia' },
+    emu: { name: 'Emu', make: 'emu', sp: 'mongoose', realm: 'land', temper: 'curious', v: 1.4, stride: 1.4, spread: 9, region: 'australia' },
+    saltcroc: { name: 'Saltwater crocodile', make: 'saltcroc', sp: 'mongoose', realm: 'land', temper: 'malicious', v: 0.4, stride: 1.0, spread: 12, rest: 0.85, coast: true, region: 'australia' },
+    panda: { name: 'Giant panda', make: 'panda', sp: 'mongoose', realm: 'land', temper: 'passive', v: 0.4, stride: 0.9, spread: 14, rest: 0.7, region: 'asia' },
+    tiger: { name: 'Bengal tiger', make: 'tiger', sp: 'mongoose', realm: 'land', temper: 'malicious', v: 1.2, stride: 1.6, spread: 30, rest: 0.6, region: 'asia' },
+    indianelephant: { name: 'Indian elephant', make: 'indianelephant', sp: 'mongoose', realm: 'land', temper: 'sometimes', v: 1.0, stride: 2.8, spread: 9, region: 'asia' },
+    snowleopard: { name: 'Snow leopard', make: 'snowleopard', sp: 'mongoose', realm: 'land', temper: 'malicious', v: 1.0, stride: 1.2, spread: 30, rest: 0.6, region: 'asia' },
+    yak: { name: 'Wild yak', make: 'yak', sp: 'mongoose', realm: 'land', temper: 'passive', v: 0.9, stride: 1.6, spread: 8, region: 'asia' },
+    macaque: { name: 'Macaque', make: 'macaque', sp: 'mongoose', realm: 'land', temper: 'curious', v: 0.9, stride: 0.5, spread: 5, region: 'asia' },
+    lion: { name: 'Lion', make: 'lion', sp: 'mongoose', realm: 'land', temper: 'malicious', v: 1.0, stride: 1.6, spread: 9, rest: 0.75, region: 'africa' },
+    hippo: { name: 'Hippopotamus (half under the lake)', make: 'hippo', sp: 'mongoose', realm: 'wade', temper: 'sometimes', v: 0.5, stride: 1.4, spread: 8, sink: 0.75, rest: 0.7, region: 'africa' },
+    gorilla: { name: 'Western lowland gorilla', make: 'gorilla', sp: 'mongoose', realm: 'land', temper: 'sometimes', v: 0.6, stride: 1.0, spread: 8, rest: 0.7, region: 'africa' },
+    ostrich: { name: 'Common ostrich', make: 'ostrich', sp: 'mongoose', realm: 'land', temper: 'passive', v: 1.8, stride: 2.6, spread: 10, region: 'africa' },
+    bison: { name: 'American bison', make: 'bison', sp: 'mongoose', realm: 'land', temper: 'sometimes', v: 1.0, stride: 2.0, spread: 7, region: 'americas' },
+    alligator: { name: 'American alligator', make: 'alligator', sp: 'mongoose', realm: 'land', temper: 'sometimes', v: 0.35, stride: 0.8, spread: 10, rest: 0.85, region: 'americas' },
+    jaguar: { name: 'Jaguar', make: 'jaguar', sp: 'mongoose', realm: 'land', temper: 'malicious', v: 1.0, stride: 1.4, spread: 30, rest: 0.65, region: 'americas' },
+    llama: { name: 'Llama', make: 'llama', sp: 'mongoose', realm: 'land', temper: 'curious', v: 1.0, stride: 1.6, spread: 6, region: 'americas' },
+    polarbear: { name: 'Polar bear', make: 'polarbear', sp: 'mongoose', realm: 'land', temper: 'malicious', v: 1.0, stride: 1.6, spread: 20, rest: 0.6, coast: true, region: 'arctic' },
+    caribou: { name: 'Caribou', make: 'caribou', sp: 'mongoose', realm: 'land', temper: 'passive', v: 1.4, stride: 1.9, spread: 7, region: 'arctic' },
+    arcticfox: { name: 'Arctic fox', make: 'arcticfox', sp: 'mongoose', realm: 'land', temper: 'curious', v: 1.0, stride: 0.6, spread: 15, rest: 0.5, region: 'arctic' },
+    walrus: { name: 'Walrus', make: 'walrus', sp: 'dolphin', realm: 'sea', also: 'land', coast: true, temper: 'passive', y: -0.5, depth: 3, v: 1.2, loop: [20, 50], lag: 0.3, side: 5, spread: 3, stride: 0.6, region: 'arctic' },
+    reddeer: { name: 'Red deer', make: 'reddeer', sp: 'mongoose', realm: 'land', temper: 'passive', v: 1.2, stride: 1.8, spread: 8, region: 'europe' },
+    redfox: { name: 'Red fox', make: 'redfox', sp: 'mongoose', realm: 'land', temper: 'curious', v: 1.0, stride: 0.7, spread: 15, rest: 0.5, region: 'europe' },
+    boar: { name: 'Wild boar', make: 'boar', sp: 'mongoose', realm: 'land', temper: 'sometimes', v: 0.8, stride: 0.8, spread: 5, region: 'europe' },
+    crane: { name: 'Red-crowned crane', make: 'crane', sp: 'pelican', realm: 'air', temper: 'passive', alt: [15, 40], v: 8, loop: [30, 70], lag: 0.3, region: 'asia' },
+    flamingo: { name: 'Lesser flamingo', make: 'flamingo', sp: 'gull', realm: 'air', temper: 'passive', alt: [6, 20], v: 9, loop: [40, 90], lag: 0.15, region: 'africa' },
+    stork: { name: 'White stork', make: 'stork', sp: 'pelican', realm: 'air', temper: 'passive', alt: [20, 60], v: 8, loop: [40, 80], lag: 0.4, region: 'europe' },
+    condor: { name: 'Andean condor', make: 'condor', sp: 'pelican', realm: 'air', temper: 'passive', alt: [60, 150], v: 9, loop: [80, 160], lag: 2, region: 'americas' },
+    toucan: { name: 'Toco toucan (small: clear only near her)', make: 'toucan', sp: 'gull', realm: 'air', temper: 'passive', alt: [20, 35], v: 8, loop: [25, 50], lag: 0.4, region: 'americas' },
+    macaw: { name: 'Scarlet macaw (small: clear only near her)', make: 'macaw', sp: 'gull', realm: 'air', temper: 'curious', alt: [25, 45], v: 10, loop: [30, 60], lag: 0.2, region: 'americas' },
+    orca: { name: 'Orca', make: 'orca', sp: 'dolphin', realm: 'sea', temper: 'sometimes', y: -1.3, depth: 14, v: 3.0, loop: [120, 260], lag: 0.08, side: 8, leap: true },
+    manta: { name: 'Giant manta ray (approximate in low poly)', make: 'manta', sp: 'dolphin', realm: 'sea', temper: 'passive', y: -1.2, depth: 6, v: 1.0, loop: [30, 70], lag: 0.5, side: 6 },
+    sealion: { name: 'Sea lion', make: 'sealion', sp: 'dolphin', realm: 'sea', also: 'land', coast: true, temper: 'curious', y: -0.3, depth: 2, v: 2.2, loop: [25, 60], lag: 0.2, side: 4, spread: 4, stride: 0.6 }
   };
   var TMP = { passive: 0, curious: 1, sometimes: 2, malicious: 3 };
   function temper(k) { var T = window.WFR_ANIMALS && WFR_ANIMALS.T ? WFR_ANIMALS.T : TMP; return T[K[k].temper]; }
@@ -87,30 +128,35 @@ window.WFR_WORLDANIMALS = (function () {
      walks it: s.by the body's centre height, s.r its radii, s.neck [length, rise (rad), r0, r1], s.head radii, s.snout [length, r0, r1], s.legR [top, foot] */
   function quad(s) {
     var P = PR, G = P.G0(), hx = P.hex, top = hx(s.top), belly = hx(s.belly || s.top), leg = hx(s.leg || s.top), hoof = hx(s.hoof || 0x2a221c), muz = hx(s.muzzle || s.top);
-    var by = s.by, rx = s.r[0], ry = s.r[1], rz = s.r[2], hipY = by - ry * 0.3, lx = rx * 0.6, lzF = rz * 0.62, lzH = -rz * 0.6, sw = s.sprawl || 1;
-    var nA = [0, by + ry * 0.35, rz * 0.8], nl = s.neck[0], np = s.neck[1], nB = [0, nA[1] + nl * Math.sin(np), nA[2] + nl * Math.cos(np)];
-    var bones = [{ name: 'root', p: [0, 0, 0] }, { name: 'body', p: [0, by, -rz * 0.5], parent: 0 }, { name: 'head', p: nA, parent: 1 }, { name: 'tail', p: [0, by + ry * 0.2, -rz * 0.95], parent: 1 },
-      { name: 'legFL', p: [lx, hipY, lzF], parent: 1 }, { name: 'legFR', p: [-lx, hipY, lzF], parent: 1 }, { name: 'legHL', p: [lx, hipY, lzH], parent: 0 }, { name: 'legHR', p: [-lx, hipY, lzH], parent: 0 }];
-    P.ell(G, { c: [0, by, 0], r: [rx, ry, rz], seg: 10, ring: 6, top: top, belly: belly, bone: 1, pat: s.pat });
-    if (s.hump) P.ell(G, { c: [0, by + ry * 0.72, s.hump[3] || 0], r: [s.hump[0], s.hump[1], s.hump[2]], seg: 8, ring: 5, top: top, belly: top, bone: 1, pat: s.pat });
-    P.tube(G, { a: nA, b: nB, ra: s.neck[2], rb: s.neck[3], sides: 7, top: s.mane ? hx(s.mane) : top, belly: belly, bone: 2, pat: s.pat });
+    var by = s.by, rx = s.r[0], ry = s.r[1], rz = s.r[2], lx = rx * 0.6, lzF = rz * 0.62, lzH = s.biped ? 0 : -rz * 0.6, sw = s.sprawl || 1, bp = s.bp || 0;
+    var rp = function (q) { var c = Math.cos(bp), sn = Math.sin(bp); return [q[0], q[1] * c - q[2] * sn + by, q[1] * sn + q[2] * c]; };   // a point of the body (from its centre), the body pitched by bp (negative: the front up)
+    var nA = rp([0, ry * 0.35, rz * 0.8]), nl = s.neck[0], np = s.neck[1], nB = [0, nA[1] + nl * Math.sin(np), nA[2] + nl * Math.cos(np)];
+    var ta = rp([0, ry * 0.2, -rz * 0.95]), fT = rp([lx, -ry * 0.3, lzF]), hT = rp([lx, -ry * 0.3, lzH]), hx2 = s.biped ? rx * 0.35 : lx;
+    var bones = [{ name: 'root', p: [0, 0, 0] }, { name: 'body', p: [0, by, -rz * 0.5], parent: 0 }, { name: 'head', p: nA, parent: 1 }, { name: 'tail', p: ta, parent: 1 },
+      { name: 'legFL', p: [lx, fT[1], fT[2]], parent: 1 }, { name: 'legFR', p: [-lx, fT[1], fT[2]], parent: 1 }, { name: 'legHL', p: [hx2, hT[1], hT[2]], parent: 0 }, { name: 'legHR', p: [-hx2, hT[1], hT[2]], parent: 0 }];
+    P.ell(G, { c: [0, by, 0], r: [rx, ry, rz], pitch: bp, seg: 10, ring: 6, top: top, belly: belly, bone: 1, pat: s.pat });
+    if (s.hump) P.ell(G, { c: rp([0, ry * 0.72, s.hump[3] || 0]), r: [s.hump[0], s.hump[1], s.hump[2]], pitch: bp, seg: 8, ring: 5, top: top, belly: top, bone: 1, pat: s.pat });
+    P.tube(G, { a: nA, b: nB, ra: s.neck[2], rb: s.neck[3], sides: 7, top: s.mane ? hx(s.mane) : top, belly: belly, bone: 2, pat: s.neckPat || s.pat });
     var hr = s.head, hc = [0, nB[1] + hr[1] * 0.25, nB[2] + hr[2] * 0.35];
     P.ell(G, { c: hc, r: hr, pitch: s.hp == null ? 0.3 : s.hp, seg: 8, ring: 5, top: top, belly: belly, bone: 2, pat: s.headPat || s.pat });
-    var sn = s.snout, sa = [0, hc[1] - hr[1] * 0.2, hc[2] + hr[2] * 0.55], sb = [0, hc[1] - hr[1] * 0.2 - sn[0] * (s.droop || 0.45), hc[2] + hr[2] * 0.55 + sn[0]];
+    var sn = s.snout, sa = [0, hc[1] - hr[1] * 0.2, hc[2] + hr[2] * 0.55], sb = [0, hc[1] - hr[1] * 0.2 - sn[0] * (s.droop == null ? 0.45 : s.droop), hc[2] + hr[2] * 0.55 + sn[0]];
     P.tube(G, { a: sa, b: sb, ra: sn[1], rb: sn[2], sides: 6, top: muz, belly: muz, bone: 2 });
     P.ell(G, { c: [0, sb[1] + sn[2] * 0.2, sb[2] + sn[2] * 0.5], r: [sn[2] * 0.9, sn[2] * 0.6, sn[2] * 0.5], seg: 5, ring: 3, col: hx(s.nose || 0x1c1612), bone: 2 });
     [1, -1].forEach(function (sd) {
       P.eye(G, [hr[0] * 0.78 * sd, hc[1] + hr[1] * 0.25, hc[2] + hr[2] * 0.3], s.eyeR || hr[0] * 0.16, 2, [0.55 * sd, 0, 0.8]);
       if (s.ear) P.ell(G, { c: [hr[0] * 0.75 * sd, hc[1] + hr[1] * 0.85, hc[2] - hr[2] * 0.25], r: s.ear, roll: -0.5 * sd, seg: 5, ring: 3, top: hx(s.earC || s.top), belly: hx(s.earIn || s.belly || s.top), bone: 2 });
     });
-    [[lx, lzF, 4], [-lx, lzF, 5], [lx, lzH, 6], [-lx, lzH, 7]].forEach(function (L) {
-      var fx = L[0] * sw, fz = L[1] + (L[1] > 0 ? 0.02 : 0) * rz, r1 = s.legR[1];
-      P.tube(G, { a: [L[0], hipY, L[1]], b: [fx, r1 * 0.8, fz], ra: s.legR[0], rb: r1, sides: 6, top: leg, belly: leg, bone: L[2], pat: s.legPat });
-      P.ell(G, { c: [fx, r1 * 0.55, fz + r1 * 0.3], r: [r1 * 1.15, r1 * 0.55, r1 * 1.4], seg: 6, ring: 3, col: hoof, bone: L[2] });
+    var LEGS = s.biped ? [[hx2, hT, 6], [-hx2, hT, 7]] : [[lx, fT, 4], [-lx, fT, 5], [lx, hT, 6], [-lx, hT, 7]];
+    LEGS.forEach(function (L) {
+      var front = L[2] < 6, arm = front && s.armY, r0 = front && s.armR ? s.armR[0] : s.legR[0], r1 = front && s.armR ? s.armR[1] : s.legR[1], tp = [L[0], L[1][1], L[1][2]];
+      var fx = L[0] * sw, fy = arm ? s.armY : r1 * 0.8, fz = tp[2] + (front ? 0.02 * rz : 0) + (arm ? 0.06 : 0), ft = s.foot || 1;
+      P.tube(G, { a: tp, b: [fx, fy, fz], ra: r0, rb: r1, sides: 6, top: leg, belly: leg, bone: L[2], pat: s.legPat });
+      if (!arm) P.ell(G, { c: [fx, r1 * 0.55, fz + r1 * 0.3 + (ft > 1 ? r1 * 1.4 * (ft - 1) : 0)], r: [r1 * 1.15, r1 * 0.55, r1 * 1.4 * ft], seg: 6, ring: 3, col: hoof, bone: L[2] });
     });
-    var tl = s.tail, ta = [0, by + ry * 0.2, -rz * 0.95], tb = [0, ta[1] - tl[0] * (tl[3] == null ? 0.8 : tl[3]), ta[2] - tl[0] * 0.6];
+    var tl = s.tail, tb = [0, ta[1] - tl[0] * (tl[3] == null ? 0.8 : tl[3]), ta[2] - tl[0] * 0.6];
+    if (tb[1] < tl[2]) tb[1] = tl[2];   // a long low tail rests on the ground, never through it
     P.tube(G, { a: ta, b: tb, ra: tl[1], rb: tl[2], sides: 5, top: hx(s.tailC || s.top), belly: hx(s.tailB || s.tailC || s.belly || s.top), bone: 3 });
-    if (s.extra) s.extra(G, P, { hc: hc, hr: hr, nA: nA, nB: nB, sa: sa, sb: sb, by: by, ry: ry, rz: rz, hx: hx });
+    if (s.extra) s.extra(G, P, { hc: hc, hr: hr, nA: nA, nB: nB, sa: sa, sb: sb, ta: ta, tb: tb, by: by, ry: ry, rz: rz, hx: hx, rp: rp });
     var m = P.finish(G, bones, s.id); m.radius = Math.max(by + ry, rz) * 1.6; return m;
   }
   function antler(G, P, base, sd, o) {   /* a beam rising back and out, then forward; tines up off it (o: beam length, tine count, tine length, radius, colour) */
@@ -164,9 +210,9 @@ window.WFR_WORLDANIMALS = (function () {
       extra: function (G, P, o) { for (var i = 0; i < 9; i++) { var z = 0.2 - i * 0.07; P.fin3(G, [[0, 0.17 - i * 0.004, z + 0.02], [0, 0.21 - i * 0.004, z], [0, 0.17 - i * 0.004, z - 0.02]], 0.006, P.hex(0x8a9a5a), 1, [1, 0, 0]); }
         P.ell(G, { c: [0, o.hc[1] - 0.05, o.hc[2] - 0.02], r: [0.012, 0.035, 0.04], seg: 5, ring: 3, col: P.hex(0x9aa47a), bone: 2 }); } }); }   /* the dorsal spikes, the dewlap */
   };
-  function bear(id, fur, muzzle) {
-    return quad({ id: id, by: 0.62, r: [0.33, 0.36, 0.7], neck: [0.2, 0.25, 0.2, 0.17], head: [0.17, 0.16, 0.18], hp: 0.1, snout: [0.13, 0.08, 0.055], droop: 0.15, legR: [0.11, 0.08],
-      top: fur, belly: fur, leg: fur, muzzle: muzzle, hoof: 0x14100e, ear: [0.05, 0.05, 0.03], tail: [0.06, 0.04, 0.03], pat: function (c, nx, ny, nz, x, y, z) { return Math.sin(x * 31 + y * 23 + z * 19) > 0.7 ? [c[0] * 1.15, c[1] * 1.15, c[2] * 1.15] : c; } });
+  function bear(id, fur, muzzle, o) {
+    return quad(Object.assign({ id: id, by: 0.62, r: [0.33, 0.36, 0.7], neck: [0.2, 0.25, 0.2, 0.17], head: [0.17, 0.16, 0.18], hp: 0.1, snout: [0.13, 0.08, 0.055], droop: 0.15, legR: [0.11, 0.08],
+      top: fur, belly: fur, leg: fur, muzzle: muzzle, hoof: 0x14100e, ear: [0.05, 0.05, 0.03], tail: [0.06, 0.04, 0.03], pat: function (c, nx, ny, nz, x, y, z) { return Math.sin(x * 31 + y * 23 + z * 19) > 0.7 ? [c[0] * 1.15, c[1] * 1.15, c[2] * 1.15] : c; } }, o || {}));
   }
   /* a bird on buildBird's rig (root, head, wL, wR, wL2, wR2, tail), so poseBird flies it; the wing is the kit's own wing(), scaled */
   function birdOf(s) {
@@ -178,8 +224,11 @@ window.WFR_WORLDANIMALS = (function () {
     if (s.neck) P.tube(G, { a: [0, 0.05 * k, 0.32 * k], b: hc, ra: 0.055 * k, rb: 0.04 * k, sides: 6, top: head, belly: head, bone: 1 });
     P.ell(G, { c: hc, r: hr, seg: 8, ring: 5, top: head, belly: head, bone: 1 });
     [1, -1].forEach(function (sd) { P.eye(G, [hc[0] + sd * hr[0] * 0.72, hc[1] + hr[1] * 0.25, hc[2] + hr[2] * 0.35], 0.012 * k, 1, [0.6 * sd, 0, 0.8]); });
-    P.tube(G, { a: [0, hc[1] - 0.01 * k, hc[2] + hr[2] * 0.75], b: [0, hc[1] - s.hook * k, hc[2] + hr[2] * 0.75 + s.billL * k], ra: 0.025 * k, rb: 0.006 * k, sides: 5, col: bill, bone: 1 });
-    P.tube(G, { a: [0, 0.02 * k, -0.34 * k], b: [0, 0.02 * k, -0.62 * k], ra: 0.1 * k, rb: 0.07 * k, sides: 6, top: hx(s.tail), belly: hx(s.tail), bone: 6 });
+    P.tube(G, { a: [0, hc[1] - 0.01 * k, hc[2] + hr[2] * 0.75], b: [0, hc[1] - s.hook * k, hc[2] + hr[2] * 0.75 + s.billL * k], ra: (s.billR || 0.025) * k, rb: (s.billR ? s.billR * 0.35 : 0.006) * k, sides: 5, col: bill, bone: 1 });
+    P.tube(G, { a: [0, 0.02 * k, -0.34 * k], b: [0, 0.02 * k, -(0.62 + (s.tailL || 0)) * k], ra: 0.1 * k, rb: (s.tailL ? 0.03 : 0.07) * k, sides: 6, top: hx(s.tail), belly: hx(s.tail), bone: 6 });
+    if (s.crown) P.ell(G, { c: [0, hc[1] + hr[1] * 0.85, hc[2]], r: [hr[0] * 0.5, hr[1] * 0.25, hr[2] * 0.45], seg: 6, ring: 3, col: hx(s.crown), bone: 1 });
+    if (s.ruff) P.ell(G, { c: [0, 0.07 * k, 0.36 * k], r: [0.11 * k, 0.09 * k, 0.07 * k], seg: 8, ring: 4, col: hx(s.ruff), bone: 1 });
+    if (s.throat) P.ell(G, { c: [0, hc[1] - hr[1] * 0.45, hc[2] + hr[2] * 0.2], r: [hr[0] * 0.8, hr[1] * 0.5, hr[2] * 0.6], seg: 6, ring: 3, col: hx(s.throat), bone: 1 });
     if (s.legs) [1, -1].forEach(function (sd) { P.tube(G, { a: [0.04 * k * sd, -0.08 * k, -0.2 * k], b: [0.04 * k * sd, -0.06 * k, -0.2 * k - s.legs], ra: 0.012 * k, rb: 0.008 * k, sides: 4, col: hx(s.legC), bone: 0 }); });   /* an egret trails its legs */
     var W = { sh: 0.1 * f, wr: 0.55 * f, hd: 0.78 * f, le: 0.1 * f, chA: 0.34 * f, chW: 0.3 * f, chH: 0.24 * f, t: 0.03 * f, y: 0.05 * k, n: 5, pl: 0.24 * f, pw: 0.028 * f, fan0: -0.15, fan1: -1.25, top: back, top2: hx(s.back2 || s.back), under: hx(s.under || s.belly), prim: hx(s.prim) };
     P.wing(G, null, 1, W); P.wing(G, null, -1, W);
@@ -198,7 +247,7 @@ window.WFR_WORLDANIMALS = (function () {
     whale: function () { var hx = PR.hex, top = hx(0x2b3038), mid = hx(0x3a4048), white = hx(0xd9dcdc), groove = hx(0x9aa0a6);   /* a humpback, 13 m: the long white pectorals, the throat grooves, the small dorsal on its hump, the wide flukes */
       return swimmer('whale', { L: 13, z0: 4.4, rings: 24, sides: 12,
         prof: function (u) { var t, e; if (u < 0.08) { t = u / 0.08; return [0.35 + 0.6 * t, 0.25 + 0.5 * t, -0.1]; } if (u < 0.4) { e = Math.sin((u - 0.08) / 0.32 * Math.PI / 2); return [0.95 + 0.55 * e, 0.75 + 0.6 * e, -0.1 + 0.05 * e]; }
-          t = (u - 0.4) / 0.6; return [1.5 * Math.pow(1 - t, 1.3) + 0.12, 1.35 * Math.pow(1 - t, 1.15) + 0.14, -0.05 + 0.1 * t]; },
+          t = (u - 0.4) / 0.6; return [1.5 * Math.pow(Math.max(0, 1 - t), 1.3) + 0.12, 1.35 * Math.pow(Math.max(0, 1 - t), 1.15) + 0.14, -0.05 + 0.1 * t]; },
         col: function (u, up, side) { if (up < -0.35) return u < 0.38 ? (Math.sin(side * 40) > 0.3 ? groove : white) : mid; return up > 0.4 ? top : mid; },
         extra: function (G, P) { P.fin3(G, [[0, 1.0, -3.0], [0, 1.45, -3.6], [0, 1.0, -4.2]], 0.12, top, 0, [1, 0, 0]);
           [1, -1].forEach(function (sd) { P.fin3(G, [[0.9 * sd, -0.6, 1.4], [3.6 * sd, -1.5, 0.3], [4.1 * sd, -1.7, -0.2], [3.4 * sd, -1.5, -0.1], [0.9 * sd, -0.75, 0.3]], 0.14, white, sd > 0 ? 3 : 4, [0, 1, 0], mid);
@@ -208,7 +257,7 @@ window.WFR_WORLDANIMALS = (function () {
     seal: function () { var hx = PR.hex, top = hx(0x5f5a52), mid = hx(0x8a8378), belly = hx(0xb8b0a2), dark = hx(0x2a2622);   /* a true seal, 1.7 m: a round head, a fat spindle body, short fore-flippers, the hind flippers paired behind */
       return swimmer('seal', { L: 1.7, z0: 0.62, rings: 16, sides: 10,
         prof: function (u) { var t; if (u < 0.15) { t = Math.sqrt(u / 0.15); return [0.03 + 0.11 * t, 0.03 + 0.11 * t, 0.23]; } if (u < 0.22) return [0.12, 0.12, 0.22]; if (u < 0.62) { t = Math.sin((u - 0.22) / 0.4 * Math.PI / 2); return [0.12 + 0.12 * t, 0.12 + 0.11 * t, 0.23]; }
-          t = (u - 0.62) / 0.38; return [0.24 * Math.pow(1 - t, 1.2) + 0.03, 0.23 * Math.pow(1 - t, 1.2) + 0.03, 0.23]; },
+          t = (u - 0.62) / 0.38; return [0.24 * Math.pow(Math.max(0, 1 - t), 1.2) + 0.03, 0.23 * Math.pow(Math.max(0, 1 - t), 1.2) + 0.03, 0.23]; },
         col: function (u, up, side) { if (up < -0.3) return belly; return Math.sin(u * 47 + side * 9) > 0.75 ? dark : up > 0.3 ? top : mid; },
         extra: function (G, P) { [1, -1].forEach(function (sd) { P.fin3(G, [[0.17 * sd, 0.08, 0.2], [0.33 * sd, 0.0, 0.08], [0.3 * sd, 0.0, 0.0], [0.17 * sd, 0.05, 0.05]], 0.025, top, sd > 0 ? 3 : 4, [0, 1, 0], mid);
           P.fin3(G, [[0.03 * sd, 0.2, -1.04], [0.17 * sd, 0.2, -1.28], [0.08 * sd, 0.2, -1.3], [0.02 * sd, 0.2, -1.12]], 0.02, top, 0, [0, 1, 0], mid); P.eye(G, [0.09 * sd, 0.29, 0.5], 0.022, 0, [0.6 * sd, 0, 0.8]); });
@@ -246,6 +295,122 @@ window.WFR_WORLDANIMALS = (function () {
     var fl = a.swim ? 0.9 * Math.sin(t) : 0.35 * w + 0.08 * Math.sin(t * 0.5); P.setR(m, 3, 0, 0, fl + 0.15); P.setR(m, 4, 0, 0, -fl - 0.15);
     P.bonesPose(m); }
 
+  /* ---------- 2b. EVERY REGION ITS OWN: the new bodies (the same quad, birdOf and swimmer builders; real sizes, U1 holds them) ---------- */
+  function cat(id, o) { var b = o.by; return quad({ id: id, by: b, r: [b * 0.33, b * 0.37, b * 1.05], neck: [b * 0.3, 0.3, b * 0.2, b * 0.16], head: [b * 0.2, b * 0.19, b * 0.22], hp: 0.1, snout: [b * 0.12, b * 0.1, b * 0.08], droop: 0.25,
+    legR: [b * 0.11, b * 0.07], top: o.top, belly: o.belly, leg: o.leg || o.top, muzzle: o.muzzle || o.belly, nose: 0x3a2420, hoof: o.paw || o.top, ear: [b * 0.06, b * 0.07, b * 0.025], earC: o.earC || o.top, earIn: o.belly,
+    tail: [b * (o.tailL || 1.1), b * 0.07, b * 0.05, 0.55], tailC: o.tailC || o.top, pat: o.pat, legPat: o.legPat || o.pat, headPat: o.headPat || o.pat, extra: o.extra }); }
+  var spotPat = function (dark, k) { return function (c, nx, ny, nz, x, y, z) { return ny > -0.5 && Math.sin(x * k) * Math.sin(z * k * 1.07 + 1.3) * Math.sin(y * k * 0.93 + 0.7) > 0.22 ? dark : c; }; };
+  function croc(id, k, back, belly) { return quad({ id: id, by: 0.28 * k, r: [0.32 * k, 0.2 * k, 1.3 * k], neck: [0.2 * k, 0, 0.2 * k, 0.18 * k], head: [0.18 * k, 0.12 * k, 0.25 * k], hp: 0, snout: [0.62 * k, 0.13 * k, 0.08 * k], droop: 0,
+    legR: [0.07 * k, 0.05 * k], sprawl: 2.1, top: back, belly: belly, leg: back, muzzle: back, hoof: back, tail: [2.0 * k, 0.22 * k, 0.04 * k, 0.1], tailC: back, tailB: belly,
+    pat: function (c, nx, ny, nz, x, y, z) { return ny > 0.6 && Math.sin(z * 9 / k) > 0.5 ? [c[0] * 0.75, c[1] * 0.75, c[2] * 0.75] : c; },
+    extra: function (G, P, o) { for (var i = 0; i < 12; i++) { var z = 1.0 * k - i * 0.32 * k, y = (i < 6 ? o.by + 0.19 * k : o.by + 0.19 * k - (i - 5) * 0.03 * k); P.fin3(G, [[0, y, z + 0.06 * k], [0, y + 0.07 * k, z], [0, y, z - 0.06 * k]], 0.02 * k, P.hex(back), i < 6 ? 1 : 3, [1, 0, 0]); } } }); }
+  function biped(id, o) { return quad({ id: id, biped: true, by: o.by, r: o.r, neck: o.neck, head: o.head, hp: 0.1, snout: o.beak, droop: 0.1, legR: o.legR, foot: 1.8, top: o.top, belly: o.belly, leg: o.leg, muzzle: o.bill, hoof: o.leg, nose: o.bill,
+    mane: o.neckC, tail: o.tail, tailC: o.tailC, pat: o.pat, neckPat: o.neckPat, headPat: o.neckPat }); }
+  var NEWQ = {
+    kangaroo: function () { return quad({ id: 'kangaroo', by: 0.68, bp: -0.85, r: [0.17, 0.26, 0.36], neck: [0.18, 1.2, 0.08, 0.06], head: [0.07, 0.08, 0.13], hp: 0.25, snout: [0.09, 0.045, 0.03], droop: 0.3,
+      legR: [0.08, 0.035], foot: 2.6, armY: 0.55, armR: [0.035, 0.022], top: 0xa8705a, belly: 0xe8d8c4, leg: 0x9a6650, muzzle: 0x8a5a48, ear: [0.025, 0.09, 0.02], earIn: 0xe8c8b8, tail: [1.0, 0.1, 0.035, 0.85], tailC: 0x9a6650 }); },
+    koala: function () { return quad({ id: 'koala', by: 0.3, r: [0.14, 0.16, 0.2], neck: [0.05, 0.5, 0.1, 0.09], head: [0.12, 0.11, 0.1], hp: 0.05, snout: [0.03, 0.035, 0.03], droop: 0.6, nose: 0x15131a,
+      legR: [0.045, 0.035], top: 0x8c8c8a, belly: 0xe6e2da, leg: 0x7a7a78, muzzle: 0x8c8c8a, hoof: 0x3a3a3a, ear: [0.07, 0.07, 0.025], earIn: 0xf4f2ee, tail: [0.02, 0.02, 0.02] }); },
+    emu: function () { return biped('emu', { by: 1.0, r: [0.24, 0.3, 0.4], neck: [0.55, 1.35, 0.06, 0.045], head: [0.055, 0.06, 0.08], beak: [0.06, 0.025, 0.012], legR: [0.06, 0.03], top: 0x5a4a38, belly: 0x6a5a46, leg: 0x6a6460,
+      bill: 0x2a2420, neckC: 0x4a5a6a, tail: [0.15, 0.12, 0.06, 0.4], tailC: 0x5a4a38, pat: function (c, nx, ny, nz, x, y, z) { return Math.sin(x * 40 + y * 33 + z * 27) > 0.4 ? [c[0] * 0.75, c[1] * 0.75, c[2] * 0.75] : c; } }); },
+    ostrich: function () { return biped('ostrich', { by: 1.25, r: [0.32, 0.36, 0.5], neck: [0.8, 1.4, 0.07, 0.05], head: [0.06, 0.065, 0.09], beak: [0.07, 0.03, 0.015], legR: [0.08, 0.035], top: 0x1a1818, belly: 0x1a1818, leg: 0xd29a96,
+      bill: 0xd8a890, neckC: 0xcfa4a0, tail: [0.25, 0.16, 0.08, 0.2], tailC: 0xf2f0ea, pat: function (c, nx, ny, nz, x, y, z) { return Math.abs(x) > 0.27 && z < 0.1 ? [0.95, 0.94, 0.9] : c; } }); },
+    saltcroc: function () { return croc('saltcroc', 1, 0x56603e, 0xd2c8a2); },
+    alligator: function () { return croc('alligator', 0.78, 0x2b3026, 0xbcb59a); },
+    panda: function () { return bear('panda', 0xf3f1ea, 0xf3f1ea, { earC: 0x141414, legPat: function () { return [0.08, 0.08, 0.09]; },
+      pat: function (c, nx, ny, nz, x, y, z) { return z > 0.18 && z < 0.42 && y > 0.45 ? [0.08, 0.08, 0.09] : c; },
+      headPat: function (c, nx, ny, nz, x, y, z) { return nz > 0.3 && Math.abs(x) > 0.05 && Math.abs(x) < 0.13 && y > 0.85 && y < 0.95 ? [0.08, 0.08, 0.09] : c; } }); },
+    tiger: function () { return cat('tiger', { by: 0.72, top: 0xd9792a, belly: 0xf2e8d8, pat: function (c, nx, ny, nz, x, y, z) { return ny > -0.45 && Math.sin(z * 15 + y * 4 + Math.sin(x * 9) * 1.5) > 0.55 ? [0.1, 0.08, 0.07] : c; } }); },
+    lion: function () { return cat('lion', { by: 0.75, top: 0xc9a062, belly: 0xe8d4a8, tailL: 1.0,
+      extra: function (G, P, o) { P.ell(G, { c: [0, o.nB[1] + 0.02, o.nB[2] - 0.02], r: [0.3, 0.32, 0.26], seg: 9, ring: 5, top: P.hex(0x6a4420), belly: P.hex(0x5a3a1c), bone: 2 });   /* the mane */
+        P.ell(G, { c: o.tb, r: [0.06, 0.06, 0.09], seg: 6, ring: 3, col: P.hex(0x3a2614), bone: 3 }); } }); },   /* the tail's tuft */
+    jaguar: function () { return cat('jaguar', { by: 0.55, top: 0xd9a540, belly: 0xf0e2c0, tailL: 0.9, pat: spotPat([0.12, 0.09, 0.06], 24) }); },
+    snowleopard: function () { return cat('snowleopard', { by: 0.45, top: 0xd8d4c8, belly: 0xf2efe8, tailL: 1.9, tailC: 0xd0ccc0, pat: spotPat([0.3, 0.3, 0.3], 30) }); },
+    indianelephant: function () { return quad({ id: 'indianelephant', by: 1.75, r: [0.75, 0.85, 1.3], neck: [0.3, 0.3, 0.5, 0.45], head: [0.48, 0.58, 0.48], hp: 0.15, snout: [0.25, 0.2, 0.16], droop: 1.2, legR: [0.27, 0.24],
+      top: 0x6e6a66, belly: 0x5e5a56, leg: 0x6a6662, muzzle: 0x6e6a66, hoof: 0x4a4642, nose: 0x4a4642, tail: [0.8, 0.05, 0.03, 0.95],
+      extra: function (G, P, o) { var g = P.hex(0x686460), t0 = o.sb, t1 = [0, t0[1] - 0.7, t0[2] + 0.22], t2 = [0, 0.4, t0[2] + 0.3];
+        P.tube(G, { a: t0, b: t1, ra: 0.15, rb: 0.11, sides: 6, col: g, bone: 2 }); P.tube(G, { a: t1, b: t2, ra: 0.11, rb: 0.06, sides: 6, col: g, bone: 2 });
+        [1, -1].forEach(function (sd) { P.ell(G, { c: [o.hr[0] * 0.95 * sd, o.hc[1] + 0.05, o.hc[2] - 0.2], r: [0.05, 0.36, 0.28], yaw: 0.3 * sd, seg: 8, ring: 4, top: P.hex(0x625e5a), belly: P.hex(0x8a6e66), bone: 2 });   /* the smaller ears: the Asian elephant's */
+          P.tube(G, { a: [0.16 * sd, o.hc[1] - 0.35, o.hc[2] + 0.3], b: [0.18 * sd, o.hc[1] - 0.42, o.hc[2] + 0.5], ra: 0.04, rb: 0.02, sides: 5, col: P.hex(0xf1e8d2), bone: 2 }); }); } }); },
+    yak: function () { return quad({ id: 'yak', by: 1.0, r: [0.38, 0.45, 0.9], neck: [0.25, -0.05, 0.3, 0.26], head: [0.2, 0.24, 0.28], hp: 0.5, snout: [0.12, 0.12, 0.1], droop: 0.5, legR: [0.1, 0.07], hump: [0.3, 0.25, 0.4, 0.4],
+      top: 0x2a2420, belly: 0x1e1a18, leg: 0x2a2420, muzzle: 0x3a3430, hoof: 0x141210, tail: [0.6, 0.08, 0.06, 0.9], tailC: 0x2a2420,
+      extra: function (G, P, o) { P.ell(G, { c: [0, o.by - 0.42, 0], r: [0.42, 0.18, 0.85], seg: 8, ring: 4, col: P.hex(0x221e1a), bone: 1 });   /* the long hair's skirt */
+        [1, -1].forEach(function (sd) { var a = [0.17 * sd, o.hc[1] + 0.14, o.hc[2] - 0.05], b = [0.38 * sd, a[1] + 0.12, a[2] + 0.02]; P.tube(G, { a: a, b: b, ra: 0.045, rb: 0.03, sides: 5, col: P.hex(0xd8d0c0), bone: 2 }); P.tube(G, { a: b, b: [0.42 * sd, b[1] + 0.2, b[2] + 0.08], ra: 0.03, rb: 0.01, sides: 4, col: P.hex(0xd8d0c0), bone: 2 }); }); } }); },
+    macaque: function () { return quad({ id: 'macaque', by: 0.35, r: [0.12, 0.13, 0.24], neck: [0.08, 0.6, 0.07, 0.06], head: [0.075, 0.08, 0.075], hp: 0.1, snout: [0.04, 0.045, 0.035], droop: 0.3, nose: 0x8a3a34, legR: [0.035, 0.022],
+      top: 0x8a7a66, belly: 0xa89a86, leg: 0x7a6a58, muzzle: 0xd06a60, hoof: 0x6a5048, ear: [0.02, 0.025, 0.01], earC: 0xc8706a, tail: [0.12, 0.025, 0.015, 0.3],
+      headPat: function (c, nx, ny, nz) { return nz > 0.55 ? [0.82, 0.42, 0.38] : c; } }); },   /* the red face */
+    hippo: function () { return quad({ id: 'hippo', by: 0.72, r: [0.55, 0.55, 1.2], neck: [0.15, 0.1, 0.42, 0.4], head: [0.34, 0.3, 0.42], hp: 0.05, snout: [0.3, 0.3, 0.28], droop: 0.05, legR: [0.2, 0.17],
+      top: 0x6e5a5c, belly: 0xb08a84, leg: 0x6a5658, muzzle: 0x8a6a6a, hoof: 0x4a3c3c, nose: 0x3a2c2c, ear: [0.05, 0.05, 0.03], tail: [0.2, 0.05, 0.02, 0.6] }); },
+    gorilla: function () { return quad({ id: 'gorilla', by: 0.78, bp: -0.45, r: [0.33, 0.4, 0.42], neck: [0.06, 0.5, 0.16, 0.15], head: [0.15, 0.17, 0.15], hp: -0.1, snout: [0.06, 0.08, 0.07], droop: 0.2, nose: 0x0e0e0e,
+      legR: [0.1, 0.08], armR: [0.11, 0.09], top: 0x1e1c1c, belly: 0x262222, leg: 0x1e1c1c, muzzle: 0x2a2626, hoof: 0x141212, ear: [0.025, 0.03, 0.01], tail: [0.02, 0.02, 0.02],
+      pat: function (c, nx, ny, nz, x, y, z) { return ny > 0.35 && z < 0.05 ? [0.55, 0.55, 0.55] : c; } }); },   /* the silverback */
+    bison: function () { return quad({ id: 'bison', by: 1.12, r: [0.42, 0.52, 1.05], neck: [0.25, -0.2, 0.34, 0.3], head: [0.24, 0.27, 0.3], hp: 0.6, snout: [0.12, 0.13, 0.11], droop: 0.6, legR: [0.11, 0.07], hump: [0.38, 0.38, 0.45, 0.45],
+      top: 0x3b2a1e, belly: 0x2a1e16, leg: 0x2a1e16, muzzle: 0x241a14, hoof: 0x141010, tail: [0.45, 0.04, 0.03, 0.95],
+      pat: function (c, nx, ny, nz, x, y, z) { return z > 0.15 ? [0.38, 0.27, 0.18] : c; },   /* the shaggy, paler forequarters */
+      extra: function (G, P, o) { [1, -1].forEach(function (sd) { P.tube(G, { a: [0.2 * sd, o.hc[1] + 0.14, o.hc[2] - 0.05], b: [0.3 * sd, o.hc[1] + 0.24, o.hc[2] - 0.02], ra: 0.035, rb: 0.012, sides: 4, col: P.hex(0x141210), bone: 2 }); }); } }); },
+    llama: function () { return quad({ id: 'llama', by: 1.05, r: [0.22, 0.28, 0.55], neck: [0.75, 1.35, 0.1, 0.08], head: [0.08, 0.1, 0.17], hp: 0.2, snout: [0.08, 0.06, 0.045], droop: 0.3, legR: [0.06, 0.035],
+      top: 0xeee6d6, belly: 0xe2d8c4, leg: 0xe2d8c4, muzzle: 0xd8ccb4, hoof: 0x4a3e30, ear: [0.025, 0.1, 0.03], tail: [0.15, 0.06, 0.04, 0.6],
+      pat: function (c, nx, ny, nz, x, y, z) { return Math.sin(x * 7 + z * 5) > 0.5 ? [0.55, 0.38, 0.24] : c; } }); },
+    polarbear: function () { return quad({ id: 'polarbear', by: 0.8, r: [0.42, 0.45, 0.95], neck: [0.35, 0.25, 0.24, 0.2], head: [0.18, 0.18, 0.24], hp: 0.15, snout: [0.16, 0.09, 0.06], droop: 0.15, legR: [0.14, 0.11],
+      top: 0xf2ede0, belly: 0xe6dfcc, leg: 0xeae4d4, muzzle: 0xeae4d4, hoof: 0x2a2826, nose: 0x141210, ear: [0.04, 0.04, 0.02], tail: [0.07, 0.05, 0.04] }); },
+    caribou: function () { return quad({ id: 'caribou', by: 0.98, r: [0.25, 0.3, 0.68], neck: [0.42, 0.75, 0.13, 0.1], head: [0.085, 0.1, 0.18], snout: [0.12, 0.06, 0.05], legR: [0.06, 0.04],
+      top: 0x7a6248, belly: 0xece6da, leg: 0x6a5440, muzzle: 0x5a4a3a, ear: [0.03, 0.07, 0.04], tail: [0.1, 0.05, 0.04, 0.4], tailC: 0xf2eee6, neckPat: function () { return [0.92, 0.9, 0.86]; },
+      extra: function (G, P, o) { [1, -1].forEach(function (sd) { antler(G, P, [0.04 * sd, o.hc[1] + o.hr[1] * 0.85, o.hc[2] - 0.04], sd, { L: 0.95, n: 4, t: 0.22, r: 0.022, col: 0xc8b48e }); }); } }); },
+    arcticfox: function () { return fox('arcticfox', 0xf4f3ef, 0xffffff, 0xe8e6e0, 0.85); },
+    redfox: function () { return fox('redfox', 0xc8642a, 0xf2ece2, 0x2a2420, 1); },
+    reddeer: function () { return quad({ id: 'reddeer', by: 1.02, r: [0.24, 0.3, 0.68], neck: [0.5, 0.95, 0.13, 0.1], head: [0.09, 0.1, 0.19], snout: [0.13, 0.06, 0.045], legR: [0.06, 0.03],
+      top: 0x8a4a2a, belly: 0xc8a888, leg: 0x6a3a22, muzzle: 0x5a3a28, mane: 0x6a3e26, ear: [0.035, 0.09, 0.05], tail: [0.1, 0.05, 0.03, 0.4], tailC: 0xe6d8c0,
+      extra: function (G, P, o) { [1, -1].forEach(function (sd) { antler(G, P, [0.045 * sd, o.hc[1] + o.hr[1] * 0.85, o.hc[2] - 0.05], sd, { L: 0.75, n: 4, t: 0.2, r: 0.025 }); }); } }); },
+    boar: function () { return quad({ id: 'boar', by: 0.5, r: [0.22, 0.27, 0.55], neck: [0.12, 0.1, 0.18, 0.16], head: [0.12, 0.14, 0.2], hp: 0.5, snout: [0.18, 0.07, 0.06], droop: 0.5, legR: [0.05, 0.03], nose: 0x4a3a34,
+      top: 0x3a2e26, belly: 0x4a3c32, leg: 0x2a221c, muzzle: 0x3a2e26, hoof: 0x141010, ear: [0.03, 0.06, 0.02], tail: [0.18, 0.02, 0.01, 0.9],
+      pat: function (c, nx, ny, nz, x, y, z) { return ny > 0.7 ? [0.2, 0.16, 0.13] : Math.sin(x * 50 + y * 41 + z * 37) > 0.6 ? [c[0] * 1.3, c[1] * 1.3, c[2] * 1.3] : c; },
+      extra: function (G, P, o) { [1, -1].forEach(function (sd) { P.tube(G, { a: [0.04 * sd, o.sb[1] + 0.02, o.sb[2] - 0.05], b: [0.06 * sd, o.sb[1] + 0.07, o.sb[2] - 0.04], ra: 0.012, rb: 0.004, sides: 4, col: P.hex(0xf0e8d8), bone: 2 }); }); } }); }
+  };
+  function fox(id, fur, belly, legC, k) { return quad({ id: id, by: 0.3 * k, r: [0.09 * k, 0.1 * k, 0.28 * k], neck: [0.1 * k, 0.6, 0.06 * k, 0.05 * k], head: [0.06 * k, 0.06 * k, 0.08 * k], snout: [0.08 * k, 0.03 * k, 0.015 * k], droop: 0.2,
+    legR: [0.025 * k, 0.012 * k], top: fur, belly: belly, leg: legC, muzzle: belly, hoof: legC, nose: 0x141212, ear: [0.03 * k, 0.065 * k, 0.015 * k], earC: fur, earIn: belly, tail: [0.4 * k, 0.07 * k, 0.045 * k, 0.4], tailC: fur,
+    extra: function (G, P, o) { P.ell(G, { c: o.tb, r: [0.05 * k, 0.05 * k, 0.07 * k], seg: 6, ring: 3, col: P.hex(0xf6f4f0), bone: 3 }); } }); }   /* the tail's white tip */
+  var NEWB = {
+    crane: function () { return birdOf({ id: 'crane', k: 0.78, span: 1.15, neck: 0.48, back: 0xf6f6f2, back2: 0xf6f6f2, belly: 0xffffff, under: 0xf0f0ec, head: 0x1a1a1a, bill: 0x8a8a6a, tail: 0x1a1a1a, prim: 0xf4f4f0, hook: 0.02, billL: 0.17, legs: 0.6, legC: 0x2a2a2a, crown: 0xd0201a }); },
+    flamingo: function () { return birdOf({ id: 'flamingo', k: 0.6, span: 0.8, neck: 0.5, back: 0xf08aa0, back2: 0xf28ea4, belly: 0xf3a3b5, under: 0xf06a88, head: 0xf3a3b5, bill: 0x1a1a1a, tail: 0xf08aa0, prim: 0x141414, hook: 0.1, billL: 0.12, billR: 0.035, legs: 0.62, legC: 0xe07a8e }); },
+    stork: function () { return birdOf({ id: 'stork', k: 0.82, span: 1.0, neck: 0.3, back: 0xf6f6f2, back2: 0x141414, belly: 0xffffff, under: 0xf0f0ec, head: 0xf6f6f2, bill: 0xd0302a, tail: 0xf6f6f2, prim: 0x141414, hook: 0.01, billL: 0.22, legs: 0.48, legC: 0xd0402a }); },
+    condor: function () { return birdOf({ id: 'condor', k: 1.15, span: 1.55, back: 0x141414, back2: 0xd8d8d0, belly: 0x141414, under: 0x1a1a1a, head: 0xb07a6a, bill: 0xe8dcc0, tail: 0x141414, prim: 0x0e0e0e, hook: 0.06, billL: 0.07, ruff: 0xf4f4f0 }); },
+    toucan: function () { return birdOf({ id: 'toucan', k: 0.36, span: 0.4, back: 0x111111, belly: 0x111111, head: 0x111111, bill: 0xf08a1a, tail: 0x111111, prim: 0x0a0a0a, hook: 0.05, billL: 0.48, billR: 0.07, throat: 0xf4f0e0 }); },
+    macaw: function () { return birdOf({ id: 'macaw', k: 0.42, span: 0.55, back: 0xd42020, back2: 0xf0c020, belly: 0xd42020, under: 0xd42020, head: 0xd42020, bill: 0xe8e0d0, tail: 0xd42020, prim: 0x1f5fd0, hook: 0.07, billL: 0.07, billR: 0.04, tailL: 0.75 }); }
+  };
+  function sealLike(id, o) { var hx = PR.hex, top = hx(o.top), mid = hx(o.mid), belly = hx(o.belly), dark = hx(0x2a2622), L = o.L, z0 = L * 0.365, k = L / 1.7;
+    return swimmer(id, { L: L, z0: z0, rings: 16, sides: 10,
+      prof: function (u) { var t; if (u < 0.15) { t = Math.sqrt(u / 0.15); return [(0.03 + 0.11 * t) * k, (0.03 + 0.11 * t) * k, 0.23 * k]; } if (u < 0.22) return [0.12 * k, 0.12 * k, 0.22 * k]; if (u < 0.62) { t = Math.sin((u - 0.22) / 0.4 * Math.PI / 2); return [(0.12 + 0.12 * t) * k, (0.12 + 0.11 * t) * k, 0.23 * k]; }
+        t = (u - 0.62) / 0.38; return [(0.24 * Math.pow(Math.max(0, 1 - t), 1.2) + 0.03) * k, (0.23 * Math.pow(Math.max(0, 1 - t), 1.2) + 0.03) * k, 0.23 * k]; },
+      col: function (u, up) { return up < -0.3 ? belly : up > 0.3 ? top : mid; },
+      extra: function (G, P) { [1, -1].forEach(function (sd) { var f = o.fore || 1; P.fin3(G, [[0.17 * sd * k, 0.08 * k, 0.2 * k], [0.33 * sd * k * f, 0.0, 0.08 * k], [0.3 * sd * k * f, 0.0, -0.02 * k * f], [0.17 * sd * k, 0.05 * k, 0.05 * k]], 0.025 * k, top, sd > 0 ? 3 : 4, [0, 1, 0], mid);
+        P.fin3(G, [[0.03 * sd * k, 0.2 * k, -1.04 * k], [0.17 * sd * k, 0.2 * k, -1.28 * k], [0.08 * sd * k, 0.2 * k, -1.3 * k], [0.02 * sd * k, 0.2 * k, -1.12 * k]], 0.02 * k, top, 0, [0, 1, 0], mid); P.eye(G, [0.09 * sd * k, 0.29 * k, 0.5 * k], 0.022 * k, 0, [0.6 * sd, 0, 0.8]);
+        if (o.ears) P.ell(G, { c: [0.08 * sd * k, 0.33 * k, 0.43 * k], r: [0.01 * k, 0.02 * k, 0.012 * k], seg: 4, ring: 2, col: top, bone: 0 });
+        if (o.tusks) P.tube(G, { a: [0.04 * sd * k, 0.16 * k, 0.6 * k], b: [0.05 * sd * k, -0.12 * k, 0.62 * k], ra: 0.018 * k, rb: 0.008 * k, sides: 4, col: hx(0xf2ead8), bone: 0 }); });
+        P.ell(G, { c: [0, 0.2 * k, 0.6 * k], r: [0.025 * k * (o.tusks ? 2.4 : 1), 0.02 * k * (o.tusks ? 2 : 1), 0.02 * k], seg: 5, ring: 3, col: o.tusks ? hx(0xb08a78) : dark, bone: 0 }); },
+      sw: { L: L, z0: z0, vert: false, amp: 0.06, kw: 3, f0: 0.25, f1: 0.2, vRef: 2, finX: 0.17 * k, finY: 0.06 * k, jawMax: 0 }, radius: 1.3 * k }); }
+  var NEWS = {
+    sealion: function () { return sealLike('sealion', { L: 2.1, top: 0x6b4a32, mid: 0x7a5a40, belly: 0x8a6a4a, fore: 1.5, ears: true }); },
+    walrus: function () { return sealLike('walrus', { L: 3.0, top: 0x9a6a58, mid: 0xa87a66, belly: 0x8a5e4e, fore: 1.2, tusks: true }); },
+    orca: function () { var hx = PR.hex, blk = hx(0x101114), wht = hx(0xf2f2f0), sad = hx(0x8a8c90);   /* 7 m: black, the white belly and the white patch behind each eye, the grey saddle, the tall dorsal */
+      return swimmer('orca', { L: 7, z0: 2.4, rings: 22, sides: 12,
+        prof: function (u) { var t, e; if (u < 0.1) { t = Math.sqrt(u / 0.1); return [0.15 + 0.4 * t, 0.15 + 0.4 * t, 0]; } if (u < 0.42) { e = Math.sin((u - 0.1) / 0.32 * Math.PI / 2); return [0.55 + 0.25 * e, 0.55 + 0.3 * e, 0.02]; }
+          t = (u - 0.42) / 0.58; return [0.8 * Math.pow(Math.max(0, 1 - t), 1.2) + 0.06, 0.85 * Math.pow(Math.max(0, 1 - t), 1.0) + 0.08, 0.02]; },
+        col: function (u, up, side) { if (up < -0.35 && u < 0.6) return wht; if (u > 0.1 && u < 0.2 && up > 0.05 && up < 0.6) return wht; if (u > 0.36 && u < 0.48 && up > 0.75) return sad; return blk; } ,
+        extra: function (G, P) { P.fin3(G, [[0, 0.8, 0.0], [0, 2.4, -0.25], [0, 0.85, -0.7]], 0.08, blk, 0, [1, 0, 0]);
+          [1, -1].forEach(function (sd) { P.fin3(G, [[0.55 * sd, -0.45, 1.5], [1.4 * sd, -0.8, 1.1], [1.3 * sd, -0.85, 0.8], [0.55 * sd, -0.5, 1.0]], 0.06, blk, sd > 0 ? 3 : 4, [0, 1, 0]);
+            P.fin3(G, [[0, 0.1, -4.2], [0.4 * sd, 0.1, -4.4], [1.1 * sd, 0.1, -4.9], [1.0 * sd, 0.1, -5.05], [0.3 * sd, 0.1, -4.75], [0, 0.1, -4.7]], 0.06, blk, 0, [0, 1, 0], wht); P.eye(G, [0.5 * sd, 0.05, 1.75], 0.04, 0, [0.6 * sd, 0, 0.8]); }); },
+        sw: { L: 7, z0: 2.4, vert: true, amp: 0.06, kw: 3.8, f0: 0.25, f1: 0.1, vRef: 5, finX: 0.55, finY: -0.45, jawMax: 0 }, radius: 4.5 }); },
+    manta: function () { var hx = PR.hex, blk = hx(0x1e2228), wht = hx(0xeef0f0);   /* a giant manta, 4 m across (APPROXIMATE in low poly): a flat body, wide wing fins that beat, the two head fins, the thin tail */
+      return swimmer('manta', { L: 1.6, z0: 0.8, rings: 10, sides: 10,
+        prof: function (u) { var e = Math.sin(Math.PI * Math.min(1, u * 1.05 + 0.05)); return [0.45 * e + 0.05, 0.12 * e + 0.02, 0]; },
+        col: function (u, up) { return up < 0 ? wht : blk; },
+        extra: function (G, P) { [1, -1].forEach(function (sd) { P.fin3(G, [[0.35 * sd, 0, 0.55], [2.0 * sd, 0.05, -0.15], [1.85 * sd, 0.04, -0.35], [0.35 * sd, 0, -0.55]], 0.05, blk, sd > 0 ? 3 : 4, [0, 1, 0], wht);
+            P.fin3(G, [[0.18 * sd, 0, 0.78], [0.24 * sd, -0.02, 1.08], [0.12 * sd, -0.02, 1.0]], 0.03, blk, 0, [sd, 0, 0]); });
+          P.tube(G, { a: [0, 0, -0.8], b: [0, 0, -2.2], ra: 0.04, rb: 0.01, sides: 4, col: blk, bone: 0 }); },
+        sw: { L: 1.6, z0: 0.8, vert: true, amp: 0.03, kw: 2, f0: 0.3, f1: 0.1, vRef: 2, finX: 0.35, finY: 0, jawMax: 0 }, radius: 2.2 }); }
+  };
+  Object.assign(Q, NEWQ); Object.assign(B, NEWB); Object.assign(S3, NEWS);
+
   /* ---------- 3. one program for every world animal: the kit's Lambert, instanced, the sea's tint under its water line ---------- */
   function OBC(shader) {   // ONE function for every world animal material (r128 keys the program by this text): uWA714 marks it for the bench
     var u = this.userData.uWA714; shader.uniforms.uWA714Col = u.col;
@@ -277,7 +442,7 @@ window.WFR_WORLDANIMALS = (function () {
   function poseKind(R, dt) {   // the kit's pose, into the same arrays (moving: walk / flap / cruise; resting: idle / glide / slow)
     var d = K[R.k];
     for (var v = 0; v < 2; v++) { var P = R.v[v], a = P.a, m = P.m; if (!R.n[v]) continue;
-      if (d.realm === 'land' || d.make === 'penguin') { a.v = v === 0 ? d.v : 0; a.mv = 0; a.state = v === 0 ? 'approach' : 'idle'; a.k += (v === 0 ? d.v * dt * TAU / (d.stride || 1) / 10 : 0); a.swim = false; }
+      if (d.realm === 'land' || d.realm === 'wade' || d.make === 'penguin') { a.v = v === 0 ? d.v : 0; a.mv = v === 0 && d.bound ? 1 : 0; a.state = v === 0 ? 'approach' : 'idle'; a.k += (v === 0 ? d.v * dt * TAU / (d.stride || 1) / 10 : 0); a.swim = false; }
       else if (d.realm === 'air') { a.mv = v === 0 ? 1 : 0; a.state = v === 0 ? 'flee' : 'idle'; a.fold = 0; }
       else { a.v = v === 0 ? d.v : d.v * 1.7; a.state = 'idle'; a.air = false; a.swim = true; }
       if (d.make === 'penguin') posePenguin(m, a, dt); else KIT.pose(m, a, dt);
@@ -315,7 +480,7 @@ window.WFR_WORLDANIMALS = (function () {
   }
   function inRing(R, lon, lat) { var c = false; for (var i = 0, j = R.length - 2; i < R.length; j = i, i += 2) { var xi = R[i], yi = R[i + 1], xj = R[j], yj = R[j + 1]; if ((yi > lat) !== (yj > lat) && lon < (xj - xi) * (lat - yi) / (yj - yi || 1e-12) + xi) c = !c; } return c; }
   function featAt(lat, lon) {   // 'water' | 'town' | 'ice' | null (water first)
-    var best = null; st.feat.forEach(function (L) { for (var i = 0; i < L.length; i++) { var p = L[i]; if (best === 'water') return; if (lon < p.b[0] || lon > p.b[1] || lat < p.b[2] || lat > p.b[3]) continue;
+    var best = null; [14, 12, 9].forEach(function (z) { var t = WFR_WORLD.tileAt(lat, lon, z), L = st.feat.get(t.z + '/' + t.x + '/' + t.y); if (!L) return; for (var i = 0; i < L.length; i++) { var p = L[i]; if (best === 'water') return; if (lon < p.b[0] || lon > p.b[1] || lat < p.b[2] || lat > p.b[3]) continue;
       if (!inRing(p.rings[0], lon, lat)) continue; var hole = false; for (var h = 1; h < p.rings.length; h++) if (inRing(p.rings[h], lon, lat)) { hole = true; break; } if (!hole && (best == null || p.c === 'water')) best = p.c; } }); return best;
   }
 
@@ -331,6 +496,7 @@ window.WFR_WORLDANIMALS = (function () {
     if (lat > 66) return 'tundra';
     if (im && lum > 0.78 && mx - mn < 0.1) return 'ice';
     var green = col ? col.g - (col.r + col.b) / 2 : 0;
+    if (h > 3200 && Math.abs(lat) < 45) return 'alpine';   // the Himalaya and Tibet, the Andes
     if (Math.abs(lat) >= 50) return inBox(lat, lon, RG.europe) && lat < 60 ? 'temperate' : 'boreal';
     if (DESERTS.some(function (Bx) { return inBox(lat, lon, Bx); }) && !(im && green > 0.04)) return 'desert';
     if (inBox(lat, lon, RG.caribbean)) return 'caribbean';
@@ -339,28 +505,42 @@ window.WFR_WORLDANIMALS = (function () {
     return 'temperate';
   }
   /* each biome's animals: [kind, weight, [fewest, most]] (land herds, sea pods and schools, air flocks). DRAFT, from each region's real fauna */
-  function roster(b, lat, lon) {
-    var am = americas(lat, lon), bear = am ? 'blackbear' : 'brownbear', R = { land: [], sea: [], air: [] };
+  function roster(b, lat, lon) {   /* each region's own animals by biome: [kind, weight, [fewest, most]] (land herds, sea pods and schools, air flocks). DRAFT, from each region's real fauna */
+    var rg = regionOf(lat, lon), am = rg === 'americas', alat = Math.abs(lat), R = { land: [], sea: [], air: [] }, pac = PACIFIC.some(function (Bx) { return inBox(lat, lon, Bx); }), pin = pac ? 'sealion' : 'seal';
     switch (b) {
-      case 'savanna': R.land = [['zebra', 4, [6, 14]], ['giraffe', 2, [3, 6]], ['elephant', 2, [4, 9]]]; R.air = [['egret', 1, [6, 12]]]; break;
-      case 'rainforest': R.land = [['elephant', 1, [3, 6]]]; break;
-      case 'desert': if (!am) R.land = [['camel', 1, [3, 8]]]; break;
+      case 'savanna': R.land = [['zebra', 4, [6, 14]], ['giraffe', 2, [3, 6]], ['elephant', 2, [4, 9]], ['lion', 2, [3, 8]], ['ostrich', 1, [2, 6]]]; R.air = [['egret', 1, [6, 12]]]; break;
+      case 'rainforest': R.land = inBox(lat, lon, RG.congo) ? [['gorilla', 2, [3, 8]], ['elephant', 1, [3, 6]]] : [['elephant', 1, [3, 6]]]; break;
+      case 'lake': if (rg === 'africa') { R.land = [['hippo', 1, [4, 12]]]; R.air = [['flamingo', 2, [14, 40]]]; } else if (rg === 'asia' && inBox(lat, lon, RG.crane)) R.air = [['crane', 1, [4, 10]]]; break;
+      case 'desert': if (rg === 'africa') R.land = [['camel', 2, [3, 8]], ['ostrich', 1, [2, 5]]]; else if (rg === 'asia') R.land = [['camel', 1, [3, 8]]]; else if (rg === 'australia') R.land = [['kangaroo', 3, [4, 12]], ['emu', 2, [2, 6]], ['camel', 1, [2, 6]]]; break;
       case 'caribbean': R.land = [['goat', 3, [3, 7]], ['iguana', 2, [2, 5]], ['mongoose', 2, [1, 3]]]; R.air = [['egret', 1, [4, 9]]]; break;
-      case 'tropical': R.land = [['deer', 1, [2, 5]]]; R.air = [['egret', 1, [4, 8]]]; break;
-      case 'temperate': R.land = [['deer', 4, [3, 8]], [bear, 1, [1, 2]]]; break;
-      case 'boreal': R.land = [['elk', 3, [4, 10]], ['moose', 2, [1, 3]], [bear, 1, [1, 2]]]; break;
+      case 'alpine': if (rg === 'asia') R.land = [['yak', 3, [4, 12]], ['snowleopard', 1, [1, 2]]]; else if (am && inBox(lat, lon, RG.andes)) { R.land = [['llama', 1, [4, 10]]]; R.air = [['condor', 1, [1, 3]]]; } break;
+      case 'tropical':
+        if (rg === 'australia') R.land = [['kangaroo', 3, [4, 12]], ['emu', 2, [2, 6]], ['saltcroc', 1, [1, 3]]];
+        else if (rg === 'asia') R.land = [['indianelephant', 2, [3, 8]], ['tiger', 1, [1, 2]]];
+        else if (rg === 'africa') R.land = [['elephant', 1, [3, 6]], ['lion', 1, [2, 5]]];
+        else if (am) { if (inBox(lat, lon, RG.amazon)) { R.land = [['jaguar', 1, [1, 2]]]; R.air = [['macaw', 2, [3, 8]], ['toucan', 2, [2, 6]]]; } else if (inBox(lat, lon, RG.florida)) { R.land = [['alligator', 2, [1, 4]], ['deer', 2, [2, 5]]]; R.air = [['egret', 1, [4, 8]]]; } else { R.land = [['deer', 1, [2, 5]]]; R.air = [['egret', 1, [4, 8]]]; } }
+        break;
+      case 'temperate':
+        if (rg === 'australia') R.land = [['kangaroo', 4, [5, 14]], ['emu', 2, [2, 6]]].concat(lon > 140 ? [['koala', 2, [1, 3]]] : []);
+        else if (rg === 'asia') { if (inBox(lat, lon, RG.sichuan)) R.land = [['panda', 3, [2, 4]], ['macaque', 1, [4, 10]]]; else if (inBox(lat, lon, RG.india)) R.land = [['indianelephant', 2, [3, 8]], ['tiger', 1, [1, 2]]]; else if (inBox(lat, lon, RG.japan)) R.land = [['macaque', 3, [5, 14]], ['brownbear', 1, [1, 2]]]; else R.land = [['brownbear', 1, [1, 2]], ['macaque', 1, [3, 8]]]; if (inBox(lat, lon, RG.crane)) R.air = [['crane', 1, [4, 10]]]; }
+        else if (rg === 'europe') { R.land = [['reddeer', 4, [4, 10]], ['boar', 3, [3, 8]], ['redfox', 2, [1, 2]], ['brownbear', 1, [1, 2]]]; R.air = [['stork', 1, [3, 8]]]; }
+        else if (am) R.land = inBox(lat, lon, RG.plains) ? [['bison', 5, [8, 24]], ['deer', 1, [2, 6]]] : inBox(lat, lon, RG.florida) ? [['alligator', 2, [1, 4]], ['deer', 2, [2, 5]]] : [['deer', 4, [3, 8]], ['blackbear', 1, [1, 2]]];
+        else if (rg === 'africa') R.land = [['ostrich', 1, [2, 5]]];
+        if (pac) R.land = R.land.concat([['sealion', 1, [3, 10]]]);
+        break;
+      case 'boreal': R.land = am ? [['elk', 3, [4, 10]], ['moose', 2, [1, 3]], ['blackbear', 1, [1, 2]]] : rg === 'europe' ? [['moose', 3, [1, 3]], ['reddeer', 2, [3, 8]], ['brownbear', 1, [1, 2]]] : [['moose', 3, [1, 3]], ['brownbear', 1, [1, 2]]]; break;
       case 'antarctic': R.land = [['penguin', 4, [14, 36]], ['seal', 2, [2, 6]]]; break;
-      case 'tundra': R.land = [['seal', 1, [2, 5]]]; break;
-      case 'reef': R.sea = [['turtle', 2, [1, 3]], ['reeffish', 3, [12, 24]], ['dolphin', 2, [4, 9]], ['shark', 1, [1, 2]]]; break;
-      case 'shelf': R.sea = [['dolphin', 3, [4, 10]], ['whale', 1, [1, 2]]].concat(Math.abs(lat) < 35 ? [['turtle', 1, [1, 2]]] : []).concat(Math.abs(lat) < 45 ? [['shark', 1, [1, 2]]] : []); break;
-      case 'ocean': R.sea = (Math.abs(lat) < 50 ? [['dolphin', 2, [5, 12]]] : []).concat([['whale', 2, [1, 3]]]).concat(Math.abs(lat) < 45 ? [['shark', 1, [1, 2]]] : []); break;
-      case 'southsea': R.sea = [['seal', 2, [2, 6]], ['penguin', 3, [8, 18]], ['whale', 1, [1, 2]]]; break;
-      case 'northsea': R.sea = [['seal', 2, [2, 6]], ['whale', 1, [1, 2]]]; break;
+      case 'tundra': R.land = [['caribou', 4, [6, 20]], ['arcticfox', 2, [1, 2]], ['polarbear', 1, [1, 2]], ['walrus', 1, [4, 12]], ['seal', 1, [2, 5]]]; break;
+      case 'reef': R.sea = [['turtle', 2, [1, 3]], ['reeffish', 3, [12, 24]], ['dolphin', 2, [4, 9]], ['shark', 1, [1, 2]], ['manta', 1, [1, 3]]]; break;
+      case 'shelf': R.sea = [['dolphin', 3, [4, 10]], ['whale', 1, [1, 2]]].concat(alat < 35 ? [['turtle', 1, [1, 2]]] : []).concat(alat < 45 ? [['shark', 1, [1, 2]]] : []).concat(alat > 40 ? [['orca', 1, [3, 7]]] : []).concat(alat < 30 ? [['manta', 1, [1, 2]]] : []).concat(pac ? [['sealion', 1, [2, 6]]] : []); break;
+      case 'ocean': R.sea = (alat < 50 ? [['dolphin', 2, [5, 12]]] : []).concat([['whale', 2, [1, 3]]]).concat(alat < 45 ? [['shark', 1, [1, 2]]] : []).concat(alat > 40 ? [['orca', 2, [3, 7]]] : []).concat(alat < 30 ? [['manta', 1, [1, 2]]] : []); break;
+      case 'southsea': R.sea = [[pin, 2, [2, 6]], ['penguin', 3, [8, 18]], ['whale', 1, [1, 2]], ['orca', 1, [3, 7]]]; break;
+      case 'northsea': R.sea = [['seal', 2, [2, 6]], ['walrus', 1, [3, 8]], ['whale', 1, [1, 2]], ['orca', 1, [3, 7]]]; break;
       case 'tahoelake': R.sea = [['trout', 1, [6, 12]]]; R.air = [['eagle', 1, [1, 3]]]; break;
     }
     return R;
   }
-  function coastAir(lat, lon) { var L = []; if (Math.abs(lat) < 62) L.push(['gull', 3, [5, 12]]); if (americas(lat, lon) && Math.abs(lat) < 40) L.push(['pelican', 2, [3, 7]]); return L; }
+  function coastAir(lat, lon) { var L = [], rg = regionOf(lat, lon); if (Math.abs(lat) < 62) L.push(['gull', 3, [5, 12]]); if ((rg === 'americas' && Math.abs(lat) < 40) || rg === 'australia') L.push(['pelican', 2, [3, 7]]); return L; }
 
   /* ---------- 6. CELLS: classified once the ground is final, then filled from the cell's own seed ---------- */
   function lonStep(iLat) { var la = (iLat + 0.5) * C.CELL; return C.CELL / Math.max(0.1, Math.cos(la * D2R)); }
@@ -371,6 +551,7 @@ window.WFR_WORLDANIMALS = (function () {
     realm = realm || d.realm;
     if (realm === 'sea') return h <= 0.01 && raw <= -d.depth;
     if (realm === 'lake') return inBox(lat, lon, RG.tahoe) && Math.abs(raw - C.TAHOE_LV) < 0.6 && Math.abs(h - C.TAHOE_LV) < 0.6 && Math.abs(rawAt(x + 12, z) - C.TAHOE_LV) < 0.6 && Math.abs(rawAt(x, z + 12) - C.TAHOE_LV) < 0.6;
+    if (realm === 'wade') { if (h < C.LAND_MIN || raw < C.LAND_MIN) return false; var fw = featAt(lat, lon), cw = colAt(x, z); return fw === 'water' || !!(cw && cw.img && cw.b > cw.r * 1.12 && cw.b > cw.g * 1.02 && (cw.r + cw.g + cw.b) / 3 < 0.4); }   // a lake's surface (the colour biomeAt calls a lake)
     if (realm === 'land') { if (h < C.LAND_MIN || raw < C.LAND_MIN) return false; if (inBox(lat, lon, RG.tahoe) && Math.abs(raw - C.TAHOE_LV) < 1.0) return false;
       var sx = H(x + 4, z) - H(x - 4, z), sz = H(x, z + 4) - H(x, z - 4); if (Math.hypot(sx, sz) / 8 > C.SLOPE) return false; var f = featAt(lat, lon); return f !== 'water' && f !== 'town' && !(f === 'ice' && k !== 'penguin' && k !== 'seal'); }
     return true;
@@ -396,8 +577,9 @@ window.WFR_WORLDANIMALS = (function () {
     var pickK = function (L) { var tot = 0; L.forEach(function (e) { tot += e[1]; }); var u = r() * tot; for (var q = 0; q < L.length; q++) { u -= L[q][1]; if (u <= 0) return L[q]; } return L[L.length - 1]; };
     var spots = function (b) { var L = smp.filter(function (q) { return q.b === b; }); for (var q = L.length - 1; q > 0; q--) { var w = Math.floor(r() * (q + 1)); var t = L[q]; L[q] = L[w]; L[w] = t; } return L; };
     /* land: up to two herds of the cell's main land biome (penguins and seals only on a coast) */
-    if (lb) { var RL = roster(lb, smp[0].lat, smp[0].lon).land, sp = spots(lb);
-      for (var g = 0; g < 2; g++) { var u0 = r(), e = pickK(RL), q0 = sp[g % Math.max(1, sp.length)]; if (!q0 || u0 > (g ? 0.4 : (tahoe ? 1 : 0.8))) continue; if (K[e[0]].coast && !anySea && !nearSea(q0.x, q0.z)) continue; herd(G, e, q0, r, f, cell); } }
+    var lb2 = null; Object.keys(landN).sort().forEach(function (k) { if (k !== lb && (!lb2 || landN[k] > landN[lb2])) lb2 = k; });
+    if (lb) { var RL = roster(lb, smp[0].lat, smp[0].lon).land, sp = spots(lb), RL2 = lb2 ? roster(lb2, smp[0].lat, smp[0].lon).land : null, sp2 = lb2 ? spots(lb2) : null;
+      for (var g = 0; g < 2; g++) { var two = g === 1 && RL2 && RL2.length, u0 = r(), e = pickK(two ? RL2 : RL), q0 = two ? sp2[0] : sp[g % Math.max(1, sp.length)]; if (!q0 || u0 > (g ? (two ? 0.6 : 0.4) : (tahoe ? 1 : 0.8))) continue; if (K[e[0]].coast && !anySea && !nearSea(q0.x, q0.z)) continue; herd(G, e, q0, r, f, cell); } }
     /* sea: a pod, a school, a turtle or two */
     if (sb) { var RS = roster(sb, smp[0].lat, smp[0].lon).sea, ss = spots(sb);
       for (var g2 = 0; g2 < 2; g2++) { var u1 = r(), e2 = pickK(RS), q1 = ss[g2 % Math.max(1, ss.length)]; if (!q1 || u1 > (g2 ? 0.45 : (tahoe ? 1 : 0.8))) continue; pod(G, e2, q1, r, f, cell); } }
@@ -409,10 +591,10 @@ window.WFR_WORLDANIMALS = (function () {
   }
   function member(gr, k, x, z, f, r, R) { var ll = WFR_WORLD.toLatLon(f, x, z); return { k: k, g: gr, lat: ll.lat, lon: ll.lon, R: R, ph: r(), th: r() * TAU, dir: r() < 0.5 ? -1 : 1, s: 0.9 + r() * 0.2, fx: 0, fz: 0, ex: 0, ez: 0, yaw: r() * TAU, wx: 0, wy: 0, wz: 0, v: 0, id: gr.id + ':' + gr.m.length }; }
   function herd(G, e, q, r, f, cell) {
-    var k = e[0], d = K[k], n = e[2][0] + Math.floor(r() * (e[2][1] - e[2][0] + 1)), gr = { k: k, kind: 'herd', realm: 'land', id: cell.key + ':' + G.length, m: [] }, rad = (d.spread || 6) * Math.sqrt(n) * 0.7;
+    var k = e[0], d = K[k], n = e[2][0] + Math.floor(r() * (e[2][1] - e[2][0] + 1)), gr = { k: k, kind: 'herd', realm: d.realm === 'wade' ? 'wade' : 'land', id: cell.key + ':' + G.length, m: [] }, rad = (d.spread || 6) * Math.sqrt(n) * 0.7;
     var cx = q.x + (r() - 0.5) * 120, cz = q.z + (r() - 0.5) * 120;
     for (var i = 0; i < n; i++) { var a = r() * TAU, dd = Math.sqrt(r()) * rad, x = cx + Math.cos(a) * dd, z = cz + Math.sin(a) * dd, R = 2 + r() * (d.spread || 6), ll = WFR_WORLD.toLatLon(f, x, z);
-      if (!valid(k, x, z, ll.lat, ll.lon, 'land')) continue; var ok = true; for (var p = 0; p < 6 && R > 0; p++) { var t = p / 6 * TAU, px = x + Math.cos(t) * R, pz = z + Math.sin(t) * R, l2 = WFR_WORLD.toLatLon(f, px, pz); if (!valid(k, px, pz, l2.lat, l2.lon, 'land')) { ok = false; break; } }
+      if (!valid(k, x, z, ll.lat, ll.lon, gr.realm)) continue; var ok = true; for (var p = 0; p < 6 && R > 0; p++) { var t = p / 6 * TAU, px = x + Math.cos(t) * R, pz = z + Math.sin(t) * R, l2 = WFR_WORLD.toLatLon(f, px, pz); if (!valid(k, px, pz, l2.lat, l2.lon, gr.realm)) { ok = false; break; } }
       gr.m.push(member(gr, k, x, z, f, r, ok ? R : 0)); }
     if (gr.m.length) G.push(gr);
   }
@@ -442,11 +624,12 @@ window.WFR_WORLDANIMALS = (function () {
     return out.sort(function (a, b) { return a.d - b.d; });
   }
   function cellsTick(dt) {
-    var her = herNow(), f = X.TR.f, near = cellsNear(her), keep = new Set(), pops = 0;
+    var her = herNow(), f = X.TR.f, near = cellsNear(her), keep = new Set(), pops = 0, t0 = performance.now();
     for (var n = 0; n < near.length; n++) { var c = near[n], key = cellKey(c.i, c.j); keep.add(key); var cell = st.cells.get(key);
       if (!cell) { cell = { key: key, lat0: c.b.lat0, lat1: c.b.lat1, lon0: c.b.lon0, lon1: c.b.lon1, groups: null, wait: 0, seen: st.t }; st.cells.set(key, cell); }
       cell.seen = st.t; cell.d = c.d;
-      if (!cell.groups && pops < C.POP && c.d < C.R_SPAWN + 1600) { var smp = sampleCell(cell, f); if (!smp) { st.waits++; continue; }
+      if (!cell.groups && pops < C.POP && performance.now() - t0 < C.POP_MS && c.d < C.R_SPAWN + 1600) {   // one cell a frame, and only while the frame has room (C1: no hitch as she flies)
+        var smp = sampleCell(cell, f); if (!smp) { st.waits++; continue; }
         if (smp.img < smp.length && cell.wait < C.IMG_WAIT && window.WFR_IMAGERY && WFR_IMAGERY.enabled && WFR_IMAGERY.enabled()) { cell.wait += dt; continue; }   // a moment for the real colour to arrive (never forever)
         populate(cell, smp, f); pops++; st.pops++; if (smp.img === smp.length) st.img++; else st.tint++; } }
     st.act = []; st.cells.forEach(function (cell) { if (cell.groups && keep.has(cell.key) && cell.d < C.R_DROP) st.act.push(cell); });
@@ -472,7 +655,7 @@ window.WFR_WORLDANIMALS = (function () {
   var HO = { x: 0, z: 0 };
   function react(m, d, gr, f, her, dt, mo) {   // the four temperaments, light: passive flee, curious come to look (dolphins escort), sometimes face her, malicious circle under her
     homeOf(gr, m, f, HO); var bx = HO.x + mo.ox, bz = HO.z + mo.oz, x = bx + m.fx + m.ex, z = bz + m.fz + m.ez, dx = x - her.x, dz = z - her.z, dh = Math.hypot(dx, dz), tp = temper(m.k);
-    var groundY = gr.realm === 'air' ? gr.y : gr.realm === 'land' ? m.wy : gr.realm === 'lake' ? C.TAHOE_LV : 0, low = her.y - groundY < (gr.realm === 'air' ? 12 : C.FLEE_Y) && her.y - groundY > -12, act = null;
+    var groundY = gr.realm === 'air' ? gr.y : gr.realm === 'land' || gr.realm === 'wade' ? m.wy : gr.realm === 'lake' ? C.TAHOE_LV : 0, low = her.y - groundY < (gr.realm === 'air' ? 12 : C.FLEE_Y) && her.y - groundY > -12, act = null;
     if (tp === 0 && dh < C.FLEE_R && low) {   // PASSIVE: away from her, at its run (checked for footing / water each step)
       var vx = dx / (dh || 1) * C.RUN * dt * (gr.realm === 'air' ? 3 : gr.realm === 'land' ? 1 : 1.5), vz = dz / (dh || 1) * C.RUN * dt * (gr.realm === 'air' ? 3 : gr.realm === 'land' ? 1 : 1.5), nx = m.fx + vx, nz = m.fz + vz;
       if (Math.hypot(nx, nz) < C.FLEE_MAX && (gr.realm === 'air' || (function () { var ll = WFR_WORLD.toLatLon(f, bx + nx + m.ex, bz + nz + m.ez); return valid(m.k, bx + nx + m.ex, bz + nz + m.ez, ll.lat, ll.lon, gr.realm); })())) { m.fx = nx; m.fz = nz; }
@@ -486,7 +669,7 @@ window.WFR_WORLDANIMALS = (function () {
       var a2 = st.t * 0.6 + (m.i || 0) * 2, tx2 = her.x + Math.cos(a2) * 7, tz2 = her.z + Math.sin(a2) * 7, gx = tx2 - bx - m.fx - m.ex, gz = tz2 - bz - m.fz - m.ez, gl = Math.hypot(gx, gz), s2 = Math.min(gl, 6 * dt);
       if (gl > 0.01 && Math.hypot(m.ex + gx / gl * s2, m.ez + gz / gl * s2) < C.ESC_MAX) { var qx = bx + m.fx + m.ex + gx / gl * s2, qz = bz + m.fz + m.ez + gz / gl * s2, l4 = WFR_WORLD.toLatLon(f, qx, qz); if (valid(m.k, qx, qz, l4.lat, l4.lon, 'sea')) { m.ex += gx / gl * s2; m.ez += gz / gl * s2; } }
       act = 'circle'; m.yaw2 = Math.atan2(gx, gz); st.circles++;
-    } else if ((tp === 1 || tp === 2) && gr.realm === 'land' && dh < C.NOTICE && low) { act = 'face'; m.yaw2 = Math.atan2(her.x - x, her.z - z); st.faces++; }   // CURIOUS / SOMETIMES on land: it turns to look at her
+    } else if ((tp === 1 || tp === 2) && (gr.realm === 'land' || gr.realm === 'wade') && dh < C.NOTICE && low) { act = 'face'; m.yaw2 = Math.atan2(her.x - x, her.z - z); st.faces++; }   // CURIOUS / SOMETIMES on land: it turns to look at her
     if (act !== 'flee') { var fl = Math.hypot(m.fx, m.fz); if (fl > 0) { var k2 = Math.max(0, fl - 1.2 * dt) / fl; m.fx *= k2; m.fz *= k2; } }
     if (act !== 'escort' && act !== 'circle') { var el = Math.hypot(m.ex, m.ez); if (el > 0) { var k3 = Math.max(0, el - 2.5 * dt) / el; m.ex *= k3; m.ez *= k3; } }
     m.act = act;
@@ -500,7 +683,7 @@ window.WFR_WORLDANIMALS = (function () {
       if (on) for (var c = 0; c < st.act.length; c++) { var G = st.act[c].groups; for (var g = 0; g < G.length; g++) { var gr = G[g], d = K[gr.k], R2 = st.kinds[gr.k]; if (!R2 || !R2.ok) continue;
         for (var i = 0; i < gr.m.length; i++) { var m = gr.m[i]; motion(m, d, gr, st.t, MO); homeOf(gr, m, f, HO); var x = HO.x + MO.ox + m.fx + m.ex, z = HO.z + MO.oz + m.fz + m.ez, y, wat = -1e4, pitch = MO.pitch, roll = MO.roll, yaw = m.act ? m.yaw2 : MO.yaw, mv = MO.mv || !!m.act;
           var dd = Math.hypot(x - S.pos.x, z - S.pos.z); if (dd > C.R_DROP) continue;   // despawned past 2.4 km (its cell keeps it for her return)
-          if (gr.realm === 'land') { y = H(x, z); if (m.act === 'face') mv = false; }
+          if (gr.realm === 'land' || gr.realm === 'wade') { y = H(x, z) - (gr.realm === 'wade' ? d.sink || 0 : 0); if (m.act === 'face') mv = false; }
           else if (gr.realm === 'air') y = gr.y + MO.y;
           else if (gr.realm === 'lake') { y = C.TAHOE_LV + d.y + m.dy; wat = C.TAHOE_LV; }
           else { y = MO.y; wat = 0; if (d.make === 'penguin') pitch += Math.PI / 2 * 0.92; }
