@@ -719,6 +719,7 @@ window.WFR_HUTS = (function () {
         if (typeof A.pose === 'function') A.pose(k.slice(1), b, false, 0.2); var cnt = b.count; m = { pos: new Float32Array(b.pos.subarray(0, cnt * 3)), nrm: new Float32Array(b.nrm.subarray(0, cnt * 3)), col: new Float32Array(b.color.subarray(0, cnt * 3)), count: cnt }; }
       else { var sp = k.split(':'); m = build(sp[0], +sp[1]); }
       R0.im = meshOf(THREE, m.pos, m.nrm, m.col, 'huts:' + k); R0.tris = m.count / 3; st.root.add(R0.im); R0.ok = true; st.built.push(k);
+      if (window.WFR_SURF732 && k.charAt(0) !== '@') WFR_SURF732.ao(m, R0.im.geometry.attributes.color);   // 732 step 4 (world-surfaces732.js): ambient occlusion baked into the dwelling's vertex colours, once per kind, time-sliced
     } catch (e) { R0.err = String(e && e.message || e); if (k.charAt(0) === '@') st.stockFault = k + ': ' + R0.err; else st.fault = 'build ' + k + ': ' + R0.err; }
     return R0;
   }

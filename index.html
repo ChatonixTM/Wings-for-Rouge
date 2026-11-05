@@ -61,6 +61,11 @@
   l.onload = function () { var F = document.fonts; if (!F || !F.load) { done('none'); return; } Promise.all(['700 16px Cinzel', '800 16px Cinzel', '700 16px Alegreya', 'italic 700 16px Alegreya'].map(function (q) { return F.load(q); })).then(function () { done('fonts'); }, function () { done('error'); }); };
   document.head.appendChild(l); })();
 </script>
+<script>/* 726 THE UI, KINGDOM HEARTS / FINAL FANTASY STYLE (board 726; Marth, Nov 4: "it’s too.. bold"). A layer on 716: Standard only;
+   localStorage wfr.ui726 = 'old' brings back 716's Relic look exactly. */
+(function () { var H = document.documentElement, on = H.classList.contains('ui716'); try { if (localStorage.getItem('wfr.ui726') === 'old') on = false; } catch (e) { /* private mode: on */ }
+  window.U726 = { on: on }; if (on) H.classList.add('ui726'); })();
+</script>
 <style>
 /* A one-screen flight game: the island fills the glass, the UI floats over it in soft cards.
    One committed look (a bright afternoon sky), so a single palette, set explicitly. */
@@ -806,6 +811,180 @@ html.ui716 #pzQuit{border-radius:0;background:var(--u-plate-e)!important;font-fa
   html.ui716 body:has(#care:not([hidden]):not(.tucked)) .compass{visibility:hidden}   /* on its side the open chick card covers the top middle: the radar steps away while it is open, as Night does */
 }
 </style>
+<style id="ui726">
+/* 726 THE UI, KINGDOM HEARTS / FINAL FANTASY STYLE (Marth, Nov 4: "it’s too.. bold"; his pick "Like KH / FF menus"). A layer on 716: every rule
+   starts html.ui716.ui726, so Classic and wfr.ui726='old' match none. Thin light rims, dark glass, one clean face, smaller HUD. */
+html.ui716.ui726{--k-sans:-apple-system,BlinkMacSystemFont,'SF Pro Text','Segoe UI',Roboto,'Helvetica Neue',Arial,sans-serif;--u-rd:var(--k-sans);--u-rb:var(--k-sans);
+  --k-ink:#f4f7ff;--k-dim:#c3cfee;--k-sky:#9fd0ff;--k-line:rgba(236,242,255,.88);--k-line2:rgba(236,242,255,.26);
+  --k-glass:radial-gradient(circle at 50% 30%,rgba(64,92,178,.80),rgba(10,18,56,.9) 74%);
+  --k-win:linear-gradient(180deg,rgba(46,70,164,.94) 0%,rgba(24,38,112,.94) 52%,rgba(12,20,68,.95) 100%);
+  --k-win-shadow:0 0 0 1px rgba(4,8,30,.5),0 10px 26px rgba(0,4,24,.42),inset 0 1px 0 rgba(255,255,255,.22);
+  --k-sel:linear-gradient(90deg,#ffffff 0%,#e6eeff 60%,#c9d9ff 100%);--k-lit:linear-gradient(90deg,rgba(150,200,255,.55),rgba(150,200,255,.10));
+  --k-crest-shadow:0 0 0 1px rgba(4,8,30,.45),0 4px 12px rgba(0,4,24,.35),inset 0 1px 0 rgba(255,255,255,.25);
+  --u-plate-e:linear-gradient(180deg,rgba(52,78,170,.92),rgba(20,32,96,.92));--u-plate-r:linear-gradient(180deg,#d9506a,#a4233d);--u-plate-g:linear-gradient(180deg,#36a574,#1c6c49);
+  --u-parch:linear-gradient(180deg,#fdfcf9,#f0ede5) padding-box,linear-gradient(180deg,#d5dcf0,#97a4c8) border-box}
+
+/* ---- the windows: FF blue, one thin silver line (Pause's sheet, the map, the choice card, a later ship's .u716-win) ---- */
+html.ui716.ui726 .u716-win,html.ui716.ui726 .sheet,html.ui716.ui726 #start .sheet,html.ui716.ui726 #map705 .m705win,html.ui716.ui726 #choice703t{border:1.5px solid var(--k-line);border-radius:10px;background:var(--k-win);box-shadow:var(--k-win-shadow)}
+html.ui716.ui726 .sheet::before{inset:3px;border-color:rgba(255,255,255,.08)}
+html.ui716.ui726 .screen{background:radial-gradient(120% 75% at 50% 30%,rgba(10,20,60,.28) 0%,rgba(4,8,30,.52) 70%,rgba(2,4,18,.64) 100%)}
+html.ui716.ui726 .sheet h1{font-weight:700;letter-spacing:.01em}
+html.ui716.ui726 .sheet h2{font-weight:700!important;letter-spacing:.01em;color:#ffb3c1!important}
+html.ui716.ui726 .sheet p,html.ui716.ui726 .how{color:var(--k-dim)}
+html.ui716.ui726 #start .kicker{color:var(--k-sky);font-weight:600}
+html.ui716.ui726 #start .sheet:has(#pauseRow:not([hidden])) .kicker{font:600 15px/1 var(--k-sans);letter-spacing:.34em;color:#dfe8ff;text-shadow:none}
+html.ui716.ui726 #start .sheet:has(#pauseRow:not([hidden])) .kicker::before,html.ui716.ui726 #start .sheet:has(#pauseRow:not([hidden])) .kicker::after{height:1px;background:linear-gradient(90deg,rgba(223,232,255,0),rgba(223,232,255,.8))}
+
+/* ---- the commands: Resume the SELECTED command (a bright bar); the rest KH command rows that light under the thumb ---- */
+html.ui716.ui726 .go{border-radius:10px;padding:0 28px;min-height:50px;color:#13205c;font:700 17px/1 var(--k-sans);letter-spacing:.08em;text-shadow:none;background:var(--k-sel)!important;box-shadow:0 0 0 1px rgba(255,255,255,.9),0 0 18px rgba(140,190,255,.45),0 4px 10px rgba(0,4,24,.35);filter:none}
+html.ui716.ui726 .go:active{filter:brightness(.92)}
+@media (orientation:landscape) and (max-height:520px){html.ui716.ui726 .go{min-height:44px}html.ui716.ui726 #start .sheet #how{display:none}}   /* on its side (750x342) the title's last row ran 23 px under the fold (716's ran 55 px: touch.js "coverage @ start screen"); the steering line is the HUD's hint too */
+html.ui716.ui726 .ghost{border-radius:8px;color:var(--k-ink);font:600 15px/1.1 var(--k-sans);letter-spacing:.02em;text-shadow:0 1px 1px rgba(0,0,20,.5);background:rgba(255,255,255,.06)!important;box-shadow:inset 0 0 0 1px rgba(236,242,255,.22)}
+html.ui716.ui726 .ghost:active,html.ui716.ui726 .ghost:focus-visible{background:var(--k-lit)!important;box-shadow:inset 0 0 0 1px #fff;filter:none;outline:none}
+html.ui716.ui726 #pauseRow{gap:4px;padding:6px;border:1px solid var(--k-line2);border-radius:10px;background:rgba(0,6,30,.22);box-shadow:none}
+html.ui716.ui726 .u716pp{align-items:flex-start;padding:0 12px 0 42px!important;background:var(--u-g,none) 13px center/20px 20px no-repeat,rgba(255,255,255,.06)!important}
+html.ui716.ui726 .u716pp:active,html.ui716.ui726 .u716pp:focus-visible{background:var(--u-g,none) 13px center/20px 20px no-repeat,var(--k-lit)!important}
+html.ui716.ui726 .u716pp:not([data-g]){padding:0 14px!important}
+html.ui716.ui726 .u716pp::after{font:600 14.5px/1.1 var(--k-sans);letter-spacing:.02em;color:var(--k-ink)}
+html.ui716.ui726 .u716pp[data-v]::before{font:600 10px/1 var(--k-sans);letter-spacing:.12em;color:var(--k-sky)}
+html.ui716.ui726 .u716-plate,html.ui716.ui726 :where(#ui > button.act,#pauseRow > button,body > button):not(:where(#flap,#flutter,#jump,#atkBtn,#land,#read,#home,#thBtn,#sing,#zoom,#nightBtn,#side703,#hit703,#evPause,#muteTop,.round,.f703,.u716-medal,.u716-skip,.ghost,.go)){border-radius:8px!important;font-family:var(--k-sans)!important;font-weight:600;letter-spacing:.02em;text-shadow:0 1px 1px rgba(0,0,20,.55)!important;box-shadow:inset 0 0 0 1px rgba(236,242,255,.5),0 3px 8px rgba(0,4,24,.3)!important}
+html.ui716.ui726 .linkish{color:var(--k-dim);font:italic 600 14px/1 var(--k-sans);text-decoration-color:rgba(223,232,255,.5)}
+html.ui716.ui726 .u716lk::after{font:600 13px/1 var(--k-sans);letter-spacing:.02em}
+html.ui716.ui726 .title-links .linkish{border-radius:8px;font:600 13px/1 var(--k-sans);letter-spacing:.02em;color:var(--k-ink);background:rgba(255,255,255,.06)!important;box-shadow:inset 0 0 0 1px rgba(236,242,255,.22)}
+html.ui716.ui726 .file{border:1px solid rgba(236,242,255,.3);border-radius:10px;background:rgba(255,255,255,.06);box-shadow:none}
+html.ui716.ui726 .file b{font-weight:700}
+html.ui716.ui726 .file small{color:var(--k-dim)}
+html.ui716.ui726 .file.on{border-color:var(--k-sky);background:var(--k-lit)}
+html.ui716.ui726 .bird b{clip-path:none;border-radius:6px;font:600 12.5px/1.1 var(--k-sans);letter-spacing:.01em;background:rgba(255,255,255,.08);box-shadow:inset 0 0 0 1px rgba(236,242,255,.3)}
+html.ui716.ui726 .bird[aria-pressed="true"] b{background:var(--k-sel);color:#13205c;text-shadow:none}
+html.ui716.ui726 .bird span{color:var(--k-dim)}
+html.ui716.ui726 .savebox-row #saveGo,html.ui716.ui726 #net678Make,html.ui716.ui726 #net678Join{border-radius:8px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.4),0 2px 4px rgba(0,0,0,.35)}
+
+/* ---- the crests: a thin light rim on dark glass, a white line glyph, a small dark word-pill (the words are 716's, the game's own) ---- */
+html.ui716.ui726 :is(#flap,#flutter,#jump,#atkBtn,#land,#read,#home,#thBtn,#sing,#zoom,#nightBtn,#side703,#hit703){border:1.5px solid var(--k-line)!important;background:var(--u-g,none) center var(--u-gy,44%)/var(--u-gs,54%) auto no-repeat padding-box,radial-gradient(circle at 50% 26%,var(--k-acc,rgba(120,160,255,.40)),rgba(0,0,0,0) 66%) padding-box,linear-gradient(rgba(12,22,64,.86),rgba(8,14,46,.9)) padding-box!important;box-shadow:var(--k-crest-shadow)!important}
+html.ui716.ui726 .u716-medal{border:1.5px solid var(--k-line)!important;background:var(--u-g,none) center var(--u-gy,44%)/var(--u-gs,54%) auto no-repeat padding-box,var(--k-glass) padding-box!important;box-shadow:var(--k-crest-shadow)!important}
+html.ui716.ui726 :is(#flap,#flutter,#jump,#atkBtn,#land,#read,#home,#thBtn,#sing,#zoom,#side703,#hit703,.u716-medal)[data-l]::after,html.ui716.ui726 #nightBtn .u716rb{min-width:0;padding:2px 9px;bottom:-9px;font:600 11.5px/1.25 var(--k-sans);letter-spacing:.07em;color:#f4f7ff;background:rgba(8,14,44,.88);border-radius:8px;clip-path:none;box-shadow:0 0 0 1px rgba(236,242,255,.35)}
+html.ui716.ui726 #flap[data-l]::after{font-size:12.5px;padding:2px 11px;bottom:-9px}
+html.ui716.ui726 #nightBtn .nvN{font:700 17px/1 var(--k-sans)}
+html.ui716.ui726 #flap{--k-acc:rgba(255,96,130,.58)}html.ui716.ui726 :is(#flutter,#jump,#side703){--k-acc:rgba(110,170,255,.52)}html.ui716.ui726 #atkBtn{--k-acc:rgba(190,200,225,.40)}
+html.ui716.ui726 :is(#land,#read){--k-acc:rgba(255,214,130,.50)}html.ui716.ui726 #zoom{--k-acc:rgba(90,220,200,.50)}html.ui716.ui726 #hit703{--k-acc:rgba(255,96,130,.58)}html.ui716.ui726 #nightBtn{--k-acc:rgba(255,229,138,.36)}
+html.ui716.ui726 #flap.on{filter:brightness(1.18)}
+html.ui716.ui726 #atkBtn{--u-gs:68%}
+html.ui716.ui726 #nightBtn.ready{box-shadow:var(--k-crest-shadow),0 0 0 2px #ffe58a,0 0 14px 3px rgba(255,229,138,.55)!important}
+html.ui716.ui726 .round[aria-label="Sound on"]{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' stroke='rgba(10,20,64,.5)' stroke-width='.9' stroke-linejoin='round' d='M9 18.6c0 1.7-1.7 2.9-3.5 2.9S2.4 20.4 2.6 18.9s1.9-2.8 3.7-2.8c.6 0 1.1.1 1.6.4V4.8L20.4 2.5v13.9c0 1.7-1.7 2.9-3.5 2.9s-3.1-1.1-2.9-2.6 1.9-2.8 3.7-2.8c.6 0 1.1.1 1.6.4V7L9 8.9z'/%3E%3C/svg%3E")}
+html.ui716.ui726 .round[aria-label="Sound off"]{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' stroke='rgba(10,20,64,.5)' stroke-width='.9' stroke-linejoin='round' d='M9 18.6c0 1.7-1.7 2.9-3.5 2.9S2.4 20.4 2.6 18.9s1.9-2.8 3.7-2.8c.6 0 1.1.1 1.6.4V4.8L20.4 2.5v13.9c0 1.7-1.7 2.9-3.5 2.9s-3.1-1.1-2.9-2.6 1.9-2.8 3.7-2.8c.6 0 1.1.1 1.6.4V7L9 8.9z' opacity='.55'/%3E%3Cpath d='M3.5 3.5 L20.5 20.5' fill='none' stroke='rgba(10,20,64,.5)' stroke-width='4.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M3.5 3.5 L20.5 20.5' fill='none' stroke='%23e2405a' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+html.ui716.ui726 #birdsBtn{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' stroke='rgba(10,20,64,.5)' stroke-width='.9' stroke-linejoin='round' d='M6 4.2h4.4v15.6H6zM13.6 4.2H18v15.6h-4.4z'/%3E%3C/svg%3E")}
+html.ui716.ui726 #quickBtn{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' stroke='rgba(10,20,64,.5)' stroke-width='.9' stroke-linejoin='round' d='M8.3 7.3C7.6 5.6 8.5 3.7 10 3.3c1-.3 1.4.5 2 .5s1-.8 2-.5c1.5.4 2.4 2.3 1.7 4l-.6 1.1C19 10 21.2 13.3 21.2 16.6c0 3.4-3.6 5.4-9.2 5.4s-9.2-2-9.2-5.4c0-3.3 2.2-6.6 6.1-8.2z'/%3E%3Cpath d='M8.4 8.4h7.2' fill='none' stroke='rgba(10,20,64,.5)' stroke-width='1.2'/%3E%3Ccircle cx='12' cy='14.6' r='2.1' fill='%23c8314a' stroke='rgba(10,20,64,.5)' stroke-width='.8'/%3E%3C/svg%3E")}
+html.ui716.ui726 #emoBtn633{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' stroke='rgba(10,20,64,.5)' stroke-width='.9' stroke-linejoin='round' d='M12 2.5l2.7 5.9 6.4.7-4.8 4.3 1.4 6.3L12 16.5l-5.7 3.2 1.4-6.3L2.9 9.1l6.4-.7z'/%3E%3C/svg%3E")}
+html.ui716.ui726 #nightBtn{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M15.2 2.6A9.6 9.6 0 1 0 21.4 17 8 8 0 0 1 15.2 2.6z' fill='%23ffe58a' stroke='rgba(10,20,64,.5)' stroke-width='1'/%3E%3Cpath d='M18.6 3.2l.9 2.2 2.2.9-2.2.9-.9 2.2-.9-2.2-2.2-.9 2.2-.9z' fill='%23ffffff'/%3E%3Ccircle cx='10.4' cy='12.6' r='1.6' fill='rgba(10,20,64,.5)'/%3E%3C/svg%3E")}
+html.ui716.ui726 #hit703{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' stroke='rgba(10,20,64,.5)' stroke-width='1' stroke-linejoin='round' d='M20.6 2.2 21.8 3.4 10.6 14.8 9.2 13.4z'/%3E%3Cpath d='M6 12.2 11.8 18' fill='none' stroke='rgba(10,20,64,.5)' stroke-width='4.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M6 12.2 11.8 18' fill='none' stroke='%23ffffff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M8.2 15.8 3.4 20.6' fill='none' stroke='rgba(10,20,64,.5)' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M8.2 15.8 3.4 20.6' fill='none' stroke='%23ffffff' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+html.ui716.ui726 #side703{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 12H21M7.4 7.2 3 12l4.4 4.8M16.6 7.2 21 12l-4.4 4.8' fill='none' stroke='rgba(10,20,64,.5)' stroke-width='4.3' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M3 12H21M7.4 7.2 3 12l4.4 4.8M16.6 7.2 21 12l-4.4 4.8' fill='none' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+html.ui716.ui726 [data-g="wings"]{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 48 30'%3E%3Cg fill='%23ffffff' stroke='rgba(10,20,64,.5)' stroke-width='1' stroke-linejoin='round'%3E%3Cpath d='M22.6 21 C18.5 10 9.5 4.6 1.5 6.4 C4.6 8.2 5.8 9.6 6.3 11.2 C3.7 11.6 2.7 13.3 3.2 14.9 C5.8 14.4 7.4 15.4 7.9 17 C6.4 18 6.4 19.6 7.4 20.6 C12.4 19.2 17.4 20 22.6 21 Z'/%3E%3Cpath d='M25.4 21 C29.5 10 38.5 4.6 46.5 6.4 C43.4 8.2 42.2 9.6 41.7 11.2 C44.3 11.6 45.3 13.3 44.8 14.9 C42.2 14.4 40.6 15.4 40.1 17 C41.6 18 41.6 19.6 40.6 20.6 C35.6 19.2 30.6 20 25.4 21 Z'/%3E%3Cellipse cx='24' cy='20.5' rx='2.9' ry='6'/%3E%3Ccircle cx='24' cy='12.6' r='2.9'/%3E%3C/g%3E%3C/svg%3E")}
+html.ui716.ui726 [data-g="flutter"]{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' stroke='rgba(10,20,64,.5)' stroke-width='1' stroke-linejoin='round' d='M11.4 17.5C9.2 11.6 4.8 8.8 1 9.6c1.5.9 2.1 1.7 2.4 2.5-1.3.2-1.8 1.1-1.5 1.9 1.3-.2 2.1.3 2.4 1.1-.8.5-.8 1.3-.3 1.8 2.6-.7 5-.3 7.4.6zM12.6 17.5c2.2-5.9 6.6-8.7 10.4-7.9-1.5.9-2.1 1.7-2.4 2.5 1.3.2 1.8 1.1 1.5 1.9-1.3-.2-2.1.3-2.4 1.1.8.5.8 1.3.3 1.8-2.6-.7-5-.3-7.4.6z'/%3E%3Cpath d='M7 5.6q5-3.4 10 0M9 2.2q3-1.8 6 0' fill='none' stroke='rgba(10,20,64,.5)' stroke-width='3.3' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M7 5.6q5-3.4 10 0M9 2.2q3-1.8 6 0' fill='none' stroke='%23ffffff' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+html.ui716.ui726 [data-g="jump"]{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' stroke='rgba(10,20,64,.5)' stroke-width='1' stroke-linejoin='round' d='M12 2.2 L19.6 10.4 H15 V16 H9 V10.4 H4.4 Z'/%3E%3Cpath d='M5 20.6 H19' fill='none' stroke='rgba(10,20,64,.5)' stroke-width='4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M5 20.6 H19' fill='none' stroke='%23ffffff' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+html.ui716.ui726 [data-g="talon"]{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' stroke='rgba(10,20,64,.5)' stroke-width='.9' stroke-linejoin='round' d='M19.6 2.4C16.4 7 13.6 11.6 11.6 21.6 11.3 14.4 13.4 8 19.6 2.4zM14.6 2.2C11.4 6.2 8.6 10.4 6.6 19.2 6.4 12.6 8.8 7 14.6 2.2zM9.4 3.4C6.8 6.6 4.6 10 3 17 2.9 11.6 4.8 7.2 9.4 3.4z'/%3E%3C/svg%3E")}
+html.ui716.ui726 [data-g="wind"]{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M2.5 9H14a3 3 0 1 0-3-3M2.5 14h15.5a3 3 0 1 1-3 3M2.5 19H10' fill='none' stroke='rgba(10,20,64,.5)' stroke-width='4.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M2.5 9H14a3 3 0 1 0-3-3M2.5 14h15.5a3 3 0 1 1-3 3M2.5 19H10' fill='none' stroke='%23ffffff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+html.ui716.ui726 [data-g="land"]{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M12 2.5v11.2M7.2 9.4 12 14.2l4.8-4.8' fill='none' stroke='%23ffffff' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M3 19.5h18' fill='none' stroke='%23ffffff' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M6.5 22h11' stroke='%23ffffff' stroke-width='1.6' stroke-linecap='round' opacity='.6'/%3E%3C/svg%3E")}
+html.ui716.ui726 [data-g="leave"]{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M5.5 19.5V10a4.5 4.5 0 0 1 4.5-4.5h7.5' fill='none' stroke='%23ffffff' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M14 2 17.8 5.5 14 9' fill='none' stroke='%23ffffff' stroke-width='2.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M3 21.6h8' stroke='%23ffffff' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E")}
+html.ui716.ui726 [data-g="read"]{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6.5 3.5h10.5a2.5 2.5 0 0 1 2.5 2.5v12.3a2.7 2.7 0 0 1-2.7 2.7H7.4' fill='rgba(255,255,255,.14)' stroke='%23ffffff' stroke-width='1.6' stroke-linejoin='round'/%3E%3Cpath d='M6.5 3.5A2.5 2.5 0 0 0 4 6v1.8h2.5M7.4 21a2.6 2.6 0 0 1-2.6-2.6V6M9.5 9h6.5M9.5 12.4h6.5M9.5 15.8h4.4' fill='none' stroke='%23ffffff' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E")}
+html.ui716.ui726 [data-g="talk"]{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4 4.5h16a1.6 1.6 0 0 1 1.6 1.6v9.3A1.6 1.6 0 0 1 20 17h-8.6l-5.2 4.2V17H4a1.6 1.6 0 0 1-1.6-1.6V6.1A1.6 1.6 0 0 1 4 4.5z' fill='rgba(255,255,255,.14)' stroke='%23ffffff' stroke-width='1.6' stroke-linejoin='round'/%3E%3Ccircle cx='8' cy='10.8' r='1.4' fill='%23ffffff'/%3E%3Ccircle cx='12' cy='10.8' r='1.4' fill='%23ffffff'/%3E%3Ccircle cx='16' cy='10.8' r='1.4' fill='%23ffffff'/%3E%3C/svg%3E")}
+html.ui716.ui726 [data-g="sleep"]{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' stroke='rgba(10,20,64,.5)' stroke-width='.9' stroke-linejoin='round' d='M15.2 2.6A9.6 9.6 0 1 0 21.4 17 8 8 0 0 1 15.2 2.6z'/%3E%3Cpath d='M17.4 5.2h3.4l-3.4 3.6h3.4' fill='none' stroke='rgba(10,20,64,.5)' stroke-width='1.1' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+html.ui716.ui726 [data-g="gate"]{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' stroke='rgba(10,20,64,.5)' stroke-width='.9' stroke-linejoin='round' d='M3.5 22V9.2L12 2.6l8.5 6.6V22h-6v-6.4a2.5 2.5 0 0 0-5 0V22z'/%3E%3Cpath d='M8 9.6h8' fill='none' stroke='rgba(10,20,64,.5)' stroke-width='.9'/%3E%3C/svg%3E")}
+html.ui716.ui726 [data-g="ladder"]{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' stroke='rgba(10,20,64,.5)' stroke-width='.9' stroke-linejoin='round' d='M6 2.5h2.6v19H6zM15.4 2.5H18v19h-2.6zM8.6 6h6.8v2H8.6zM8.6 11h6.8v2H8.6zM8.6 16h6.8v2H8.6z'/%3E%3C/svg%3E")}
+html.ui716.ui726 [data-g="nest"]{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='9.4' cy='10.4' r='2.3' fill='%23ffffff' stroke='rgba(10,20,64,.5)' stroke-width='.8'/%3E%3Ccircle cx='14.4' cy='10.1' r='2.3' fill='%23ffffff' stroke='rgba(10,20,64,.5)' stroke-width='.8'/%3E%3Cpath fill='%23ffffff' stroke='rgba(10,20,64,.5)' stroke-width='.9' stroke-linejoin='round' d='M2.5 11.6h19c0 5-4.3 8.6-9.5 8.6S2.5 16.6 2.5 11.6z'/%3E%3Cpath d='M4.2 13.6c3 1.4 12.6 1.4 15.6 0M5.8 16.6c3 1.2 9.4 1.2 12.4 0M3 11.6 6 9.2M21 11.6 18 9.2' fill='none' stroke='rgba(10,20,64,.5)' stroke-width='.9' stroke-linecap='round'/%3E%3C/svg%3E")}
+html.ui716.ui726 [data-g="getup"]{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' stroke='rgba(10,20,64,.5)' stroke-width='.9' stroke-linejoin='round' d='M11.4 17.5C9.2 11.6 4.8 8.8 1 9.6c1.5.9 2.1 1.7 2.4 2.5-1.3.2-1.8 1.1-1.5 1.9 1.3-.2 2.1.3 2.4 1.1-.8.5-.8 1.3-.3 1.8 2.6-.7 5-.3 7.4.6zM12.6 17.5c2.2-5.9 6.6-8.7 10.4-7.9-1.5.9-2.1 1.7-2.4 2.5 1.3.2 1.8 1.1 1.5 1.9-1.3-.2-2.1.3-2.4 1.1.8.5.8 1.3.3 1.8-2.6-.7-5-.3-7.4.6z'/%3E%3C/svg%3E")}
+html.ui716.ui726 [data-g="sing"]{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' stroke='rgba(10,20,64,.5)' stroke-width='.9' stroke-linejoin='round' d='M9 18.6c0 1.7-1.7 2.9-3.5 2.9S2.4 20.4 2.6 18.9s1.9-2.8 3.7-2.8c.6 0 1.1.1 1.6.4V4.8L20.4 2.5v13.9c0 1.7-1.7 2.9-3.5 2.9s-3.1-1.1-2.9-2.6 1.9-2.8 3.7-2.8c.6 0 1.1.1 1.6.4V7L9 8.9z'/%3E%3C/svg%3E")}
+html.ui716.ui726 [data-g="crystal"]{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' stroke='rgba(10,20,64,.5)' stroke-width='.9' stroke-linejoin='round' d='M12 1.5 18.2 9 12 22.5 5.8 9z'/%3E%3Cpath d='M5.8 9h12.4M12 1.5 9.4 9 12 22.5 14.6 9z' fill='none' stroke='rgba(10,20,64,.5)' stroke-width='.8'/%3E%3C/svg%3E")}
+html.ui716.ui726 [data-g="book"]{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' stroke='rgba(10,20,64,.5)' stroke-width='.9' stroke-linejoin='round' d='M12 6.2C9.6 4.6 6.2 4.2 2.4 4.8v14c3.8-.6 7.2-.2 9.6 1.4 2.4-1.6 5.8-2 9.6-1.4v-14c-3.8-.6-7.2-.2-9.6 1.4z'/%3E%3Cpath d='M12 6.2v14' fill='none' stroke='rgba(10,20,64,.5)' stroke-width='.9'/%3E%3C/svg%3E")}
+html.ui716.ui726 [data-g="mirror"]{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cellipse fill='%23ffffff' stroke='rgba(10,20,64,.5)' stroke-width='.9' stroke-linejoin='round' cx='12' cy='8.8' rx='6.4' ry='7'/%3E%3Cellipse cx='12' cy='8.8' rx='4.2' ry='4.8' fill='%239fc6ff' stroke='rgba(10,20,64,.5)' stroke-width='.8'/%3E%3Cpath fill='%23ffffff' stroke='rgba(10,20,64,.5)' stroke-width='.9' stroke-linejoin='round' d='M10.6 15.4h2.8l.6 7h-4z'/%3E%3C/svg%3E")}
+html.ui716.ui726 [data-g="two"]{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' stroke='rgba(10,20,64,.5)' stroke-width='.9' stroke-linejoin='round' d='M1.5 11.4q3.4-4.6 6.8-.6 3.4-4 6.8.6-3.4-1.6-6.8 1.8-3.4-3.4-6.8-1.8zM9 18.6q3.4-4.6 6.8-.6 3.4-4 6.8.6-3.4-1.6-6.8 1.8-3.4-3.4-6.8-1.8z'/%3E%3C/svg%3E")}
+html.ui716.ui726 [data-g="map"]{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' stroke='rgba(10,20,64,.5)' stroke-width='.9' stroke-linejoin='round' d='M2.5 5.5 8.5 3l7 2.5 6-2.5v15.5l-6 2.5-7-2.5-6 2.5z'/%3E%3Cpath d='M8.5 3v15.5M15.5 5.5V21' fill='none' stroke='rgba(10,20,64,.5)' stroke-width='.9'/%3E%3Cpath d='M10.6 9.4 13.4 12.2M13.4 9.4 10.6 12.2' stroke='%23c8314a' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E")}
+html.ui716.ui726 [data-g="dodge"]{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M3 12H21M7.4 7.2 3 12l4.4 4.8M16.6 7.2 21 12l-4.4 4.8' fill='none' stroke='rgba(10,20,64,.5)' stroke-width='4.3' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M3 12H21M7.4 7.2 3 12l4.4 4.8M16.6 7.2 21 12l-4.4 4.8' fill='none' stroke='%23ffffff' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+html.ui716.ui726 [data-g="sword"]{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' stroke='rgba(10,20,64,.5)' stroke-width='1' stroke-linejoin='round' d='M20.6 2.2 21.8 3.4 10.6 14.8 9.2 13.4z'/%3E%3Cpath d='M6 12.2 11.8 18' fill='none' stroke='rgba(10,20,64,.5)' stroke-width='4.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M6 12.2 11.8 18' fill='none' stroke='%23ffffff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M8.2 15.8 3.4 20.6' fill='none' stroke='rgba(10,20,64,.5)' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M8.2 15.8 3.4 20.6' fill='none' stroke='%23ffffff' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+html.ui716.ui726 .u716pp[data-g="wind"]{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M2.5 9H14a3 3 0 1 0-3-3M2.5 14h15.5a3 3 0 1 1-3 3M2.5 19H10' fill='none' stroke='rgba(10,20,64,.5)' stroke-width='4.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M2.5 9H14a3 3 0 1 0-3-3M2.5 14h15.5a3 3 0 1 1-3 3M2.5 19H10' fill='none' stroke='%23ffffff' stroke-width='2.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E")}
+/* smaller: each box shrinks inside its own 716 box, anchored to the same corner (the fight's own slots keep 716's sizes) */
+html.ui716.ui726 #flap{width:86px!important;height:86px!important}
+html.ui716.ui726 :is(#flutter,#jump,#atkBtn){width:58px!important;height:58px!important}
+html.ui716.ui726 :is(#land,#read){width:54px!important;height:54px!important}
+html.ui716.ui726 :is(#thBtn,#home,#sing,#nightBtn,#zoom){width:52px!important;height:52px!important}
+html.ui716.ui726 #hit703{width:66px!important;height:66px!important}
+html.ui716.ui726 #side703{width:62px!important;height:62px!important}
+@media (orientation:landscape) and (max-height:520px){
+html.ui716.ui726 #flap{width:80px!important;height:80px!important}
+html.ui716.ui726 :is(#flutter,#jump,#atkBtn){width:56px!important;height:56px!important}
+html.ui716.ui726 :is(#land,#read,#thBtn,#home,#sing){width:52px!important;height:52px!important}
+html.ui716.ui726 :is(#nightBtn,#zoom){width:50px!important;height:50px!important}
+html.ui716.ui726 #hit703{width:60px!important;height:60px!important}
+html.ui716.ui726 #side703{width:58px!important;height:58px!important}
+}
+
+/* ---- the top row: sound, pause, pouch, emotes, the quests board: 44 px glass rings ---- */
+html.ui716.ui726 .round,html.ui716.ui726 #evPause{width:44px;height:44px;box-sizing:border-box;border-radius:50%;border:1.5px solid var(--k-line);background:var(--u-g,none) center/20px 20px no-repeat,var(--k-glass)!important;filter:none;box-shadow:var(--k-crest-shadow)}
+html.ui716.ui726 #evPause{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' stroke='rgba(10,20,64,.5)' stroke-width='.9' stroke-linejoin='round' d='M6 4.2h4.4v15.6H6zM13.6 4.2H18v15.6h-4.4z'/%3E%3C/svg%3E")}
+html.ui716.ui726 #questsBtn720{border:1.5px solid var(--k-line);background:var(--k-glass);box-shadow:var(--k-crest-shadow)}
+@media (orientation:landscape) and (max-height:520px){html.ui716.ui726 #emoBtn633{position:static}}   /* on its side the emotes ring sat under the level card, where the quests scroll is placed (K2 saw them overlap): back in the top row's column */
+
+/* ---- the level card: slim glass, the level in a thin ring, a thin XP line ---- */
+html.ui716.ui726 #lvPill{width:min(196px,calc(100vw - 196px));padding:6px 10px 6px 50px;border:1px solid var(--k-line2);border-radius:12px;background:linear-gradient(180deg,rgba(30,46,116,.58),rgba(8,14,48,.64));box-shadow:0 4px 14px rgba(0,4,24,.22)}
+html.ui716.ui726 #lvText{left:5px;width:40px;height:40px;margin-top:-20px;border:1.5px solid var(--k-line);padding:7px 1px 0;font:600 15px/1 var(--k-sans);color:#fff;text-shadow:none;background:radial-gradient(circle at 50% 30%,rgba(255,96,130,.50),rgba(10,18,56,.86) 75%);box-shadow:0 2px 6px rgba(0,4,24,.35)}
+html.ui716.ui726 #lvText::first-line{font-size:8.5px;letter-spacing:.16em}
+html.ui716.ui726 #lvPill .bar{height:5px;margin:4px 2px 4px 0;border-radius:3px;background:rgba(255,255,255,.14);box-shadow:none}
+html.ui716.ui726 #lvPill .bar i{border-radius:3px;background:linear-gradient(90deg,#4aa8ff,#9fe0ff 70%,#ffffff);box-shadow:none}
+html.ui716.ui726 #lvPill .bar::after{background:repeating-linear-gradient(90deg,transparent 0 calc(25% - 1px),rgba(255,255,255,.28) calc(25% - 1px) 25%)}
+html.ui716.ui726 #quest{font:500 13px/1.25 var(--k-sans);color:var(--k-ink)}
+html.ui716.ui726 #quest::after{color:var(--k-sky)}
+html.ui716.ui726 #navHud{font:500 12px/1.2 var(--k-sans);color:var(--k-dim)}
+html.ui716.ui726 #lvCard b{font-family:var(--k-sans);font-weight:700;color:#fff;text-shadow:0 0 14px rgba(80,150,255,.85),0 2px 3px #000}
+html.ui716.ui726 #xpPop{font-family:var(--k-sans);font-weight:700;color:#e6f3ff;text-shadow:0 1px 2px #000,0 0 8px rgba(11,16,48,.9)}
+
+/* ---- the radar (705's control, ALWAYS tappable): a thin ring round dark glass; its distance a small dark pill ---- */
+html.ui716.ui726 .arrow{width:66px;height:66px;border:1.5px solid var(--k-line);background:radial-gradient(circle,rgba(16,26,80,.55) 60%,rgba(6,10,36,.78)) padding-box;box-shadow:var(--k-crest-shadow)}
+html.ui716.ui726 #arrowSvg path{fill:#ff5f7a;stroke:#ffffff;stroke-width:1.2px}
+html.ui716.ui726 .dist{margin-top:-6px;padding:2px 9px 2px 22px;font:600 12px/14px var(--k-sans);color:var(--k-ink);background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' stroke='rgba(10,20,64,.5)' stroke-width='.9' stroke-linejoin='round' d='M2.5 5.5 8.5 3l7 2.5 6-2.5v15.5l-6 2.5-7-2.5-6 2.5z'/%3E%3Cpath d='M8.5 3v15.5M15.5 5.5V21' fill='none' stroke='rgba(10,20,64,.5)' stroke-width='.9'/%3E%3Cpath d='M10.6 9.4 13.4 12.2M13.4 9.4 10.6 12.2' stroke='%23c8314a' stroke-width='1.6' stroke-linecap='round'/%3E%3C/svg%3E") 6px center/13px 13px no-repeat,rgba(8,14,44,.88);border-radius:9px;clip-path:none;box-shadow:0 0 0 1px rgba(236,242,255,.35)}
+html.ui716.ui726.map705open .compass .arrow{box-shadow:0 0 0 1px rgba(4,8,30,.45),0 0 0 3px rgba(150,200,255,.6),0 0 16px 3px rgba(150,200,255,.5)}
+
+/* ---- the map's window (705 + 712e): FF window, a glass close ring ---- */
+html.ui716.ui726 #map705{background:radial-gradient(120% 80% at 50% 40%,rgba(10,20,60,.40),rgba(2,4,20,.70))}
+html.ui716.ui726 #map705 h3{font:600 13px/1 var(--k-sans);letter-spacing:.24em;color:#dfe8ff}
+html.ui716.ui726 #map705 h3::before,html.ui716.ui726 #map705 h3::after{background:linear-gradient(90deg,rgba(223,232,255,0),rgba(223,232,255,.8))}
+html.ui716.ui726 #map705cv,html.ui716.ui726 #wmap712cv{box-shadow:0 0 0 1px rgba(236,242,255,.75),0 4px 12px rgba(0,0,0,.4)}
+html.ui716.ui726 #map705 .m705foot,html.ui716.ui726 #wmap712foot{font:italic 500 13px/1.3 var(--k-sans);color:var(--k-dim)}
+html.ui716.ui726 #map705 .m705foot b{font-family:var(--k-sans);color:var(--k-sky)}
+html.ui716.ui726 #map705Close{border:1.5px solid var(--k-line);background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 6 L18 18 M18 6 L6 18' fill='none' stroke='rgba(10,20,64,.5)' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M6 6 L18 18 M18 6 L6 18' fill='none' stroke='%23ffffff' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/18px 18px no-repeat,var(--k-glass);box-shadow:var(--k-crest-shadow)}
+html.ui716.ui726 #wmap712Btn{border-radius:8px!important;font:600 13px/44px var(--k-sans)!important;letter-spacing:.02em}
+html.ui716.ui726 #wmap712 .wmZoom button{border:1.5px solid var(--k-line)!important;background:var(--k-glass)!important;color:#fff!important}
+html.ui716.ui726 #wmap712 .wmProj button{border-radius:8px;background:rgba(255,255,255,.08)!important}
+html.ui716.ui726 #wmap712 .wmProj button[aria-pressed="true"]{background:var(--k-sel)!important;color:#13205c!important}
+
+/* ---- the words over the world: the toast an FF message window; the hint lighter ---- */
+html.ui716.ui726 .toast{font:600 14.5px/1.3 var(--k-sans);color:var(--k-ink);background:var(--k-win);border:1.5px solid var(--k-line);border-radius:10px;box-shadow:var(--k-win-shadow)}
+html.ui716.ui726 .hint{font:italic 500 14.5px/1.3 var(--k-sans)}
+
+/* ---- the fight's band and call (703) ---- */
+html.ui716.ui726 #hud703{border:1.5px solid var(--k-line);background:var(--k-win);font:600 14px/1 var(--k-sans);box-shadow:var(--k-win-shadow)}
+html.ui716.ui726 #hud703 i{height:6px;background:rgba(255,255,255,.14);box-shadow:none}
+html.ui716.ui726 #hud703 i b{background:linear-gradient(90deg,#ff5f7a,#ffb0bf);box-shadow:none}
+@media (orientation:landscape) and (max-height:520px){   /* on its side the band (716 + 703p: 351 px) ran under the pouch ring, in the old look too; now it ends 8 px short of the top row */
+  html.ui716.ui726 #hud703{box-sizing:border-box;max-width:min(320px,calc(50vw - 100px - env(safe-area-inset-right,0px)))}
+  html.ui716.ui726 #hud703 i{width:90px!important}
+  html.ui716.ui726 #hits703{font:600 12px/1 var(--k-sans);letter-spacing:.03em;white-space:nowrap}
+}
+html.ui716.ui726 #say703{font:700 28px/1.05 var(--k-sans);letter-spacing:.08em;color:#fff;text-shadow:0 0 14px rgba(80,150,255,.9),0 2px 3px #000}
+
+/* ---- the stick: a thin ring, a glass knob ---- */
+html.ui716.ui726 .knob-base{border:1.5px solid rgba(236,242,255,.7);background:radial-gradient(circle,rgba(20,28,80,.06) 40%,rgba(20,28,80,.30) 100%) padding-box;box-shadow:none}
+html.ui716.ui726 .knob{border:1.5px solid #fff;background:radial-gradient(circle at 50% 35%,rgba(255,255,255,.6),rgba(120,160,255,.38) 70%) padding-box;box-shadow:0 2px 8px rgba(0,4,24,.4)}
+
+/* ---- the cards in her world (pouch, quests, what to do, the chick, words, steps): light, a thin blue-grey line; their insides unchanged ---- */
+html.ui716.ui726 :is(.missions,.care,.talk,.tut){border-width:1.5px;border-radius:12px;box-shadow:0 8px 22px rgba(0,4,24,.28)}
+html.ui716.ui726 .missions .top button{border:1.5px solid var(--k-line);background:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M6 6 L18 18 M18 6 L6 18' fill='none' stroke='rgba(10,20,64,.5)' stroke-width='4.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3Cpath d='M6 6 L18 18 M18 6 L6 18' fill='none' stroke='%23ffffff' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E") center/16px 16px no-repeat,rgba(14,24,72,.92)}
+html.ui716.ui726 #quickClose{background:var(--u-plate-e);color:#fff;font-weight:600;box-shadow:inset 0 0 0 1px rgba(236,242,255,.5)}
+html.ui716.ui726 .care .row button{box-shadow:inset 0 0 0 1px rgba(255,255,255,.35),0 2px 4px rgba(0,0,0,.25)}
+html.ui716.ui726 .talk button,html.ui716.ui726 :is(#ride715Ask,#pir669Ask) button{border-radius:8px!important;font:700 16px/1.1 var(--k-sans)!important;letter-spacing:.02em;filter:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.4),0 3px 8px rgba(0,0,0,.3)!important}
+html.ui716.ui726 #choice703 > button{border-radius:10px!important;font:700 17px/1.1 var(--k-sans)!important;letter-spacing:.02em;filter:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.4),0 4px 10px rgba(0,0,0,.35)!important}
+html.ui716.ui726 #choice703t{font:600 18px/1.4 var(--k-sans)}
+html.ui716.ui726 .warm{border-radius:12px;font-family:var(--k-sans);filter:none;box-shadow:inset 0 0 0 1px rgba(255,255,255,.4),0 3px 8px rgba(0,0,0,.3)}
+</style>
 
 <canvas id="c" aria-label="An island to fly over"></canvas>
 
@@ -908,68 +1087,69 @@ html.ui716 #pzQuit{border-radius:0;background:var(--u-plate-e)!important;font-fa
 <div class="rhRes" id="rhRes" hidden aria-live="polite"><b id="resRank"></b><span id="resLine"></span><small id="resTime"></small><small id="resNew" hidden></small></div>   <!-- 672 OURS/DRAFT words: Paused, Resume, Quit song -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="toon.js?v=7e000fd799e9"></script>
+<script src="toon.js?v=8388519875b3"></script>
 <script>(function () { let classic = false; try { classic = localStorage.getItem('wfr.look') === 'classic'; } catch (e) { /* private mode: Standard */ }
   window.WFR_DOOR = classic ? { w: 1.2, h: 2, classic: true } : { w: 1.5, h: 2.9, classic: false }; }());   /* 683 C1: THE doorway, local units (x HS 1.6: Standard 2.4 x 4.64 m; a villager, drawn 3.67-3.72 m, is 80% of it; the brief's 2.6 left him at 89%). The ring houses, the 641 house, the cabins and the walk read it. Classic is frozen (Marth, Oct 14, board 645): its doors stay 1.2 x 2. The look is read as the game reads it (it reloads on a switch). */</script>
-<script src="gltf-loader.js?v=7e000fd799e9"></script>
-<script src="skeleton-utils.js?v=7e000fd799e9"></script>
-<script src="meshopt-decoder.js?v=7e000fd799e9"></script>
-<script src="models.js?v=7e000fd799e9"></script>
-<script src="people.js?v=7e000fd799e9"></script>
-<script src="villagers.js?v=7e000fd799e9"></script>
-<script src="tex-photos.js?v=7e000fd799e9"></script>
-<script src="textures.js?v=7e000fd799e9"></script>
-<script src="birds.js?v=7e000fd799e9"></script>
-<script src="humans.js?v=7e000fd799e9"></script>
-<script src="folk.js?v=7e000fd799e9"></script>
-<script src="trees.js?v=7e000fd799e9"></script>
-<script src="treehouses.js?v=7e000fd799e9"></script>
-<script src="cabins.js?v=7e000fd799e9"></script>
-<script src="cave.js?v=7e000fd799e9"></script>
-<script src="hermits.js?v=7e000fd799e9"></script>
-<script src="sounds.js?v=7e000fd799e9"></script>
-<script src="music.js?v=7e000fd799e9"></script>
-<script src="battle703-song.js?v=7e000fd799e9"></script>
-<script src="music-orchestra.js?v=7e000fd799e9"></script>
-<script src="rhythm.js?v=7e000fd799e9"></script>
-<script src="pictograms.js?v=7e000fd799e9"></script>
-<script src="chick-wear.js?v=7e000fd799e9"></script>
-<script src="hedgehogs.js?v=7e000fd799e9"></script>
-<script src="opening.js?v=7e000fd799e9"></script>
-<script src="skypiea.js?v=7e000fd799e9"></script>
-<script src="pirate.js?v=7e000fd799e9"></script>
-<script src="atmo.js?v=7e000fd799e9"></script>
-<script src="world-realism.js?v=7e000fd799e9"></script>
-<script src="boat.js?v=7e000fd799e9"></script>
-<script src="weather.js?v=7e000fd799e9"></script>
-<script src="village-build.js?v=7e000fd799e9"></script>
-<script src="runes.js?v=7e000fd799e9"></script>
-<script src="hearts714.js?v=7e000fd799e9"></script>
-<script src="world712-frame.js?v=7e000fd799e9"></script>
-<script src="creative712.js?v=7e000fd799e9"></script>
-<script src="world712-carib.js?v=7e000fd799e9"></script>
-<script src="world712-dunns.js?v=7e000fd799e9"></script>
-<script src="world712-travel.js?v=7e000fd799e9"></script>
-<script src="world-terrain.js?v=7e000fd799e9"></script>
-<script src="world-features.js?v=7e000fd799e9"></script>
-<script src="world-vegetation.js?v=7e000fd799e9"></script>
-<script src="world725d-fast.js?v=7e000fd799e9"></script>
-<script src="world-chicks.js?v=7e000fd799e9"></script>
-<script src="world-imagery.js?v=7e000fd799e9"></script>
-<script src="world712-photo.js?v=7e000fd799e9"></script>
-<script src="hawkwake.js?v=7e000fd799e9"></script>
-<script src="hawkfight.js?v=7e000fd799e9"></script>
-<script src="hawkarena.js?v=7e000fd799e9"></script>
-<script src="orchard.js?v=7e000fd799e9"></script>
-<script src="net678.js?v=7e000fd799e9"></script>
-<script src="net678-config.js?v=7e000fd799e9"></script>
-<script src="net721.js?v=7e000fd799e9"></script>
-<script src="animals714.js?v=7e000fd799e9"></script>
-<script src="world-people.js?v=7e000fd799e9"></script>
-<script src="world-animals.js?v=7e000fd799e9"></script>
-<script src="world-huts.js?v=7e000fd799e9"></script>
-<script src="world-interiors.js?v=7e000fd799e9"></script>
-<script src="world-quests.js?v=7e000fd799e9"></script>
+<script src="gltf-loader.js?v=8388519875b3"></script>
+<script src="skeleton-utils.js?v=8388519875b3"></script>
+<script src="meshopt-decoder.js?v=8388519875b3"></script>
+<script src="models.js?v=8388519875b3"></script>
+<script src="people.js?v=8388519875b3"></script>
+<script src="villagers.js?v=8388519875b3"></script>
+<script src="tex-photos.js?v=8388519875b3"></script>
+<script src="textures.js?v=8388519875b3"></script>
+<script src="birds.js?v=8388519875b3"></script>
+<script src="humans.js?v=8388519875b3"></script>
+<script src="folk.js?v=8388519875b3"></script>
+<script src="trees.js?v=8388519875b3"></script>
+<script src="treehouses.js?v=8388519875b3"></script>
+<script src="cabins.js?v=8388519875b3"></script>
+<script src="cave.js?v=8388519875b3"></script>
+<script src="hermits.js?v=8388519875b3"></script>
+<script src="sounds.js?v=8388519875b3"></script>
+<script src="music.js?v=8388519875b3"></script>
+<script src="battle703-song.js?v=8388519875b3"></script>
+<script src="music-orchestra.js?v=8388519875b3"></script>
+<script src="rhythm.js?v=8388519875b3"></script>
+<script src="pictograms.js?v=8388519875b3"></script>
+<script src="chick-wear.js?v=8388519875b3"></script>
+<script src="hedgehogs.js?v=8388519875b3"></script>
+<script src="opening.js?v=8388519875b3"></script>
+<script src="skypiea.js?v=8388519875b3"></script>
+<script src="pirate.js?v=8388519875b3"></script>
+<script src="atmo.js?v=8388519875b3"></script>
+<script src="world-realism.js?v=8388519875b3"></script>
+<script src="boat.js?v=8388519875b3"></script>
+<script src="weather.js?v=8388519875b3"></script>
+<script src="village-build.js?v=8388519875b3"></script>
+<script src="runes.js?v=8388519875b3"></script>
+<script src="hearts714.js?v=8388519875b3"></script>
+<script src="world712-frame.js?v=8388519875b3"></script>
+<script src="creative712.js?v=8388519875b3"></script>
+<script src="world712-carib.js?v=8388519875b3"></script>
+<script src="world712-dunns.js?v=8388519875b3"></script>
+<script src="world712-travel.js?v=8388519875b3"></script>
+<script src="world-surfaces732.js?v=8388519875b3"></script>
+<script src="world-terrain.js?v=8388519875b3"></script>
+<script src="world-features.js?v=8388519875b3"></script>
+<script src="world-vegetation.js?v=8388519875b3"></script>
+<script src="world725d-fast.js?v=8388519875b3"></script>
+<script src="world-chicks.js?v=8388519875b3"></script>
+<script src="world-imagery.js?v=8388519875b3"></script>
+<script src="world712-photo.js?v=8388519875b3"></script>
+<script src="hawkwake.js?v=8388519875b3"></script>
+<script src="hawkfight.js?v=8388519875b3"></script>
+<script src="hawkarena.js?v=8388519875b3"></script>
+<script src="orchard.js?v=8388519875b3"></script>
+<script src="net678.js?v=8388519875b3"></script>
+<script src="net678-config.js?v=8388519875b3"></script>
+<script src="net721.js?v=8388519875b3"></script>
+<script src="animals714.js?v=8388519875b3"></script>
+<script src="world-people.js?v=8388519875b3"></script>
+<script src="world-animals.js?v=8388519875b3"></script>
+<script src="world-huts.js?v=8388519875b3"></script>
+<script src="world-interiors.js?v=8388519875b3"></script>
+<script src="world-quests.js?v=8388519875b3"></script>
 <script>
 (() => {
 'use strict';
@@ -2199,6 +2379,107 @@ function climb712Peek() { const s = CLIMB712.sea, hm = HZN700.mesh; return { on:
 if (CARIB712.u) CARIB712.u.uHaze = { value: 1 };   // before the first picture: the land's program reads it from its first compile
 try { climb712BuildSea(); climb712Fade(); CLIMB712.built = true; } catch (e) { CLIMB712.fault = String(e && e.message || e); console.warn('the climb 712 stopped: ' + CLIMB712.fault); }
 
+/* CAMTREES: THE CAMERA KEEPS OUT OF THE TREES (Marth, Nov 5 2026, his 14:45 recording: "Bit of bugs hahah…"; Trunks). Every number a DRAFT.
+   The island's forest is trees.js's InstancedMeshes, and 733's camera arm skipped every instanced mesh, so it never saw a tree: flying low, the chase
+   camera went into crowns and trunks, and the inside of a crown (its own shadowed inner faces under the ACES tone map) drew the screen BLACK.
+   THE QUERY: read live from the forest's own instance matrices (a tree the village fells or shrinks is read as it stands) and each part's built box
+   (trap 115): a trunk is an upright cylinder (its base radius measured from its geometry), a broad crown (oak, birch, bush) its upright cylinder, a
+   conifer (pine, fir, krumm) its tiers' cone. No ray against a triangle. THE ARM (733's cam733Cast asks camTreesCast): a trunk on the line pulls the
+   camera in like a wall; a crown pulls it in only when the camera would be INSIDE it; a crown that holds HER cannot be left. THE FADE (camTreesFade,
+   each island frame): the crown the lens is in, and up to three more standing between the lens and her, dissolve (a screen-door dither: one program
+   per material, compiled at load); and every tree part dissolves within ~3 m of the lens, so a brush through leaves is never a black screen.
+   Her own flight is untouched (no tree collision for her). ALSO FIXED HERE (the wire's first anchor): 733's cam733Occ wrote a box's size over the
+   flight camera's FROM point (a shared scratch vector), so near the village the lens jumped toward the world's origin, under the ground.
+   localStorage 'wfr.camtreesplant' = 'skip': the old skip restored (the arm blind to trees, no fade): the guard's plant. */
+var CAMTREES = { on: true, plant: (() => { try { return localStorage.getItem('wfr.camtreesplant') || ''; } catch (e) { return ''; } })(), parts: [], adopted: 0,
+  U: { uCtNear: { value: new THREE.Vector2(0.8, 3.0) }, uCtTrees: { value: [0, 1, 2, 3].map(() => new THREE.Vector4(0, -1e5, 1, 0)) } }, faded: new Map(), pulls: 0, fades: 0, outs: 0, ms: [], fms: [],
+  K: { PAD: 0.35, CONE: ['pine', 'fir', 'krumm'], BLOB: ['oak', 'birch', 'bush'], WOOD: ['woodStraight', 'woodOak', 'woodBirch', 'woodSnag', 'woodBent'], FADE_TO: 0.22, OCC_TO: 0.35, STEP: 0.8, NB: 20, NS: 12, PROF: 1.0, SIGHT: 1.2 } };   // SIGHT: how near the line to her a crown may stand before it fades (her body, not a hair-thin line)
+function camTreesAdopt(meshes) {   // once, as the forest is planted: each part's local shape from its built geometry; the materials learn the lens dither
+  const C = CAMTREES; if (C.plant === 'skip') C.U.uCtNear.value.set(0, 0);
+  const mats = new Set(); C.parts = [];
+  for (const m of meshes || []) { const k = String(m.name || '').replace('trees:', ''), g = m.geometry; if (!g || !g.attributes.position || k === 'shadow') continue;
+    if (!g.boundingBox) g.computeBoundingBox(); const bb = g.boundingBox, kind = C.K.CONE.includes(k) ? 'cone' : C.K.BLOB.includes(k) ? 'blob' : C.K.WOOD.includes(k) ? 'wood' : null;
+    if (kind) { let rh = Math.max(Math.abs(bb.min.x), Math.abs(bb.max.x), Math.abs(bb.min.z), Math.abs(bb.max.z)), rb = 0;
+      if (kind === 'wood') { const p = g.attributes.position, yc = bb.min.y + (bb.max.y - bb.min.y) * 0.08; for (let i = 0; i < p.count; i++) if (p.getY(i) <= yc) rb = Math.max(rb, Math.hypot(p.getX(i), p.getZ(i))); rh = rb || rh * 0.2; }   // the trunk's own base radius (not its branches)
+      C.parts.push({ m, k, kind, y0: bb.min.y, y1: bb.max.y, rh, prof: camTreesProfile(g, bb.min.y, bb.max.y) }); }   // a trunk's too: an oak's branches reach out
+    mats.add(m.material); }
+  for (const mat of mats) camTreesShader(mat);
+  C.adopted++;
+}
+function camTreesProfile(g, y0, y1) {   // a crown's own silhouette: its widest reach from the axis at each of NB heights and NS directions (an oak's lumps are not round), from points spread over every triangle (trap 115)
+  const NB = CAMTREES.K.NB, NS = CAMTREES.K.NS, pr = new Float32Array(NB * NS), p = g.attributes.position, ix = g.index, n = ix ? ix.count : p.count, H = Math.max(1e-3, y1 - y0), v = [0, 0, 0];
+  for (let t = 0; t + 2 < n; t += 3) { const a = ix ? ix.getX(t) : t, b = ix ? ix.getX(t + 1) : t + 1, c = ix ? ix.getX(t + 2) : t + 2;
+    for (let i = 0; i <= 4; i++) for (let j = 0; j <= 4 - i; j++) { const u = i / 4, w = j / 4, z0 = 1 - u - w;
+      v[0] = p.getX(a) * z0 + p.getX(b) * u + p.getX(c) * w; v[1] = p.getY(a) * z0 + p.getY(b) * u + p.getY(c) * w; v[2] = p.getZ(a) * z0 + p.getZ(b) * u + p.getZ(c) * w;   // (r128 has no getComponent)
+      const bi = Math.max(0, Math.min(NB - 1, Math.floor((v[1] - y0) / H * NB))) * NS + Math.min(NS - 1, Math.floor((Math.atan2(v[0], v[2]) + Math.PI) / (2 * Math.PI) * NS)), r = Math.hypot(v[0], v[2]); if (r > pr[bi]) pr[bi] = r; } }
+  return pr;
+}
+function camTreesShader(mat) {   // the lens dither + the one faded tree: chained after the material's own onBeforeCompile (trees.js's sway); its own program key
+  if (!mat || mat.userData.ct1) return; mat.userData.ct1 = true; const prev = mat.onBeforeCompile, U = CAMTREES.U, NL = String.fromCharCode(10);
+  mat.onBeforeCompile = function (sh, r) { if (typeof prev === 'function') prev.call(this, sh, r); sh.uniforms.uCtNear = U.uCtNear; sh.uniforms.uCtTrees = U.uCtTrees;
+    sh.vertexShader = 'varying vec3 vCtW; varying vec3 vCtO;' + NL + sh.vertexShader.replace('#include <project_vertex>', ['#include <project_vertex>', 'vec4 ctW = vec4( transformed, 1.0 );', 'vec4 ctO = vec4( 0.0, 0.0, 0.0, 1.0 );',
+      '#ifdef USE_INSTANCING', '  ctW = instanceMatrix * ctW; ctO = instanceMatrix * ctO;', '#endif', 'vCtW = ( modelMatrix * ctW ).xyz; vCtO = ( modelMatrix * ctO ).xyz;'].join(NL));
+    sh.fragmentShader = 'uniform vec2 uCtNear; uniform vec4 uCtTrees[ 4 ]; varying vec3 vCtW; varying vec3 vCtO;' + NL + sh.fragmentShader.replace('void main() {', ['void main() {',
+      '  float ctA = uCtNear.y > 0.0 ? smoothstep( uCtNear.x, uCtNear.y, distance( vCtW, cameraPosition ) ) : 1.0;',
+      '  for ( int i = 0; i < 4; i ++ ) { if ( distance( vCtO.xz, uCtTrees[ i ].xy ) < 0.3 ) ctA = min( ctA, uCtTrees[ i ].z ); }',
+      '  if ( ctA < 0.999 && ctA <= fract( 52.9829189 * fract( dot( gl_FragCoord.xy, vec2( 0.06711056, 0.00583715 ) ) ) ) ) discard;'].join(NL)); };
+  const key = mat.customProgramCacheKey ? mat.customProgramCacheKey.call(mat) : ''; mat.customProgramCacheKey = function () { return key + '|ct1'; };   // its own program (trees.js's other plantings keep theirs)
+  mat.needsUpdate = true;
+}
+function camTreesEach(fn, x0, z0, x1, z1, grow) {   // every tree part standing within the box (plus grow), live from the instance matrices: fn(part, ox, oy, oz, sxz, sy, ax, az) true = stop; (ax, az): its own x axis on the ground (its yaw)
+  const C = CAMTREES; for (const P of C.parts) { const im = P.m; if (!im.visible || !im.parent) continue; const a = im.instanceMatrix.array, n = im.count, e = im.matrixWorld.elements, id = e[0] === 1 && e[5] === 1 && e[10] === 1 && e[12] === 0 && e[13] === 0 && e[14] === 0;
+    for (let i = 0; i < n; i++) { const o = i * 16; let ox = a[o + 12], oy = a[o + 13], oz = a[o + 14]; if (!id) { const X = ox, Y = oy, Z = oz; ox = e[0] * X + e[4] * Y + e[8] * Z + e[12]; oy = e[1] * X + e[5] * Y + e[9] * Z + e[13]; oz = e[2] * X + e[6] * Y + e[10] * Z + e[14]; }
+      const sxz = Math.hypot(a[o], a[o + 1], a[o + 2]), sy = Math.hypot(a[o + 4], a[o + 5], a[o + 6]); if (sy < 1e-3) continue; const R = P.rh * sxz + grow;
+      if (ox < x0 - R || ox > x1 + R || oz < z0 - R || oz > z1 + R) continue; if (fn(P, ox, oy, oz, sxz, sy, a[o] / sxz, a[o + 2] / sxz)) return true; } }
+  return false;
+}
+function camTreesIn(P, ox, oy, oz, sxz, sy, x, y, z, pad, ax, az) {   // is (x, y, z) inside this part (grown by pad)?
+  const y0 = oy + P.y0 * sy, y1 = oy + P.y1 * sy, r2 = Math.hypot(x - ox, z - oz);
+  if (y < y0 - pad || y > y1 + pad) return false;
+  const K = CAMTREES.K, NB = K.NB, NS = K.NS, f = ((y - oy) / sy - P.y0) / Math.max(1e-3, P.y1 - P.y0) * NB - 0.5, i0 = Math.max(0, Math.min(NB - 1, Math.floor(f))), i1 = Math.min(NB - 1, i0 + 1), fr = Math.max(0, Math.min(1, f - Math.floor(f)));
+  const dx = x - ox, dz = z - oz, g = (Math.atan2(dx * ax + dz * az, dx * -az + dz * ax) + Math.PI) / (2 * Math.PI) * NS, s0 = Math.min(NS - 1, Math.floor(g)), s1 = (g - s0 < 0.5 ? s0 + NS - 1 : s0 + 1) % NS;   // its own direction, and the nearer neighbour
+  const pr = P.prof, rl = Math.max(pr[i0 * NS + s0], pr[i0 * NS + s1]) * (1 - fr) + Math.max(pr[i1 * NS + s0], pr[i1 * NS + s1]) * fr;
+  return r2 < rl * sxz * K.PROF + pad;   // its own silhouette at that height (its widest reach: the gaps between a pine's spokes count as the tree)
+}
+function camTreesCast(from, d, len) {   // 733's arm asks: the distance along from + d * s (d a unit vector) to the first tree that must stop the camera, or Infinity
+  const C = CAMTREES; if (C.plant === 'skip' || !C.parts.length || !(len > 0.3)) return Infinity; const t0 = performance.now(), pad = C.K.PAD;
+  const tx = from.x + d.x * len, ty = from.y + d.y * len, tz = from.z + d.z * len; let best = Infinity;
+  camTreesEach((P, ox, oy, oz, sxz, sy, ax, az) => {
+    if (P.kind === 'wood') {   // a trunk ON the line: the ray against its upright cylinder (2D), then the height at the hit; she inside its circle (perched above): not this one
+      const r = P.rh * sxz + pad, fx = from.x - ox, fz = from.z - oz, a = d.x * d.x + d.z * d.z, b = fx * d.x + fz * d.z, c = fx * fx + fz * fz - r * r, disc = b * b - a * c;
+      if (a > 1e-6 && c > 0 && disc >= 0) { const s = (-b - Math.sqrt(disc)) / a, y = from.y + d.y * s, y0 = oy + P.y0 * sy, y1 = y0 + (P.y1 - P.y0) * sy * 0.85; if (s >= 0 && s <= len && s < best && y >= y0 - pad && y <= y1) best = s; } }   // then, like a crown: the camera never left in its branches
+    if (camTreesIn(P, ox, oy, oz, sxz, sy, from.x, from.y, from.z, 0, ax, az)) return false;   // a crown that holds her: never pulled out of (it fades instead)
+    if (!camTreesIn(P, ox, oy, oz, sxz, sy, tx, ty, tz, pad, ax, az)) return false;   // the camera is not in it: a crown between them fades instead (camTreesFade)
+    let lo = 0, hi = len; for (let k = 0; k < 10; k++) { const mid = (lo + hi) / 2; if (camTreesIn(P, ox, oy, oz, sxz, sy, from.x + d.x * mid, from.y + d.y * mid, from.z + d.z * mid, pad, ax, az)) hi = mid; else lo = mid; }
+    if (lo < best) best = lo; return false;
+  }, Math.min(from.x, tx), Math.min(from.z, tz), Math.max(from.x, tx), Math.max(from.z, tz), pad + 0.5);
+  if (best < Infinity) C.pulls++; C.ms.push(performance.now() - t0); if (C.ms.length > 4000) C.ms.shift();
+  return best;
+}
+function camTreesInside(p, pad) {   // the tree part the point is inside (or null): [part, ox, oy, oz, sxz, sy, ax, az]
+  let hit = null; camTreesEach((P, ox, oy, oz, sxz, sy, ax, az) => { if (camTreesIn(P, ox, oy, oz, sxz, sy, p.x, p.y, p.z, pad || 0, ax, az)) { hit = [P, ox, oy, oz, sxz, sy, ax, az]; return true; } return false; }, p.x, p.z, p.x, p.z, (pad || 0) + 0.5);
+  return hit;
+}
+function camTreesOut() {   // after every island frame, whatever camera ran (a lock's blend, a fight's): a lens left inside a tree that does not hold HER steps toward her until it is clear
+  const C = CAMTREES; if (C.plant === 'skip' || !C.parts.length || (S.mode !== 'fly' && S.mode !== 'walk') || S.inside) return; const p = camera.position, h = camTreesInside(p, 0); if (!h) return;
+  const q = C.q || (C.q = new THREE.Vector3()), her = C.her || (C.her = new THREE.Vector3()); her.set(S.pos.x, S.pos.y + 0.5, S.pos.z);
+  if (camTreesIn(h[0], h[1], h[2], h[3], h[4], h[5], her.x, her.y, her.z, 0, h[6], h[7])) return;   // it holds her too: it fades instead
+  const L = p.distanceTo(her); for (let s = 0.4; s < L - 0.3; s += 0.4) { q.copy(p).lerp(her, s / L); if (!camTreesInside(q, 0)) { p.copy(q); C.outs++; return; } }
+}
+function camTreesFade(dt) {   // after every island frame: every crown the lens is in, or that stands between the lens and HER, dissolves (out quickly, back slowly); four at most
+  const C = CAMTREES; if (C.plant === 'skip' || !C.parts.length) return; const t0 = performance.now(), K = C.K, c = camera.position, h = S.pos, want = new Map();
+  const L = Math.hypot(h.x - c.x, h.y - c.y, h.z - c.z), n = Math.max(1, Math.ceil(L / K.STEP));
+  if (L < 80) camTreesEach((P, ox, oy, oz, sxz, sy, ax, az) => { if (P.kind === 'wood') return false; const key = ox.toFixed(1) + ',' + oz.toFixed(1);
+    if (camTreesIn(P, ox, oy, oz, sxz, sy, c.x, c.y, c.z, 0.15, ax, az)) { want.set(key, [ox, oz, K.FADE_TO]); return false; }
+    for (let k = 1; k < n; k++) { const f = k / n, x = c.x + (h.x - c.x) * f, y = c.y + (h.y + 0.3 - c.y) * f, z = c.z + (h.z - c.z) * f; if (camTreesIn(P, ox, oy, oz, sxz, sy, x, y, z, K.SIGHT, ax, az)) { if (!want.has(key)) want.set(key, [ox, oz, K.OCC_TO]); return false; } }
+    return false; }, Math.min(c.x, h.x), Math.min(c.z, h.z), Math.max(c.x, h.x), Math.max(c.z, h.z), 0.5);
+  const st = dt || 0.016;
+  for (const [key, w] of want) { let f = C.faded.get(key); if (!f) { f = { x: w[0], z: w[1], a: 1 }; C.faded.set(key, f); C.fades++; } f.a = w[2] === K.FADE_TO ? Math.min(f.a, K.FADE_TO) : Math.max(w[2], f.a - 5 * st); }   // the lens's own crown at once; one in the way in ~0.15 s
+  for (const [key, f] of C.faded) if (!want.has(key)) { f.a += 1.5 * st; if (f.a >= 1) C.faded.delete(key); }
+  const top = [...C.faded.values()].sort((p, q) => p.a - q.a).slice(0, 4), U = C.U.uCtTrees.value;
+  for (let i = 0; i < 4; i++) { const f = top[i]; if (f) U[i].set(f.x, f.z, f.a, 0); else U[i].set(0, -1e5, 1, 0); }
+  C.fms.push(performance.now() - t0); if (C.fms.length > 4000) C.fms.shift();
+}
 /* ---------- trees (perchable: each top is a place to land) ---------- */
 const trees = [];
 /* 260 trees were 780 meshes with their own geometry (~600 draw calls in view, Obito board 525): now one
@@ -2212,7 +2493,7 @@ function tree(x, z, s) {
 function plantTrees() {
   if (window.WFR_TREES) {   /* the builder's forest (board 537): pines, firs, oaks with autumn tints, birches by the lake, snags, understory - 13 draws */
     const F = WFR_TREES.plant(THREE, treeSpecs, { renderer, H, water: WATER, lake: LAKE, peaks: PEAKS });
-    F.meshes.forEach((m) => scene.add(m));
+    F.meshes.forEach((m) => scene.add(m)); camTreesAdopt(F.meshes);   // camtrees: the camera learns the forest
     trees.forEach((t, i) => { t.top = F.tops[i]; t.r = F.radii[i]; t.fruit = F.fruit[i]; });   // landing, groundAt and the aim-assist read these
     return;
   }
@@ -4274,8 +4555,8 @@ function map705El() {
   return m;
 }
 function wmap712Hook(m) {   // 712e (Marth, Oct 28: "Not just Jamaica, the whole world."): the chart's World tab; world712-mapview.js draws it, the island chart is untouched
-  let data = 'world712-map.js'; { const ORCH_SRC = 'world712-map.js?v=7e000fd799e9'; data = ORCH_SRC; }   // named as build-site.js finds a lazy file, so her app carries it offline
-  { const ORCH_SRC = 'world712-mapview.js?v=7e000fd799e9'; const s = document.createElement('script'); s.src = ORCH_SRC; s.async = true; s.onload = () => { if (window.WMAP712) WMAP712.attach(m, data, () => { if (MAP705.open) { map705Size(); map705Draw(); } }); }; document.head.appendChild(s); }
+  let data = 'world712-map.js'; { const ORCH_SRC = 'world712-map.js?v=8388519875b3'; data = ORCH_SRC; }   // named as build-site.js finds a lazy file, so her app carries it offline
+  { const ORCH_SRC = 'world712-mapview.js?v=8388519875b3'; const s = document.createElement('script'); s.src = ORCH_SRC; s.async = true; s.onload = () => { if (window.WMAP712) WMAP712.attach(m, data, () => { if (MAP705.open) { map705Size(); map705Draw(); } }); }; document.head.appendChild(s); }
 }
 function map705Size() {   // the chart's side in CSS px: as big as fits, upright on a phone held up, the head and foot kept on a phone on its side
   const cv = $('map705cv'), side = Math.round(innerWidth > innerHeight && innerHeight <= 520 ? Math.max(150, Math.min(innerHeight - 96, innerWidth * 0.6)) : Math.max(180, Math.min(innerWidth - 44, innerHeight - 150, 460)));
@@ -6513,7 +6794,7 @@ function bgMusicTick(dt) {
    after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
    music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
    menu, a cutscene), the orchestra bows out. */
-const ORCH_SRC = 'orch-samples.js?v=7e000fd799e9';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const ORCH_SRC = 'orch-samples.js?v=8388519875b3';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
 const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
 window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
 const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
@@ -8920,7 +9201,7 @@ function cam733Drag(dt, turnable) {   // on foot a drag orbits the camera only (
   const o = S.camOff || 0; if (Math.abs(o) > 1e-4) { CAM733.yaw += o; CAM733.dragT = 0; CAM733.yawV = 0; } S.camOff = 0; S.panTurnV = 0; return true;
 }
 function cam733Occ() {   // the solid things near her, a slice a frame (never a burst): a catalog of opaque meshes every 4 s of play; each pass sorts it into the near lists
-  const C = CAM733, sz = C.b, tb = performance.now();   // not her, the chick, the villagers or anything skinned; the ground answers from its heights
+  const C = CAM733, sz = C.sz || (C.sz = new THREE.Vector3()), tb = performance.now();   // not her, the chick, the villagers or anything skinned; the ground answers from its heights
   const first = !C.all; if (first || S.t - C.allT > 4 || S.t < C.allT) { C.all = []; C.allT = S.t; C.ai = 0; C.nOcc = []; C.nThin = []; const skip = new Set(); for (const r of [bird, chick].concat(npcs.map((n) => n.g))) if (r) skip.add(r);
     scene.traverseVisible((o) => { if (!o.isMesh || o.isInstancedMesh || o.isSkinnedMesh || o.isSprite) return; for (let p = o; p; p = p.parent) if (skip.has(p)) return;
       const f = C.fades.get(o), m0 = f ? f.m : (Array.isArray(o.material) ? o.material[0] : o.material);
@@ -8937,6 +9218,7 @@ function cam733Cast(from, to) {   // the distance along from->to to the first so
   const C = CAM733, d = C.d.subVectors(to, from), len = d.length(); if (len < 0.3) return Infinity; d.multiplyScalar(1 / len); let best = Infinity;
   for (let k = 1; k <= 6; k++) { const f = k / 6, x = from.x + d.x * len * f, z = from.z + d.z * len * f, y = from.y + d.y * len * f; if (y < cam733G(x, z) + 0.35) { best = Math.max(0, len * (k - 1) / 6); break; } }
   C.rc.set(from, d); C.rc.near = 0.05; C.rc.far = len + C.CAM_PAD; const h = C.rc.intersectObjects(C.occ, false); if (h.length && h[0].distance < best) best = h[0].distance;
+  best = Math.min(best, camTreesCast(from, d, len));   // camtrees: the forest (instanced, so the list above never held it)
   return best;
 }
 CAM733.CAM_PAD = CAM733_K.ARM_PAD;
@@ -9009,10 +9291,13 @@ function cam733FlyLook(dt) {   // a little look-ahead into her heading (the came
   cam733SdV(C.fla, C.b.set((Math.sin(S.yaw) - tmp.x) * k, 0, (Math.cos(S.yaw) - tmp.z) * k), C.flaV, 0.35, dt); look.add(C.fla);
 }
 function cam733End(dt) {   // after every island frame: the fades end with the camera that made them; the FOV eases home through a landing, and is home in every other scene
+  camTreesOut(); camTreesFade(dt);   // camtrees: a lens left in a tree steps out toward her; the crowns in the way fade
   const C = CAM733; C.fr = (C.fr || 0) + 1; if (C.fades.size && S.t - C.lastT > 0.25 && C.lastFlyFr !== C.fr - 1) cam733Unfade();
   if (!C.fov0 || C.fovFr === C.fr - 1 || (typeof IDLE692 !== 'undefined' && IDLE692.cam) || Math.abs(camera.fov - C.fov0) < 0.01) return;   // the FOV code ran this frame, or a cutscene holds the lens
   if (['fly', 'walk', 'landing', 'hover', 'swim'].includes(S.mode)) { const k = C.fovFr; cam733Fov(dt, false, 0); C.fovFr = k; } else { C.fov = C.fov0; C.fovV = 0; camera.fov = C.fov0; camera.updateProjectionMatrix(); }   // a ride, a rail, a landing: eased home; any other scene: home at once
 }
+if (window.__wfr) window.__wfr.camTrees = (o) => { o = o || {}; const C = CAMTREES, Q = (A) => { const m = A.slice().sort((a, b) => a - b), q = (p) => (m.length ? +m[Math.min(m.length - 1, Math.floor(p * m.length))].toFixed(3) : null); return { n: m.length, med: q(0.5), p95: q(0.95), max: q(1) }; }; if (o.reset) { C.ms.length = 0; C.fms.length = 0; C.pulls = 0; C.fades = 0; }
+  const h = camTreesInside(camera.position, 0); return { plant: C.plant, adopted: C.adopted, parts: C.parts.map((P) => P.k + ':' + P.kind + ':' + P.m.count), pulls: C.pulls, fades: C.fades, fadedNow: C.faded.size, near: [C.U.uCtNear.value.x, C.U.uCtNear.value.y], inside: h ? h[0].k : null, ms: Q(C.ms), fadeMs: Q(C.fms) }; };   // camtrees: the bench's read
 /* 727a THE TAP LOCK: a tap on a foe on screen locks it (the nearest under the finger wins, trap 36); a tap away from every foe locks the nearest foe on screen,
    or lets a lock go. The arena keeps its own lock. lockFoe675 asks lock733Pick first: a foe, null (let go: no lock for 4 s), or undefined (the old proximity lock). */
 function lock733Pick() {
@@ -10819,9 +11104,9 @@ function u716Radar() {   // the radar's relic face, every frame (it turns with h
   const cv = $('radar'), g = cv.getContext('2d'), W = cv.width, cx = W / 2, R = W / 2 - 2, RANGE = 140; U716.faces++;
   if (!U716.glass) { const gr = g.createRadialGradient(cx, cx * 0.76, 2, cx, cx, R); gr.addColorStop(0, '#3a4a9c'); gr.addColorStop(0.6, '#18205a'); gr.addColorStop(1, '#080c28'); U716.glass = gr; }
   g.clearRect(0, 0, W, W); g.fillStyle = U716.glass; g.beginPath(); g.arc(cx, cx, R, 0, 6.2832); g.fill();
-  g.strokeStyle = 'rgba(240,207,122,.20)'; g.lineWidth = 1.6; g.beginPath();
+  g.strokeStyle = window.U726 && U726.on ? 'rgba(225,236,255,.16)' : 'rgba(240,207,122,.20)'; g.lineWidth = window.U726 && U726.on ? 1.2 : 1.6; g.beginPath();
   for (let k = 0; k < 4; k++) { const a = k * Math.PI / 4, c = Math.cos(a) * R, s = Math.sin(a) * R; g.moveTo(cx + c, cx + s); g.lineTo(cx - c, cx - s); } g.stroke();
-  g.strokeStyle = 'rgba(240,207,122,.32)'; g.beginPath(); g.arc(cx, cx, R * 0.5, 0, 6.2832); g.stroke(); g.beginPath(); g.arc(cx, cx, R * 0.93, 0, 6.2832); g.stroke();
+  g.strokeStyle = window.U726 && U726.on ? 'rgba(225,236,255,.30)' : 'rgba(240,207,122,.32)'; g.beginPath(); g.arc(cx, cx, R * 0.5, 0, 6.2832); g.stroke(); g.beginPath(); g.arc(cx, cx, R * 0.93, 0, 6.2832); g.stroke();
   const dot = (x, z, col, size, edge) => {
     const dx = x - S.pos.x, dz = z - S.pos.z, d = Math.hypot(dx, dz); if (!edge && d > RANGE) return;
     let rel = Math.atan2(dx, dz) - ARROW.view; rel = Math.atan2(Math.sin(rel), Math.cos(rel));
@@ -10837,8 +11122,8 @@ function u716Radar() {   // the radar's relic face, every frame (it turns with h
   if (S.nestDone) dot(NEST.x, NEST.z, '#c9a0ff', 7, Math.hypot(NEST.x - S.pos.x, NEST.z - S.pos.z) > RANGE);
   let nr = Math.PI - ARROW.view; nr = -Math.atan2(Math.sin(nr), Math.cos(nr));   // north (-z) at its bearing from her view
   const nx = cx + Math.sin(nr) * (R - 10), ny = cx - Math.cos(nr) * (R - 10);
-  g.fillStyle = '#c8314a'; g.strokeStyle = '#f0cf7a'; g.lineWidth = 2.4; g.beginPath(); g.arc(nx, ny, 8.5, 0, 6.2832); g.fill(); g.stroke();
-  g.fillStyle = '#fff8ea'; g.font = '800 11px Cinzel, Georgia, serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('N', nx, ny + 0.5);
+  g.fillStyle = '#c8314a'; g.strokeStyle = window.U726 && U726.on ? '#ffffff' : '#f0cf7a'; g.lineWidth = window.U726 && U726.on ? 1.5 : 2.4; g.beginPath(); g.arc(nx, ny, 8.5, 0, 6.2832); g.fill(); g.stroke();
+  g.fillStyle = '#fff8ea'; g.font = window.U726 && U726.on ? '700 11px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif' : '800 11px Cinzel, Georgia, serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; g.fillText('N', nx, ny + 0.5);
 }
 function u716BirdBox() {   // her drawn box on the screen (the guard's read: words and controls stay off her); math objects only, made once
   if (typeof bird === 'undefined' || !bird || !bird.visible) return null; const B = U716.box || (U716.box = new THREE.Box3()), v = U716.v || (U716.v = new THREE.Vector3()); B.setFromObject(bird); if (B.isEmpty()) return null;
@@ -10869,7 +11154,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build 7e000fd799e9): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build 8388519875b3): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>

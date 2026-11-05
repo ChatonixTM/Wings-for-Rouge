@@ -114,6 +114,7 @@ window.WFR_FEATURES = (function () {
     var TR = window.WFR_TRAVEL712, ground = TR.makeMaterial(THREE, u);   // 'travel712far': the very program the ground already compiled
     ground.polygonOffset = true; ground.polygonOffsetFactor = -2; ground.polygonOffsetUnits = -4;
     var wall = TR.makeMaterial(THREE, u, 'feat'); wall.map = photo('painted_plaster_wall_diff_1k.jpg', '#e6e1d6', 256);
+    if (window.WFR_SURF732) WFR_SURF732.wall(wall);   // 732 step 2 (world-surfaces732.js): the walls wear the CC0 facade (windows, its occlusion baked in)
     var roof = TR.makeMaterial(THREE, u, 'feat'); roof.map = photo('clay_roof_tiles_02_diff_1k.jpg', '#b8654a', 256);
     return { ground: ground, wall: wall, roof: roof };
   }
