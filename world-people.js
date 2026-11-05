@@ -429,16 +429,31 @@ window.WFR_PEOPLE724 = (function () {
   }
   function islandName(g) { var n = (g.userData && (g.userData.name || g.userData.who)) || g.name || ''; n = String(n).split(':').pop(); return n && !/^(group|object3d|mesh)$/i.test(n) ? n.charAt(0).toUpperCase() + n.slice(1) : 'A villager'; }
   var ISLAND_LINES = ['Oh! Hello, little one.', 'You fly so well these days.', 'The nest is looking strong.'];   // DRAFT (724b will say the last thing she did for them)
-  function talk(tg) {
+  function talk(tg, lines, done) {   // lines (optional, 720): another module's words in place of the person's own line; they still turn to her
     if (!st.inited || !tg || !X.say) return false; var S = X.S, crow = !!(S.lessons && S.lessons.crow), who, text;
     if (tg.kind === 'town') { var e = st.setById.get(tg.id); if (!e) return false; var sp = e.sp, r = rtOf(sp.id); r.hold = true; r.holdT = st.uTime.value; r.release = 0;
       who = crow ? '💬 ' + sp.name + ', ' + sp.title : '💬'; text = crow ? sp.line : sp.emoji + ' ♪';
-      st.talks++; st.lastTalk = { id: sp.id, who: who, text: text };
-      X.say([[who, text]], function () { r.release = st.uTime.value + 2.5; }); return true; }
+      st.talks++; st.lastTalk = { id: sp.id, who: lines ? lines[0][0] : who, text: lines ? lines[0][1] : text };
+      X.say(lines || [[who, text]], function () { r.release = st.uTime.value + 2.5; if (done) done(); }); return true; }
     var g = tg.g, v = g.getWorldPosition(new X.THREE.Vector3()); if (g.parent === X.scene) g.rotation.y = Math.atan2(S.pos.x - v.x, S.pos.z - v.z);
-    var nm = islandName(g); who = crow ? '💬 ' + nm : '💬'; text = crow ? ISLAND_LINES[hash(nm) % ISLAND_LINES.length] : '👋 ♪'; st.talks++; st.lastTalk = { island: nm, who: who, text: text };
-    X.say([[who, text]]); return true;
+    var nm = islandName(g); who = crow ? '💬 ' + nm : '💬'; text = crow ? ISLAND_LINES[hash(nm) % ISLAND_LINES.length] : '👋 ♪'; st.talks++; st.lastTalk = { island: nm, who: lines ? lines[0][0] : who, text: lines ? lines[0][1] : text };
+    X.say(lines || [[who, text]], done); return true;
   }
+
+  /* ---------- 6b. the doors world-quests.js (720 + 724c) reads: who someone is, where they stand NOW, their neighbours in the same place ---------- */
+  function spawnOf(id) { id = String(id); var k = id.lastIndexOf(':'); if (k < 0) return null; var p = st.byId[id.slice(0, k)]; if (!p) return null; ensureSpawns(p); var sp = p.spawns[+id.slice(k + 1)]; return sp && sp.id === id ? { p: p, sp: sp } : null; }
+  function who(tg) {
+    if (!tg) return null; if (tg.kind === 'island') return { island: true, g: tg.g, name: islandName(tg.g) };
+    var q = spawnOf(tg.kind === 'town' ? tg.id : tg); if (!q) return null; var sp = q.sp; return { id: sp.id, name: sp.name, title: sp.title, role: sp.role, kind: sp.kind, place: q.p.id, placeName: q.p.name, folk: q.p.folk || 'jm' }; }
+  var LT2 = [0, 0, 0], LW4 = [0, 0, 0, 0];
+  function locate(id, out) {   // the person's feet in the world now (drawn: as drawn; else from the place's frame), or null when the place is not where she is
+    var e = st.setById.get(id); if (e && e.wx != null) { out.x = e.wx; out.y = e.wy; out.z = e.wz; return out; }
+    var q = spawnOf(id); if (!q) return null; var o = originOf(q.p); if (!o) return null; posNow(q.sp, LT2); toWorld(o, LT2[0], groundL(q.p, o, LT2[0], LT2[1]), LT2[1], LW4); out.x = LW4[0]; out.y = LW4[1]; out.z = LW4[2]; return out; }
+  function peers(id, d0, d1) {   // the people of the same place who stand still, d0..d1 m from this one (in the place's own metres), nearest first: the same list every visit
+    var q = spawnOf(id); if (!q) return []; var a = q.sp, out = [];
+    q.p.spawns.forEach(function (sp) { if (sp === a || sp.kind === 'walk' || sp.role === 'swimmer') return; var d = Math.hypot(sp.x - a.x, sp.z - a.z); if (d >= d0 && d <= d1) out.push({ id: sp.id, d: d, name: sp.name, title: sp.title, role: sp.role }); });
+    return out.sort(function (x, y) { return x.d - y.d || (x.id < y.id ? -1 : 1); }); }
+  function each(fn) { for (var s = 0; s < st.set.length; s++) { var e = st.set[s]; if (e.wx != null) fn(e.sp.id, e.wx, e.wy, e.wz, e.sp); } }   // every drawn person, no allocation
 
   /* ---------- 7. the bench's reads (guards only) ---------- */
   function drawn() {   // what SHIPS: every drawn person read back from the instance buffers
@@ -464,7 +479,7 @@ window.WFR_PEOPLE724 = (function () {
   }
   function rebuild(id) { var p = st.byId[id]; if (p) { p.spawns = null; p.grid = null; st.refreshT = 0; } }   // the bench's revisit: generate the place again from its id
 
-  return { C: C, init: init, tick: tick, near: near, talk: talk, addPlace: addPlace, dropPlace: dropPlace, featureTile: featureTile, featureDrop: featureDrop,
+  return { C: C, init: init, tick: tick, near: near, talk: talk, who: who, locate: locate, peers: peers, each: each, addPlace: addPlace, dropPlace: dropPlace, featureTile: featureTile, featureDrop: featureDrop,
     peek: peek, drawn: drawn, resetMs: function () { st.ms = []; st.msMax = 0; }, testPerson: testPerson, rebuild: rebuild, roster: function (id) { var p = st.byId[id]; if (!p) return null; ensureSpawns(p); return { n: p.spawns.length, sig: p.sig }; },
     set enabled(v) { st.enabled = !!v; if (!v) st.meshes.forEach(function (im) { im.count = 0; }); st.refreshT = 0; }, get enabled() { return st.enabled; } };
 })();
