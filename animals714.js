@@ -1053,6 +1053,7 @@ window.WFR_ANIMALS = (function () {
       flat: flat,
       school: { build: buildSchool, place: placeSchool, step: stepSchool },   /* 714c: the reef fish, one batch */
       reef: buildReef,   /* 714c: the patch reef, static */
+      prim: { G0: G0, ell: ell, tube: tube, plank: plank, fin3: fin3, loft: loft, eye: eye, finish: finish, flat: flat, bonesPose: bonesPose, setR: setR, hex: hex, mixc: mixc, wing: wing, fishInto: fishInto, swimDone: swimDone },   /* world-animals.js: the same primitives, for the real world's kinds */
     };
   }());
 
