@@ -254,7 +254,7 @@ window.WFR_PEOPLE724 = (function () {
   }
   function ensureSpawns(p) {
     if (p.spawns) return; p.spawns = []; var r = rng(hash(p.id));
-    try { if (p.build) p.build(p, r); spotsBuild(p, r); } catch (e) { st.fault = 'build ' + p.id + ': ' + (e && e.message || e); }
+    try { if (p.build) p.build(p, r, function (rr, o) { var sp = person(p, rr, o); if (o.title) sp.title = o.title; if (o.line) sp.line = o.line; if (o.name) sp.name = o.name; if (o.emoji) sp.emoji = o.emoji; return sp; }); spotsBuild(p, r); } catch (e) { st.fault = 'build ' + p.id + ': ' + (e && e.message || e); }
     var grid = new Map(); p.spawns.forEach(function (sp, i) { var k = Math.floor(sp.x / C.CELL) + ',' + Math.floor(sp.z / C.CELL); if (!grid.has(k)) grid.set(k, []); grid.get(k).push(i); }); p.grid = grid;
     var sig = 2166136261 >>> 0; p.spawns.forEach(function (sp) { sig = hash(sig + '|' + sp.id + sp.model + sp.kind + sp.x.toFixed(2) + sp.z.toFixed(2) + sp.skin.join() + (sp.top || '') + (sp.bot || '') + (sp.L || 0).toFixed(1)); }); p.sig = sig;
   }
@@ -350,6 +350,7 @@ window.WFR_PEOPLE724 = (function () {
   function groundL(p, o, lx, lz) { if (o.host && p.ground) return p.ground(lx, lz); var w = (X.H || X.groundAt)(o.x + lx, o.z + lz); if (p.world && X.groundAt) w = X.groundAt(o.x + lx, o.z + lz); return w; }
   function rtOf(id) { var r = st.rt.get(id); if (!r) { r = { paused: 0, hold: false, holdT: 0, release: 0 }; st.rt.set(id, r); } return r; }
   function posNow(sp, out) {   // where a townsperson is at the clock now (walkers: back and forth along their run; a held one keeps its spot)
+    if (sp.cross && window.WFR_INTERIORS729) return WFR_INTERIORS729.crossPos(sp, st.uTime.value, out);   /* 729: the Scramble crosses on its light */
     if (sp.kind !== 'walk') { out[0] = sp.x; out[1] = sp.z; out[2] = sp.yaw; return out; }
     var r = st.rt.get(sp.id), t = st.uTime.value - (r ? r.paused : 0), u = ((sp.s0 + sp.v * t) % (2 * sp.L) + 2 * sp.L) % (2 * sp.L), fwd = u < sp.L, q = at(sp, fwd ? u : 2 * sp.L - u);
     out[0] = q[0]; out[1] = q[1]; out[2] = fwd ? q[2] : q[2] + Math.PI; return out; }

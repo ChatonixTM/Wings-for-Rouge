@@ -137,12 +137,13 @@ window.WFR_FEATURES = (function () {
   /* ---------- building one tile, a slice at a time ---------- */
   function Out() { this.p = []; this.n = []; this.c = []; this.uv = []; this.i = []; }
   Out.prototype.v = function (x, y, z, nx, ny, nz, r, g, b, u, v) { this.p.push(x, y, z); this.n.push(nx, ny, nz); this.c.push(r, g, b); if (this.uv) this.uv.push(u || 0, v || 0); return this.p.length / 3 - 1; };
-  function want(z) { var w = { transportation: 1, water: 1, waterway: 1, place: z <= 12 ? 1 : 0, building: z >= 14 ? 1 : 0 }; if (listeners.length) { w.landcover = 1; w.landuse = 1; } return w; }
+  var poiWant = null;   /* 729: world-interiors.js asks for shops, cafes and offices near the quests */
+  function want(z, t) { var w = { transportation: 1, water: 1, waterway: 1, place: z <= 12 ? 1 : 0, building: z >= 14 ? 1 : 0 }; if (listeners.length) { w.landcover = 1; w.landuse = 1; } if (poiWant && z >= 14 && t && poiWant(t)) w.poi = 1; return w; }
   function startJob(t) {
-    var st = T.st, f = T.f, L = decodeTile(t.raw, want(t.z)), order = ['water', 'waterway', 'transportation', 'building', 'place', 'landcover', 'landuse'], lays = [];
+    var st = T.st, f = T.f, L = decodeTile(t.raw, want(t.z, t)), order = ['water', 'waterway', 'transportation', 'building', 'place', 'landcover', 'landuse', 'poi'], lays = [];
     for (var i = 0; i < order.length; i++) if (L[order[i]]) lays.push(L[order[i]]);
     var a = W.toLocal(f, t.nw.lat, t.nw.lon), b = W.toLocal(f, t.se.lat, t.se.lon), cx = (a.x + b.x) / 2, cz = (a.z + b.z) / 2, pr = st.probe(cx, cz);
-    t.job = { lakeK: 0, f: f, ax: a.x, az: a.z, lays: lays, li: 0, fi: 0, wall: new Out(), roof: new Out(), gnd: new Out(), wallN: 0, nB: 0, nR: 0, nW: 0, places: [], feed: listeners.length ? { landcover: [], landuse: [], water: [], buildings: [] } : null, terrZ: pr ? pr.zoom : -1 };
+    t.job = { lakeK: 0, f: f, ax: a.x, az: a.z, lays: lays, li: 0, fi: 0, wall: new Out(), roof: new Out(), gnd: new Out(), wallN: 0, nB: 0, nR: 0, nW: 0, places: [], feed: listeners.length ? { landcover: [], landuse: [], water: [], buildings: [], pois: [] } : null, terrZ: pr ? pr.zoom : -1 };
     t.job.gnd.uv = null; t.job.terrA = { x0: Math.min(a.x, b.x), x1: Math.max(a.x, b.x), z0: Math.min(a.z, b.z), z1: Math.max(a.z, b.z) }; stats.jobs++;
   }
   function stepJob(t, deadline) {   // true when done
@@ -162,6 +163,7 @@ window.WFR_FEATURES = (function () {
   function H(J, lx, lz) { return T.st.H(J.ax + lx, J.az + lz); }
   function emit(t, J, L, ft) {
     var name = L.name, P = ft.props, E = L.extent;
+    if (name === 'poi') { if (J.feed && J.feed.pois && ft.type === 1 && ft.rings[0] && /^(office|cafe|shop|clothing_store|grocery|bakery|ice_cream)$/.test(P['class'])) { var g729 = llOf(t.z, t.x, t.y, ft.rings[0][0], ft.rings[0][1], E); J.feed.pois.push({ id: ft.id, cls: P['class'], sub: P.subclass || null, name: P['name:en'] || P.name_en || P.name || null, lat: g729.lat, lon: g729.lon }); } return; }   /* 729 */
     if (name === 'building') { if (ft.type !== 3 || P.hide_3d) return; var ps = polygons(ft.rings); for (var i = 0; i < ps.length; i++) building(t, J, ps[i], P, ft.id, E); return; }
     if (name === 'transportation') { var cl = P['class']; if (!ROADS[t.z][cl] || ft.type !== 2 || P.brunnel === 'tunnel') return; for (i = 0; i < ft.rings.length; i++) ribbon(J, locRing(t, J, ft.rings[i], E), ROAD_W[cl] * C.WIDEN[t.z], ROAD_C[cl], C.LIFT[t.z], C.SUB[t.z]); J.nR++; return; }
     if (name === 'waterway') { var wc = P['class'], ww = WAY_W[wc]; if (!ww || ft.type !== 2 || (wc === 'stream' && t.z < 14) || P.brunnel === 'tunnel') return; for (i = 0; i < ft.rings.length; i++) ribbon(J, locRing(t, J, ft.rings[i], E), ww * C.WIDEN[t.z], WATER_C, C.LIFT[t.z] * 1.2, C.SUB[t.z]); return; }
@@ -197,7 +199,7 @@ window.WFR_FEATURES = (function () {
     var faces = triangulate(rings), RO = house ? J.roof : J.roofFlat || (J.roofFlat = new Out()), base = RO.p.length / 3, rc = house ? [0.96 - rnd * 0.12, 0.90 - rnd * 0.15, 0.86 - rnd * 0.12] : [col[0] * 0.66, col[1] * 0.66, col[2] * 0.68];
     for (r = 0; r < rings.length; r++) for (i = 0; i < rings[r].length; i += 2) RO.v(rings[r][i], top, rings[r][i + 1], 0, 1, 0, rc[0], rc[1], rc[2], rings[r][i] / 10, rings[r][i + 1] / 10);
     for (i = 0; i < faces.length; i++) tri(RO, base + faces[i][0], base + faces[i][1], base + faces[i][2]);
-    J.nB++; if (J.feed) J.feed.buildings.push({ h: h, minH: mh, rings: [poly.outer].concat(poly.holes).map(function (q) { var ll = new Float64Array(q.length); locRing(t, J, q, E, ll); return ll; }) });
+    J.nB++; if (J.feed) J.feed.buildings.push({ h: h, minH: mh, id: id, rings: [poly.outer].concat(poly.holes).map(function (q) { var ll = new Float64Array(q.length); locRing(t, J, q, E, ll); return ll; }) });
   }
   function lake(t, J, poly, E, id) {   // a lake's surface is level: at its flat interior's height when the ground inside is flat (a lake), else at the lowest ground on its shore (a river on a slope never floats)
     var rings = [locRing(t, J, poly.outer, E)]; for (var i = 0; i < poly.holes.length; i++) rings.push(locRing(t, J, poly.holes[i], E));
@@ -414,6 +416,6 @@ window.WFR_FEATURES = (function () {
     var raw = 0; tiles.forEach(function (t) { if (t.raw) raw += t.raw.byteLength; }); s.rawMB = +(raw / 1048576).toFixed(2); s.template = template; s.photos = Object.assign({}, tex); s.lakeLv = []; lakeLv.forEach(function (v, k) { if (s.lakeLv.length < 12) s.lakeLv.push([k, v.z, +v.h.toFixed(2)]); }); s.lakeReads = stats.lakeReads.slice(); s.lakeOf = function (id) { var b = lakeLv.get(id), pcs = []; tiles.forEach(function (t) { if (t.lakes) t.lakes.forEach(function (L) { if (L.id === id) pcs.push([t.key, t.state, !!t.stale, L.z, L.lv, L.rd, L.lo, L.ns]); }); }); return { best: b ? [b.z, +b.h.toFixed(2)] : null, pieces: pcs }; }; return s; }
   function meshes() { var out = []; tiles.forEach(function (t) { for (var i = 0; i < t.meshes.length; i++) out.push({ key: t.key, z: t.z, mesh: t.meshes[i] }); }); return out; }
   var api = { C: C, attach: attach, update: update, peek: peek, meshes: meshes, decodeTile: decodeTile, feature: feature, polygons: polygons, llOf: llOf,
-    onTile: function (cb) { listeners.push(cb); }, onDrop: function (cb) { droppers.push(cb); }, setFetch: function (fn) { fetchFn = fn; }, group: function () { return group; }, materials: function () { return mats; }, attached: function () { return { T: T, scene: scene, warm: warm }; }, version: 1 };   // attached(): what the page handed attach() (the game's script is scoped; the guard reads it here)
+    onTile: function (cb) { listeners.push(cb); }, wantPoi: function (fn) { poiWant = fn; }, onDrop: function (cb) { droppers.push(cb); }, setFetch: function (fn) { fetchFn = fn; }, group: function () { return group; }, materials: function () { return mats; }, attached: function () { return { T: T, scene: scene, warm: warm }; }, version: 1 };   // attached(): what the page handed attach() (the game's script is scoped; the guard reads it here)
   return api;
 })();

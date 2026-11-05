@@ -79,6 +79,7 @@ window.WFR_QUESTS720 = (function () {
     { id: 'opera', e: '🎭', name: 'the Sydney Opera House', title: 'See the Sydney Opera House', where: 'Sydney, Australia', lat: -33.85678, lon: 151.2153, kind: 'fly', r: 250, aglMax: 500, xp: 140, runes: 18, line: 'Sails of white tile on the harbour.' },
     { id: 'tahoe', e: '🏞️', name: 'Lake Tahoe', title: 'Fly over Lake Tahoe', where: 'California and Nevada, USA', lat: 39.0968, lon: -120.0324, kind: 'see', r: 9000, aglMax: 2000, xp: 100, runes: 12, line: 'A mountain lake so clear you can see the bottom.' }
   ];
+  if (window.WFR_INTERIORS729 && WFR_INTERIORS729.LANDMARKS) LANDMARKS = LANDMARKS.concat(WFR_INTERIORS729.LANDMARKS);   /* 729: Shanghai, Beijing, Tokyo, Shibuya, Shinjuku (world-interiors.js) */
   var LMB = {}; LANDMARKS.forEach(function (L) { LMB[L.id] = L; });
 
   var X = null, V = null, Q = null;   // the page's ctx; one reused goal vector; S.quests
@@ -157,6 +158,7 @@ window.WFR_QUESTS720 = (function () {
     Q.active = Q.active.filter(function (q) { return q !== a; }); if (Q.pin === a.id) Q.pin = Q.active.length ? Q.active[Q.active.length - 1].id : null;
     Q.done.push({ id: a.id, kind: a.kind, title: a.title, e: a.e, xp: a.xp, runes: a.runes, giver: a.gname || null, day: X.S.dawns || 0 }); if (Q.done.length > C.DONE_KEEP) Q.done.splice(0, Q.done.length - C.DONE_KEEP);
     if (a.kind === 'lm') Q.lm[a.lm] = 1;
+    if (a.kind === 'lm' && window.WFR_INTERIORS729) { var in729 = WFR_INTERIORS729.questFor(a.lm, X.S.dawns || 0); if (in729 && !Q.lm[in729.id] && !Q.active.some(function (q) { return q.id === in729.id; })) { Q.active.push(in729); Q.pin = in729.id; } }   /* 729: a landmark she can enter: going inside follows */
     if (a.giver) { var h = help(a.giver); h.help++; h.last = a.item || (LMB[a.lm] && LMB[a.lm].name) || ''; }
     if (a.to && a.kind !== 'find') { var h2 = help(a.to); h2.help++; h2.last = a.item; }
     X.S.runes = (X.S.runes || 0) + (a.runes || 0); st.completed++; st.events.push('finish ' + a.id + ' ' + how);
@@ -215,7 +217,7 @@ window.WFR_QUESTS720 = (function () {
 
   /* ---------- the arrow and the level card ---------- */
   function pinned() { if (!Q || !Q.pin) return null; for (var i = 0; i < Q.active.length; i++) if (Q.active[i].id === Q.pin) return Q.active[i]; return null; }
-  function legTarget(a, out) { var L = a.legs[a.leg]; if (!L) return null; if (L.k === 'lm') return lmTarget(LMB[L.lm], out); if (L.k === 'spot') return spotOf(L, out); return posOf(L.who, out); }
+  function legTarget(a, out) { var L = a.legs[a.leg]; if (!L) return null; if (L.k === 'in') return window.WFR_INTERIORS729 ? WFR_INTERIORS729.doorAt(L.lm, out) : null; if (L.k === 'lm') return lmTarget(LMB[L.lm], out); if (L.k === 'spot') return spotOf(L, out); return posOf(L.who, out); }
   function goal() {   // goalTarget(): the pinned quest's next step where she is now, else null (the game's own chain carries on)
     if (!st.inited || st.fault) return null; var a = pinned(); if (!a) return null; var p = legTarget(a, TMPP); if (!p) return null; if (!V) V = new X.THREE.Vector3(); V.set(p.x, p.y, p.z); return V; }
   function stepText(a) { var L = a.legs[a.leg]; if (!L) return a.title; var o = { e: a.e, to: a.toName, g: a.gname, i: a.item, lm: a.title };
@@ -224,8 +226,8 @@ window.WFR_QUESTS720 = (function () {
   var AR = { a: null };
   function travelHud(T, viewYaw) {   // the travel zone: a pinned landmark gets the arrow and the distance (unless 725d's own route holds them)
     st.travelArrow = false; if (!st.inited) return; hideMarks();
-    var a = pinned(), F = window.WFR_FAST725D, W = window.WFR_WORLD; if (!a || a.kind !== 'lm' || !T || !T.on || !T.ll || !W) return; if (F && F.state && F.state().on) return;
-    var L = LMB[a.lm], km = W.flownKm(T.ll, L), d = km < 2 ? Math.round(km * 1000) + ' m' : Math.round(km).toLocaleString('en-US') + ' km', el = $('dist'), ar = $('arrowSvg');
+    var a = pinned(), F = window.WFR_FAST725D, W = window.WFR_WORLD; if (!a || (a.kind !== 'lm' && a.kind !== 'in') || !T || !T.on || !T.ll || !W) return; if (F && F.state && F.state().on) return;
+    var L = (a.kind === 'in' && window.WFR_INTERIORS729 && WFR_INTERIORS729.doorLL(a.lm)) || LMB[a.lm], km = W.flownKm(T.ll, L), d = km < 2 ? Math.round(km * 1000) + ' m' : Math.round(km).toLocaleString('en-US') + ' km', el = $('dist'), ar = $('arrowSvg');
     if (el && el.textContent !== L.e + ' ' + d) el.textContent = L.e + ' ' + d;
     if (ar) { var rel = W.yawToward(T.ll, L) - viewYaw; rel = Math.atan2(Math.sin(rel), Math.cos(rel)); ar.style.transform = 'rotate(' + (-rel * 180 / Math.PI).toFixed(1) + 'deg)'; if (ar.style.opacity !== '1') ar.style.opacity = '1'; }
     st.travelArrow = true;
@@ -366,8 +368,13 @@ window.WFR_QUESTS720 = (function () {
       shown: st.shown.slice(), busted: st.busted || 0, lastTalk: st.lastTalk, lastOffer: st.lastOffer || null, travelArrow: st.travelArrow, near: st.near,
       btn: b ? [Math.round(b.left), Math.round(b.top), Math.round(b.width), Math.round(b.height)] : null, help: Object.assign({}, X && X.S.people724 || {}) };
   }
+  function inside729(id) {   /* 729: she went inside a landmark: its "go inside" quest is done (made and done at once if she came without it) */
+    if (!st.inited || !window.WFR_INTERIORS729) return false; var key = 'in:' + id, a = null, i; if (Q.lm[key]) return false;
+    for (i = 0; i < Q.active.length; i++) if (Q.active[i].id === key) a = Q.active[i];
+    if (!a) { a = WFR_INTERIORS729.questFor(id, X.S.dawns || 0); if (!a) return false; Q.active.push(a); }
+    Q.lm[key] = 1; finish(a, 'went inside'); return true; }
   function lmPeek(id) { var L = LMB[id]; if (!L || !st.inited) return null; var h = lmHere(L); return { id: id, d: h ? +h.d.toFixed(1) : null, agl: h && h.agl != null ? +h.agl.toFixed(1) : null, ok: h ? h.ok : null, where: h ? h.where : null, done: !!Q.lm[id] }; }
 
-  return { C: C, WORDS: WORDS, LANDMARKS: LANDMARKS, init: init, tick: tick, draw: draw, travelHud: travelHud, talk: talk, goal: goal, pill: pill, peek: peek, lmPeek: lmPeek,
+  return { C: C, WORDS: WORDS, LANDMARKS: LANDMARKS, inside: function (id) { return inside729(id); }, init: init, tick: tick, draw: draw, travelHud: travelHud, talk: talk, goal: goal, pill: pill, peek: peek, lmPeek: lmPeek,
     offers: function (pid) { return st.inited ? offers(pid) : false; }, open: function (on) { openBoard(on); } };
 })();
