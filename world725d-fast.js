@@ -86,7 +86,9 @@ window.WFR_FAST725D = (function () {
     document.body.appendChild(veil); return veil;
   }
   function fade(on) { var v = veilEl(); v.style.transition = 'opacity ' + (on ? C.FADE_IN : C.FADE_OUT) + 'ms ease'; v.style.opacity = on ? '1' : '0'; }
+  var DROP_OFF = true;   // Marth, Nov 5 2026: "just make it so u have to manually fly for now so it may take minutes" (Rouge was sent 8000 km): no Drop here until he says
   function drop(p) {
+    if (DROP_OFF) return false;
     if (!D || DR.phase || !p || !isFinite(p.lat) || !isFinite(p.lon)) return false;
     if (!D.can()) { say(WORDS.shut); return false; }
     end('drop'); glideOff(); DR.to = { lat: p.lat, lon: p.lon }; DR.name = nameOf(p); DR.phase = 'in'; DR.t0 = performance.now(); DR.drops++; DR.err = null; DR.waits = 0;
@@ -119,7 +121,7 @@ window.WFR_FAST725D = (function () {
     vis();
   }
   function vis() {
-    if (!ui) return; var any = !!(sel && sel.kind !== 'home'), fly = !!(any && D && D.T && D.T.on), dr = !!(any && D && D.can());
+    if (!ui) return; var any = !!(sel && sel.kind !== 'home'), fly = !!(any && D && D.T && D.T.on), dr = !DROP_OFF && !!(any && D && D.can());
     if (ui.fly.hidden === fly) ui.fly.hidden = !fly; if (ui.drop.hidden === dr) ui.drop.hidden = !dr; var row = fly || dr; if (ui.row.hidden === row) ui.row.hidden = !row;
   }
   function tap(b, fn) {   // a thumb's tap is its own down and up (705's rule: 615 cancels a second tap's click near any lift); a keyboard's Enter is the click
