@@ -53,6 +53,10 @@ window.WFR_ANIMALS = (function () {
       moves: [{ id: 'cruise', v: 1.3 }, { id: 'surge', v: 10 }], stalkMv: 0, strikeMv: 1,   /* Carcharhinus perezi, 2.2 m (its burst 10 m/s: she cruises at 8, a Stroke takes her to 13): patrols the drop-off, circles, hunches (its warning), then bumps or runs in to bite */
       attacks: [{ id: 'bump', warn: 0.85, fly: 0.3, from: 2.5, reach: 4.6, hitR: 0.85, lock: 0.62, sea: true, lead: true }, { id: 'biterun', heavy: true, warn: 1.35, fly: 0.6, from: 6.0, reach: 9.8, hitR: 1.05, lock: 0.7, sea: true, lead: true }] },
   };
+  /* BOARD-744-HIT THE HIT TABLE (Marth, Nov 6: "they should get hit and stagger a bit on the poke and fly back a bit on the tail sweep. This applies to all animals . Varies in fly back on anima size. This also applies to the level of rouge(the save file/other birds) and what (if she has any) weapons are in use"). Every number a DRAFT for his thumb.
+     m: metres per hit at size 1, level factor 1 (a peck lands two beak hits); t: seconds of the reaction; hop: metres of height on a size-1 throw; shake: metres of side-to-side; rear: the recoil of the head. SIZE: small flies far, big barely. LV: [level, factor, level, factor], straight between. GEAR: [peck, sweep]; none is 1. MAX: the longest throw. BODY: the boa's length. */
+  var HIT = { PECK: { m: 0.12, t: 0.42, hop: 0, shake: 0.09, rear: 0.8 }, SWEEP: { m: 1.5, t: 0.55, hop: 0.42, shake: 0.03, rear: 0.5 },
+    SIZE: { crab: 1.6, mongoose: 1.3, gull: 1.2, boa: 1, barracuda: 0.8, pelican: 0.8, turtle: 0.5, dolphin: 0.35, shark: 0.3 }, LV: [1, 0.8, 60, 1.6], GEAR: { none: [1, 1], gust: [1, 1.5] }, MAX: 5, BODY: 2 };
   var TRIES = [0, 0.7, -0.7, 1.5, -1.5];   /* a blocked step tries these turns, in order */
   var BUMP = { id: 'bump', warn: 0.7, fly: 0.2, from: 1.0, reach: 1.2, hitR: 0.8, lock: 0.3 };   /* no gentle animal has an attack: this exists only so plant 'warn' can show one striking */
   var API = null, TAU = Math.PI * 2;
@@ -60,6 +64,10 @@ window.WFR_ANIMALS = (function () {
   function num(x, lo, hi) { x = +x; return x === x && x !== Infinity && x !== -Infinity ? clamp(x, lo, hi) : 0; }
   function wrap(a) { while (a > Math.PI) a -= TAU; while (a < -Math.PI) a += TAU; return a; }
   function ease(x) { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); }
+  function hitDist(how, sp, lv, gear) {   /* 744: move x animal size x her level x weapon */
+    var sw = how === 'sweep', M = sw ? HIT.SWEEP : HIT.PECK, s = HIT.SIZE[sp] == null ? 1 : HIT.SIZE[sp], L = HIT.LV, u = clamp(((+lv || L[0]) - L[0]) / (L[2] - L[0]), 0, 1), g = HIT.GEAR[gear] || HIT.GEAR.none;
+    return Math.min(HIT.MAX, M.m * s * (L[1] + (L[3] - L[1]) * u) * g[sw ? 1 : 0]);
+  }
 
   function create(o) {   /* never throws into the game */
     try { var w = build(o || {}); API.last = w; return w; } catch (err) { API.error = String(err && err.message || err); return deadWorld(); }
@@ -74,7 +82,7 @@ window.WFR_ANIMALS = (function () {
     var NEST = o.nest ? [+o.nest[0] || 0, +o.nest[1] || 0] : [1e9, 1e9];
     var A = [];
     var R = { outside: false, grace: 0, t: 0, plant: null, dead: false, attacker: -1, log: new Float64Array(8), logN: 0, mean: false,
-      awake: 0, strikes: 0, warns: 0, hurts: 0, steals: 0, parries: 0, perfect: 0, dodges: 0, driven: 0, whiffs: 0, early: 0, cancels: 0, xp: 0, notices: 0 };
+      awake: 0, strikes: 0, warns: 0, hurts: 0, steals: 0, parries: 0, perfect: 0, dodges: 0, driven: 0, whiffs: 0, early: 0, cancels: 0, xp: 0, notices: 0, kicks: 0, kick: null };
     var EVP = [], EV = [], k;
     for (k = 0; k < 32; k++) EVP.push({ type: '', i: -1, heavy: false, atk: '', xp: 0, tgt: '', d: 0 });
     var PEND = [], pendN = 0; for (k = 0; k < 8; k++) PEND.push({ type: '', i: -1, heavy: false, atk: '', xp: 0, tgt: '', d: 0 });   /* events raised between steps (her peck: hit()) wait here for the next step */
@@ -112,7 +120,7 @@ window.WFR_ANIMALS = (function () {
       a.tgtChick = false;
       if (R.plant === 'chickTarget' && IN.chick) { var dc = hd(a, IN.cx, IN.cz), dh = hd(a, IN.hx, IN.hz); if (dc < dh) a.tgtChick = true; }   /* plant 'chickTarget': the control for the chick claim */
     }
-    function toIdle(a, cd) { release(a); a.atk = -1; a.cd = Math.max(a.cd, cd || 0); a.mean = false; a.driven = false; a.locked = false; a.mark = 0; a.wT = 0; a.dodged = 0; a.show = false; setState(a, 'idle'); }
+    function toIdle(a, cd) { release(a); a.kT = 0; a.kS = 0; a.kY = 0; a.atk = -1; a.cd = Math.max(a.cd, cd || 0); a.mean = false; a.driven = false; a.locked = false; a.mark = 0; a.wT = 0; a.dodged = 0; a.show = false; setState(a, 'idle'); }
     function cancel(a) { if (a.state === 'warn' || a.state === 'strike') { R.cancels++; ev('cancel', a); } release(a); a.locked = false; a.mark = 0; setState(a, 'recover'); }
     function face(a, x, z, dt, rate) { var want = Math.atan2(x - a.x, z - a.z), df = wrap(want - a.dir); a.dir = wrap(a.dir + clamp(df, -rate * dt, rate * dt)); }
     function stepMove(a, dt, mv) {   /* along a.dir at a.vT (smoothed), the boa weaving, every step tested by the html's ok() and the nest line */
@@ -182,8 +190,26 @@ window.WFR_ANIMALS = (function () {
       var L = a.S.attacks; if (!L) { a.atk = 0; return; } var hv = L[1], can = !hv.fruit || IN.fruit;
       if (a.force >= 0 && R.plant !== 'oneatk' && (a.force === 0 || can)) { a.atk = a.force; return; }   /* the bench's lever (W.force): this attack until it reaches contact; never past plant 'oneatk' */
       a.atk = R.plant !== 'oneatk' && can && (a.since >= 2 || rand() < a.S.heavyP) ? 1 : 0; if (a.atk === 1) a.since = 0; else a.since++; }
+    function knockOK(a, ox, oz) {   /* 744: may it be moved by (ox, oz)? the animal's own ok() and the nest line, as stepMove; the boa's middle and tail too */
+      var nx = a.x + ox, nz = a.z + oz, tr = a.tr, q;
+      if (nestD(nx, nz) < FAIR.NEST_R + 1 && nestD(nx, nz) < nestD(a.x, a.z)) return false;
+      if (a.S.realm === 'air') return true;
+      if (!okAt(a.sp, nx, nz)) return false;
+      if (tr && a.kMid >= 0) { q = a.kMid * 3; if (!okAt(a.sp, tr[q] + ox, tr[q + 2] + oz)) return false; }
+      if (tr && a.kTail >= 0) { q = a.kTail * 3; if (!okAt(a.sp, tr[q] + ox, tr[q + 2] + oz)) return false; }
+      return true;
+    }
+    function knocked(a, dt) {   /* 744: the hit, before the slither-away: fast off the blow, slowing to the landing, in steps of 12 cm so no wall is jumped; a blocked throw stops there and drops */
+      var u0 = 1 - a.kT / a.kLen, u1, want, s, mx = 0, mz = 0, tr = a.tr, j;
+      a.kT = Math.max(0, a.kT - dt); a.dizzy = Math.max(0, a.dizzy - dt); a.v = 0; a.vT = 0;   /* her old dizzy beat runs inside the reaction, never after it */
+      u1 = 1 - a.kT / a.kLen; want = a.kD * (u1 * (2 - u1) - u0 * (2 - u0));
+      while (want > 1e-4) { s = want < 0.12 ? want : 0.12; want -= s; if (!knockOK(a, mx + a.kx * s, mz + a.kz * s)) { a.kD = 0; break; } mx += a.kx * s; mz += a.kz * s; }
+      a.x += mx; a.z += mz; a.kY = a.kH * Math.sin(Math.PI * u1);
+      if (tr) for (j = 0; j < tr.length; j += 3) { tr[j] += mx; tr[j + 2] += mz; tr[j + 1] = ground(tr[j], tr[j + 2]) + a.kY; }   /* the whole snake flies, never its head alone */
+    }
     function flee(a, dt) {
       var S0 = a.S, d = hd(a, IN.hx, IN.hz);
+      if (a.kT > 0) { knocked(a, dt); return; }   /* 744 */
       if (a.dizzy > 0) { a.dizzy -= dt; a.vT = 0; stepMove(a, dt, 0); return; }
       if (S0.realm === 'water') a.dive = Math.min(1, a.dive + dt * 1.5);
       if (S0.sea3d) a.ty = ground(a.x, a.z) + 0.5;   /* 714c: away, and down toward the bottom */
@@ -336,6 +362,7 @@ window.WFR_ANIMALS = (function () {
       if (S0.sea3d) seaY(a, dt); else setY(a, dt);
       if (a.sp === 'crab') a.yaw = a.state === 'warn' || a.state === 'strike' || a.v < 0.05 && (a.state === 'stalk' || a.state === 'recover') ? a.dir : wrap(a.dir + (a.side > 0 ? 1 : -1) * Math.PI / 2);   /* a crab always moves sideways; it turns its claws to her only standing to strike */
       else a.yaw = a.sp === 'boa' ? (a.head == null ? a.dir : a.head) : a.dir;
+      if (a.kT > 0) { a.kS = a.kW * (a.kT / a.kLen) * Math.sin(a.kT * 34); a.yaw = wrap(a.yaw + a.kS * 3); if (S0.realm === 'land') a.y += a.kY; } else a.kS = 0;   /* 744: added to the ground setY just gave it, so it can never sink */
     }
     function wake() {   /* awake within 60 m, asleep past 80 m, and never more than the six nearest */
       var n = A.length, j, m, best, bd, want = 0;
@@ -489,7 +516,7 @@ window.WFR_ANIMALS = (function () {
         mean: false, driven: false, dizzy: 0, carry: false, zip: false, since: 0, doze: false, curl: 0, jaw: 0, followT: 0, blocked: 0, side: rand() < 0.5 ? 1 : -1, used: { mv: [0, 0, 0], atk: [0, 0] }, tr: null, tH: 0, tN: 0 };
       if (sp === 'boa') { a.tr = new Float32Array(48 * 3); }
       a.y = S0.realm === 'land' ? ground(x, z) : S0.realm === 'water' ? WATER - 0.1 : WATER + S0.alt; a.ty = a.y;
-      a.dodged = 0; a.show = false; a.hurry = false; a.force = -1;
+      a.dodged = 0; a.show = false; a.hurry = false; a.force = -1; a.kT = 0; a.kLen = 1; a.kD = 0; a.kx = 0; a.kz = 0; a.kH = 0; a.kY = 0; a.kW = 0; a.kS = 0; a.kMid = -1; a.kTail = -1;
       if (S0.sea3d) {   /* 714c: its slot among its kind (the pod's places round the bow), its pod's boat, its depth */
         var nS = 0, j3, acc = 0; for (j3 = 0; j3 < A.length; j3++) if (A[j3].sp === sp) nS++;
         a.slot = nS; a.boat = -1; if (S0.pods) for (j3 = 0; j3 < S0.pods.length; j3++) { acc += S0.pods[j3]; if (nS < acc) { a.boat = j3; break; } }
@@ -503,12 +530,22 @@ window.WFR_ANIMALS = (function () {
       if (R.dead) return null;
       try { R.plant = W._plant || null; if (R.plant === 'throw') R.no.such = 1; return tick(dt, input || {}); } catch (err) { kill(err); return null; }
     }
-    function hit(i, how) {   /* her peck or sweep reached animal i: a threat is driven off (XP), a gentle one just runs */
+    function kick(a, how, lv, gear) {   /* 744: starts the reaction, away from her; a peck never cuts a throw short */
+      var sw = how === 'sweep', M = sw ? HIT.SWEEP : HIT.PECK, d = hitDist(how, a.sp, lv, gear), dx = a.x - IN.hx, dz = a.z - IN.hz, L = Math.sqrt(dx * dx + dz * dz), s = HIT.SIZE[a.sp] == null ? 1 : HIT.SIZE[a.sp], tr = a.tr;
+      if (!sw && a.kT > 0 && a.kH > 0) return;
+      if (L < 0.05) { dx = -Math.sin(a.dir); dz = -Math.cos(a.dir); L = 1; }
+      a.kx = dx / L; a.kz = dz / L; a.kD = d; a.kLen = M.t; a.kT = M.t; a.kH = M.hop * Math.min(1.4, d / M.m); a.kW = M.shake * Math.min(1.2, s); a.rear = Math.max(a.rear, M.rear); a.st = 0; a.kMid = -1; a.kTail = -1;
+      if (tr) { var n = tr.length / 3, k = a.tH, px = a.x, pz = a.z, acc = 0, c = 0, q;   /* the trail's points at half and whole body length, for knockOK */
+        while (c < a.tN - 1 && acc < HIT.BODY) { q = k * 3; acc += Math.sqrt((tr[q] - px) * (tr[q] - px) + (tr[q + 2] - pz) * (tr[q + 2] - pz)); px = tr[q]; pz = tr[q + 2]; k = (k - 1 + n) % n; c++; if (a.kMid < 0 && acc >= HIT.BODY / 2) a.kMid = k; }
+        a.kTail = k; }
+      R.kicks++; R.kick = { i: a.i, sp: a.sp, how: sw ? 'sweep' : 'peck', d: +d.toFixed(3), lv: +(+lv || 0).toFixed(2), gear: gear || 'none' };
+    }
+    function hit(i, how, lv, gear) {   /* her peck or sweep reached animal i: a threat is driven off (XP), a gentle one just runs; 744: either way it feels the blow first (lv, gear: her level, her weapon) */
       var a = A[i]; if (!a || !a.awake || R.dead) return 0;
-      if (a.state === 'flee' && a.driven) return 1;
+      if (a.state === 'flee' && a.driven) { kick(a, how, lv, gear); return 1; }
       R.outside = true;
       try { if (a.temper >= T.sometimes || (a.state === 'warn' || a.state === 'strike')) drive(a); else { a.cd = 30; setState(a, 'flee'); ev('flee', a); } } finally { R.outside = false; }
-      void how; return 1;
+      kick(a, how, lv, gear); return 1;
     }
     function put(i, x, z, home) { var a = A[i]; if (!a) return false; if (a.awake) toIdle(a, 0); a.cd = 0; a.atkCd = 0; a.x = x; a.z = z;   /* the bench's placement: a fresh animal */ if (home !== false) { a.hx = x; a.hz = z; } a.wT = 0; a.y = a.S.realm === 'land' ? ground(x, z) : a.y; if (a.S.sea3d) { a.air = false; a.lp = 0; a.y = clamp(a.y, ground(x, z) + 0.45, WATER - 0.5); a.ty = a.y; }
       if (a.tr) { for (var j = 0; j < a.tr.length; j += 3) { a.tr[j] = x; a.tr[j + 1] = a.y; a.tr[j + 2] = z; } a.tN = 1; } return true; }
@@ -521,7 +558,7 @@ window.WFR_ANIMALS = (function () {
     function peek() {
       var L = []; for (var j = 0; j < A.length; j++) L.push(peekA(A[j]));
       return { ready: true, dead: R.dead, error: API.error, t: +R.t.toFixed(3), plant: R.plant, awake: R.awake, attacker: R.attacker, strikes: R.strikes, warns: R.warns, hurts: R.hurts, steals: R.steals, parries: R.parries,
-        perfect: R.perfect, dodges: R.dodges, driven: R.driven, whiffs: R.whiffs, early: R.early, cancels: R.cancels, xp: R.xp, notices: R.notices, mean: R.mean, animals: L };
+        perfect: R.perfect, dodges: R.dodges, driven: R.driven, whiffs: R.whiffs, early: R.early, cancels: R.cancels, xp: R.xp, notices: R.notices, mean: R.mean, kicks: R.kicks, kick: R.kick, animals: L };
     }
     var W = { dead: false, _plant: null, A: A, now: function () { return R.t; }, add: function (sp, x, z) { return newAnimal(sp, x, z); }, step: step, hit: hit, put: put, peek: peek, mean: function (on) { R.mean = !!on; }, force: function (i, k) { var a = A[i]; if (!a || !a.S.attacks) return false; a.force = k === 1 ? 1 : k === 0 ? 0 : -1; return true; },   /* the bench: animal i's next attack is k (0 simple, 1 heavy) until it lands (-1: the coin again) */ water: WATER, boats: BT };   /* boats (714c): what the dolphins were told this step */
     return W;
@@ -1057,6 +1094,6 @@ window.WFR_ANIMALS = (function () {
     };
   }());
 
-  API = { create: create, last: null, error: null, T: T, FAIR: FAIR, SPECIES: SP, SEA: SEA, kit: KIT };
+  API = { create: create, last: null, error: null, T: T, FAIR: FAIR, SPECIES: SP, SEA: SEA, kit: KIT, HIT: HIT, hitDist: hitDist };
   return API;
 }());
