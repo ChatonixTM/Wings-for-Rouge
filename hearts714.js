@@ -22,7 +22,7 @@ window.WFR_HEARTS = (function () {
   /* THE RULES (Marth's words, Oct 28; change them here, nowhere else) */
   var RULE_HEARTS_LOW = 4;               /* "under level 42 you have 4 hearts" */
   var RULE_HEARTS_HIGH = 5;              /* "if ur above level 42 when u beat the hawk youll start with 5 hearts"; his answer: "5 hearts" at 42 */
-  var RULE_LV_HIGH = 42;                 /* level >= 42 at the moment of the win (his answer); the cap is 60 */
+  var RULE_LV_HIGH = 42;                 /* level >= 42 at the moment of the win (his answer); the cap is 99 */
   var RULE_LOSE = 30;                    /* "on the first onwards; you will lose 30 runes": every hit, never more than she has */
   var RULE_FREE_HITS = 1;                /* "once per fight": the first hit of each fight costs no heart (Su's DRAFT read: a stagger and the 30 runes) */
   var RULE_HEART_COST = 1;               /* hearts each later hit in that fight costs (Su's DRAFT read) */

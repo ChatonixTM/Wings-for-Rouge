@@ -32,7 +32,7 @@
 window.WFR_WORLDANIMALS = (function () {
   'use strict';
   var C = { CELL: 0.02, R_SPAWN: 1500, R_DROP: 2400, AGL_MAX: 2500, POP: 1, POP_MS: 0.6, IMG_WAIT: 4, CAP: 128, LAYER: 7, KEEP: 400, LAND_MIN: 2, SLOPE: 0.45,
-    FLEE_R: 60, FLEE_Y: 70, RUN: 2.6, FLEE_MAX: 30, NOTICE: 80, SHARK_Y: 50, LOAD_MAX: 6, ESC_R: 240, ESC_Y: 45, ESC_V: 9, ESC_MAX: 450, TAHOE_LV: 1897.6, WATER_COL: [0.08, 0.27, 0.37] };
+    FLEE_R: 60, FLEE_Y: 70, RUN: 2.6, FLEE_MAX: 30, NOTICE: 80, SHARK_Y: 50, LOAD_MAX: 6, ESC_R: 240, ESC_Y: 45, ESC_V: 9, ESC_MAX: 450, TAHOE_LV: 1897.6, HOG_P: 0.5, WATER_COL: [0.08, 0.27, 0.37] };
   var D2R = Math.PI / 180, TAU = Math.PI * 2;
   var X = null, KIT = null, PR = null;
   var st = { inited: false, enabled: true, fault: null, t: 0, frame: 0, cells: new Map(), act: [], mat: null, keep: null, root: null, kinds: {}, models: 0,
@@ -110,6 +110,7 @@ window.WFR_WORLDANIMALS = (function () {
     reddeer: { name: 'Red deer', make: 'reddeer', sp: 'mongoose', realm: 'land', temper: 'passive', v: 1.2, stride: 1.8, spread: 8, region: 'europe' },
     redfox: { name: 'Red fox', make: 'redfox', sp: 'mongoose', realm: 'land', temper: 'curious', v: 1.0, stride: 0.7, spread: 15, rest: 0.5, region: 'europe' },
     boar: { name: 'Wild boar', make: 'boar', sp: 'mongoose', realm: 'land', temper: 'sometimes', v: 0.8, stride: 0.8, spread: 5, region: 'europe' },
+    hedgehog: { name: 'Wild hedgehog', make: 'hedgehog', sp: 'mongoose', realm: 'land', temper: 'passive', v: 0.35, stride: 0.3, spread: 5, rest: 0.6 },   /* 749: several regions: hogRange */
     crane: { name: 'Red-crowned crane', make: 'crane', sp: 'pelican', realm: 'air', temper: 'passive', alt: [15, 40], v: 8, loop: [30, 70], lag: 0.3, region: 'asia' },
     flamingo: { name: 'Lesser flamingo', make: 'flamingo', sp: 'gull', realm: 'air', temper: 'passive', alt: [6, 20], v: 9, loop: [40, 90], lag: 0.15, region: 'africa' },
     stork: { name: 'White stork', make: 'stork', sp: 'pelican', realm: 'air', temper: 'passive', alt: [20, 60], v: 8, loop: [40, 80], lag: 0.4, region: 'europe' },
@@ -361,6 +362,11 @@ window.WFR_WORLDANIMALS = (function () {
     reddeer: function () { return quad({ id: 'reddeer', by: 1.02, r: [0.24, 0.3, 0.68], neck: [0.5, 0.95, 0.13, 0.1], head: [0.09, 0.1, 0.19], snout: [0.13, 0.06, 0.045], legR: [0.06, 0.03],
       top: 0x8a4a2a, belly: 0xc8a888, leg: 0x6a3a22, muzzle: 0x5a3a28, mane: 0x6a3e26, ear: [0.035, 0.09, 0.05], tail: [0.1, 0.05, 0.03, 0.4], tailC: 0xe6d8c0,
       extra: function (G, P, o) { [1, -1].forEach(function (sd) { antler(G, P, [0.045 * sd, o.hc[1] + o.hr[1] * 0.85, o.hc[2] - 0.05], sd, { L: 0.75, n: 4, t: 0.2, r: 0.025 }); }); } }); },
+    hedgehog: function () { var k = 0.42, PHI = Math.PI * (3 - Math.sqrt(5));   /* 749: Pip's own measurements (hedgehogs.js buildHog and spinePoses) at a wild one's size, on the mongoose's rig: the spines ride the body bone, so they go with the curl */
+      return quad({ id: 'hedgehog', by: 0.27 * k, r: [0.34 * k, 0.24 * k, 0.46 * k], neck: [0.05 * k, 0.1, 0.14 * k, 0.13 * k], head: [0.16 * k, 0.14 * k, 0.22 * k], hp: 0.1, snout: [0.2 * k, 0.075 * k, 0.02 * k], droop: 0.15, legR: [0.05 * k, 0.04 * k], nose: 0x1a1410,
+        top: 0x684a2c, belly: 0xd9c19c, leg: 0xb59474, muzzle: 0xd3b58e, hoof: 0x8a6c50, ear: [0.056 * k, 0.045 * k, 0.03 * k], earC: 0xb59474, earIn: 0xd9c19c, tail: [0.03 * k, 0.03 * k, 0.02 * k], tailC: 0x684a2c,
+        extra: function (G, P, o) { var N = 56, cols = [0xf1e7cf, 0x684a2c, 0x3a2818, 0xd8ccb0]; for (var i = 0; i < N; i++) { var y = 1 - 2 * (i + 0.5) / N, a = i * PHI, fr = Math.max(0, Math.sin(a)), th = Math.acos(y) * 0.62 * (1 - 0.5 * fr), vx = Math.sin(th) * Math.cos(a), vy = Math.cos(th), vz = Math.sin(th) * Math.sin(a), dy = vy + 0.25, dz = vz - 1.1, L = Math.hypot(vx, dy, dz);
+          var p = [0.33 * vx * k, o.by + 0.25 * vy * k * 0.9, (-0.08 + 0.46 * vz) * k]; P.tube(G, { a: p, b: [p[0] + vx / L * 0.2 * k, p[1] + dy / L * 0.2 * k, p[2] + dz / L * 0.2 * k], ra: 0.03 * k, rb: 0.004 * k, sides: 3, col: P.hex(cols[i % 4]), bone: 1 }); } } }); },
     boar: function () { return quad({ id: 'boar', by: 0.5, r: [0.22, 0.27, 0.55], neck: [0.12, 0.1, 0.18, 0.16], head: [0.12, 0.14, 0.2], hp: 0.5, snout: [0.18, 0.07, 0.06], droop: 0.5, legR: [0.05, 0.03], nose: 0x4a3a34,
       top: 0x3a2e26, belly: 0x4a3c32, leg: 0x2a221c, muzzle: 0x3a2e26, hoof: 0x141010, ear: [0.03, 0.06, 0.02], tail: [0.18, 0.02, 0.01, 0.9],
       pat: function (c, nx, ny, nz, x, y, z) { return ny > 0.7 ? [0.2, 0.16, 0.13] : Math.sin(x * 50 + y * 41 + z * 37) > 0.6 ? [c[0] * 1.3, c[1] * 1.3, c[2] * 1.3] : c; },
@@ -540,6 +546,8 @@ window.WFR_WORLDANIMALS = (function () {
     }
     return R;
   }
+  /* 749 (Marth, Nov 6: "yes wild hedgehogs can be huntable"): where real ones live, by the cell's main land biome. European and Amur; the Algerian and the four-toed in Africa; the long-eared and desert ones; New Zealand's, brought there. None in the Americas or Australia. Their own dice in populate(): no other animal moves. DRAFT for Izumi's atlas check */
+  function hogRange(b, lat, lon) { var rg = regionOf(lat, lon); return b === 'temperate' ? rg === 'europe' || rg === 'asia' || rg === 'africa' || rg === 'oceania' : b === 'savanna' ? rg === 'africa' : b === 'desert' ? rg === 'africa' || rg === 'asia' : b === 'boreal' ? rg === 'europe' : false; }
   function coastAir(lat, lon) { var L = [], rg = regionOf(lat, lon); if (Math.abs(lat) < 62) L.push(['gull', 3, [5, 12]]); if ((rg === 'americas' && Math.abs(lat) < 40) || rg === 'australia') L.push(['pelican', 2, [3, 7]]); return L; }
 
   /* ---------- 6. CELLS: classified once the ground is final, then filled from the cell's own seed ---------- */
@@ -586,6 +594,8 @@ window.WFR_WORLDANIMALS = (function () {
     /* air: gulls and pelicans over a coast, egrets over the savanna and the Caribbean, eagles over Tahoe */
     var RA = (lb ? roster(lb, smp[0].lat, smp[0].lon).air : []).concat(sb ? roster(sb, smp[0].lat, smp[0].lon).air : []).concat(anySea && anyLand ? coastAir(smp[0].lat, smp[0].lon) : []);
     var u2 = r(); if (RA.length && u2 < 0.75) { var e3 = pickK(RA), q2 = smp[Math.floor(r() * smp.length) % smp.length]; flock(G, e3, q2, r, f, cell); }
+    /* 749: a wild hedgehog or few, by their own dice (r is left alone: every other animal stays where it was) */
+    if (lb && hogRange(lb, smp[0].lat, smp[0].lon)) { var rh = rng(hash('hog749:' + cell.key)); if (rh() < C.HOG_P) { var qh = sp[Math.floor(rh() * sp.length) % Math.max(1, sp.length)]; if (qh) herd(G, ['hedgehog', 1, [1, 3]], qh, rh, f, cell); } }
     var sig = 2166136261 >>> 0; G.forEach(function (gr) { gr.m.forEach(function (m) { sig = hash(sig + '|' + gr.k + ':' + gr.realm + ':' + m.lat.toFixed(6) + ',' + m.lon.toFixed(6) + ':' + m.R.toFixed(2) + ':' + (m.side || 0).toFixed(3) + ':' + m.ph.toFixed(5)); }); }); cell.sig = sig;
     cell.n = G.reduce(function (s, gr) { return s + gr.m.length; }, 0);
   }
@@ -820,7 +830,7 @@ window.WFR_WORLDANIMALS = (function () {
       ms: { n: ms.length, med: ms.length ? +ms[ms.length >> 1].toFixed(3) : null, p95: ms.length ? +ms[Math.floor(ms.length * 0.95)].toFixed(3) : null, max: +st.msMax.toFixed(3) },
       fall748: { blows: st.blows748 || 0, falls: st.falls748 || 0 }, reacts: { flees: st.flees, escorts: st.escorts, faces: st.faces, circles: st.circles }, featTiles: st.featTiles, featFault: st.featFault, hook: st.hook, placeN: st.placeN, her: st.her };
   }
-  return { aim748: aim748, reach748: reach748, where748: where748, blow748: blow748, C: C, KINDS: K, init: init, tick: tick, peek: peek, drawn: drawn, biomeAt: biomeAt, roster: roster,
+  return { hogRange: hogRange, aim748: aim748, reach748: reach748, where748: where748, blow748: blow748, C: C, KINDS: K, init: init, tick: tick, peek: peek, drawn: drawn, biomeAt: biomeAt, roster: roster,
     resetMs: function () { st.ms = []; st.msMax = 0; }, forget: function () { st.cells.clear(); st.act = []; },   // the bench's revisit: every cell generated again from its key
     cell: function (key) { var c = st.cells.get(key); return c ? { key: c.key, n: c.n, sig: c.sig, b: c.biomes } : null; },
     model: function (k) { KIT = KIT || (window.WFR_ANIMALS && WFR_ANIMALS.kit); PR = PR || (KIT && KIT.prim); var d = K[k]; if (!d || !KIT || !PR) return null; return d.kit ? KIT.build(d.kit) : (Q[d.make] || B[d.make] || S3[d.make])(); },   // pure: a kind's body (the unit bench)

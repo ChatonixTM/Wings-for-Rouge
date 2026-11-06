@@ -56,7 +56,7 @@ window.WFR_ANIMALS = (function () {
   /* BOARD-744-HIT THE HIT TABLE (Marth, Nov 6: "they should get hit and stagger a bit on the poke and fly back a bit on the tail sweep. This applies to all animals . Varies in fly back on anima size. This also applies to the level of rouge(the save file/other birds) and what (if she has any) weapons are in use"). Every number a DRAFT for his thumb.
      m: metres per hit at size 1, level factor 1 (a peck lands two beak hits); t: seconds of the reaction; hop: metres of height on a size-1 throw; shake: metres of side-to-side; rear: the recoil of the head. SIZE: small flies far, big barely. LV: [level, factor, level, factor], straight between. GEAR: [peck, sweep]; none is 1. MAX: the longest throw. BODY: the boa's length. */
   var HIT = { PECK: { m: 0.12, t: 0.42, hop: 0, shake: 0.09, rear: 0.8 }, SWEEP: { m: 1.5, t: 0.55, hop: 0.42, shake: 0.03, rear: 0.5 },
-    SIZE: { crab: 1.6, mongoose: 1.3, gull: 1.2, boa: 1, barracuda: 0.8, pelican: 0.8, turtle: 0.5, dolphin: 0.35, shark: 0.3 }, LV: [1, 0.8, 60, 1.6], GEAR: { none: [1, 1], gust: [1, 1.5] }, MAX: 5, BODY: 2 };
+    SIZE: { crab: 1.6, mongoose: 1.3, gull: 1.2, boa: 1, barracuda: 0.8, pelican: 0.8, turtle: 0.5, dolphin: 0.35, shark: 0.3 }, LV: [1, 0.8, 99, 2.1288], GEAR: { none: [1, 1], gust: [1, 1.5] }, HELD: { feather: 1.1, twig: 1.15, shell: 1.2, bead: 1.25, pinecone: 1.3, riverstone: 1.4 }, MAX: 5, BODY: 2 };   /* 749: LV keeps 744's slope to 99 (Lv 60 is still 1.6). HELD: a chick's held item, one DRAFT number each, on peck and sweep alike */
   var TRIES = [0, 0.7, -0.7, 1.5, -1.5];   /* a blocked step tries these turns, in order */
   var BUMP = { id: 'bump', warn: 0.7, fly: 0.2, from: 1.0, reach: 1.2, hitR: 0.8, lock: 0.3 };   /* no gentle animal has an attack: this exists only so plant 'warn' can show one striking */
   var API = null, TAU = Math.PI * 2;
@@ -64,8 +64,9 @@ window.WFR_ANIMALS = (function () {
   function num(x, lo, hi) { x = +x; return x === x && x !== Infinity && x !== -Infinity ? clamp(x, lo, hi) : 0; }
   function wrap(a) { while (a > Math.PI) a -= TAU; while (a < -Math.PI) a += TAU; return a; }
   function ease(x) { x = clamp(x, 0, 1); return x * x * (3 - 2 * x); }
+  function gearOf(gear) { var q = String(gear || 'none').split('+'), G = HIT.GEAR[q[0]] || HIT.GEAR.none, h = HIT.HELD[q[1]] || 1; return [G[0] * h, G[1] * h]; }   /* 749: 'gust' or 'gust+twig': her weapon, then what her chick holds */
   function hitDist(how, sp, lv, gear) {   /* 744: move x animal size x her level x weapon */
-    var sw = how === 'sweep', M = sw ? HIT.SWEEP : HIT.PECK, s = HIT.SIZE[sp] == null ? 1 : HIT.SIZE[sp], L = HIT.LV, u = clamp(((+lv || L[0]) - L[0]) / (L[2] - L[0]), 0, 1), g = HIT.GEAR[gear] || HIT.GEAR.none;
+    var sw = how === 'sweep', M = sw ? HIT.SWEEP : HIT.PECK, s = HIT.SIZE[sp] == null ? 1 : HIT.SIZE[sp], L = HIT.LV, u = clamp(((+lv || L[0]) - L[0]) / (L[2] - L[0]), 0, 1), g = gearOf(gear);
     return Math.min(HIT.MAX, M.m * s * (L[1] + (L[3] - L[1]) * u) * g[sw ? 1 : 0]);
   }
 
@@ -1099,6 +1100,6 @@ window.WFR_ANIMALS = (function () {
     };
   }());
 
-  API = { create: create, last: null, error: null, T: T, FAIR: FAIR, SPECIES: SP, SEA: SEA, kit: KIT, HIT: HIT, hitDist: hitDist };
+  API = { create: create, last: null, error: null, T: T, FAIR: FAIR, SPECIES: SP, SEA: SEA, kit: KIT, HIT: HIT, hitDist: hitDist, gearOf: gearOf };
   return API;
 }());

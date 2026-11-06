@@ -15,7 +15,7 @@ window.WFR_FALL748 = (function () {
     reeffish: [0.6, 'sea', 0.05, 1.6], trout: [0.8, 'sea', 0.06, 1.4], poolfish: [0.6, 'sea', 0.05, 1.6], seal: [3, 'sea', 0.25, 0.5], sealion: [3.4, 'sea', 0.25, 0.5], walrus: [7, 'sea', 0.40, 0.2], manta: [7, 'sea', 0.40, 0.15], orca: [14, 'sea', 0.60, 0.1], whale: [24, 'sea', 0.75, 0.05],
     toucan: [1, 'bird', 0.10, 1.3], macaw: [1.1, 'bird', 0.12, 1.2], egret: [1.6, 'bird', 0.14, 1], flamingo: [1.6, 'bird', 0.14, 1], crane: [2.2, 'bird', 0.20, 0.8], stork: [2.2, 'bird', 0.20, 0.8], eagle: [3, 'bird', 0.28, 0.7], condor: [3.6, 'bird', 0.30, 0.6],
     iguana: [1.4, 'serpent', 0.12, 1.2], alligator: [5.5, 'serpent', 0.40, 0.3], saltcroc: [7, 'serpent', 0.45, 0.2],
-    arcticfox: [1.4, 'small', 0.14, 1.2], penguin: [1.4, 'small', 0.14, 1.1], redfox: [1.6, 'small', 0.15, 1.2], koala: [1.6, 'small', 0.15, 1], macaque: [1.6, 'small', 0.15, 1.2], goat: [2.2, 'small', 0.20, 0.9], boar: [3.6, 'small', 0.28, 0.6],
+    arcticfox: [1.4, 'small', 0.14, 1.2], penguin: [1.4, 'small', 0.14, 1.1], redfox: [1.6, 'small', 0.15, 1.2], koala: [1.6, 'small', 0.15, 1], macaque: [1.6, 'small', 0.15, 1.2], goat: [2.2, 'small', 0.20, 0.9], boar: [3.6, 'small', 0.28, 0.6], hedgehog: [1.2, 'small', 0.12, 1.3],
     emu: [3, 'big', 0.25, 0.7], deer: [3.2, 'big', 0.25, 0.7], kangaroo: [3.6, 'big', 0.25, 0.7], llama: [3.6, 'big', 0.28, 0.6], reddeer: [4, 'big', 0.30, 0.6], ostrich: [4.4, 'big', 0.30, 0.5], snowleopard: [4.4, 'big', 0.30, 0.6], caribou: [4.6, 'big', 0.30, 0.5], zebra: [5, 'big', 0.32, 0.5], jaguar: [5, 'big', 0.32, 0.5], panda: [5, 'big', 0.32, 0.4],
     elk: [6, 'big', 0.35, 0.4], blackbear: [6, 'big', 0.35, 0.4], lion: [6.5, 'big', 0.38, 0.4], camel: [7, 'big', 0.38, 0.35], tiger: [7, 'big', 0.40, 0.35], gorilla: [7, 'big', 0.40, 0.3], brownbear: [8, 'big', 0.42, 0.3], yak: [8, 'big', 0.42, 0.25], moose: [9, 'big', 0.45, 0.25], polarbear: [9, 'big', 0.45, 0.25], bison: [9.5, 'big', 0.45, 0.2],
     giraffe: [10, 'big', 0.50, 0.2], hippo: [11, 'big', 0.50, 0.15], indianelephant: [13, 'big', 0.55, 0.1], elephant: [14, 'big', 0.60, 0.1]
@@ -70,6 +70,7 @@ window.WFR_FALL748 = (function () {
     macaque: { l: 0.4, b: { body: [-0.6, 0, 0, 0], legFL: [-1, 0, 0.6, 3], legFR: [-1, 0, -0.6, -3], head: [-0.4, 0, 0, 0] } },   /* it leaps up shrieking, arms flailing */
     goat: { b: { body: [-0.7, 0, 0, 1], head: [0.9, 0, 0, 0], legFL: [-0.6, 0, 0, 1], legFR: [-0.6, 0, 0, 1] } },   /* chin tucked, it rears, then butts down */
     boar: { l: -0.2, b: { head: [0.35, 0.55, 0.2, 2.5], body: [0.2, 0, 0, 0], tail: [0.9, 0, 0, 0] } },   /* head low, it hooks with its tusks, the tail straight up */
+    hedgehog: { r: -0.3, f: 1.5, l: -0.28, p: 0.75, b: { body: [1, 0, 0, 0], head: [1.1, 0, 0, 0], legFL: [-1.1, 0, 0, 0], legFR: [-1.1, 0, 0, 0], legHL: [1.1, 0, 0, 0], legHR: [1.1, 0, 0, 0], tail: [0.5, 0, 0, 0] } },   /* 749: it does not jump: it tucks head and feet in, as Pip's family does */
     iguana: { r: -0.3, b: { head: [0.4, 0, 0, 4], body: [-0.3, 0, 0, 0], tail: [0, 0.5, 0, 1.5] } },   /* it bobs its head and lashes its tail */
     alligator: { r: 1.5, f: 1, b: { legFL: [0, 0, 0.6, 0], legFR: [0, 0, -0.6, 0], head: [0.2, 0, 0, 0] } },   /* the death roll, legs tucked */
     saltcroc: { p: -0.7, l: 0.4, b: { head: [-0.6, 0, 0, 0], tail: [0.5, 0, 0, 0], legFL: [-0.8, 0, 0, 2], legFR: [-0.8, 0, 0, 2] } },   /* it lunges up on its tail, jaws high */
@@ -96,7 +97,7 @@ window.WFR_FALL748 = (function () {
   function clamp(x, a, b) { return x < a ? a : x > b ? b : x; }
   function damage(how, lv, gear) {   /* the 744 scale: her level and her weapon, the same numbers as the throw */
     var H = window.WFR_ANIMALS ? WFR_ANIMALS.HIT : null, sw = how === 'sweep', f = 1, g = 1;
-    if (H) { var L = H.LV, u = clamp(((+lv || L[0]) - L[0]) / (L[2] - L[0]), 0, 1), G = H.GEAR[gear] || H.GEAR.none; f = L[1] + (L[3] - L[1]) * u; g = G[sw ? 1 : 0]; }
+    if (H) { var L = H.LV, u = clamp(((+lv || L[0]) - L[0]) / (L[2] - L[0]), 0, 1), G = window.WFR_ANIMALS.gearOf(gear); f = L[1] + (L[3] - L[1]) * u; g = G[sw ? 1 : 0]; }
     return (sw ? C.SWEEP : C.PECK) * f * g;
   }
   function hp(k) { return row(k)[0]; }
