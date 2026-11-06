@@ -33,7 +33,10 @@ window.WFR_VILLAGERS = (function () {
   const CLIP = { talk: 'interact', stretch: 'idle_neutral', pull: 'interact', sweep: 'interact', kneel: 'interact', shop: 'idle_neutral', look: 'idle', wave: 'wave',
     listen: 'idle_neutral', listenSit: 'idle_neutral', receive: 'wave', hammer: 'interact', paint: 'interact', turn: 'interact', sit: 'idle_neutral' };
   const bone = (root, nm) => root.getObjectByName(nm) || root.getObjectByName(nm.replace(/[\[\]\.:\/]/g, ''));   /* Su 33 (Oct 17): r128's GLTFLoader strips . : / [ ] from node names ('Wrist.R' -> 'WristR'): without this the hand socket was never attached (held things never drawn) and the sit never bent a knee */
-  const SIT = { 'UpperLeg.L': [-1.45, 0, 0], 'UpperLeg.R': [-1.45, 0, 0], 'LowerLeg.L': [1.5, 0, 0], 'LowerLeg.R': [1.5, 0, 0] };   // a sit by hand: hips bent, knees bent
+  /* 745: a sit by hand. hip, foot: metres from the sitter's origin (the page holds it 0.25 m above the ground at the seat's middle). thigh, knee: radians about the body's side axis.
+     upArm, loArm: [forward, inward]. ease: how fast they settle, per second. All DRAFT. */
+  const SEAT = { hip: 0.8, foot: -0.205, thigh: -1.45, knee: 1.45, upArm: [-0.35, 0.1], loArm: [-0.85, 0.35], ease: 3 };
+  let T3 = null;
 
   function paint(THREE, body, name, pal) {
     const P = PAINT[name]; if (!P || !pal) return;
@@ -79,7 +82,7 @@ window.WFR_VILLAGERS = (function () {
       const pc = piece(THREE, L.piece, hs); pc.position.y = 0.12 / hs; head.add(pc); } }
   }
   function swap(THREE, n, i, api) {   // api: { WFR_PEOPLE, height, pal, scene }
-    if (n.model || !api.WFR_PEOPLE) return false;
+    T3 = THREE; if (n.model || !api.WFR_PEOPLE) return false;
     const name = api.body || BODY[i % BODY.length];
     const gs = n.g.getWorldScale(new THREE.Vector3()).y || 1;   // the villager's group already scales its body (1.35): size the model INSIDE that, or it stands a third too tall (ship #13 on his phone, Oct 11)
     api.WFR_PEOPLE.make(THREE, name, { height: api.height / gs, clips: name }, (p) => {   // each body's OWN clips: the women's skeleton rests differently, and the man's numbers put their hands behind their backs (his phone, Oct 11)
@@ -113,15 +116,33 @@ window.WFR_VILLAGERS = (function () {
     n.model = null; n.classic = null; n.hand = null; if (hand && hand.parent) hand.parent.remove(hand);
     return true;
   }
+  /* 745: world-people.js's swing: turn a bone about an axis of the villager's own frame, so the rig's bone axes never matter (the guessed ones threw the thighs back through the backrest) */
+  function turn(bone, top, axis, ang, q) { top.getWorldQuaternion(q.a); bone.parent.getWorldQuaternion(q.b); q.a.invert().multiply(q.b); q.b.copy(q.a).invert(); q.c.setFromAxisAngle(axis, ang); bone.quaternion.premultiply(q.a).premultiply(q.c).premultiply(q.b); }
+  function sitBones(p) {
+    const legs = ['L', 'R'].map((s) => [bone(p.body, 'UpperLeg.' + s), bone(p.body, 'LowerLeg.' + s), bone(p.body, 'Foot.' + s)]), arms = ['L', 'R'].map((s, i) => [bone(p.body, 'UpperArm.' + s), bone(p.body, 'LowerArm.' + s), bone(p.body, 'Wrist.' + s), i ? 1 : -1]), body = bone(p.body, 'Body');
+    const q = () => new T3.Quaternion(), all = [body].concat(...legs, ...arms.map((a) => a.slice(0, 2)));
+    return { root: bone(p.body, 'Root'), body, hips: bone(p.body, 'Hips'), legs, arms, a: new T3.Vector3(), b: new T3.Vector3(), X: new T3.Vector3(1, 0, 0), Z: new T3.Vector3(0, 0, 1), q: { a: q(), b: q(), c: q() }, kept: all.map((o) => [o, q(), new T3.Vector3()]), held: false };
+  }
+  function sit(n, p, kind, dt) {
+    const B = p.sit || (p.sit = sitBones(p)), g = n.g.position, a = B.a, b = B.b, k = n.sitK = Math.min(1, (n.sitK || 0) + dt * SEAT.ease);
+    for (const s of B.kept) { s[1].copy(s[0].quaternion); s[2].copy(s[0].position); } B.held = true;   // the clip's pose, put back before the next tick: the mixer skips a channel that did not change, so nothing here may build up
+    B.hips.getWorldPosition(a); b.set(g.x, g.y + SEAT.hip, g.z); B.root.worldToLocal(a); B.root.worldToLocal(b); B.body.position.addScaledVector(b.sub(a), k);   // the hips on the seat; the rig's feet hang from the Root, so they do not move with it
+    for (const L of B.legs) { turn(L[0], n.g, B.X, SEAT.thigh * k, B.q); turn(L[1], n.g, B.X, SEAT.knee * k, B.q); L[1].getWorldPosition(a); a.y = g.y + SEAT.foot; B.root.worldToLocal(a); L[2].position.lerp(a, k); }   // the thigh forward, the shin down, the foot under the knee
+    if (kind !== 'sit' && kind !== 'listenSit') return;   // a wave from the seat keeps the clip's arms
+    for (const A of B.arms) { turn(A[0], n.g, B.X, SEAT.upArm[0] * k, B.q); turn(A[0], n.g, B.Z, SEAT.upArm[1] * A[3] * k, B.q); turn(A[1], n.g, B.X, SEAT.loArm[0] * k, B.q); turn(A[1], n.g, B.Z, SEAT.loArm[1] * A[3] * k, B.q); }   // the hands to the lap
+    if (!n.hand) return;
+    B.arms[0][2].getWorldPosition(a); B.arms[1][2].getWorldPosition(b); a.add(b).multiplyScalar(0.5); n.g.worldToLocal(a); const t = n.hand.rotation.x;   // the book between the hands: the socket's -0.72 hang turns with the page's arm ease, so it is undone here
+    n.hand.position.set(a.x, a.y + 0.72 * Math.cos(t), a.z + 0.72 * Math.sin(t)); if (n.props && n.props.book) n.props.book.rotation.set(1.2, Math.PI / 2, 0);
+  }
   function pose(n, kind, dt, walkAmt, bt) {
     const p = n.model; if (!p) return;
+    if (p.sit && p.sit.held) { for (const s of p.sit.kept) { s[0].quaternion.copy(s[1]); s[0].position.copy(s[2]); } p.sit.held = false; }
     const clip = walkAmt > 0.15 ? 'walk' : (CLIP[kind] || (kind ? 'idle' : 'idle'));
     if (kind === 'receive' && bt > 1.6) p.play('interact'); else p.play(clip);
     if (p.actions.walk) p.actions.walk.setEffectiveTimeScale(walkAmt > 0.15 ? Math.max(0.6, Math.min(1.6, walkAmt)) : 1);
     p.tick(dt);
     if (n.wristBone && n.hand && n.wv) { n.wristBone.getWorldPosition(n.wv); n.g.worldToLocal(n.wv); n.hand.position.set(n.wv.x, n.wv.y + 0.72, n.wv.z); }   /* Su 33 (Oct 18): the hand follows the wrist (props hang as the old rig drew them) */
-    const sitting = kind === 'sit' || kind === 'listenSit', s = p.body.scale.x;
-    if (sitting) { for (const b in SIT) { const bn = bone(p.body, b); if (bn) bn.rotation.set(SIT[b][0], SIT[b][1], SIT[b][2]); } }
+    if (kind === 'sit' || kind === 'listenSit' || n.onSeat) sit(n, p, kind, dt); else n.sitK = 0;
     /* the body's height while seated is the game's own ease of n.body.position.y (n.body is this model's root), the same path the
        hand-built body takes; writing it here too made two hands fight on one knob (the bench's "listens sitting down" caught it) */
   }
