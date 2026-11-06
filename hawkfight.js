@@ -237,7 +237,7 @@ window.WFR_HAWKFIGHT = (function () {
       try { R.plant = F._plant || null; if (R.plant === 'throw') R.no.such = 1; return tick(dt, input); } catch (err) { kill(err); return null; }
     }
     function peek() {
-      return { ready: true, on: R.on, dead: R.dead, error: API.error, phase: R.phase, mode: R.mode, hp: R.hp, hits: R.hits, hitsChase: R.hitsA, hitsSecond: R.hitsB,
+      return { ready: true, sideCd: +R.sideCd.toFixed(3), on: R.on, dead: R.dead, error: API.error, phase: R.phase, mode: R.mode, hp: R.hp, hits: R.hits, hitsChase: R.hitsA, hitsSecond: R.hitsB,
         stunT: +R.stunT.toFixed(3), stunLen: R.stunLen, warnT: incoming() ? +(R.t - R.warnStart).toFixed(3) : 0, arriveIn: incoming() ? +(R.arrive - R.t).toFixed(3) : null,
         feathers: R.feathers, swoops: R.swoops, zooms: R.zooms, parries: { good: R.parG, perfect: R.parP }, dodges: R.dodges, misses: R.misses, hurts: R.hurts, whiffs: R.whiffs,
         lastJudge: R.lastJudge, rel: +R.rel.toFixed(3), lat: +R.lat.toFixed(3), aim: +R.aim.toFixed(3), side: R.side, t: +R.t.toFixed(3), dmg: DMG_LOG.slice(0, R.dmgN), plant: R.plant,

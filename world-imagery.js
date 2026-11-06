@@ -82,7 +82,7 @@ window.WFR_IMAGERY = (function () {
     var t0 = now(), g = rec.mesh.geometry, col = g.getAttribute('color'), arr = col.array, im = rec.im712, N = Math.round(Math.sqrt(rec.hv.length)) - 1, V = (N + 1) * (N + 1), hv = rec.hv, base = im.base;
     for (var j = 0; j <= N; j++) for (var i = 0; i <= N; i++) { var q2 = j * (N + 1) + i, k = q2 * 3; sample(src.e.px, src.u0 + i / N * src.s, src.v0 + j / N * src.s, rgb);
       if (hv[q2] > 0) { arr[k] = Math.min(1, rgb[0] * C.GAIN); arr[k + 1] = Math.min(1, rgb[1] * C.GAIN); arr[k + 2] = Math.min(1, rgb[2] * C.GAIN); }
-      else { arr[k] = base[k] + (rgb[0] - base[k]) * C.SEA; arr[k + 1] = base[k + 1] + (rgb[1] - base[k + 1]) * C.SEA; arr[k + 2] = base[k + 2] + (rgb[2] - base[k + 2]) * C.SEA; } }
+      else { var sk737 = rgb[2] >= rgb[1] && Math.max(rgb[0], rgb[1]) < 0.07 ? 0 : C.SEA; arr[k] = base[k] + (rgb[0] - base[k]) * sk737; arr[k + 1] = base[k + 1] + (rgb[1] - base[k + 1]) * sk737; arr[k + 2] = base[k + 2] + (rgb[2] - base[k + 2]) * sk737; } }   // 737: the flat ocean fill says nothing of the sea, so the atlas's depth blue stands whole there (half of a near-black fill drew a dark sea, a step at the gate)
     var vs = V;   // the skirt, in the streamer's order: north (j 0), south (j N), west (i 0), east (i N)
     for (var e = 0; e < 4; e++) for (var gg = 0; gg <= N; gg++) { var ii = e === 0 || e === 1 ? gg : (e === 2 ? 0 : N), jj = e === 0 ? 0 : e === 1 ? N : gg, qq = (jj * (N + 1) + ii) * 3, kk = vs * 3;
       if (kk + 2 < arr.length) { arr[kk] = arr[qq] * 0.8; arr[kk + 1] = arr[qq + 1] * 0.8; arr[kk + 2] = arr[qq + 2] * 0.8; } vs++; }

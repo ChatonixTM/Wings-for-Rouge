@@ -515,7 +515,13 @@
       prevMode = S.mode;
     }
 
-    const API = { air: () => (Z.t > 0 && S.mode === 'fly' ? 1 : 0), pre, tick, deliver, openBook, state: () => ({ met: !!S.seen.hogsMet, returned: !!S.seen.hogsBook, bookSeen: !!S.seen.bookSeen, zoom: !!S.lessons.zoom }) };
+    function travel(dt) {   // 737: past the gate pre() and tick() do not run (they are the island's), so a press out there never ended and the button never rested (sea737 P4: it stays at 1): the timer and the button only
+      if (Z.t > 0) { Z.t -= dt; if (Z.t <= 0 || !zoomable()) endZoom(); } else if (Z.cd > 0) Z.cd = Math.max(0, Z.cd - dt);
+      const zOn = !!S.lessons.zoom && S.mode === 'fly' && zoomable() && !(ui && ui.hidden);
+      if (zoomBtn.hidden === zOn) zoomBtn.hidden = !zOn;
+      if (zOn) { const o = (Z.t > 0 && !fast()) || Z.cd > 0 ? '0.5' : '1'; if (zoomBtn.style.opacity !== o) zoomBtn.style.opacity = o; }
+    }
+    const API = { air: () => (Z.t > 0 && S.mode === 'fly' ? 1 : 0), pre, tick, travel, deliver, openBook, state: () => ({ met: !!S.seen.hogsMet, returned: !!S.seen.hogsBook, bookSeen: !!S.seen.bookSeen, zoom: !!S.lessons.zoom }) };
     if (debugOn) root.WFR_HOGS.dbg = {
       state: () => ({ met: !!S.seen.hogsMet, returned: !!S.seen.hogsBook, bookSeen: !!S.seen.bookSeen, lesson: !!S.lessons.zoom, mode: S.mode, talking: !!S.talking, talkingHogs,
         zoom: { t: Z.t, cd: Z.cd, k: Z.k, hold: Z.hold, by: Z.by, starts: Z.starts, fov: api.camera.fov }, bookOpen, story: !story.hidden, at: api.panels.at(), count: api.panels.count(),

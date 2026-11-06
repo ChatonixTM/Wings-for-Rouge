@@ -53,7 +53,7 @@ window.WFR_TRAVEL712 = (function () {
   function boundsOf(f, z, x, y) { return W.tileBox(f, z, x, y); }   // 725b: the door's (world712-frame.js mTileBox: these lines, moved in whole)
 
   /* ---------- the atlas made 3D (world712-mapview.js SEA / LAND; tiles.js's meadow at the low end; sand at the coast; snow by latitude) ---------- */
-  var SEA = [[-8000, 22, 52, 104], [-5000, 38, 82, 140], [-3000, 62, 116, 172], [-1000, 104, 160, 206], [-200, 150, 199, 228], [0, 196, 228, 240]];
+  var SEA = [[-8000, 2, 34, 66], [-5000, 3, 40, 78], [-3000, 3, 48, 90], [-1000, 4, 56, 100], [-200, 8, 90, 130], [-30, 30, 150, 175], [0, 120, 205, 220]];   // 737: the atlas's pale blue, once it stood whole over the ocean fill, flipped the sea from 4,64,113 to 121,184,224 at the gate (sea737 S2: 54 to 174): this ramp is measured to the sea just before the gate
   var LAND = [[0, 112, 168, 98], [150, 142, 186, 108], [400, 196, 206, 128], [800, 226, 206, 142], [1300, 214, 170, 112], [2000, 182, 130, 88], [3000, 150, 104, 78], [4000, 196, 184, 176], [4800, 244, 244, 244]];
   var MEADOW = [[0, 134, 178, 92], [60, 111, 162, 78], [250, 92, 140, 69]];   /* the island's G1 G2 G3 (0x86b25c 0x6fa24e 0x5c8c45): the lowlands wear her island's own greens */
   var SAND = [230, 214, 168], SNOW = [244, 246, 248], ROCK = [139, 134, 118], DRY = [206, 184, 132];
@@ -85,7 +85,7 @@ window.WFR_TRAVEL712 = (function () {
       sh.vertexShader = 'varying vec2 vW712t;' + NL723 + sh.vertexShader;
       sh.fragmentShader = 'uniform vec4 uHole712t; varying vec2 vW712t;' + NL723 + sh.fragmentShader.replace('void main() {', 'void main() {' + NL723 + '  if ( vW712t.x > uHole712t.x && vW712t.x < uHole712t.z && vW712t.y > uHole712t.y && vW712t.y < uHole712t.w ) discard;');
       sh.uniforms.uPhoto712t = u.uPhoto; sh.vertexShader = 'attribute vec3 aPh712t; varying vec3 vPh712t;' + NL723 + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>' + NL723 + 'vPh712t = aPh712t;');   /* 723e: the photo layer (world712-photo.js) */
-      sh.fragmentShader = 'uniform sampler2D uPhoto712t; varying vec3 vPh712t;' + NL723 + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>' + NL723 + '  if ( vPh712t.z > 0.5 ) { vec3 ph712t = texture2D( uPhoto712t, vPh712t.xy ).rgb; if ( ph712t.r + ph712t.g + ph712t.b > 0.03 ) diffuseColor.rgb = ph712t; }');   /* 723e: the atlas where aPh712t.z is 1; pure black is the tiler's no-data, the vertex colour stays */
+      sh.fragmentShader = 'uniform sampler2D uPhoto712t; varying vec3 vPh712t;' + NL723 + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>' + NL723 + '  if ( vPh712t.z > 0.5 ) { vec3 ph712t = texture2D( uPhoto712t, vPh712t.xy ).rgb; if ( ph712t.r + ph712t.g + ph712t.b > 0.03 ) { float sea737 = step( ph712t.g, ph712t.b ) * ( 1.0 - smoothstep( 0.07, 0.14, max( ph712t.r, ph712t.g ) ) ); diffuseColor.rgb = mix( ph712t, diffuseColor.rgb, sea737 ); } }');   /* 723e: the atlas where aPh712t.z is 1; pure black is the tiler's no-data, the vertex colour stays. 737: so is Blue Marble's flat ocean fill (RGB 2,5,20: measured 100% of open-sea tiles, under 0.5% of dark land), or the sea draws black past 20 km */
       sh.vertexShader = 'uniform vec3 uEye712t; uniform float uInvK712t;\n' + sh.vertexShader.replace('#include <project_vertex>', [
         'vec4 wp712t = modelMatrix * vec4( transformed, 1.0 );', 'vW712t = wp712t.xz;',
         'vec3 r712t = wp712t.xyz - uEye712t; float d712t = length( r712t.xz );',
@@ -135,6 +135,7 @@ window.WFR_TRAVEL712 = (function () {
       var sp = rec.b.size / C.GRID; if (rec.fmax <= 0 && rec.z >= C.SEA_Z) return 0;
       return sp * C.GRID * Math.min(1, Math.max(C.FLAT, (rec.fmax - Math.max(0, rec.fmin)) / sp)); }
 
+    function depth737(rec, u, v) { for (var dz = 1; dz <= 6 && dz <= rec.z; dz++) { var n = 1 << dz, x = rec.x >> dz, y = rec.y >> dz, r = tiles.get(keyOf(rec.z - dz, x, y)); if (r && r.field) { var h = sampleField(r.field, r.u0 + (rec.x - x * n + u) / n * r.s, r.v0 + (rec.y - y * n + v) / n * r.s); if (h < 0) return h; } } return -30; }   // 737: the remote terrain has no sea floor past z10 (its sea is exactly 0): the depth comes from the nearest ancestor that has one; none says land is beside her, so shallow
     function build(rec) {   // one tile: a GRID x GRID sheet in the tile's own mercator metres (scaled by the frame's k), plus a skirt round its edge
       var N = C.GRID, V = (N + 1) * (N + 1), E = 4 * (N + 1), s = WORLD / Math.pow(2, rec.z), b = boundsOf(f, rec.z, rec.x, rec.y), skirt = Math.max(30, b.size * 0.04);
       var pos = new Float32Array((V + E) * 3), col = new Float32Array((V + E) * 3), hv = new Float32Array(V), idx = [], fld = rec.field, U0 = rec.u0, V0 = rec.v0, SS = rec.s, minH = 1e9, maxH = -1e9, eps = 0.5 / N;
@@ -145,7 +146,7 @@ window.WFR_TRAVEL712 = (function () {
         var tl = W.tileLocal(f, rec.z, rec.x, rec.y, i / N, j / N, o725); pos[k] = tl.x; pos[k + 1] = y; pos[k + 2] = tl.z; if (y < minH) minH = y; if (y > maxH) maxH = y;
         var hx = hv[j * (N + 1) + Math.min(N, i + 1)] - hv[j * (N + 1) + Math.max(0, i - 1)], hz = hv[Math.min(N, j + 1) * (N + 1) + i] - hv[Math.max(0, j - 1) * (N + 1) + i], step = 2 * b.size / N;
         if ((i === 0 || j === 0 || i === N || j === N) && hh > 0) edgeSlope = Math.max(edgeSlope, Math.hypot(hx, hz) / step);
-        tint(hh, Math.hypot(hx, hz) / step, latTop + (latBot - latTop) * j / N, col, k); }
+        tint(hh === 0 ? depth737(rec, i / N, j / N) : hh, Math.hypot(hx, hz) / step, latTop + (latBot - latTop) * j / N, col, k); }
       var fr = reliefOf(fld, U0, V0, SS); rec.fmin = fr[0]; rec.fmax = fr[1];   // the field's own range under the tile (every pixel, not the sheet's 33 x 33): the LOD's relief
       skirt = Math.max(skirt, Math.min(maxH - minH + 30, C.SKIRT_K * b.size / N * edgeSlope));
       for (j = 0; j < N; j++) for (i = 0; i < N; i++) { var a = j * (N + 1) + i, c = a + N + 1; idx.push(a, c, a + 1, a + 1, c, c + 1); }   // tiles.js's diagonal (H() below reads the same two triangles)
