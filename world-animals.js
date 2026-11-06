@@ -121,6 +121,26 @@ window.WFR_WORLDANIMALS = (function () {
     manta: { name: 'Giant manta ray (approximate in low poly)', make: 'manta', sp: 'dolphin', realm: 'sea', temper: 'passive', y: -1.2, depth: 6, v: 1.0, loop: [30, 70], lag: 0.5, side: 6 },
     sealion: { name: 'Sea lion', make: 'sealion', sp: 'dolphin', realm: 'sea', also: 'land', coast: true, temper: 'curious', y: -0.3, depth: 2, v: 2.2, loop: [25, 60], lag: 0.2, side: 4, spread: 4, stride: 0.6 }
   };
+  /* 750 (Marth, Nov 6: "are there animals in the ocean? and can we add at least 15 types of sea animals?"): the new swimmers, and the giant tortoise, which lives on land. depth: the water it needs under it; shore: it keeps within that many metres of land. DRAFT */
+  Object.assign(K, {
+    minnow: { name: 'Minnow (small: clear only near her)', make: 'minnow', sp: 'dolphin', realm: 'sea', temper: 'passive', y: -0.5, depth: 1.5, v: 0.8, loop: [5, 12], lag: 0.05, side: 2.0, school: true },
+    salmon: { name: 'Atlantic salmon', make: 'salmon', sp: 'dolphin', realm: 'sea', temper: 'passive', y: -0.8, depth: 3, v: 1.6, loop: [10, 25], lag: 0.08, side: 1.6, school: true, shore: 2600 },
+    pacsalmon: { name: 'Sockeye salmon', make: 'pacsalmon', sp: 'dolphin', realm: 'sea', temper: 'passive', y: -0.7, depth: 3, v: 1.5, loop: [10, 25], lag: 0.08, side: 1.6, school: true, shore: 2600 },
+    seatrout: { name: 'Sea trout', make: 'seatrout', sp: 'dolphin', realm: 'sea', temper: 'passive', y: -0.8, depth: 3, v: 1.2, loop: [8, 20], lag: 0.1, side: 1.4, school: true, shore: 2600 },
+    bass: { name: 'European sea bass', make: 'bass', sp: 'dolphin', realm: 'sea', temper: 'passive', y: -1.0, depth: 3, v: 1.0, loop: [12, 30], lag: 0.08, side: 2, school: true },
+    tuna: { name: 'Yellowfin tuna', make: 'tuna', sp: 'dolphin', realm: 'sea', temper: 'passive', y: -1.1, depth: 15, v: 3.4, loop: [80, 180], lag: 0.06, side: 4, school: true },
+    swordfish: { name: 'Swordfish', make: 'swordfish', sp: 'dolphin', realm: 'sea', temper: 'sometimes', y: -1.0, depth: 30, v: 2.8, loop: [60, 140], lag: 0.3, side: 6, leap: true },
+    hammerhead: { name: 'Great hammerhead', make: 'hammerhead', sp: 'dolphin', realm: 'sea', temper: 'sometimes', y: -1.3, depth: 8, v: 1.6, loop: [50, 110], lag: 0.2, side: 6 },
+    greatwhite: { name: 'Great white shark', make: 'greatwhite', sp: 'dolphin', realm: 'sea', temper: 'malicious', y: -1.6, depth: 12, v: 1.8, loop: [80, 160], lag: 0.5, side: 8 },
+    spermwhale: { name: 'Sperm whale', make: 'spermwhale', sp: 'dolphin', realm: 'sea', temper: 'passive', y: -2.4, depth: 200, v: 1.8, loop: [200, 420], lag: 0.05, side: 18, surface: true },
+    beluga: { name: 'Beluga', make: 'beluga', sp: 'dolphin', realm: 'sea', temper: 'curious', y: -1.1, depth: 5, v: 1.6, loop: [70, 150], lag: 0.1, side: 5 },
+    narwhal: { name: 'Narwhal', make: 'narwhal', sp: 'dolphin', realm: 'sea', temper: 'passive', y: -1.2, depth: 8, v: 1.5, loop: [70, 150], lag: 0.1, side: 5 },
+    moray: { name: 'Green moray', make: 'moray', sp: 'dolphin', realm: 'sea', temper: 'sometimes', y: -1.6, depth: 5, v: 0.5, loop: [6, 14], lag: 0.6, side: 3 },
+    octopus: { name: 'Common octopus', make: 'octopus', sp: 'dolphin', realm: 'sea', temper: 'passive', y: -1.5, depth: 4, v: 0.3, loop: [5, 12], lag: 0.8, side: 3 },
+    jellyfish: { name: 'Moon jellyfish', make: 'jellyfish', sp: 'dolphin', realm: 'sea', temper: 'sometimes', y: -0.9, depth: 3, v: 0.15, loop: [6, 14], lag: 0.05, side: 3, school: true },
+    stingray: { name: 'Southern stingray', make: 'stingray', sp: 'dolphin', realm: 'sea', temper: 'passive', y: -1.6, depth: 4, v: 0.6, loop: [12, 30], lag: 0.5, side: 4 },
+    tortoise: { name: 'Giant tortoise', make: 'tortoise', sp: 'mongoose', realm: 'land', temper: 'passive', v: 0.15, stride: 0.5, spread: 5, rest: 0.8 }
+  });
   var TMP = { passive: 0, curious: 1, sometimes: 2, malicious: 3 };
   function temper(k) { var T = window.WFR_ANIMALS && WFR_ANIMALS.T ? WFR_ANIMALS.T : TMP; return T[K[k].temper]; }
 
@@ -417,6 +437,84 @@ window.WFR_WORLDANIMALS = (function () {
   };
   Object.assign(Q, NEWQ); Object.assign(B, NEWB); Object.assign(S3, NEWS);
 
+  /* 750: the new bodies, from the same swimmer() and fish() (seen from above, so each is known by its outline: the hammer, the sword, the tusk, the arms, the bell) */
+  function shark750(id, o) { var hx = PR.hex, top = hx(o.top), mid = hx(o.mid), belly = hx(o.belly), L = o.L, z0 = L * 0.4, w = o.w, h = o.h, fin = o.fin ? hx(o.fin) : top;
+    return swimmer(id, { L: L, z0: z0, rings: 16, sides: 10,
+      prof: function (u) { var t; if (u < 0.3) { t = Math.sin(u / 0.3 * Math.PI / 2); return [w * (0.18 + 0.82 * t), h * (0.18 + 0.82 * t), 0]; } t = (u - 0.3) / 0.7; return [w * Math.pow(Math.max(0, 1 - t), 1.2) + L * 0.008, h * Math.pow(Math.max(0, 1 - t), 1.1) + L * 0.012, 0]; },
+      col: function (u, up) { return up < -0.25 ? belly : up > 0.35 ? top : mid; },
+      extra: function (G, P) { P.fin3(G, [[0, h * 0.85, z0 - L * 0.3], [0, h + L * o.dorsal, z0 - L * 0.46], [0, h * 0.8, z0 - L * 0.5]], L * 0.008, fin, 0, [1, 0, 0]);
+        P.fin3(G, [[0, 0, z0 - L * 0.96], [0, L * 0.17, z0 - L * 1.12], [0, L * 0.05, z0 - L * 1.0], [0, -L * 0.1, z0 - L * 1.07]], L * 0.008, fin, 0, [1, 0, 0]);
+        [1, -1].forEach(function (sd) { P.fin3(G, [[w * 0.8 * sd, -h * 0.4, z0 - L * 0.2], [(w + L * 0.13) * sd, -h * 0.65, z0 - L * 0.36], [w * 0.8 * sd, -h * 0.5, z0 - L * 0.32]], L * 0.008, fin, sd > 0 ? 3 : 4, [0, 1, 0], belly); });
+        if (o.extra) o.extra(G, P, z0, top, belly); },
+      sw: { L: L, z0: z0, vert: false, amp: o.amp || 0.085, kw: 5, f0: 0.4, f1: 0.25, vRef: 4, finX: w * 0.8, finY: -h * 0.4, jawMax: 0 }, radius: L * 0.6 }); }
+  function whale750(id, o) { var hx = PR.hex, top = hx(o.top), belly = hx(o.belly), dark = hx(o.dark), L = o.L, z0 = o.z0;
+    return swimmer(id, { L: L, z0: z0, rings: 18, sides: 10, prof: o.prof,
+      col: function (u, up, sd) { if (up < -0.35) return belly; return Math.sin(u * o.mk + sd * 7) > 0.72 ? dark : top; },
+      extra: function (G, P) { var q = L - z0, f = o.fluke, y = 0.04 * L * 0.2;
+        [1, -1].forEach(function (sd) { P.fin3(G, [[0, y, -q + f * 0.12], [f * 0.35 * sd, y, -q - f * 0.1], [f * sd, y, -q - f * 0.5], [f * 0.9 * sd, y, -q - f * 0.62], [f * 0.3 * sd, y, -q - f * 0.35], [0, y, -q - f * 0.25]], L * 0.008, top, 0, [0, 1, 0], belly);
+          P.fin3(G, [[o.finX * sd, o.finY, o.finZ], [(o.finX + o.fin) * sd, o.finY - o.fin * 0.3, o.finZ - o.fin * 0.45], [(o.finX + o.fin * 0.8) * sd, o.finY - o.fin * 0.3, o.finZ - o.fin * 0.8], [o.finX * sd, o.finY - o.fin * 0.05, o.finZ - o.fin * 0.5]], L * 0.008, top, sd > 0 ? 3 : 4, [0, 1, 0], belly);
+          P.eye(G, [o.eye[0] * sd, o.eye[1], o.eye[2]], L * 0.006, 0, [0.6 * sd, 0, 0.8]); });
+        if (o.extra) o.extra(G, P); },
+      sw: { L: L, z0: z0, vert: true, amp: 0.05, kw: 3.5, f0: 0.12, f1: 0.06, vRef: 3, finX: o.finX, finY: o.finY, jawMax: 0 }, radius: L * 0.6 }); }
+  var SEA750 = {
+    minnow: function () { var hx = PR.hex, back = hx(0x9db4a8), side = hx(0xdfe8e2), belly = hx(0xf4f7f4), L = 0.14;   /* a silver fleck: a school of them shimmers */
+      return swimmer('minnow', { L: L, z0: L * 0.45, rings: 5, sides: 5,
+        prof: function (u) { var e = Math.sin(Math.PI * Math.min(1, u * 1.02 + 0.06)); return [0.015 * (0.25 + 0.75 * e), 0.023 * (0.25 + 0.75 * e), 0]; },
+        col: function (u, up) { return up > 0.4 ? back : up > -0.2 ? side : belly; },
+        extra: function (G, P) { P.fin3(G, [[0, 0, -L * 0.5], [0, 0.022, -L * 0.72], [0, -0.022, -L * 0.72]], 0.002, back, 0, [1, 0, 0]); },
+        sw: { L: L, z0: L * 0.45, vert: false, amp: 0.09, kw: 4, f0: 1.2, f1: 0.5, vRef: 1, finX: 0, finY: 0, jawMax: 0 }, radius: 0.16 }); },
+    salmon: function () { return fish('salmon', 0.8, [0x3e4e58, 0xc8d0d4, 0xdfe6ea, 0xf2f4f2], 0.075, 0.1); },
+    pacsalmon: function () { return fish('pacsalmon', 0.7, [0x47683a, 0xc8321e, 0xd8402a, 0xe8c8b0], 0.07, 0.095); },   /* the sockeye in its river red, green about the head and back */
+    seatrout: function () { return fish('seatrout', 0.6, [0x4a5a5e, 0xb8c2c4, 0xd0d6d6, 0xecefec], 0.055, 0.075); },
+    bass: function () { return fish('bass', 0.65, [0x56666e, 0xb4c0c6, 0xccd6da, 0xf0f2f2], 0.06, 0.09); },
+    tuna: function () { return shark750('tuna', { L: 2, w: 0.24, h: 0.3, dorsal: 0.1, top: 0x1f3a6e, mid: 0xb8c4cc, belly: 0xf0f2f2, fin: 0xe8c020, amp: 0.05 }); },
+    swordfish: function () { return shark750('swordfish', { L: 2.8, w: 0.24, h: 0.3, dorsal: 0.2, top: 0x2a2f44, mid: 0x6f7a88, belly: 0xdfe4e6, amp: 0.06,
+      extra: function (G, P, z0, top) { P.tube(G, { a: [0, 0.02, z0 - 0.05], b: [0, 0.02, z0 + 1.1], ra: 0.06, rb: 0.008, sides: 5, col: top, bone: 0 }); } }); },   /* the sword */
+    hammerhead: function () { return shark750('hammerhead', { L: 3.8, w: 0.3, h: 0.33, dorsal: 0.15, top: 0x6a7682, mid: 0x8f9aa4, belly: 0xeef0f0,
+      extra: function (G, P, z0, top, belly) { [1, -1].forEach(function (sd) { P.fin3(G, [[0, 0.02, z0 + 0.04], [0.28 * sd, 0.02, z0 + 0.08], [0.66 * sd, 0.02, z0 - 0.02], [0.68 * sd, 0.02, z0 - 0.2], [0.45 * sd, 0.02, z0 - 0.26], [0.12 * sd, 0.02, z0 - 0.4], [0, 0.02, z0 - 0.42]], 0.03, top, 0, [0, 1, 0], belly);   /* the hammer: its outline from above */
+        P.eye(G, [0.67 * sd, 0.02, z0 - 0.1], 0.025, 0, [0.9 * sd, 0, 0.3]); }); } }); },
+    greatwhite: function () { return shark750('greatwhite', { L: 4.8, w: 0.5, h: 0.58, dorsal: 0.13, top: 0x55606a, mid: 0x7b868e, belly: 0xf0f2f2 }); },
+    spermwhale: function () { return whale750('spermwhale', { L: 15, z0: 5.2, top: 0x4c5056, belly: 0x6e7278, dark: 0x3a3e44, mk: 80, fluke: 2.3, fin: 1.1, finX: 1.4, finY: -1.0, finZ: 1.6, eye: [1.45, -0.5, 1.3],   /* the great square head, a third of it; a low hump for a dorsal */
+      prof: function (u) { var t; if (u < 0.05) { t = Math.sqrt(u / 0.05); return [0.7 + 0.6 * t, 0.9 + 0.7 * t, 0.1]; } if (u < 0.35) { t = (u - 0.05) / 0.3; return [1.3 + 0.4 * t, 1.6 + 0.3 * t, 0.1]; } t = (u - 0.35) / 0.65; return [1.7 * Math.pow(Math.max(0, 1 - t), 1.2) + 0.1, 1.9 * Math.pow(Math.max(0, 1 - t), 1.1) + 0.14, 0.1]; },
+      extra: function (G, P) { P.fin3(G, [[0, 1.35, -3.6], [0, 1.75, -4.2], [0, 1.2, -5.0]], 0.14, PR.hex(0x4c5056), 0, [1, 0, 0]); } }); },
+    beluga: function () { return whale750('beluga', { L: 4.2, z0: 1.5, top: 0xeef0ec, belly: 0xf6f7f4, dark: 0xdfe3df, mk: 9, fluke: 0.62, fin: 0.42, finX: 0.48, finY: -0.3, finZ: 0.65, eye: [0.33, 0.08, 1.12],   /* all white, the round melon, the neck's crease, no dorsal */
+      prof: function (u) { var t, e; if (u < 0.09) { t = Math.sqrt(u / 0.09); return [0.1 + 0.28 * t, 0.1 + 0.3 * t, 0.06]; } if (u < 0.16) return [0.36, 0.38, 0.05]; if (u < 0.42) { e = Math.sin((u - 0.16) / 0.26 * Math.PI / 2); return [0.36 + 0.26 * e, 0.38 + 0.26 * e, 0.03]; } t = (u - 0.42) / 0.58; return [0.62 * Math.pow(Math.max(0, 1 - t), 1.15) + 0.04, 0.64 * Math.pow(Math.max(0, 1 - t), 1.05) + 0.05, 0.03]; } }); },
+    narwhal: function () { return whale750('narwhal', { L: 4.4, z0: 1.6, top: 0x6a7076, belly: 0xd8dcdc, dark: 0x3e444a, mk: 57, fluke: 0.66, fin: 0.36, finX: 0.44, finY: -0.26, finZ: 0.7, eye: [0.3, 0.05, 1.2],   /* mottled, and the long tusk: it is what she sees from the air */
+      prof: function (u) { var t, e; if (u < 0.08) { t = Math.sqrt(u / 0.08); return [0.08 + 0.24 * t, 0.08 + 0.26 * t, 0.03]; } if (u < 0.42) { e = Math.sin((u - 0.08) / 0.34 * Math.PI / 2); return [0.32 + 0.28 * e, 0.34 + 0.28 * e, 0.02]; } t = (u - 0.42) / 0.58; return [0.6 * Math.pow(Math.max(0, 1 - t), 1.15) + 0.04, 0.62 * Math.pow(Math.max(0, 1 - t), 1.05) + 0.05, 0.02]; },
+      extra: function (G, P) { P.tube(G, { a: [0.05, 0.05, 1.55], b: [0.14, 0.14, 3.85], ra: 0.05, rb: 0.012, sides: 5, col: PR.hex(0xeadfc6), bone: 0 }); } }); },
+    moray: function () { var hx = PR.hex, g = hx(0x4a6a2a), d = hx(0x2f4a1e), pale = hx(0x8a9a4a), L = 1.8, z0 = 0.7;   /* a long ribbon, the fin along its back */
+      return swimmer('moray', { L: L, z0: z0, rings: 14, sides: 6,
+        prof: function (u) { var e = Math.min(1, u * 8), t = Math.max(0, (u - 0.7) / 0.3); return [0.07 * (0.45 + 0.55 * e) * (1 - 0.85 * t), 0.085 * (0.45 + 0.55 * e) * (1 - 0.7 * t), 0]; },
+        col: function (u, up, sd) { return up < -0.4 ? pale : Math.sin(u * 53 + sd * 11) > 0.45 ? d : g; },
+        extra: function (G, P) { P.fin3(G, [[0, 0.07, z0 - 0.2], [0, 0.13, z0 - 0.5], [0, 0.11, z0 - 1.5], [0, 0.03, z0 - 1.8], [0, 0.02, z0 - 1.7], [0, 0.05, z0 - 0.4]], 0.006, d, 0, [1, 0, 0]);
+          [1, -1].forEach(function (sd) { P.eye(G, [0.04 * sd, 0.04, z0 - 0.09], 0.012, 0, [0.6 * sd, 0, 0.8]); }); },
+        sw: { L: L, z0: z0, vert: false, amp: 0.14, kw: 7, f0: 0.5, f1: 0.5, vRef: 1, finX: 0, finY: 0, jawMax: 0 }, radius: 1 }); },
+    octopus: function () { var hx = PR.hex, r = hx(0xa84a32), d = hx(0x7a3020), pale = hx(0xd8926e), z0 = 0.18;   /* the arms spread: from above, a star */
+      return swimmer('octopus', { L: 0.42, z0: z0, rings: 7, sides: 8,
+        prof: function (u) { var e = Math.sin(Math.PI * Math.min(1, u * 0.95 + 0.08)); return [0.15 * e + 0.02, 0.13 * e + 0.02, 0.05]; },
+        col: function (u, up, sd) { return Math.sin(u * 31 + sd * 9) > 0.6 ? d : up < -0.3 ? pale : r; },
+        extra: function (G, P) { for (var i = 0; i < 8; i++) { var a = (i + 0.5) / 8 * TAU, c = Math.cos(a), s = Math.sin(a), p0 = [c * 0.1, 0, z0 + s * 0.1 - 0.04], p1 = [c * 0.42, -0.03, z0 + s * 0.42 - 0.04], p2 = [(c * 0.8 - s * 0.14), -0.02, z0 + (s * 0.8 + c * 0.14) - 0.04];
+            P.tube(G, { a: p0, b: p1, ra: 0.04, rb: 0.024, sides: 4, col: r, bone: 0 }); P.tube(G, { a: p1, b: p2, ra: 0.024, rb: 0.006, sides: 4, col: i % 2 ? r : d, bone: 0 }); }
+          [1, -1].forEach(function (sd) { P.eye(G, [0.1 * sd, 0.13, z0 - 0.03], 0.02, 0, [0.7 * sd, 0.3, 0.6]); }); },
+        sw: { L: 0.42, z0: z0, vert: true, amp: 0.05, kw: 2, f0: 0.3, f1: 0.2, vRef: 0.5, finX: 0, finY: 0, jawMax: 0 }, radius: 1 }); },
+    jellyfish: function () { var P = PR, G = P.G0(), hx = P.hex, bell = hx(0xefd4e2), rim = hx(0xcfa6c4), arm = hx(0xf4e4ee), ring = hx(0xb06aa8), i;   /* the pale bell and its four purple rings, the tentacles under it */
+      P.ell(G, { c: [0, 0, 0], r: [0.34, 0.2, 0.34], seg: 10, ring: 5, top: bell, belly: rim, bone: 0 });
+      [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(function (q) { P.ell(G, { c: [0.1 * q[0], 0.16, 0.1 * q[1]], r: [0.075, 0.035, 0.075], seg: 6, ring: 3, col: ring, bone: 0 }); });
+      for (i = 0; i < 8; i++) { var a = i / 8 * TAU; P.tube(G, { a: [Math.cos(a) * 0.26, -0.08, Math.sin(a) * 0.26], b: [Math.cos(a) * 0.32, -0.6, Math.sin(a) * 0.32], ra: 0.018, rb: 0.005, sides: 4, col: arm, bone: 0 }); }
+      return P.swimDone(G, 'jellyfish', { L: 0.7, z0: 0.35, vert: true, amp: 0.06, kw: 2, f0: 0.35, f1: 0.1, vRef: 0.5, finX: 0, finY: 0, jawMax: 0 }, 0.7); },
+    stingray: function () { var hx = PR.hex, sand = hx(0x8a7a5e), d = hx(0x6a5c44), wht = hx(0xeef0ee), z0 = 0.62;   /* the kite, and the whip of its tail */
+      return swimmer('stingray', { L: 1.25, z0: z0, rings: 8, sides: 10,
+        prof: function (u) { var e = Math.sin(Math.PI * Math.min(1, u * 1.04 + 0.05)); return [0.3 * e + 0.04, 0.09 * e + 0.02, 0]; },
+        col: function (u, up, sd) { return up < 0 ? wht : Math.sin(u * 29 + sd * 8) > 0.7 ? d : sand; },
+        extra: function (G, P) { [1, -1].forEach(function (sd) { P.fin3(G, [[0.2 * sd, 0, 0.48], [0.95 * sd, 0.01, -0.06], [0.2 * sd, 0, -0.5]], 0.03, sand, sd > 0 ? 3 : 4, [0, 1, 0], wht); P.eye(G, [0.1 * sd, 0.09, 0.32], 0.016, 0, [0.5 * sd, 0.5, 0.6]); });
+          P.tube(G, { a: [0, 0, -0.6], b: [0, 0, -1.9], ra: 0.03, rb: 0.005, sides: 4, col: d, bone: 0 }); },
+        sw: { L: 1.25, z0: z0, vert: true, amp: 0.04, kw: 3, f0: 0.35, f1: 0.1, vRef: 1, finX: 0.2, finY: 0, jawMax: 0 }, radius: 1.2 }); }
+  };
+  Object.assign(S3, SEA750);
+  Q.tortoise = function () { return quad({ id: 'tortoise', by: 0.3, r: [0.34, 0.2, 0.46], neck: [0.34, 0.45, 0.075, 0.06], head: [0.07, 0.065, 0.1], hp: 0.1, snout: [0.03, 0.04, 0.03], droop: 0.3, legR: [0.1, 0.085], sprawl: 1.35,
+    top: 0x5c5a4e, belly: 0x6e6a58, leg: 0x5a5648, muzzle: 0x5c5a4e, hoof: 0x45423a, nose: 0x26241e, tail: [0.1, 0.035, 0.015, 0.5],
+    extra: function (G, P) { P.ell(G, { c: [0, 0.52, -0.03], r: [0.52, 0.36, 0.66], seg: 12, ring: 7, top: P.hex(0x3e3a30), belly: P.hex(0x4a453a), bone: 1, pat: function (c, nx, ny, nz, x, y, z) { return Math.sin(x * 9) * Math.sin(z * 8) > 0.45 ? [c[0] * 1.5, c[1] * 1.5, c[2] * 1.4] : c; } }); } }); };   /* the great domed shell: on land, since a tortoise cannot swim */
+
   /* ---------- 3. one program for every world animal: the kit's Lambert, instanced, the sea's tint under its water line ---------- */
   function OBC(shader) {   // ONE function for every world animal material (r128 keys the program by this text): uWA714 marks it for the bench
     var u = this.userData.uWA714; shader.uniforms.uWA714Col = u.col;
@@ -465,8 +563,13 @@ window.WFR_WORLDANIMALS = (function () {
     var q = recOf(x, z); if (!q) return null; var N = Math.round(Math.sqrt(q.r.hv.length)) - 1, uv = uvOf(q, x, z), hv = q.r.hv;
     var fx = Math.min(N - 1e-9, Math.max(0, uv.u * N)), fz = Math.min(N - 1e-9, Math.max(0, uv.v * N)), i = Math.floor(fx), j = Math.floor(fz), a = fx - i, c = fz - j;
     var h00 = hv[j * (N + 1) + i], h10 = hv[j * (N + 1) + i + 1], h01 = hv[(j + 1) * (N + 1) + i], h11 = hv[(j + 1) * (N + 1) + i + 1];
+    if (h00 === 0 && h10 === 0 && h01 === 0 && h11 === 0) return deep750(q, uv);   // 750
     return a + c <= 1 ? h00 + (h10 - h00) * a + (h01 - h00) * c : h11 + (h01 - h11) * (1 - a) + (h10 - h11) * (1 - c);
   }
+  /* 750: past z10 the remote sheets have no sea floor (their sea is exactly 0: depth737 in world712-travel.js), so every fine sheet, and that is every coast, read as no water at all and no swimmer was ever given one. The depth comes from the nearest ancestor that has it, as the sea's own colour does */
+  function deep750(q, uv) { var s = ST(), T = window.WFR_TRAVEL712, r = q.r; if (!T || !T.sampleField) return 0;
+    for (var dz = 1; dz <= 6 && dz <= r.z; dz++) { var n = 1 << dz, x = r.x >> dz, y = r.y >> dz, A = s.tiles.get(T.keyOf(r.z - dz, x, y)); if (A && A.field) { var h = T.sampleField(A.field, A.u0 + (r.x - x * n + uv.u) / n * A.s, A.v0 + (r.y - y * n + uv.v) / n * A.s); if (h < 0) return h; } }
+    return 0; }
   function colAt(x, z) {   // the colour painted on the ground there: NASA Blue Marble when world-imagery.js has painted the tile (img), else the atlas tint
     var q = recOf(x, z); if (!q) return null; var col = q.r.mesh.geometry.getAttribute('color'); if (!col) return null; var N = Math.round(Math.sqrt(q.r.hv.length)) - 1, uv = uvOf(q, x, z);
     var i = clamp(Math.round(uv.u * N), 0, N), j = clamp(Math.round(uv.v * N), 0, N), k = (j * (N + 1) + i) * 3, A = col.array;
@@ -544,8 +647,35 @@ window.WFR_WORLDANIMALS = (function () {
       case 'northsea': R.sea = [['seal', 2, [2, 6]], ['walrus', 1, [3, 8]], ['whale', 1, [1, 2]], ['orca', 1, [3, 7]]]; break;
       case 'tahoelake': R.sea = [['trout', 1, [6, 12]]]; R.air = [['eagle', 1, [1, 3]]]; break;
     }
+    sea750(R, b, lat, lon);
     return R;
   }
+  /* 750: the new kinds by real water: added after the switch above, each where it really lives. The boxes are rough, DRAFT for Izumi's atlas check */
+  var B750 = { natl: [40, 72, -75, 30], npacW: [38, 72, 135, 180], npacE: [38, 72, -180, -118], bass: [30, 60, -12, 36], trout: [45, 71, -25, 42], narwhal: [65, 82, -100, 60], hudson: [51, 66, -96, -64], gala: [-1.5, 0.7, -92, -89], aldabra: [-9.6, -9.3, 46, 46.6] };
+  function sea750(R, b, lat, lon) {
+    var al = Math.abs(lat), S = R.sea, at = function (Bx) { return inBox(lat, lon, Bx); }, north = at(B750.natl), pac = at(B750.npacW) || at(B750.npacE);
+    if (R.land.length && (at(B750.gala) || at(B750.aldabra))) R.land = [['tortoise', 4, [3, 8]]];   // the two homes of the giant tortoises: on these islands they are the land's own
+    switch (b) {
+      case 'lake': if (lat > -56 && lat < 68) S.push(['minnow', 3, [14, 24]]); break;
+      case 'tahoelake': S.push(['minnow', 1, [14, 24]]); break;
+      case 'reef': S.push(['hammerhead', 2, [2, 5]], ['stingray', 2, [1, 3]], ['moray', 1, [1, 2]], ['octopus', 1, [1, 2]], ['jellyfish', 1, [6, 14]], ['minnow', 1, [14, 24]]); break;
+      case 'shelf':
+        if (al < 35) S.push(['hammerhead', 1, [2, 5]], ['stingray', 1, [1, 3]]);
+        if (al > 25 && al < 50) S.push(['greatwhite', 1, [1, 2]]);
+        if (al < 45) S.push(['tuna', 1, [6, 14]]);
+        if (al < 55) S.push(['jellyfish', 1, [6, 14]], ['minnow', 1, [14, 24]]);
+        if (north) S.push(['salmon', 2, [8, 16]]); if (pac) S.push(['pacsalmon', 2, [10, 20]]); if (at(B750.trout)) S.push(['seatrout', 1, [6, 12]]); if (at(B750.bass)) S.push(['bass', 2, [8, 16]]); if (at(B750.hudson)) S.push(['beluga', 3, [4, 10]]);
+        break;
+      case 'ocean':
+        S.push(['spermwhale', 2, [1, 3]]); if (al < 45) S.push(['tuna', 2, [6, 14]], ['swordfish', 1, [1, 2]]); if (al < 55) S.push(['jellyfish', 1, [6, 14]]);
+        break;
+      case 'northsea':
+        S.push(['beluga', 3, [4, 10]]); if (at(B750.narwhal)) S.push(['narwhal', 2, [3, 8]]); if (north) S.push(['salmon', 1, [8, 16]]); if (at(B750.trout)) S.push(['seatrout', 1, [6, 12]]);
+        break;
+    }
+  }
+  function nearLand750(x, z, far) { for (var r = 600; r <= far; r += 1000) for (var a = 0; a < 12; a++) { var t = a / 12 * TAU, q = rawAt(x + Math.cos(t) * r, z + Math.sin(t) * r); if (q != null && q >= C.LAND_MIN) return true; } return false; }   // a river's mouth is a coast
+  function lv750(gr) { return gr.wl != null ? gr.wl : C.TAHOE_LV; }   // the level of the water a lake school swims in
   /* 749 (Marth, Nov 6: "yes wild hedgehogs can be huntable"): where real ones live, by the cell's main land biome. European and Amur; the Algerian and the four-toed in Africa; the long-eared and desert ones; New Zealand's, brought there. None in the Americas or Australia. Their own dice in populate(): no other animal moves. DRAFT for Izumi's atlas check */
   function hogRange(b, lat, lon) { var rg = regionOf(lat, lon); return b === 'temperate' ? rg === 'europe' || rg === 'asia' || rg === 'africa' || rg === 'oceania' : b === 'savanna' ? rg === 'africa' : b === 'desert' ? rg === 'africa' || rg === 'asia' : b === 'boreal' ? rg === 'europe' : false; }
   function coastAir(lat, lon) { var L = [], rg = regionOf(lat, lon); if (Math.abs(lat) < 62) L.push(['gull', 3, [5, 12]]); if ((rg === 'americas' && Math.abs(lat) < 40) || rg === 'australia') L.push(['pelican', 2, [3, 7]]); return L; }
@@ -558,6 +688,7 @@ window.WFR_WORLDANIMALS = (function () {
     var d = K[k], h = H(x, z), raw = rawAt(x, z); if (raw == null) return false;
     realm = realm || d.realm;
     if (realm === 'sea') return h <= 0.01 && raw <= -d.depth;
+    if (realm === 'lake' && !inBox(lat, lon, RG.tahoe)) { if (h < C.LAND_MIN || raw < C.LAND_MIN) return false; var f750 = featAt(lat, lon), c750 = colAt(x, z); return f750 === 'water' || !!(c750 && c750.img && c750.b > c750.r * 1.12 && c750.b > c750.g * 1.02 && (c750.r + c750.g + c750.b) / 3 < 0.4); }   // 750: any other lake or river: the wader's own test
     if (realm === 'lake') return inBox(lat, lon, RG.tahoe) && Math.abs(raw - C.TAHOE_LV) < 0.6 && Math.abs(h - C.TAHOE_LV) < 0.6 && Math.abs(rawAt(x + 12, z) - C.TAHOE_LV) < 0.6 && Math.abs(rawAt(x, z + 12) - C.TAHOE_LV) < 0.6;
     if (realm === 'wade') { if (h < C.LAND_MIN || raw < C.LAND_MIN) return false; var fw = featAt(lat, lon), cw = colAt(x, z); return fw === 'water' || !!(cw && cw.img && cw.b > cw.r * 1.12 && cw.b > cw.g * 1.02 && (cw.r + cw.g + cw.b) / 3 < 0.4); }   // a lake's surface (the colour biomeAt calls a lake)
     if (realm === 'land') { if (h < C.LAND_MIN || raw < C.LAND_MIN) return false; if (inBox(lat, lon, RG.tahoe) && Math.abs(raw - C.TAHOE_LV) < 1.0) return false;
@@ -609,8 +740,8 @@ window.WFR_WORLDANIMALS = (function () {
     if (gr.m.length) G.push(gr);
   }
   function pod(G, e, q, r, f, cell) {   // a pod (or a school) on one loop round its home: each member a lag behind the one before, a little to one side
-    var k = e[0], d = K[k], n = e[2][0] + Math.floor(r() * (e[2][1] - e[2][0] + 1)), R = d.loop[0] + r() * (d.loop[1] - d.loop[0]), gr = { k: k, kind: 'pod', realm: d.realm === 'lake' ? 'lake' : 'sea', id: cell.key + ':' + G.length, m: [], R: R, dir: r() < 0.5 ? -1 : 1, th: r() * TAU };
-    var cx = q.x, cz = q.z, ll = WFR_WORLD.toLatLon(f, cx, cz); if (!valid(k, cx, cz, ll.lat, ll.lon, gr.realm)) return;
+    var k = e[0], d = K[k], n = e[2][0] + Math.floor(r() * (e[2][1] - e[2][0] + 1)), R = d.loop[0] + r() * (d.loop[1] - d.loop[0]), gr = { k: k, kind: 'pod', realm: d.realm === 'lake' || q.b === 'lake' || q.b === 'tahoelake' ? 'lake' : 'sea', id: cell.key + ':' + G.length, m: [], R: R, dir: r() < 0.5 ? -1 : 1, th: r() * TAU };
+    var cx = q.x, cz = q.z, ll = WFR_WORLD.toLatLon(f, cx, cz); if (!valid(k, cx, cz, ll.lat, ll.lon, gr.realm)) return; if (d.shore && !nearLand750(cx, cz, d.shore)) return; if (q.b === 'lake') gr.wl = H(cx, cz);   // 750
     for (var s = 0; s < 3; s++) { var bad = false; for (var p = 0; p < 10; p++) { var t = p / 10 * TAU, px = cx + Math.cos(t) * gr.R, pz = cz + Math.sin(t) * gr.R, l2 = WFR_WORLD.toLatLon(f, px, pz); if (!valid(k, px, pz, l2.lat, l2.lon, gr.realm)) { bad = true; break; } } if (!bad) break; gr.R *= 0.5; if (s === 2) gr.R = 0; }
     gr.lat = ll.lat; gr.lon = ll.lon;
     for (var i = 0; i < n; i++) { var m = member(gr, k, cx, cz, f, r, gr.R); m.i = i; m.side = (r() - 0.5) * 2 * d.side; m.dy = (r() - 0.5) * (d.school ? 0.8 : 0.4); gr.m.push(m); }
@@ -665,7 +796,7 @@ window.WFR_WORLDANIMALS = (function () {
   var HO = { x: 0, z: 0 };
   function react(m, d, gr, f, her, dt, mo) {   // the four temperaments, light: passive flee, curious come to look (dolphins escort), sometimes face her, malicious circle under her
     homeOf(gr, m, f, HO); var bx = HO.x + mo.ox, bz = HO.z + mo.oz, x = bx + m.fx + m.ex, z = bz + m.fz + m.ez, dx = x - her.x, dz = z - her.z, dh = Math.hypot(dx, dz), tp = temper(m.k);
-    var groundY = gr.realm === 'air' ? gr.y : gr.realm === 'land' || gr.realm === 'wade' ? m.wy : gr.realm === 'lake' ? C.TAHOE_LV : 0, low = her.y - groundY < (gr.realm === 'air' ? 12 : C.FLEE_Y) && her.y - groundY > -12, act = null;
+    var groundY = gr.realm === 'air' ? gr.y : gr.realm === 'land' || gr.realm === 'wade' ? m.wy : gr.realm === 'lake' ? lv750(gr) : 0, low = her.y - groundY < (gr.realm === 'air' ? 12 : C.FLEE_Y) && her.y - groundY > -12, act = null;
     if (tp === 0 && dh < C.FLEE_R && low) {   // PASSIVE: away from her, at its run (checked for footing / water each step)
       var vx = dx / (dh || 1) * C.RUN * dt * (gr.realm === 'air' ? 3 : gr.realm === 'land' ? 1 : 1.5), vz = dz / (dh || 1) * C.RUN * dt * (gr.realm === 'air' ? 3 : gr.realm === 'land' ? 1 : 1.5), nx = m.fx + vx, nz = m.fz + vz;
       if (Math.hypot(nx, nz) < C.FLEE_MAX && (gr.realm === 'air' || (function () { var ll = WFR_WORLD.toLatLon(f, bx + nx + m.ex, bz + nz + m.ez); return valid(m.k, bx + nx + m.ex, bz + nz + m.ez, ll.lat, ll.lon, gr.realm); })())) { m.fx = nx; m.fz = nz; }
@@ -696,7 +827,7 @@ window.WFR_WORLDANIMALS = (function () {
           var fz7 = false; if (m.gone748) { var F7 = WFR_FALL748.C; if (st.t >= m.gone748 && dd > F7.BACK_R) { m.gone748 = 0; m.fall748 = 0; m.hp748 = null; } else if (st.t - m.fall748 >= F7.WHITE) continue; else fz7 = true; } else if (m.hp748 != null && dd > WFR_FALL748.C.BACK_R) m.hp748 = null;   // 748: gone from the picture once it has turned white; whole again when she has left
           if (gr.realm === 'land' || gr.realm === 'wade') { y = H(x, z) - (gr.realm === 'wade' ? d.sink || 0 : 0); if (m.act === 'face') mv = false; }
           else if (gr.realm === 'air') y = gr.y + MO.y;
-          else if (gr.realm === 'lake') { y = C.TAHOE_LV + d.y + m.dy; wat = C.TAHOE_LV; }
+          else if (gr.realm === 'lake') { y = lv750(gr) + d.y + m.dy; wat = lv750(gr); }
           else { y = MO.y; wat = 0; if (d.make === 'penguin') pitch += Math.PI / 2 * 0.92; }
           var v7 = mv ? 0 : 1;
           if (fz7) { var p7 = WFR_WORLD.toLocal(f, m.fl.lat, m.fl.lon); x = p7.x; z = p7.z; y = m.fl.y; yaw = m.fl.yaw; pitch = m.fl.p; roll = m.fl.r; v7 = R2.v[2] ? 2 : 1; }   // 748: at zero it stops where it stood
@@ -803,7 +934,7 @@ window.WFR_WORLDANIMALS = (function () {
   }
   function where748(m) {   /* where her swoop is going; null once it is gone (the fade included: she stays to see it) */
     var R = st.kinds[m.k], F = window.WFR_FALL748; if (!R || !F || (m.gone748 && st.t - m.fall748 >= F.C.WHITE + F.C.GONE)) return null; var r = rad748(m, R), sea = m.g.realm === 'sea' || m.g.realm === 'lake';
-    return { x: m.wx, y: sea ? Math.max(m.wy, m.g.realm === 'lake' ? C.TAHOE_LV : 0) : m.wy, z: m.wz, r: r, gy: sea ? (m.g.realm === 'lake' ? C.TAHOE_LV : 0) : m.g.realm === 'air' ? m.wy : m.wy };
+    return { x: m.wx, y: sea ? Math.max(m.wy, m.g.realm === 'lake' ? lv750(m.g) : 0) : m.wy, z: m.wz, r: r, gy: sea ? (m.g.realm === 'lake' ? lv750(m.g) : 0) : m.g.realm === 'air' ? m.wy : m.wy };
   }
   function blow748(m, how, lv, gear, hx, hz) {   /* her blow lands: hit points, the throw (744's distance, this kind's size, never onto ground it could not stand on), the motion; at zero the fall */
     var F = window.WFR_FALL748, R = st.kinds[m.k]; if (!F || !R || !R.ok || m.gone748) return null;

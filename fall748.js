@@ -93,6 +93,28 @@ window.WFR_FALL748 = (function () {
     walrus: { p: 0.4, l: -0.22, r: -0.38, f: 1 },   /* the great weight heaves forward, tusks down */
     manta: { y: -TAU, r: 0.6, f: 1, l: 0.5 }   /* the wide wings wheel over */
   };
+  /* 750: the new waters. Hit points by size: a minnow falls to a touch, a sperm whale takes the most of all. Each its own motion (a swimmer answers through its whole body) */
+  Object.assign(ROW, { minnow: [0.3, 'sea', 0.03, 1.8], jellyfish: [0.5, 'sea', 0.05, 1.4], seatrout: [1, 'sea', 0.09, 1.3], bass: [1.1, 'sea', 0.10, 1.2], salmon: [1.2, 'sea', 0.10, 1.2], pacsalmon: [1.2, 'sea', 0.10, 1.2], octopus: [2, 'sea', 0.18, 0.8], moray: [2.2, 'serpent', 0.20, 0.8], stingray: [3, 'sea', 0.22, 0.5], tuna: [3.5, 'sea', 0.28, 0.4],
+    swordfish: [6, 'sea', 0.38, 0.3], hammerhead: [8, 'sea', 0.45, 0.2], beluga: [9, 'sea', 0.45, 0.18], narwhal: [10, 'sea', 0.50, 0.16], greatwhite: [12, 'sea', 0.55, 0.12], spermwhale: [30, 'sea', 0.85, 0.04], tortoise: [6, 'big', 0.30, 0.15] });
+  Object.assign(FLAV, {
+    minnow: { y: TAU, l: 0.5, r: 0.2, f: 6 },   /* a flash of silver, right round */
+    salmon: { l: 1, p: -1.1, r: 0.25, f: 4 },   /* it leaps, as at a weir */
+    pacsalmon: { l: 0.85, p: -0.95, r: -0.45, f: 3.5 },
+    seatrout: { l: 0.6, p: -0.75, r: 0.55, f: 5.5 },
+    bass: { p: -0.65, r: 0.45, f: 4.5, l: 0.35 },   /* it shakes its head at the surface */
+    tuna: { r: 0.3, f: 6, l: 0.2, p: 0.25 },   /* it shivers and sounds */
+    swordfish: { p: -0.85, l: 0.75, r: 0.9, f: 2 },   /* it walks up on its tail, the sword high */
+    hammerhead: { r: -0.8, f: 3.5, p: 0.2 },   /* the wide head swings side to side */
+    greatwhite: { p: -0.7, l: 0.6, r: 0.35, f: 1.5 },   /* it breaches */
+    spermwhale: { r: 0.16, f: 0.5, p: -0.2, l: -0.1 },   /* the slowest roll of all */
+    beluga: { r: 0.5, f: 1, p: 0.15, l: 0.1 },   /* the white back rolls, soft */
+    narwhal: { p: -0.4, r: -0.25, f: 1.5, l: 0.15 },   /* the tusk lifts */
+    moray: { r: 0.8, f: 4, y: -TAU },   /* the ribbon whips round */
+    octopus: { y: TAU, l: 0.7, p: 0.35 },   /* it jets away, turning */
+    jellyfish: { l: 0.4, r: 0.12, f: 1 },   /* it drifts up on one soft pulse */
+    stingray: { p: -0.6, l: 0.55, r: -0.6, f: 2 },   /* it flips up, the wings over */
+    tortoise: { l: -0.12, b: { head: [0.8, 0, 0, 0], legFL: [0.6, 0, 0.5, 0], legFR: [0.6, 0, -0.5, 0], tail: [0.4, 0, 0, 0] } }   /* it pulls in and sits down in its shell */
+  });
   function row(k) { return ROW[k] || [3, 'small', 0.2, 0.7]; }
   function clamp(x, a, b) { return x < a ? a : x > b ? b : x; }
   function damage(how, lv, gear) {   /* the 744 scale: her level and her weapon, the same numbers as the throw */
