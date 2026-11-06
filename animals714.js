@@ -82,7 +82,7 @@ window.WFR_ANIMALS = (function () {
     var NEST = o.nest ? [+o.nest[0] || 0, +o.nest[1] || 0] : [1e9, 1e9];
     var A = [];
     var R = { outside: false, grace: 0, t: 0, plant: null, dead: false, attacker: -1, log: new Float64Array(8), logN: 0, mean: false,
-      awake: 0, strikes: 0, warns: 0, hurts: 0, steals: 0, parries: 0, perfect: 0, dodges: 0, driven: 0, whiffs: 0, early: 0, cancels: 0, xp: 0, notices: 0, kicks: 0, kick: null };
+      awake: 0, strikes: 0, warns: 0, hurts: 0, steals: 0, parries: 0, perfect: 0, dodges: 0, driven: 0, whiffs: 0, early: 0, cancels: 0, xp: 0, notices: 0, kicks: 0, kick: null, falls: 0, fall: null };
     var EVP = [], EV = [], k;
     for (k = 0; k < 32; k++) EVP.push({ type: '', i: -1, heavy: false, atk: '', xp: 0, tgt: '', d: 0 });
     var PEND = [], pendN = 0; for (k = 0; k < 8; k++) PEND.push({ type: '', i: -1, heavy: false, atk: '', xp: 0, tgt: '', d: 0 });   /* events raised between steps (her peck: hit()) wait here for the next step */
@@ -367,13 +367,13 @@ window.WFR_ANIMALS = (function () {
     function wake() {   /* awake within 60 m, asleep past 80 m, and never more than the six nearest */
       var n = A.length, j, m, best, bd, want = 0;
       for (j = 0; j < n; j++) if (!A[j].awake && A[j].S.escort) escortSleep(A[j]);   /* 714c: a sleeping pod keeps up with its boat, unseen */
-      for (j = 0; j < n; j++) { var a = A[j], d = hd(a, IN.hx, IN.hz); a.dist = d; a.want = (d < FAIR.WAKE || (a.awake && d < FAIR.SLEEP)) && !(a.S.hide && !active(a))
+      for (j = 0; j < n; j++) { var a = A[j], d = hd(a, IN.hx, IN.hz); a.dist = d; if (a.gone && R.t >= a.gone && Math.sqrt((a.hx - IN.hx) * (a.hx - IN.hx) + (a.hz - IN.hz) * (a.hz - IN.hz)) > FAIR.SLEEP) { a.gone = 0; a.hp = null; put(j, a.hx, a.hz, false); d = hd(a, IN.hx, IN.hz); a.dist = d; } a.want = !a.gone && (d < FAIR.WAKE || (a.awake && d < FAIR.SLEEP)) && !(a.S.hide && !active(a))
           && !(a.S.onlyDive && !IN.swim && R.plant !== 'nodiveonly'); a.pick = false;   /* 714c: the barracuda is there only while she dives (plant 'nodiveonly': always) */   /* a crab out of its hours is down its burrow */ if (a.want) want++; }
       if (R.plant === 'nosleep') { for (j = 0; j < n; j++) A[j].pick = true; }   /* plant 'nosleep': the control for the six */
       else for (m = 0; m < FAIR.MAX_AWAKE && m < want; m++) { best = -1; bd = 1e18; for (j = 0; j < n; j++) if (A[j].want && !A[j].pick && A[j].dist < bd) { bd = A[j].dist; best = j; } if (best >= 0) A[best].pick = true; }
       var c = 0;
       for (j = 0; j < n; j++) { var b = A[j];
-        if (b.pick && !b.awake) { b.awake = true; toIdle(b, 1); ev('wake', b); }
+        if (b.pick && !b.awake) { b.awake = true; b.hp = null; toIdle(b, 1); ev('wake', b); }
         else if (!b.pick && b.awake) { if (b.state === 'warn' || b.state === 'strike') R.cancels++; release(b); b.awake = false; b.state = 'asleep'; b.st = 0; b.v = 0; b.mark = 0; ev('sleep', b); }
         if (b.awake) c++; }
       R.awake = c;
@@ -516,7 +516,7 @@ window.WFR_ANIMALS = (function () {
         mean: false, driven: false, dizzy: 0, carry: false, zip: false, since: 0, doze: false, curl: 0, jaw: 0, followT: 0, blocked: 0, side: rand() < 0.5 ? 1 : -1, used: { mv: [0, 0, 0], atk: [0, 0] }, tr: null, tH: 0, tN: 0 };
       if (sp === 'boa') { a.tr = new Float32Array(48 * 3); }
       a.y = S0.realm === 'land' ? ground(x, z) : S0.realm === 'water' ? WATER - 0.1 : WATER + S0.alt; a.ty = a.y;
-      a.dodged = 0; a.show = false; a.hurry = false; a.force = -1; a.kT = 0; a.kLen = 1; a.kD = 0; a.kx = 0; a.kz = 0; a.kH = 0; a.kY = 0; a.kW = 0; a.kS = 0; a.kMid = -1; a.kTail = -1;
+      a.dodged = 0; a.show = false; a.hurry = false; a.force = -1; a.hp = null; a.gone = 0; a.kT = 0; a.kLen = 1; a.kD = 0; a.kx = 0; a.kz = 0; a.kH = 0; a.kY = 0; a.kW = 0; a.kS = 0; a.kMid = -1; a.kTail = -1;
       if (S0.sea3d) {   /* 714c: its slot among its kind (the pod's places round the bow), its pod's boat, its depth */
         var nS = 0, j3, acc = 0; for (j3 = 0; j3 < A.length; j3++) if (A[j3].sp === sp) nS++;
         a.slot = nS; a.boat = -1; if (S0.pods) for (j3 = 0; j3 < S0.pods.length; j3++) { acc += S0.pods[j3]; if (nS < acc) { a.boat = j3; break; } }
@@ -540,16 +540,21 @@ window.WFR_ANIMALS = (function () {
         a.kTail = k; }
       R.kicks++; R.kick = { i: a.i, sp: a.sp, how: sw ? 'sweep' : 'peck', d: +d.toFixed(3), lv: +(+lv || 0).toFixed(2), gear: gear || 'none' };
     }
-    function hit(i, how, lv, gear) {   /* her peck or sweep reached animal i: a threat is driven off (XP), a gentle one just runs; 744: either way it feels the blow first (lv, gear: her level, her weapon) */
-      var a = A[i]; if (!a || !a.awake || R.dead) return 0;
-      if (a.state === 'flee' && a.driven) { kick(a, how, lv, gear); return 1; }
+    function blow(a, how, lv, gear) {   /* 748: her blow takes its hit points (o.fall, fall748.js; none in the unit bench or in Classic); at zero it stops and is gone; a dolphin riding a boat (S.escort: the story's pods) feels it and never falls */
+      var F = o.fall; if (!F) return false; if (a.hp == null) a.hp = F.hp(a.sp); a.hp -= F.damage(how, lv, gear); if (a.hp > 0) return false; if (a.S.escort) { a.hp = 0.01; return false; }
+      a.gone = R.t + F.back; a.kT = 0; a.kS = 0; a.kY = 0; a.v = 0; a.vT = 0; a.mark = 0; a.locked = false; release(a); R.falls++; R.fall = { i: a.i, sp: a.sp }; return true;
+    }
+    function hit(i, how, lv, gear) {   /* her peck or sweep reached animal i: a threat is driven off (XP), a gentle one just runs; 744: either way it feels the blow first (lv, gear: her level, her weapon); 748: unless the blow is its last */
+      var a = A[i]; if (!a || !a.awake || R.dead || a.gone) return 0;
+      var fell = blow(a, how, lv, gear);
+      if (a.state === 'flee' && a.driven) { if (!fell) kick(a, how, lv, gear); return 1; }
       R.outside = true;
       try { if (a.temper >= T.sometimes || (a.state === 'warn' || a.state === 'strike')) drive(a); else { a.cd = 30; setState(a, 'flee'); ev('flee', a); } } finally { R.outside = false; }
-      kick(a, how, lv, gear); return 1;
+      if (!fell) kick(a, how, lv, gear); return 1;
     }
     function put(i, x, z, home) { var a = A[i]; if (!a) return false; if (a.awake) toIdle(a, 0); a.cd = 0; a.atkCd = 0; a.x = x; a.z = z;   /* the bench's placement: a fresh animal */ if (home !== false) { a.hx = x; a.hz = z; } a.wT = 0; a.y = a.S.realm === 'land' ? ground(x, z) : a.y; if (a.S.sea3d) { a.air = false; a.lp = 0; a.y = clamp(a.y, ground(x, z) + 0.45, WATER - 0.5); a.ty = a.y; }
       if (a.tr) { for (var j = 0; j < a.tr.length; j += 3) { a.tr[j] = x; a.tr[j + 1] = a.y; a.tr[j + 2] = z; } a.tN = 1; } return true; }
-    function peekA(a) { return { i: a.i, sp: a.sp, temper: a.temper, state: a.state, awake: a.awake, x: +a.x.toFixed(3), y: +a.y.toFixed(3), z: +a.z.toFixed(3), home: [a.hx, a.hz], v: +a.v.toFixed(3), mv: a.mv, move: a.S.moves[a.mv].id,
+    function peekA(a) { return { hp: a.hp, gone: !!a.gone, i: a.i, sp: a.sp, temper: a.temper, state: a.state, awake: a.awake, x: +a.x.toFixed(3), y: +a.y.toFixed(3), z: +a.z.toFixed(3), home: [a.hx, a.hz], v: +a.v.toFixed(3), mv: a.mv, move: a.S.moves[a.mv].id,
       atk: a.atk >= 0 ? atkOf(a).id : null, heavy: a.atk >= 0 ? !!atkOf(a).heavy : false, mark: a.mark, warnT: a.state === 'warn' ? +a.st.toFixed(3) : 0, warnLen: a.warnLen,
       arriveIn: a.state === 'warn' || a.state === 'strike' ? +(a.arrive - R.t).toFixed(3) : null, aim: a.aim.slice(), cpt: a.cpt.slice(), tgt: a.tgtChick ? 'chick' : 'her', mean: a.mean, driven: a.driven, dist: +a.dist.toFixed(2),
       used: { mv: [+a.used.mv[0].toFixed(2), +a.used.mv[1].toFixed(2)], atk: a.used.atk.slice() }, rear: +a.rear.toFixed(3), ext: +a.ext.toFixed(3), stand: +a.stand.toFixed(3), dive: +a.dive.toFixed(3), carry: a.carry, active: activeP(a), doze: a.doze, curl: +a.curl.toFixed(3),
@@ -558,7 +563,7 @@ window.WFR_ANIMALS = (function () {
     function peek() {
       var L = []; for (var j = 0; j < A.length; j++) L.push(peekA(A[j]));
       return { ready: true, dead: R.dead, error: API.error, t: +R.t.toFixed(3), plant: R.plant, awake: R.awake, attacker: R.attacker, strikes: R.strikes, warns: R.warns, hurts: R.hurts, steals: R.steals, parries: R.parries,
-        perfect: R.perfect, dodges: R.dodges, driven: R.driven, whiffs: R.whiffs, early: R.early, cancels: R.cancels, xp: R.xp, notices: R.notices, mean: R.mean, kicks: R.kicks, kick: R.kick, animals: L };
+        perfect: R.perfect, dodges: R.dodges, driven: R.driven, whiffs: R.whiffs, early: R.early, cancels: R.cancels, xp: R.xp, notices: R.notices, mean: R.mean, kicks: R.kicks, kick: R.kick, falls: R.falls, fall: R.fall, animals: L };
     }
     var W = { dead: false, _plant: null, A: A, now: function () { return R.t; }, add: function (sp, x, z) { return newAnimal(sp, x, z); }, step: step, hit: hit, put: put, peek: peek, mean: function (on) { R.mean = !!on; }, force: function (i, k) { var a = A[i]; if (!a || !a.S.attacks) return false; a.force = k === 1 ? 1 : k === 0 ? 0 : -1; return true; },   /* the bench: animal i's next attack is k (0 simple, 1 heavy) until it lands (-1: the coin again) */ water: WATER, boats: BT };   /* boats (714c): what the dolphins were told this step */
     return W;
