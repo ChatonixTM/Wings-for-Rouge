@@ -49,16 +49,21 @@ window.WMAP712 = (function () {
   function nearX(X) { return S.proj === 'pole' ? X : X + 360 * Math.round((S.cX - X) / 360); }   // equirectangular wraps: the copy nearest the view
   function toScreen(lat, lon) { P(lat, lon, tmp); return { x: S.cw / 2 + (nearX(tmp.x) - S.cX) * S.k, y: S.ch / 2 + (tmp.y - S.cY) * S.k }; }
   function fromScreen(sx, sy) { return invP(S.cX + (sx - S.cw / 2) / S.k, S.cY + (sy - S.ch / 2) / S.k); }
-  function kMin() { return S.proj === 'pole' ? Math.min(S.cw, S.ch) / 360 * 0.86 : Math.max(S.cw / 360, S.ch / 180 * 0.62); }
+  function kDisc() { return S.proj === 'pole' ? Math.min(S.cw, S.ch) / 360 * 0.86 : Math.max(S.cw / 360, S.ch / 180 * 0.62); }   // the whole disc in view: Classic's widest look, and the measure the base picture and the names keep
+  function kMin() { return CLASSIC ? kDisc() : Math.max(kDisc(), Math.min(S.cw, S.ch) * 111.2 / FLOOR_KM); }   // 735b, Marth: "No no you can’t zoom out to see the whole disk": Standard's widest look
   var CLASSIC = !!(window.WFR_DOOR && WFR_DOOR.classic);   // 735: Classic is frozen (board 645): its map keeps its old look; the look switch reloads the page
+  var HOME_SPAN = 32;   // 735b: the plane degrees across the first look's shorter side, tuned by eye
+  var FLOOR_KM = 4000;   // 735b: the ground across the widest look's shorter side, about a continent (DRAFT for Marth)
   var K_MAX = CLASSIC ? 140 : 2400;   // 735: about 46 m a pixel (was 140); past k 200 the streamed water, roads and towns take over from the baked relief
   function clampView() {
     var k0 = kMin(); S.k = Math.max(k0, Math.min(K_MAX, S.k));
     if (S.proj === 'pole') { var r = Math.hypot(S.cX, S.cY); if (r > 180) { S.cX *= 180 / r; S.cY *= 180 / r; } }
     else { S.cX = ((S.cX + 180) % 360 + 360) % 360 - 180; var hh = S.ch / 2 / S.k; S.cY = 180 * S.k <= S.ch ? 0 : Math.max(-90 + hh, Math.min(90 - hh, S.cY)); }
   }
+  function homeK() { return Math.max(kMin(), Math.min(S.cw, S.ch) / HOME_SPAN); }
   function homeView() {
     var H = window.WFR_WORLD && WFR_WORLD.HOME;
+    if (!CLASSIC) { var Y = YOU && YOU(), c = Y && isFinite(Y.lat) && isFinite(Y.lon) ? Y : H; S.k = homeK(); if (c) { P(c.lat, c.lon, tmp); S.cX = tmp.x; S.cY = tmp.y; } clampView(); return; }   // 735b, Marth: "you should have it waaaaaaaaaaay more zoomed in": on her, the Caribbean filling the view at home (Classic keeps its wide opening)
     if (S.proj === 'pole') { S.k = kMin(); S.cX = 0; S.cY = 0; }
     else { S.k = Math.max(kMin(), S.ch / 180 * 0.98); S.cX = H ? H.lon : 0; S.cY = 0; }
     clampView();
@@ -226,7 +231,7 @@ window.WMAP712 = (function () {
     var eachSeen = function (fn) { offs.forEach(function (off, i) { setT(off); ctx.save(); if (fp) ctx.clip(fp); fn(paths[i]); ctx.restore(); }); };   // 735: only the ground she has seen
     var whole = function () { var w = new Path2D(); if (proj === 'pole') parallel(w, -90); else w.rect(-180, -90, 360, 180); return w; };
     st.push(function () { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = PAPER; ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height); ctx.imageSmoothingEnabled = true;
-      fp = CLASSIC ? null : fogPath(V); ts = cull && !flat ? tileReady(V) : []; if (J) J.tiles = ts.length; offs.forEach(function (off, i) { paths[i] = cull ? culled(B, V, off) : B.path; }); if (fp) each(function (q) { ctx.strokeStyle = 'rgba(58,29,12,.3)'; ctx.lineWidth = 0.7 * px; ctx.stroke(q.coast); }); eachSeen(function () { if (flat) { ctx.fillStyle = 'rgb(150,199,228)'; ctx.fill(whole()); return; } ctx.drawImage(I.sea, I.x0, I.y0, I.ww, I.hh); B.ov.forEach(function (ov) { ctx.drawImage(ov.sea, ov.x0, ov.y0, ov.ww, ov.hh); }); }); });   // the sharper reliefs over the world's
+      fp = CLASSIC ? null : fogPath(V); ts = cull && !flat ? tileReady(V) : []; if (J) J.tiles = ts.length; offs.forEach(function (off, i) { paths[i] = cull ? culled(B, V, off) : B.path; }); eachSeen(function () { if (flat) { ctx.fillStyle = 'rgb(150,199,228)'; ctx.fill(whole()); return; } ctx.drawImage(I.sea, I.x0, I.y0, I.ww, I.hh); B.ov.forEach(function (ov) { ctx.drawImage(ov.sea, ov.x0, ov.y0, ov.ww, ov.hh); }); }); });   // the sharper reliefs over the world's
     st.push(function () { eachSeen(function (q) { if (flat) { ctx.fillStyle = 'rgb(176,194,126)'; ctx.fill(q.land); return; } ctx.save(); ctx.clip(q.land); ctx.drawImage(I.land, I.x0, I.y0, I.ww, I.hh); B.ov.forEach(function (ov) { ctx.drawImage(ov.land, ov.x0, ov.y0, ov.ww, ov.hh); }); ctx.restore(); }); });
     st.push(function () { if (!ts.length) return; eachSeen(function () { ts.forEach(function (t) { var q = tilePaths(t); ctx.save(); ctx.clip(q.rect); ctx.drawImage(I.land, I.x0, I.y0, I.ww, I.hh); B.ov.forEach(function (ov) { ctx.drawImage(ov.land, ov.x0, ov.y0, ov.ww, ov.hh); });   // 735: inside a real tile the coast is the tile's own: land's colours first, the sea only inside its water
         ctx.lineJoin = 'round'; ctx.lineWidth = 1.7 * px; ctx.strokeStyle = 'rgba(58,29,12,.78)'; ctx.stroke(q.water); ctx.save(); ctx.clip(q.water); ctx.drawImage(I.sea, I.x0, I.y0, I.ww, I.hh); B.ov.forEach(function (ov) { ctx.drawImage(ov.sea, ov.x0, ov.y0, ov.ww, ov.hh); }); ctx.restore();
@@ -236,7 +241,7 @@ window.WMAP712 = (function () {
     st.push(function () { eachSeen(function (q) { ctx.lineJoin = 'round'; ctx.lineCap = 'round';
       for (var rv = 0; rv < 3; rv++) { var a = rv === 0 ? 1 : fadeAt(rv === 1 ? 3 : 5, V.k); if (a <= 0) continue; ctx.globalAlpha = a * 0.85; ctx.strokeStyle = 'rgb(62,118,168)'; ctx.lineWidth = (rv === 0 ? 1.2 : rv === 1 ? 0.9 : 0.7) * px; ctx.stroke(q['riv' + rv]); }
       ctx.globalAlpha = 1; }); });
-    st.push(function () { if (!ts.length) eachSeen(function (q) { ctx.strokeStyle = 'rgba(58,29,12,.78)'; ctx.lineWidth = 0.85 * px; ctx.stroke(q.coast); }); });   // 735: a real tile brings its own coast; the faint one is laid first, under the picture
+    st.push(function () { if (!ts.length) eachSeen(function (q) { ctx.strokeStyle = 'rgba(58,29,12,.78)'; ctx.lineWidth = 0.85 * px; ctx.stroke(q.coast); }); });   // 735: a real tile brings its own coast
     st.push(function () { each(function () {
       var step = V.k > 30 ? 5 : V.k > 9 ? 10 : 30, grat = new Path2D(), lat, lon;
       for (lat = -90 + step; lat < 90; lat += step) if (lat !== 0) parallel(grat, lat);
@@ -250,7 +255,7 @@ window.WMAP712 = (function () {
     return st;
   }
   function baseV(proj) {   // the base picture: the whole plane at the home look's scale (so the first look and every pan at it are pixel for pixel)
-    var was = S.proj; S.proj = proj; var k = proj === 'pole' ? kMin() : Math.max(kMin(), S.ch / 180 * 0.98); S.proj = was;
+    var was = S.proj; S.proj = proj; var k = proj === 'pole' ? kDisc() : Math.max(kDisc(), S.ch / 180 * 0.98); S.proj = was;
     k = Math.min(k, 4096 / (360 * S.dpr)); return { k: k, cX: 0, cY: 0, w: 360 * k, h: (proj === 'pole' ? 360 : 180) * k, dpr: S.dpr };
   }
   function curV() { return { k: S.k, cX: S.cX, cY: S.cY, w: S.cw, h: S.ch, dpr: S.dpr }; }
@@ -293,10 +298,10 @@ window.WMAP712 = (function () {
          carried through drawImage onto the canvas on show and read back. An empty one is rebuilt from the data held in memory; a second failure in a row switches to the plain map, drawn straight
          onto the canvas on show, so there is always land. Whatever happened is written under the map, never silent.
        HER: a live ruby arrow at her true lat/lon, turned to her true heading; ruby means her and nothing else.
-       THE REVEAL: a 0.5 degree grid of what she has seen, saved in S.world.fog as runs. The picture is clipped to it; the rest stays paper, graticule and a faint coast.
+       THE REVEAL: a 0.5 degree grid of what she has seen, saved in S.world.fog as runs. The picture is clipped to it; the rest stays paper and the grid (735b, Marth: "you kept the outlines, makes the whole point redundant").
        THE CLOSE LOOK: past k 200, OpenFreeMap's own water, roads and place names, each vertex through P(), the relief and sea laid under them, credited only while drawn. ---------- */
   var HEAL = { need: true, checks: 0, lost: 0, rebuilds: 0, fails: 0, direct: false, why: '' };
-  var YOU = null;   // the page's door: a function returning { lat, lon, bearing, away }
+  var YOU = null, WORDS = null;   // the page's doors: a function returning { lat, lon, bearing, away }, and (735b) her place in plain words
   function hasPixels(c) { try { var p = c.__p || [c.width >> 1, c.height >> 1]; return c.getContext('2d').getImageData(p[0], p[1], 1, 1).data[3] > 0; } catch (e) { return false; } }
   function paperLike(d) { return Math.abs(d[0] - 241) < 7 && Math.abs(d[1] - 226) < 7 && Math.abs(d[2] - 184) < 7; }
   function witness(g, B, bs) {   // true when the kept pictures are really there: each source read, then home's pixel of the base carried onto this canvas and read back
@@ -331,13 +336,13 @@ window.WMAP712 = (function () {
     g.save(); g.translate(x, y); g.rotate(ang); g.beginPath(); g.moveTo(0, -10); g.lineTo(7, 7); g.lineTo(0, 3); g.lineTo(-7, 7); g.closePath(); g.fillStyle = '#c8314a'; g.fill(); g.lineWidth = 1.8; g.strokeStyle = '#fff2c2'; g.stroke(); g.lineWidth = 0.8; g.strokeStyle = '#3d0610'; g.stroke(); g.restore();
     g.font = '700 11px Georgia, serif'; g.textAlign = 'center'; g.textBaseline = 'middle'; text(g, 'You', x, y + (y > S.ch - 26 ? -17 : 17), 1, '#8c1d33');
     S.youAt = { x: a.x, y: a.y, shownX: x, shownY: y, ang: ang, off: off, lat: Y.lat, lon: Y.lon, bearing: Y.bearing };
-    if (el) { var s = 'You: ' + deg(Y.lat, 'N', 'S') + ', ' + deg(Y.lon, 'E', 'W'); if (el.textContent !== s) el.textContent = s; }   // DRAFT for Marth
+    if (el) { var s = WORDS ? WORDS() : ''; if (el.textContent !== s) el.textContent = s; }   // 735b: the same plain words as the line along the top
   }
 
   /* ---------- THE REVEAL: a cell is half a degree. Marked only when she moves into a new one; seeded with the Caribbean and the places she knows (the save holds no trail: what she flew before
      this was built cannot be recovered). 'all' is the whole world seen (the creative world, and the guards that are about the whole picture). ---------- */
   var FC = 720, FR = 360, FOG = { bits: new Uint8Array(FC * FR / 8), all: false, v: 1, n: 0, cell: -1, rad: 0, loaded: false };
-  var FOG_SEED = [8, 28, -90, -58];   // lat from, lat to, lon from, lon to: her home sea (DRAFT for Marth: is this enough for Rouge's start)
+  var FOG_SEED = [8, 28, -90, -58];   // lat from, lat to, lon from, lon to: her home sea (Marth, Nov 6, asked if it is enough: "For now")
   function fogRow(lat) { return Math.max(0, Math.min(FR - 1, Math.floor((90 - lat) * 2))); }
   function fogCol(lon) { return ((Math.floor((lon + 180) * 2) % FC) + FC) % FC; }
   function fogHas(i) { return (FOG.bits[i >> 3] >> (i & 7)) & 1; }
@@ -422,8 +427,11 @@ window.WMAP712 = (function () {
   }
   function tileCredit() { var el = $('wmap735tiles'); if (!el) return; var on = !!(S.detail && S.detail.proj === S.proj && S.detail.tiles > 0 && S.k >= K_TILE); if (el.hidden === on) el.hidden = !on; if (on && !el.textContent) el.textContent = WFR_FEATURES.C.CREDIT; }
 
+  function nearCity(lat, lon, km) {   // 735b: the nearest city inside km, or null (nothing is read until the world's data is in)
+    if (!D) return null; var best = null, bd = km, f = lat * D2R; for (var i = 0; i < D.cities.length; i++) { var c = D.cities[i], dl = Math.abs(c.lon - lon); if (dl > 180) dl = 360 - dl; var d = 111.2 * Math.hypot(c.lat - lat, dl * Math.cos(f)); if (d < bd) { bd = d; best = c; } }
+    return best ? best.name + (best.country ? ', ' + best.country : '') : null; }
   /* ---------- drawing ---------- */
-  function need(rank) { return kMin() * (rank <= 1 ? 0.5 : Math.pow(1.5, rank)); }   // the zoom at which a rank shows: rank 0-1 always (full at the widest look), then half again each rank
+  function need(rank) { return kDisc() * (rank <= 1 ? 0.5 : Math.pow(1.5, rank)); }   // the zoom at which a rank shows: rank 0-1 always (full at the widest look), then half again each rank
   function fade(rank) { return fadeAt(rank, S.k); }
   function fadeAt(rank, k) { var n = need(rank); return Math.max(0, Math.min(1, (k - n) / (n * 0.35))); }
   function setPlane(g, off) { var s = S.k * S.dpr; g.setTransform(s, 0, 0, s, S.dpr * (S.cw / 2 + (off - S.cX) * S.k), S.dpr * (S.ch / 2 - S.cY * S.k)); }
@@ -450,7 +458,7 @@ window.WMAP712 = (function () {
     if (!ensure(S.proj)) { g.setTransform(dpr, 0, 0, dpr, 0, 0); drawWaiting(g); return; }
     if (S.needHome) { S.needHome = false; homeView(); }   // the first look, once the canvas has its size
     clampView(); var B = S.built[S.proj], px = 1 / S.k, offs = copies(), bs = S.base[S.proj], V = curV();
-    var paperUp = S.proj === 'pole' && PP.on && !!PP.cv;   // 76 review: the laid paper covers the whole disc (r 869 px = 182 deg), so nothing is drawn or sharpened under it
+    var paperUp = S.proj === 'pole' && PP.on && !!PP.cv;   // 76 review: nothing is drawn or sharpened under the laid paper (735b: in Standard it stops at the ground she has seen, and past that is bare paper)
     if (!CACHE || HEAL.direct) layerSteps(B, S.proj, V, g, HEAL.direct, HEAL.direct).forEach(function (f) { f(); });
     else {
       var bv = baseV(S.proj);
@@ -483,6 +491,7 @@ window.WMAP712 = (function () {
     g.font = '700 11px Georgia, serif'; marks.forEach(function (mk) { mk.lab = mk.shown && fits(mk.x + 9, mk.y - 7, g.measureText(mk.name).width + 4, 14); });
     var npLab = np && fits(np.x + 8, np.y + 3, 56, 12);
     if (S.sel) { var sq = toScreen(S.sel.lat, S.sel.lon); fits(sq.x - 9, sq.y - 9, 18, 18); }
+    var yq = !CLASSIC && YOU && YOU(); if (yq && isFinite(yq.lat) && isFinite(yq.lon)) { var ys = toScreen(yq.lat, yq.lon); fits(ys.x - 16, ys.y - 12, 32, 40); }   // 735b
     var dots = [];
     g.textAlign = 'left';
     tileLabels(g, fits);
@@ -490,7 +499,7 @@ window.WMAP712 = (function () {
       if (!fits(cp.x - 3, cp.y - 3, 6, 6)) continue; dots.push([cp.x, cp.y, ca, C.cap]); C.sx = cp.x; C.sy = cp.y; C.shown = ca; C.drawnAt = S.draws;
       g.font = (C.cap ? '700 ' : '600 ') + (C.rank <= 1 ? 11 : 10) + 'px Georgia, serif'; var cw = g.measureText(C.name).width; if (fits(cp.x + 5, cp.y - 6, cw + 2, 12)) text(g, C.name, cp.x + 5, cp.y, ca); }
     g.font = 'italic 600 12px Georgia, serif'; g.textAlign = 'center';
-    for (var oc = 0; oc < OCEANS.length; oc++) { var oa = paper ? 0 : OCEANS[oc][3] === 2 ? fade(3) : OCEANS[oc][3] === 1 ? fade(2) : 1; if (oa <= 0) continue; var op = scr(B.ocean, oc); if (!onScreen(op.x, op.y, 40)) continue; var ow = g.measureText(OCEANS[oc][0]).width; if (fits(op.x - ow / 2, op.y - 7, ow, 14)) text(g, OCEANS[oc][0], op.x, op.y, oa * 0.8, '#2f5f86'); }
+    for (var oc = 0; oc < OCEANS.length; oc++) { var oa = paper ? 0 : OCEANS[oc][3] === 2 ? fade(3) : OCEANS[oc][3] === 1 ? fade(2) : 1; if (oa <= 0 || !fogShown(OCEANS[oc][1], OCEANS[oc][2])) continue; var op = scr(B.ocean, oc); if (!onScreen(op.x, op.y, 40)) continue; var ow = g.measureText(OCEANS[oc][0]).width; if (fits(op.x - ow / 2, op.y - 7, ow, 14)) text(g, OCEANS[oc][0], op.x, op.y, oa * 0.8, '#2f5f86'); }
     g.font = 'italic 600 10.5px Georgia, serif';
     for (var r = 0; r < D.regions.length; r++) { var R = D.regions[r], ra = paper ? 0 : fade(R.rank); if (ra <= 0.05 || !fogShown(R.lat, R.lon)) continue; var rp = scr(B.region, r); if (!onScreen(rp.x, rp.y, 30)) continue; var rw = g.measureText(R.name).width; if (fits(rp.x - rw / 2, rp.y - 6, rw, 12)) text(g, R.name, rp.x, rp.y, ra * 0.75, '#6e4c2a'); }
     for (var dd = 0; dd < dots.length; dd++) { var d = dots[dd]; g.globalAlpha = d[2]; g.beginPath(); g.arc(d[0], d[1], d[3] ? 3.2 : 2.6, 0, 6.2832); g.fillStyle = '#fff8e8'; g.fill(); g.lineWidth = 1.1; g.strokeStyle = INK; g.stroke(); if (d[3]) { g.beginPath(); g.arc(d[0], d[1], 1, 0, 6.2832); g.fillStyle = INK; g.fill(); } }   // the dots last, over every name
@@ -547,7 +556,7 @@ window.WMAP712 = (function () {
   }
   function drawPaper(g) {   // the laid paper: one picture, plain scale and offset (the plane's origin at the disc's centre, P7.s of its pixels a degree)
     if (!PP.cv) return false; var P7 = PAPER725, N = PP.cv.width, ks = S.k / P7.s, d = S.dpr, ox = S.cw / 2 - S.cX * S.k, oy = S.ch / 2 - S.cY * S.k;
-    g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true; g.drawImage(PP.cv, d * (ox - N / 2 * ks), d * (oy - N / 2 * ks), d * N * ks, d * N * ks); g.restore(); PP.draws++; return true;
+    g.save(); var fp = CLASSIC ? null : PP.fv === FOG.v ? PP.fp : (PP.fv = FOG.v, PP.fp = fogPath(curV())); if (fp) { g.setTransform(S.k * d, 0, 0, S.k * d, d * ox, d * oy); g.clip(fp); } g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true; g.drawImage(PP.cv, d * (ox - N / 2 * ks), d * (oy - N / 2 * ks), d * N * ks, d * N * ks); g.restore(); PP.draws++; return true;
   }
   function paperSwitch(on) {
     PP.on = !!on; var b = $('wmap725paper'), c = $('wmap725credit'); if (b) b.setAttribute('aria-pressed', String(PP.on)); if (c) c.hidden = !(PP.on && S.proj === 'pole');
@@ -623,7 +632,7 @@ window.WMAP712 = (function () {
   function show(v) {
     var m = S.el; if (!m) return; S.view = v; m.classList.toggle('wm712', v === 'world'); var b = $('wmap712Btn'), h3 = m.querySelector('h3');
     if (v === 'world') { b.textContent = '🏝 Island'; b.setAttribute('aria-label', 'Back to the island chart'); if (h3) h3.textContent = 'The world'; m.setAttribute('aria-label', 'Map of the whole world');
-      HEAL.need = true; S.home = window.WFR_WORLD ? WFR_WORLD.HOME : null; sizeCanvas(); want(); load(want); }
+      if (!CLASSIC) S.needHome = true; HEAL.need = true; S.home = window.WFR_WORLD ? WFR_WORLD.HOME : null; sizeCanvas(); want(); load(want); }
     else { b.textContent = '🌍 World'; b.setAttribute('aria-label', 'Show the whole world'); if (h3) h3.textContent = 'The island'; m.setAttribute('aria-label', 'Map of the island');
       if (S.redraw) S.redraw(); }   // back to the island chart, drawn by 705's own map705Size and map705Draw (the hook hands them over: they are not globals)
   }
@@ -635,7 +644,7 @@ window.WMAP712 = (function () {
     var wrap = document.createElement('div'); wrap.id = 'wmap712';
     wrap.innerHTML = '<canvas id="wmap712cv" width="8" height="8" aria-label="The whole world: drag to move, pinch to zoom, tap a place"></canvas>' +
       '<div class="wmProj" role="group" aria-label="Projection"><button type="button" data-proj="pole" aria-pressed="true">Gleason (1892)</button><button type="button" data-proj="globe" aria-pressed="false">Globe</button></div>' +   // DRAFT for Marth (76 review): the tab words "Gleason (1892)" and "Globe" (was "Globe-true")
-      '<div class="wmZoom"><button type="button" id="wmap712in" aria-label="Zoom in">+</button><button type="button" id="wmap712out" aria-label="Zoom out">−</button><button type="button" id="wmap712home" aria-label="Back to home">⌂</button></div>' +
+      '<div class="wmZoom"><button type="button" id="wmap712in" aria-label="Zoom in">+</button><button type="button" id="wmap712out" aria-label="Zoom out">−</button><button type="button" id="wmap712home" aria-label="' + (CLASSIC ? 'Back to home' : 'Back to you') + '">⌂</button></div>' +
       '<button type="button" id="wmap725paper" aria-pressed="false" aria-label="Lay the 1892 paper map under the marks">1892 paper</button>';   // DRAFT for Marth (76 review): the switch's words "1892 paper" and its spoken label
     var foot = document.createElement('p'); foot.id = 'wmap712foot';
     foot.innerHTML = (CLASSIC ? '' : '<span id="wmap735you"></span>') + '<span id="wmap712sel">Tap a place: how far it is from home</span><span id="wmap735note" hidden></span><span class="wmNote" id="wmap712note"></span><span class="wmCredit" id="wmap712credit"></span><span class="wmCredit" id="wmap725credit" hidden></span><span class="wmCredit" id="wmap735tiles" hidden></span>'; foot.querySelector('#wmap712credit').textContent = credit(); foot.querySelector('#wmap725credit').textContent = PAPER_CREDIT;
@@ -644,13 +653,13 @@ window.WMAP712 = (function () {
     wrap.querySelectorAll('.wmProj button').forEach(function (pb) { tapButton(pb, function () { setProj(pb.dataset.proj); }); });
     tapButton($('wmap725paper'), function () { paperSwitch(!PP.on); var pc = $('wmap725credit'); if (pc) pc.hidden = !(PP.on && S.proj === 'pole'); });
     tapButton($('wmap712in'), function () { zoomAt(S.cw / 2, S.ch / 2, 1.6); }); tapButton($('wmap712out'), function () { zoomAt(S.cw / 2, S.ch / 2, 1 / 1.6); });
-    tapButton($('wmap712home'), function () { var H = WFR_WORLD.HOME; S.k = Math.max(S.k, 24); P(H.lat, H.lon, tmp); S.cX = tmp.x; S.cY = tmp.y; clampView(); want(); });
+    tapButton($('wmap712home'), function () { if (!CLASSIC) { homeView(); want(); return; } var H = WFR_WORLD.HOME; S.k = Math.max(S.k, 24); P(H.lat, H.lon, tmp); S.cX = tmp.x; S.cY = tmp.y; clampView(); want(); });   // 735b: back to her
     wireGestures($('wmap712cv'));
     new MutationObserver(function () { if (m.hidden) { if (S.view !== 'island') show('island'); } else S.opens++; }).observe(m, { attributes: true, attributeFilter: ['hidden'] });   // every opening starts on the island chart
     addEventListener('resize', function () { if (S.view === 'world' && !m.hidden) { sizeCanvas(); want(); } });
     document.addEventListener('visibilitychange', function () { if (document.hidden) return; HEAL.need = true; if (S.view === 'world' && !m.hidden) want(); });   // 735: back from the lock screen
   }
-  return { attach: attach, show: show, setProj: setProj, credit: credit, paper: paperSwitch, PAPER725: PAPER725, you: function (fn) { YOU = fn; if (S.view === 'world') want(); }, fog: { load: fogLoad, save: fogSave, mark: fogMark, seen: fogSeen },
+  return { attach: attach, show: show, setProj: setProj, credit: credit, paper: paperSwitch, PAPER725: PAPER725, you: function (fn, words) { YOU = fn; WORDS = words || null; if (S.view === 'world') want(); }, near: nearCity, fog: { load: fogLoad, save: fogSave, mark: fogMark, seen: fogSeen },
     choose: function (lat, lon) { select({ name: null, lat: lat, lon: lon, kind: 'point' }); want(); return S.sel; },   // the bench's door for a place no thumb can hit exactly (home's antipode)
     look: function (lat, lon, k) { S.needHome = false; P(lat, lon, tmp); S.k = k; S.cX = tmp.x; S.cY = tmp.y; clampView(); draw(); return { k: S.k, cX: S.cX, cY: S.cY }; },   // the bench's and the home button's way to aim the view
     state: function () { var cv = $('wmap712cv'), r = cv ? cv.getBoundingClientRect() : null; return { view: S.view, proj: S.proj, k: S.k, kMin: S.cw ? kMin() : null, cX: S.cX, cY: S.cY, cw: S.cw, ch: S.ch, dpr: S.dpr, loaded: S.loaded, failed: S.failed,

@@ -304,12 +304,13 @@ window.WFR_QUESTS720 = (function () {
     $('quests720Body').addEventListener('click', function (e) { var t = e.target && e.target.closest ? e.target.closest('button[data-q]') : null; if (!t) return; act(t.getAttribute('data-q'), t.getAttribute('data-a')); });
     var m = document.createElement('div'); m.id = 'q720marks'; ui.appendChild(m); st.el = m;
     for (var i = 0; i < C.POOL; i++) { var k = document.createElement('div'); k.className = 'q720m'; k.hidden = true; k.setAttribute('aria-hidden', 'true'); m.appendChild(k); st.marks.push(k); }
-    place(); addEventListener('resize', place); if (window.visualViewport) visualViewport.addEventListener('resize', place);
+    place(); addEventListener('resize', place); if (window.visualViewport) visualViewport.addEventListener('resize', place); if ($('care')) new MutationObserver(place).observe($('care'), { attributes: true, attributeFilter: ['hidden', 'class'] });
     return true;
   }
   function place() {   // under the level card, its left edge (both looks, any safe area); measured, never assumed
     var p = $('lvPill'), b = st.btn; if (!p || !b) return; var r = p.getBoundingClientRect(); if (!r.width) return;
-    var L = Math.round(r.left) + 'px', T = Math.round(r.bottom + 8) + 'px'; if (b.style.left !== L) b.style.left = L; if (b.style.top !== T) b.style.top = T; }
+    var c = $('care'), q = c && !c.hidden && c.classList.contains('tucked') ? c.getBoundingClientRect() : null, bot = q && q.width && q.left < r.left + b.offsetWidth && q.right > r.left ? Math.max(r.bottom, q.bottom) : r.bottom;   // 735b: under a tucked chick bar that would sit on it (Marth's picture, Nov 6), in both looks
+    var L = Math.round(r.left) + 'px', T = Math.round(bot + 8) + 'px'; if (b.style.left !== L) b.style.left = L; if (b.style.top !== T) b.style.top = T; }
   function openBoard(on) {
     if (!st.board) return; on = !!on;
     if (on) { try { if ($('missions')) $('missions').hidden = true; if (X.openQuick && X.S.quick) X.openQuick(false); } catch (e) { /* the other cards stay as they are */ } refreshBoard(true); st.opens++; st.seen = Q.active.length; }
@@ -375,6 +376,6 @@ window.WFR_QUESTS720 = (function () {
     Q.lm[key] = 1; finish(a, 'went inside'); return true; }
   function lmPeek(id) { var L = LMB[id]; if (!L || !st.inited) return null; var h = lmHere(L); return { id: id, d: h ? +h.d.toFixed(1) : null, agl: h && h.agl != null ? +h.agl.toFixed(1) : null, ok: h ? h.ok : null, where: h ? h.where : null, done: !!Q.lm[id] }; }
 
-  return { C: C, WORDS: WORDS, LANDMARKS: LANDMARKS, inside: function (id) { return inside729(id); }, init: init, tick: tick, draw: draw, travelHud: travelHud, talk: talk, goal: goal, pill: pill, peek: peek, lmPeek: lmPeek,
+  return { C: C, WORDS: WORDS, LANDMARKS: LANDMARKS, place: place, inside: function (id) { return inside729(id); }, init: init, tick: tick, draw: draw, travelHud: travelHud, talk: talk, goal: goal, pill: pill, peek: peek, lmPeek: lmPeek,
     offers: function (pid) { return st.inited ? offers(pid) : false; }, open: function (on) { openBoard(on); } };
 })();

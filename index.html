@@ -922,6 +922,26 @@ html.ui716.ui726 #side703{width:58px!important;height:58px!important}
 html.ui716.ui726 .round,html.ui716.ui726 #evPause{width:44px;height:44px;box-sizing:border-box;border-radius:50%;border:1.5px solid var(--k-line);background:var(--u-g,none) center/20px 20px no-repeat,var(--k-glass)!important;filter:none;box-shadow:var(--k-crest-shadow)}
 html.ui716.ui726 #evPause{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' stroke='rgba(10,20,64,.5)' stroke-width='.9' stroke-linejoin='round' d='M6 4.2h4.4v15.6H6zM13.6 4.2H18v15.6h-4.4z'/%3E%3C/svg%3E")}
 html.ui716.ui726 #questsBtn720{border:1.5px solid var(--k-line);background:var(--k-glass);box-shadow:var(--k-crest-shadow)}
+/* ---- 735b: the words along the top, and the chick bar with all its actions in view (Standard only). Marth, Nov 6: "string it along the top" ---- */
+html.ui716 .hud{padding-top:calc(max(env(safe-area-inset-top,0px),6px) + 12px)}   /* six px of room on a phone with no status bar; his iPhone's status bar already leaves it */
+html.ui716 #wordsTop735{position:absolute;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));top:max(calc(env(safe-area-inset-top,0px) - 6px),1px);height:16px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-align:center;font:600 11.5px/16px var(--k-sans,var(--body));letter-spacing:.015em;color:#eef4ff;text-shadow:0 1px 2px rgba(0,4,24,.75);pointer-events:none;background:linear-gradient(90deg,transparent,rgba(8,14,48,.5) 16%,rgba(8,14,48,.5) 84%,transparent)}
+html.ui716 .care.tucked .top{font-size:0}   /* the words give their room to the actions; the bar still speaks its name (the tuck button's own label) */
+html.ui716 .care.tucked .top .tuck{font-size:12px;margin:-6px 0}
+html.ui716.ui726 #wmap712 .wmProj button:not([aria-pressed="true"]){background:rgba(18,26,74,.86)!important}   /* the map opens on the picture now: clear glass left the tab's word unreadable on it */
+@media (orientation:portrait){
+  html.ui716 .care.tucked{grid-template-columns:44px minmax(0,1fr);gap:2px;padding:4px 6px}
+  html.ui716 .care.tucked .row{flex-wrap:wrap;overflow:visible;gap:4px;padding-bottom:0}
+  html.ui716 .care.tucked .row button{flex:1 1 44px;min-width:44px;padding:0 1px;font-size:12.5px;line-height:1.05;white-space:normal}   /* all five in one line at 390; a narrower phone wraps the last down, never off the edge */
+}
+@media (orientation:landscape) and (max-height:520px){   /* on its side the open card's name and tuck button lay under Feed and Pet, so it could not be tucked; it also reached up over the line */
+  html.ui716 .care:not(.tucked){top:calc(max(env(safe-area-inset-top,0px),6px) + 12px)!important;width:min(410px,52vw)!important;grid-template-columns:auto minmax(0,1fr)}
+  html.ui716 .care:not(.tucked) #careStage{display:none}
+  html.ui716 .care:not(.tucked) .row{flex-wrap:wrap;gap:4px;justify-content:flex-end}
+  html.ui716 .care:not(.tucked) .row button{min-width:44px;padding:6px 7px;font-size:13px}
+  html.ui716 .care:not(.tucked) .top .tuck{margin:-6px -6px -6px 0}
+  html.ui716 body:has(#care:not([hidden])) #zoom{top:calc(max(env(safe-area-inset-top,0px),6px) + 12px)!important}   /* Zoom's ribbon lay on the bar's Dress */
+  html.ui716 body:has(#care:not([hidden]):not(.tucked)) #zoom{visibility:hidden}   /* the open card covers its place, as it does Night's and the radar's */
+}
 @media (orientation:landscape) and (max-height:520px){html.ui716.ui726 #emoBtn633{position:static}}   /* on its side the emotes ring sat under the level card, where the quests scroll is placed (K2 saw them overlap): back in the top row's column */
 
 /* ---- the level card: slim glass, the level in a thin ring, a thin XP line ---- */
@@ -1092,70 +1112,70 @@ html.ui716.ui726 .warm{border-radius:12px;font-family:var(--k-sans);filter:none;
 <div class="rhRes" id="rhRes" hidden aria-live="polite"><b id="resRank"></b><span id="resLine"></span><small id="resTime"></small><small id="resNew" hidden></small></div>   <!-- 672 OURS/DRAFT words: Paused, Resume, Quit song -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="toon.js?v=f8406b23bbc0"></script>
+<script src="toon.js?v=63ad85b1e47b"></script>
 <script>(function () { let classic = false; try { classic = localStorage.getItem('wfr.look') === 'classic'; } catch (e) { /* private mode: Standard */ }
   window.WFR_DOOR = classic ? { w: 1.2, h: 2, classic: true } : { w: 1.5, h: 2.9, classic: false }; }());   /* 683 C1: THE doorway, local units (x HS 1.6: Standard 2.4 x 4.64 m; a villager, drawn 3.67-3.72 m, is 80% of it; the brief's 2.6 left him at 89%). The ring houses, the 641 house, the cabins and the walk read it. Classic is frozen (Marth, Oct 14, board 645): its doors stay 1.2 x 2. The look is read as the game reads it (it reloads on a switch). */</script>
-<script src="gltf-loader.js?v=f8406b23bbc0"></script>
-<script src="skeleton-utils.js?v=f8406b23bbc0"></script>
-<script src="meshopt-decoder.js?v=f8406b23bbc0"></script>
-<script src="models.js?v=f8406b23bbc0"></script>
-<script src="people.js?v=f8406b23bbc0"></script>
-<script src="villagers.js?v=f8406b23bbc0"></script>
-<script src="tex-photos.js?v=f8406b23bbc0"></script>
-<script src="textures.js?v=f8406b23bbc0"></script>
-<script src="birds.js?v=f8406b23bbc0"></script>
-<script src="humans.js?v=f8406b23bbc0"></script>
-<script src="folk.js?v=f8406b23bbc0"></script>
-<script src="trees.js?v=f8406b23bbc0"></script>
-<script src="treehouses.js?v=f8406b23bbc0"></script>
-<script src="cabins.js?v=f8406b23bbc0"></script>
-<script src="cave.js?v=f8406b23bbc0"></script>
-<script src="hermits.js?v=f8406b23bbc0"></script>
-<script src="sounds.js?v=f8406b23bbc0"></script>
-<script src="music.js?v=f8406b23bbc0"></script>
-<script src="battle703-song.js?v=f8406b23bbc0"></script>
-<script src="music-orchestra.js?v=f8406b23bbc0"></script>
-<script src="rhythm.js?v=f8406b23bbc0"></script>
-<script src="pictograms.js?v=f8406b23bbc0"></script>
-<script src="chick-wear.js?v=f8406b23bbc0"></script>
-<script src="hedgehogs.js?v=f8406b23bbc0"></script>
-<script src="opening.js?v=f8406b23bbc0"></script>
-<script src="skypiea.js?v=f8406b23bbc0"></script>
-<script src="pirate.js?v=f8406b23bbc0"></script>
-<script src="atmo.js?v=f8406b23bbc0"></script>
-<script src="world-realism.js?v=f8406b23bbc0"></script>
-<script src="boat.js?v=f8406b23bbc0"></script>
-<script src="weather.js?v=f8406b23bbc0"></script>
-<script src="village-build.js?v=f8406b23bbc0"></script>
-<script src="runes.js?v=f8406b23bbc0"></script>
-<script src="hearts714.js?v=f8406b23bbc0"></script>
-<script src="world712-frame.js?v=f8406b23bbc0"></script>
-<script src="creative712.js?v=f8406b23bbc0"></script>
-<script src="world712-carib.js?v=f8406b23bbc0"></script>
-<script src="world712-dunns.js?v=f8406b23bbc0"></script>
-<script src="world712-travel.js?v=f8406b23bbc0"></script>
-<script src="world-surfaces732.js?v=f8406b23bbc0"></script>
-<script src="world-terrain.js?v=f8406b23bbc0"></script>
-<script src="world-features.js?v=f8406b23bbc0"></script>
-<script src="world-vegetation.js?v=f8406b23bbc0"></script>
-<script src="world725d-fast.js?v=f8406b23bbc0"></script>
-<script src="world-chicks.js?v=f8406b23bbc0"></script>
-<script src="world-imagery.js?v=f8406b23bbc0"></script>
-<script src="world712-photo.js?v=f8406b23bbc0"></script>
-<script src="hawkwake.js?v=f8406b23bbc0"></script>
-<script src="hawkfight.js?v=f8406b23bbc0"></script>
-<script src="hawkarena.js?v=f8406b23bbc0"></script>
-<script src="orchard.js?v=f8406b23bbc0"></script>
-<script src="net678.js?v=f8406b23bbc0"></script>
-<script src="net678-config.js?v=f8406b23bbc0"></script>
-<script src="net721.js?v=f8406b23bbc0"></script>
-<script src="animals714.js?v=f8406b23bbc0"></script>
-<script src="world-people.js?v=f8406b23bbc0"></script>
-<script src="world-animals.js?v=f8406b23bbc0"></script>
-<script src="world-traffic.js?v=f8406b23bbc0"></script>
-<script src="world-huts.js?v=f8406b23bbc0"></script>
-<script src="world-interiors.js?v=f8406b23bbc0"></script>
-<script src="world-quests.js?v=f8406b23bbc0"></script>
+<script src="gltf-loader.js?v=63ad85b1e47b"></script>
+<script src="skeleton-utils.js?v=63ad85b1e47b"></script>
+<script src="meshopt-decoder.js?v=63ad85b1e47b"></script>
+<script src="models.js?v=63ad85b1e47b"></script>
+<script src="people.js?v=63ad85b1e47b"></script>
+<script src="villagers.js?v=63ad85b1e47b"></script>
+<script src="tex-photos.js?v=63ad85b1e47b"></script>
+<script src="textures.js?v=63ad85b1e47b"></script>
+<script src="birds.js?v=63ad85b1e47b"></script>
+<script src="humans.js?v=63ad85b1e47b"></script>
+<script src="folk.js?v=63ad85b1e47b"></script>
+<script src="trees.js?v=63ad85b1e47b"></script>
+<script src="treehouses.js?v=63ad85b1e47b"></script>
+<script src="cabins.js?v=63ad85b1e47b"></script>
+<script src="cave.js?v=63ad85b1e47b"></script>
+<script src="hermits.js?v=63ad85b1e47b"></script>
+<script src="sounds.js?v=63ad85b1e47b"></script>
+<script src="music.js?v=63ad85b1e47b"></script>
+<script src="battle703-song.js?v=63ad85b1e47b"></script>
+<script src="music-orchestra.js?v=63ad85b1e47b"></script>
+<script src="rhythm.js?v=63ad85b1e47b"></script>
+<script src="pictograms.js?v=63ad85b1e47b"></script>
+<script src="chick-wear.js?v=63ad85b1e47b"></script>
+<script src="hedgehogs.js?v=63ad85b1e47b"></script>
+<script src="opening.js?v=63ad85b1e47b"></script>
+<script src="skypiea.js?v=63ad85b1e47b"></script>
+<script src="pirate.js?v=63ad85b1e47b"></script>
+<script src="atmo.js?v=63ad85b1e47b"></script>
+<script src="world-realism.js?v=63ad85b1e47b"></script>
+<script src="boat.js?v=63ad85b1e47b"></script>
+<script src="weather.js?v=63ad85b1e47b"></script>
+<script src="village-build.js?v=63ad85b1e47b"></script>
+<script src="runes.js?v=63ad85b1e47b"></script>
+<script src="hearts714.js?v=63ad85b1e47b"></script>
+<script src="world712-frame.js?v=63ad85b1e47b"></script>
+<script src="creative712.js?v=63ad85b1e47b"></script>
+<script src="world712-carib.js?v=63ad85b1e47b"></script>
+<script src="world712-dunns.js?v=63ad85b1e47b"></script>
+<script src="world712-travel.js?v=63ad85b1e47b"></script>
+<script src="world-surfaces732.js?v=63ad85b1e47b"></script>
+<script src="world-terrain.js?v=63ad85b1e47b"></script>
+<script src="world-features.js?v=63ad85b1e47b"></script>
+<script src="world-vegetation.js?v=63ad85b1e47b"></script>
+<script src="world725d-fast.js?v=63ad85b1e47b"></script>
+<script src="world-chicks.js?v=63ad85b1e47b"></script>
+<script src="world-imagery.js?v=63ad85b1e47b"></script>
+<script src="world712-photo.js?v=63ad85b1e47b"></script>
+<script src="hawkwake.js?v=63ad85b1e47b"></script>
+<script src="hawkfight.js?v=63ad85b1e47b"></script>
+<script src="hawkarena.js?v=63ad85b1e47b"></script>
+<script src="orchard.js?v=63ad85b1e47b"></script>
+<script src="net678.js?v=63ad85b1e47b"></script>
+<script src="net678-config.js?v=63ad85b1e47b"></script>
+<script src="net721.js?v=63ad85b1e47b"></script>
+<script src="animals714.js?v=63ad85b1e47b"></script>
+<script src="world-people.js?v=63ad85b1e47b"></script>
+<script src="world-animals.js?v=63ad85b1e47b"></script>
+<script src="world-traffic.js?v=63ad85b1e47b"></script>
+<script src="world-huts.js?v=63ad85b1e47b"></script>
+<script src="world-interiors.js?v=63ad85b1e47b"></script>
+<script src="world-quests.js?v=63ad85b1e47b"></script>
 <script>
 (() => {
 'use strict';
@@ -4597,8 +4617,8 @@ function map705El() {
   return m;
 }
 function wmap712Hook(m) {   // 712e (Marth, Oct 28: "Not just Jamaica, the whole world."): the chart's World tab; world712-mapview.js draws it, the island chart is untouched
-  let data = 'world712-map.js'; { const ORCH_SRC = 'world712-map.js?v=f8406b23bbc0'; data = ORCH_SRC; }   // named as build-site.js finds a lazy file, so her app carries it offline
-  { const ORCH_SRC = 'world712-mapview.js?v=f8406b23bbc0'; const s = document.createElement('script'); s.src = ORCH_SRC; s.async = true; s.onload = () => { if (window.WMAP712) { WMAP712.attach(m, data, () => { if (MAP705.open) { map705Size(); map705Draw(); } }); map735Hook(); } }; document.head.appendChild(s); }
+  let data = 'world712-map.js'; { const ORCH_SRC = 'world712-map.js?v=63ad85b1e47b'; data = ORCH_SRC; }   // named as build-site.js finds a lazy file, so her app carries it offline
+  { const ORCH_SRC = 'world712-mapview.js?v=63ad85b1e47b'; const s = document.createElement('script'); s.src = ORCH_SRC; s.async = true; s.onload = () => { if (window.WMAP712) { WMAP712.attach(m, data, () => { if (MAP705.open) { map705Size(); map705Draw(); } }); map735Hook(); } }; document.head.appendChild(s); }
 }
 /* 735 THE TRUE MAP (Marth, Nov 5 2026, verbatim: "in the vid u can see im nowhere near the village but the marker / the map says i am"). Trunks; tools/wiring/wire-735-map.js; guard tests/map735.js.
    One place says where she is: map735You. The chart's land is painted straight onto the canvas on show from pixels held in memory (no hidden canvas to come back empty). Ruby is HER and nothing else:
@@ -4613,7 +4633,7 @@ function map735Tick() {   // each travel frame: costs one comparison until she e
   if (!window.WMAP712 || !WMAP712.fog) return; const y = map735You(); if (!y) return;
   if (WMAP712.fog.mark(y.lat, y.lon, S.pos.y - Math.max(0, travel712H(S.pos.x, S.pos.z)))) { S.world = S.world || {}; S.world.fog = WMAP712.fog.save(); save(); }
 }
-function map735Hook() { if (!window.WMAP712 || !WMAP712.fog) return; WMAP712.you(map735You); WMAP712.fog.load(typeof creative712On === 'function' && creative712On() ? 'all' : (S.world && S.world.fog) || null); }   // the creative world has no fog: it is hers already
+function map735Hook() { if (!window.WMAP712 || !WMAP712.fog) return; WMAP712.you(map735You, map735bLine); map735bStart(); WMAP712.fog.load(typeof creative712On === 'function' && creative712On() ? 'all' : (S.world && S.world.fog) || null); }   // the creative world has no fog: it is hers already
 function map735Land(g, ox, oy, S0, dpr) {   // the 180 x 180 relief scaled here (bilinear), kept in memory at the chart's own size, laid down with putImageData
   const px = map705Terrain(), N = M705.N, w = Math.round(S0 * dpr); let B = MAP705.big;
   if (!B || B.width !== w) { B = g.createImageData(w, w); const d = B.data, s = N / w;
@@ -4623,7 +4643,7 @@ function map735Land(g, ox, oy, S0, dpr) {   // the 180 x 180 relief scaled here 
     MAP705.big = B; }
   g.putImageData(B, Math.round(ox * dpr), Math.round(oy * dpr));
 }
-const MAP735_WORD = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'], map735Word = (b) => MAP735_WORD[Math.round(((b % 360) + 360) % 360 / 45) % 8];
+const MAP735_WORD = ['north', 'northeast', 'east', 'southeast', 'south', 'southwest', 'west', 'northwest'], map735Word = (b) => MAP735_WORD[Math.round(((b % 360) + 360) % 360 / 45) % 8];
 function map735Off(T) {   // she is off this chart: which way, and how far (from the goal when there is one, as her radar counts it; else from the island)
   const y = map735You(), W = window.WFR_WORLD; if (map735Away() && y && W) { const b = W.bearing(W.HOME, y), km = W.flownKm(W.HOME, y); return { dx: Math.sin(b * Math.PI / 180), dz: -Math.cos(b * Math.PI / 180), said: Math.round(km).toLocaleString('en-US') + ' km ' + map735Word(b), from: 'the island' }; }
   const fx = T ? T.x : 0, fz = T ? T.z : 0, ex = S.pos.x - fx, ez = S.pos.z - fz, m = Math.round(Math.hypot(ex, ez)), d = Math.hypot(S.pos.x, S.pos.z) || 1;
@@ -4640,8 +4660,36 @@ function map735Mine(g, ox, oy, S0, X, Z, T) {   // the goal's gold ring and her 
   }
   const arrow = (x, y, rot) => { g.save(); g.translate(x, y); g.rotate(rot); g.beginPath(); g.moveTo(0, -10); g.lineTo(7, 7); g.lineTo(0, 3); g.lineTo(-7, 7); g.closePath(); g.fillStyle = '#c8314a'; g.fill(); g.lineWidth = 1.8; g.strokeStyle = '#fff2c2'; g.stroke(); g.lineWidth = 0.8; g.strokeStyle = '#3d0610'; g.stroke(); g.restore(); };
   if (on) arrow(X(S.pos.x), Z(S.pos.z), Math.PI - (S.yaw || 0));   // north is up: x to the right, z down, as the squares run
-  else if (!classicLook) { arrow(rx, rz, Math.atan2(off.dx, -off.dz)); g.font = '700 11px Georgia, serif'; const word = 'You · ' + off.said, w = g.measureText(word).width, lx = Math.max(ox + w / 2 + 4, Math.min(ox + S0 - w / 2 - 4, rx - off.dx * 6)), ly = Math.max(oy + 10, Math.min(oy + S0 - 10, rz + (off.dz > 0 ? -19 : 19))); g.textAlign = 'center'; g.textBaseline = 'middle'; map705Text(g, word, lx, ly); }   // DRAFT words for Marth
+  else if (!classicLook) { arrow(rx, rz, Math.atan2(off.dx, -off.dz)); g.font = '700 11px Georgia, serif'; const word = 'You', w = g.measureText(word).width, lx = Math.max(ox + w / 2 + 4, Math.min(ox + S0 - w / 2 - 4, rx - off.dx * 6)), ly = Math.max(oy + 10, Math.min(oy + S0 - 10, rz + (off.dz > 0 ? -19 : 19))); g.textAlign = 'center'; g.textBaseline = 'middle'; map705Text(g, word, lx, ly); }   // DRAFT words for Marth
   return off;
+}
+/* 735b THE WORDS ALONG THE TOP (Marth, Nov 6 2026, verbatim: "It should be more straight forward. Or string it along the top (see image) you can also see there’s some menu over lapping.. kinda ehh but wtvr."). Trunks; tools/wiring/wire-735b.js; guard tests/map735.js.
+   One plain line under the phone's status bar, Standard only, drawn over nothing a thumb needs (pointer-events none). It is written once a second at most, never per frame. It names a place only when she is truly within MAP735B_KM of one she knows, and says sea or land only when the ground under her has really been read. Every word is a DRAFT for Marth. The chick's card is placed under the level card here, measured: that card grows with her hearts and what she carries. */
+const MAP735B = { el: null, at: -1e9, said: '' }, MAP735B_MS = 1000, MAP735B_KM = 40;
+function map735bNear(y) {   // the nearest place she knows within MAP735B_KM; Damned stays out of it until she has entered it (the chart's far words say it then). The world's cities join in once the map has loaded them
+  const W = WFR_WORLD, L = Object.keys(W.PLACES).map((k) => W.PLACES[k]); if (window.WFR_DUNNS712) L.push(WFR_DUNNS712.place);
+  let name = null, best = MAP735B_KM; for (const p of L) { const d = W.distance(y, p) / 1000; if (d < best) { best = d; name = p.name; } }
+  return (window.WMAP712 && WMAP712.near && WMAP712.near(y.lat, y.lon, best)) || name;
+}
+function map735bWords() {   // what the line says now; empty (the line steps away) wherever her place on the world means nothing: inside a house, up in the sky, in the eagle's nest
+  if (S.inside || S.insideTH || S.inEagle || S.inSky) return ''; const W = window.WFR_WORLD, y = map735You(); if (!W || !y) return '';
+  const T = TRAVEL712, far = !T.on && FAR682.where && FAR682_DATA[FAR682.where], len = (m) => (m < 1000 ? Math.round(m / 10) * 10 + ' m' : Math.round(m / 1000).toLocaleString('en-US') + ' km');
+  if (!map735Away()) { const x = S.pos.x, z = S.pos.z; if (Math.abs(x) < M705.HALF && Math.abs(z) < M705.HALF) return 'Home island'; return 'Over the sea · ' + len(Math.hypot(x, z)) + ' ' + map735Word(Math.atan2(x, -z) * 180 / Math.PI) + ' of home'; }
+  const dist = len(W.flownKm(y, W.HOME) * 1000); if (far) return 'At ' + far.name + ' · ' + dist + ' from home';
+  const near = map735bNear(y); if (near) return 'Near ' + near + ' · ' + dist + ' from home';
+  const way = dist + ' ' + map735Word(W.bearing(W.HOME, y)) + ' of home', read = T.on && T.st && T.st.probe(S.pos.x, S.pos.z);
+  return !read ? way : (travel712H(S.pos.x, S.pos.z) > 1 ? 'Over land · ' : 'Over the sea · ') + way;
+}
+function map735bLine() { const t = performance.now(); if (t - MAP735B.at >= MAP735B_MS * 0.9) { MAP735B.at = t; MAP735B.said = map735bWords(); } return MAP735B.said; }   // the world map's foot reads the same sentence
+function map735bStack() {   // the chick's card clears the level card and the radar, upright; on its side it stands beside them and keeps its own place
+  const c = $('care'), p = $('lvPill'), m = $('mapBtn705'); if (!c || !p || !m || c.hidden) return; const was = c.style.top; c.style.removeProperty('top');
+  const q = c.getBoundingClientRect(), r = p.getBoundingClientRect(), n = m.getBoundingClientRect(), under = q.left < r.right && q.right > r.left;
+  const v = under ? Math.round(Math.max(r.bottom, n.bottom) + 6) + 'px' : ''; if (v) c.style.setProperty('top', v, 'important'); if (v !== was && window.WFR_QUESTS720 && WFR_QUESTS720.place) WFR_QUESTS720.place();
+}
+function map735bTick() { if (document.hidden) return; const e = MAP735B.el, s = map735bLine(); if (e.textContent !== s) e.textContent = s; if (e.hidden === !!s) e.hidden = !s; map735bStack(); }
+function map735bStart() {   // Standard only: Classic is frozen (board 645)
+  if (classicLook || MAP735B.el) return; const h = document.querySelector('#ui .hud'); if (!h) return; const e = document.createElement('div'); e.id = 'wordsTop735'; e.hidden = true; h.appendChild(e); MAP735B.el = e;
+  map735bTick(); setInterval(map735bTick, MAP735B_MS); addEventListener('resize', map735bStack); new MutationObserver(map735bStack).observe($('care'), { attributes: true, attributeFilter: ['hidden', 'class'] });
 }
 function map735Peek() { const y = map735You(), w = window.WMAP712 && WMAP712.state ? WMAP712.state() : null; return { you: y, away: map735Away(), fog: S.world && S.world.fog ? String(S.world.fog).length : 0, goal: ARROW.T ? { x: ARROW.T.x, z: ARROW.T.z } : null, pos: [S.pos.x, S.pos.y, S.pos.z], yaw: S.yaw, big: !!MAP705.big, world: w ? w.map735 : null }; }
 function map705Size() {   // the chart's side in CSS px: as big as fits, upright on a phone held up, the head and foot kept on a phone on its side
@@ -6886,7 +6934,7 @@ function bgMusicTick(dt) {
    after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
    music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
    menu, a cutscene), the orchestra bows out. */
-const ORCH_SRC = 'orch-samples.js?v=f8406b23bbc0';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const ORCH_SRC = 'orch-samples.js?v=63ad85b1e47b';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
 const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
 window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
 const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
@@ -11329,7 +11377,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build f8406b23bbc0): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build 63ad85b1e47b): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>
