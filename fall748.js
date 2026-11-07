@@ -198,10 +198,11 @@ window.WFR_FALL748 = (function () {
   }
   function clear() { var i; if (!X) return; for (i = 0; i < JOBS.length; i++) { var j = JOBS[i]; if (j.G) { j.G.o.visible = false; j.G.o.material.opacity = 0; j.G.o.geometry = j.G.geo0; j.G.busy = false; } if (j.L) { j.L.o.visible = false; j.L.o.material.opacity = 0; j.L.busy = false; } } JOBS.length = 0;
     for (i = 0; i < CN.length; i++) { CN[i].on = false; CN[i].o.visible = false; CN[i].sh.visible = false; } if (ring) ring.visible = false; }
+  function coinAt(x, y, z) { var c = freeCoin(); c.on = true; c.t = 0; c.ll = null; c.x = x; c.z = z; c.y0 = y; c.y = y; c.r = 0.26; c.far = false; c.o.visible = true; c.sh.visible = true; stat.coins++; return true; }   /* 746: a coin at a door, on the island */
   function coinNear(x, y, z, R) { var best = null, bd = R, i; for (i = 0; i < CN.length; i++) { var c = CN[i]; if (!c.on || c.t < 0.7) continue; var d = Math.sqrt((c.x - x) * (c.x - x) + (c.y - y) * (c.y - y) + (c.z - z) * (c.z - z)); if (d < bd) { bd = d; best = c; } } return best; }
   function mark(x, y, z, r) { if (!ring) return; if (x == null) { ring.visible = false; return; } ring.visible = true; ring.position.set(x, y, z); ring.scale.setScalar(r); }   /* what her swoop would reach */
   function peek() { var g = 0, l = 0, c = [], i; for (i = 0; i < GH.length; i++) if (GH[i].o.visible) g++; for (i = 0; i < GL.length; i++) if (GL[i].o.visible) l++; for (i = 0; i < CN.length; i++) if (CN[i].on) c.push([+CN[i].x.toFixed(2), +CN[i].y.toFixed(2), +CN[i].z.toFixed(2), +CN[i].t.toFixed(2)]);
     return { ready: !!X, stat: Object.assign({}, stat), jobs: JOBS.map(function (j) { return [j.type, +j.t.toFixed(2)]; }), ghosts: g, glows: l, coinsOut: c, ring: !!(ring && ring.visible), hold: hold, chance: chanceOver }; }
-  return { C: C, ROW: ROW, FAM: FAM, FLAV: FLAV, row: row, hp: hp, damage: damage, back: back, roll: roll, pose: pose, body: body, attach: attach, warm: warm, flash: flash, fall: fall, tick: tick, clear: clear, coinNear: coinNear, mark: mark, peek: peek,
+  return { C: C, ROW: ROW, FAM: FAM, FLAV: FLAV, row: row, hp: hp, damage: damage, back: back, roll: roll, pose: pose, body: body, attach: attach, warm: warm, flash: flash, fall: fall, tick: tick, clear: clear, coinNear: coinNear, coinAt: coinAt, mark: mark, peek: peek,
     ready: function () { return !!X; }, bench: function (o) { if ('chance' in o) chanceOver = o.chance; if ('hold' in o) hold = o.hold; } };
 }());
