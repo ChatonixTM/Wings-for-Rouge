@@ -52,7 +52,7 @@ window.WMAP712 = (function () {
   function kDisc() { return S.proj === 'pole' ? Math.min(S.cw, S.ch) / 360 * 0.86 : Math.max(S.cw / 360, S.ch / 180 * 0.62); }   // the whole disc in view: Classic's widest look, and the measure the base picture and the names keep
   function kMin() { return CLASSIC ? kDisc() : Math.max(kDisc(), Math.min(S.cw, S.ch) * 111.2 / FLOOR_KM); }   // 735b, Marth: "No no you can’t zoom out to see the whole disk": Standard's widest look
   var CLASSIC = !!(window.WFR_DOOR && WFR_DOOR.classic);   // 735: Classic is frozen (board 645): its map keeps its old look; the look switch reloads the page
-  var HOME_SPAN = 32;   // 735b: the plane degrees across the first look's shorter side, tuned by eye
+  var HOME_SPAN = 10;   // 735b: the plane degrees across the first look's shorter side, tuned by eye (753a: 32 until now; with no seed that was her whole explored world as a speck under her arrow. DRAFT for Marth)
   var FLOOR_KM = 4000;   // 735b: the ground across the widest look's shorter side, about a continent (DRAFT for Marth)
   var K_MAX = CLASSIC ? 140 : 2400;   // 735: about 46 m a pixel (was 140); past k 200 the streamed water, roads and towns take over from the baked relief
   function clampView() {
@@ -228,10 +228,11 @@ window.WMAP712 = (function () {
     var offs = copiesFor(proj, V), paths = [], px = 1 / V.k, I = B.img, st = [], fp = null, ts = [];
     var setT = function (off) { var sc = V.k * V.dpr; ctx.setTransform(sc, 0, 0, sc, V.dpr * (V.w / 2 + (off - V.cX) * V.k), V.dpr * (V.h / 2 - V.cY * V.k)); };
     var each = function (fn) { offs.forEach(function (off, i) { setT(off); fn(paths[i]); }); };
-    var eachSeen = function (fn) { offs.forEach(function (off, i) { setT(off); ctx.save(); if (fp) ctx.clip(fp); fn(paths[i]); ctx.restore(); }); };   // 735: only the ground she has seen
+    var eachSeen = function (fn) { offs.forEach(function (off, i) { setT(off); ctx.save(); fn(paths[i]); ctx.restore(); }); };   // 753a: only the ground she has seen, by the trail's alpha laid first (source-atop)
     var whole = function () { var w = new Path2D(); if (proj === 'pole') parallel(w, -90); else w.rect(-180, -90, 360, 180); return w; };
-    st.push(function () { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.fillStyle = PAPER; ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height); ctx.imageSmoothingEnabled = true;
-      fp = CLASSIC ? null : fogPath(V); ts = cull && !flat ? tileReady(V) : []; if (J) J.tiles = ts.length; offs.forEach(function (off, i) { paths[i] = cull ? culled(B, V, off) : B.path; }); eachSeen(function () { if (flat) { ctx.fillStyle = 'rgb(150,199,228)'; ctx.fill(whole()); return; } ctx.drawImage(I.sea, I.x0, I.y0, I.ww, I.hh); B.ov.forEach(function (ov) { ctx.drawImage(ov.sea, ov.x0, ov.y0, ov.ww, ov.hh); }); }); });   // the sharper reliefs over the world's
+    st.push(function () { ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = 1; ctx.imageSmoothingEnabled = true; fp = CLASSIC ? null : fogPaths();
+      if (fp) { ctx.clearRect(0, 0, ctx.canvas.width, ctx.canvas.height); offs.forEach(function (off) { setT(off); fogMask(ctx, V, fp); }); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'source-atop'; } else { ctx.fillStyle = PAPER; ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height); }   // 753a: the canvas's own alpha is the fog, so no hidden canvas can come back empty and show the world
+      ts = cull && !flat ? tileReady(V) : []; if (J) J.tiles = ts.length; offs.forEach(function (off, i) { paths[i] = cull ? culled(B, V, off) : B.path; }); eachSeen(function () { if (flat) { ctx.fillStyle = 'rgb(150,199,228)'; ctx.fill(whole()); return; } ctx.drawImage(I.sea, I.x0, I.y0, I.ww, I.hh); B.ov.forEach(function (ov) { ctx.drawImage(ov.sea, ov.x0, ov.y0, ov.ww, ov.hh); }); }); });   // the sharper reliefs over the world's
     st.push(function () { eachSeen(function (q) { if (flat) { ctx.fillStyle = 'rgb(176,194,126)'; ctx.fill(q.land); return; } ctx.save(); ctx.clip(q.land); ctx.drawImage(I.land, I.x0, I.y0, I.ww, I.hh); B.ov.forEach(function (ov) { ctx.drawImage(ov.land, ov.x0, ov.y0, ov.ww, ov.hh); }); ctx.restore(); }); });
     st.push(function () { if (!ts.length) return; eachSeen(function () { ts.forEach(function (t) { var q = tilePaths(t); ctx.save(); ctx.clip(q.rect); ctx.drawImage(I.land, I.x0, I.y0, I.ww, I.hh); B.ov.forEach(function (ov) { ctx.drawImage(ov.land, ov.x0, ov.y0, ov.ww, ov.hh); });   // 735: inside a real tile the coast is the tile's own: land's colours first, the sea only inside its water
         ctx.lineJoin = 'round'; ctx.lineWidth = 1.7 * px; ctx.strokeStyle = 'rgba(58,29,12,.78)'; ctx.stroke(q.water); ctx.save(); ctx.clip(q.water); ctx.drawImage(I.sea, I.x0, I.y0, I.ww, I.hh); B.ov.forEach(function (ov) { ctx.drawImage(ov.sea, ov.x0, ov.y0, ov.ww, ov.hh); }); ctx.restore();
@@ -242,6 +243,7 @@ window.WMAP712 = (function () {
       for (var rv = 0; rv < 3; rv++) { var a = rv === 0 ? 1 : fadeAt(rv === 1 ? 3 : 5, V.k); if (a <= 0) continue; ctx.globalAlpha = a * 0.85; ctx.strokeStyle = 'rgb(62,118,168)'; ctx.lineWidth = (rv === 0 ? 1.2 : rv === 1 ? 0.9 : 0.7) * px; ctx.stroke(q['riv' + rv]); }
       ctx.globalAlpha = 1; }); });
     st.push(function () { if (!ts.length) eachSeen(function (q) { ctx.strokeStyle = 'rgba(58,29,12,.78)'; ctx.lineWidth = 0.85 * px; ctx.stroke(q.coast); }); });   // 735: a real tile brings its own coast
+    st.push(function () { if (!fp) return; ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'destination-over'; ctx.fillStyle = PAPER; ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height); ctx.globalCompositeOperation = 'source-over'; });   // 753a: the fog's paper, under the picture and its soft rim
     st.push(function () { each(function () {
       var step = V.k > 30 ? 5 : V.k > 9 ? 10 : 30, grat = new Path2D(), lat, lon;
       for (lat = -90 + step; lat < 90; lat += step) if (lat !== 0) parallel(grat, lat);
@@ -251,7 +253,7 @@ window.WMAP712 = (function () {
       var polar = new Path2D(); parallel(polar, 66.56); parallel(polar, -66.56); ctx.strokeStyle = 'rgba(60,110,150,.55)'; ctx.stroke(polar); ctx.setLineDash([]);
       var eq = new Path2D(); parallel(eq, 0); ctx.strokeStyle = '#d9a441'; ctx.lineWidth = 1.6 * px; ctx.stroke(eq);   // the equator, gold
       if (proj === 'pole') { var rim = new Path2D(); parallel(rim, -90); ctx.strokeStyle = INK; ctx.lineWidth = 1.6 * px; ctx.stroke(rim); var rim2 = new Path2D(); parallel(rim2, -87.6); ctx.lineWidth = 0.7 * px; ctx.stroke(rim2); } });
-      ctx.setTransform(1, 0, 0, 1, 0, 0); });
+      ctx.setTransform(1, 0, 0, 1, 0, 0); if (J && J.kind === 'base') { ctx.fillStyle = WITNESS; ctx.fillRect(0, 0, 2, 2); } });   // 753a: the witness's own pixels: home is no longer sure to be picture
     return st;
   }
   function baseV(proj) {   // the base picture: the whole plane at the home look's scale (so the first look and every pan at it are pixel for pixel)
@@ -298,18 +300,18 @@ window.WMAP712 = (function () {
          carried through drawImage onto the canvas on show and read back. An empty one is rebuilt from the data held in memory; a second failure in a row switches to the plain map, drawn straight
          onto the canvas on show, so there is always land. Whatever happened is written under the map, never silent.
        HER: a live ruby arrow at her true lat/lon, turned to her true heading; ruby means her and nothing else.
-       THE REVEAL: a 0.5 degree grid of what she has seen, saved in S.world.fog as runs. The picture is clipped to it; the rest stays paper and the grid (735b, Marth: "you kept the outlines, makes the whole point redundant").
+       THE REVEAL: the discs she has flown under, saved in S.world.fog in order (753a). The picture lies inside their soft alpha; the rest stays paper and the grid (735b, Marth: "you kept the outlines, makes the whole point redundant").
        THE CLOSE LOOK: past k 200, OpenFreeMap's own water, roads and place names, each vertex through P(), the relief and sea laid under them, credited only while drawn. ---------- */
+  var WITNESS = 'rgb(228,212,170)';   // 753a: the base's corner, a shade off paper: paperLike() refuses paper, her eye cannot tell them apart
   var HEAL = { need: true, checks: 0, lost: 0, rebuilds: 0, fails: 0, direct: false, why: '' };
   var YOU = null, WORDS = null;   // the page's doors: a function returning { lat, lon, bearing, away }, and (735b) her place in plain words
   function hasPixels(c) { try { var p = c.__p || [c.width >> 1, c.height >> 1]; return c.getContext('2d').getImageData(p[0], p[1], 1, 1).data[3] > 0; } catch (e) { return false; } }
   function paperLike(d) { return Math.abs(d[0] - 241) < 7 && Math.abs(d[1] - 226) < 7 && Math.abs(d[2] - 184) < 7; }
-  function witness(g, B, bs) {   // true when the kept pictures are really there: each source read, then home's pixel of the base carried onto this canvas and read back
-    HEAL.checks++; var bad = [], I = B.img, H = window.WFR_WORLD && WFR_WORLD.HOME, q = { x: 0, y: 0 }, V = bs.V;
+  function witness(g, B, bs) {   // true when the kept pictures are really there: each source read, then the base's own witness pixel carried onto this canvas and read back
+    HEAL.checks++; var bad = [], I = B.img;
     if (!hasPixels(I.sea)) bad.push('sea'); if (!hasPixels(I.land)) bad.push('land');
     B.ov.forEach(function (o) { if (!hasPixels(o.sea) || !hasPixels(o.land)) bad.push(o.id); });
-    if (H) { P(H.lat, H.lon, q); var sx = Math.round((V.w / 2 + (q.x - V.cX) * V.k) * V.dpr), sy = Math.round((V.h / 2 + (q.y - V.cY) * V.k) * V.dpr);
-      g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.fillStyle = PAPER; g.fillRect(0, 0, 2, 2); g.drawImage(bs.c, sx, sy, 1, 1, 0, 0, 1, 1);
+    { g.setTransform(1, 0, 0, 1, 0, 0); g.globalAlpha = 1; g.fillStyle = PAPER; g.fillRect(0, 0, 2, 2); g.drawImage(bs.c, 0, 0, 1, 1, 0, 0, 1, 1);
       var d = null; try { d = g.getImageData(0, 0, 1, 1).data; } catch (e) { d = null; } g.fillStyle = PAPER; g.fillRect(0, 0, 2, 2); if (d && paperLike(d)) bad.push('picture'); }
     if (PP.cv && !hasPixels(PP.cv)) { PP.cv = null; if (PP.on) paperImg(); }   // the 1892 paper is decoded again from its file
     if (!bad.length) { HEAL.fails = 0; return true; }
@@ -339,49 +341,66 @@ window.WMAP712 = (function () {
     if (el) { var s = WORDS ? WORDS() : ''; if (el.textContent !== s) el.textContent = s; }   // 735b: the same plain words as the line along the top
   }
 
-  /* ---------- THE REVEAL: a cell is half a degree. Marked only when she moves into a new one; seeded with the Caribbean and the places she knows (the save holds no trail: what she flew before
-     this was built cannot be recovered). 'all' is the whole world seen (the creative world, and the guards that are about the whole picture). ---------- */
-  var FC = 720, FR = 360, FOG = { bits: new Uint8Array(FC * FR / 8), all: false, v: 1, n: 0, cell: -1, rad: 0, loaded: false };
-  var FOG_SEED = [8, 28, -90, -58];   // lat from, lat to, lon from, lon to: her home sea (Marth, Nov 6, asked if it is enough: "For now")
-  function fogRow(lat) { return Math.max(0, Math.min(FR - 1, Math.floor((90 - lat) * 2))); }
-  function fogCol(lon) { return ((Math.floor((lon + 180) * 2) % FC) + FC) % FC; }
+  /* ---------- THE REVEAL (753a; Marth, Nov 7, on his iPhone: "it still is revealing way more than I’ve actually searched. And I don’t like how its unveiling in the shape of parentheses"; this overrules the seed he okayed "For now").
+     No seeded block. What she has seen is a small circle round home and a list of the discs she truly flew under, in order, at her own place to a hundredth of a degree, one for each eighth-of-a-degree cell that showed her something new. The known places stay as
+     marks and open nothing. The discs are stroked as one round-capped trail with a feathered rim measured in screen pixels, so it is the same soft shape on Gleason, the Globe and the 1892 paper.
+     The cell grid is the quick "has she seen this spot" for names and tiles; it is only ever drawn from the discs, and it stays inside what is drawn on either map.
+     'all' is the whole world seen (the creative world, and the guards that are about the whole picture). ---------- */
+  var FC = 2880, FR = 1440, FCELL = 8, FOG = { bits: new Uint8Array(FC * FR / 8), pts: [], pp: {}, all: false, v: 1, n: 0, cell: -1, rc: 0, loaded: false };
+  var FOG_KM = [30, 50, 90], FOG_HIGH = [5000, 20000];   // what a bird can see: the radius low, over 5 km up and over 20 km up (DRAFT for Marth); home's circle is the 50
+  var FOG_FEATHER = 9, FOG_RINGS = 10, FOG_LINK = 0.4;   // the rim's width in screen px and the strokes that make it; the plane degrees two neighbouring discs are joined across
+  var FOG_OLD_SEED = [8, 28, -90, -58], FOG_OLD_RINGS = [[14.5586, -90.7295], [39.0968, -120.0324]];   // only to take the old seed back out of an 'f1:' save; Home, Kingston and Dunn's rings lay inside the block
+  function fogRow(lat) { return Math.max(0, Math.min(FR - 1, Math.floor((90 - lat) * FCELL))); }
+  function fogCol(lon) { return ((Math.floor((lon + 180) * FCELL) % FC) + FC) % FC; }
   function fogHas(i) { return (FOG.bits[i >> 3] >> (i & 7)) & 1; }
   function fogSet(i) { if (fogHas(i)) return 0; FOG.bits[i >> 3] |= 1 << (i & 7); FOG.n++; return 1; }
   function fogSeen(lat, lon) { return FOG.all || !!fogHas(fogRow(lat) * FC + fogCol(lon)); }
   function fogShown(lat, lon) { return CLASSIC || fogSeen(lat, lon); }   // Classic is frozen (board 645): the trail is kept, never drawn
-  function fogAround(lat, lon, rad) {   // a circle of cells on the ground: wider in longitude nearer the pole
-    var r0 = fogRow(lat), c0 = fogCol(lon), n = 0;
-    for (var dr = -rad; dr <= rad; dr++) { var r = r0 + dr; if (r < 0 || r >= FR) continue; var cs = Math.max(0.02, Math.cos((90 - (r + 0.5) / 2) * D2R)), w = Math.min(FC / 2, Math.ceil(Math.sqrt(Math.max(0, rad * rad - dr * dr)) / cs));
+  function fogTile(z, x, y) { var f = [0.1, 0.5, 0.9]; for (var a = 0; a < 3; a++) for (var b = 0; b < 3; b++) if (fogSeen(WFR_WORLD.tileLat(z, y + f[a]), WFR_WORLD.tileLon(z, x + f[b]))) return true; return false; }   // a trail can cross a tile and miss its middle
+  function fogAround(i, km) {   // the cells under a disc. A degree of longitude is t plane degrees on Gleason and 1 on the Globe: dividing by the larger keeps the cells inside the round disc drawn on both
+    var r0 = Math.floor(i / FC), c0 = i % FC, rad = km / 111.2 * FCELL, top = Math.floor(rad), n = 0;
+    for (var dr = -top; dr <= top; dr++) { var r = r0 + dr; if (r < 0 || r >= FR) continue; var t = Math.max(1, (r + 0.5) / FCELL * D2R), w = Math.min(FC / 2, Math.floor(Math.sqrt(rad * rad - dr * dr) / t));
       for (var dc = -w; dc <= w; dc++) n += fogSet(r * FC + ((c0 + dc) % FC + FC) % FC); }
-    if (n) FOG.v++; return n;
+    return n;
   }
-  function fogSeed() {
-    for (var la = FOG_SEED[0]; la < FOG_SEED[1]; la += 0.5) for (var lo = FOG_SEED[2]; lo < FOG_SEED[3]; lo += 0.5) fogSet(fogRow(la + 0.25) * FC + fogCol(lo + 0.25));
-    var W = window.WFR_WORLD, PL = (W && W.PLACES) || {}; Object.keys(PL).forEach(function (id) { fogAround(PL[id].lat, PL[id].lon, 3); }); if (W) fogAround(W.HOME.lat, W.HOME.lon, 3);
-    var Dn = window.WFR_DUNNS712 && WFR_DUNNS712.place; if (Dn) fogAround(Dn.lat, Dn.lon, 3); FOG.v++;
+  function fogPack(lat, lon, rc) { return (Math.round((90 - lat) * 100) * 36000 + (Math.round((lon + 180) * 100) % 36000 + 36000) % 36000) * 3 + rc; }
+  function fogLat(v) { return 90 - Math.floor(v / 108000) / 100; }
+  function fogLon(v) { return -180 + Math.floor(v / 3) % 36000 / 100; }
+  function fogDisc(lat, lon, rc) { var i = fogRow(lat) * FC + fogCol(lon), n = fogAround(i, FOG_KM[rc]); if (n) { FOG.pts.push(fogPack(lat, lon, rc)); FOG.v++; } return n; }   // kept only when it showed her something new, so circling costs nothing. Her true place, not the cell's middle: a straight flight stays straight
+  function fogHome() { var W = window.WFR_WORLD; if (W) fogDisc(W.HOME.lat, W.HOME.lon, 1); }
+  function fogSave() {   // 'f2:' then the discs in the order she flew them, each her place x 3 + its size, in base 36: seven characters for every 14 km of new ground
+    if (FOG.all) return 'all'; return 'f2:' + FOG.pts.map(function (v) { return v.toString(36); }).join(',');
   }
-  function fogSave() {   // 'f1:' then the run lengths in base 36, unseen first, turn about
-    if (FOG.all) return 'all'; var out = [], run = 0, cur = 0, N = FC * FR; for (var i = 0; i < N; i++) { var b = fogHas(i); if (b !== cur) { out.push(run.toString(36)); run = 0; cur = b; } run++; } out.push(run.toString(36)); return 'f1:' + out.join(',');
+  function fogOld(s) {   // an 'f1:' save (ships #94-#104): half-degree cells, run lengths, with the seed mixed in. Whatever lies outside the seed she truly reached and is kept, as round patches; inside the seed her flights cannot be told from it, so they go with it
+    var OC = 720, OR = 360, N = OC * OR, parts = s.slice(3).split(','), sum = 0, a; for (a = 0; a < parts.length; a++) sum += parseInt(parts[a], 36) || 0; if (sum !== N) return;   // a file that does not add up is ignored, never half-read
+    var seed = new Uint8Array(N), row = function (lat) { return Math.max(0, Math.min(OR - 1, Math.floor((90 - lat) * 2))); }, col = function (lon) { return ((Math.floor((lon + 180) * 2) % OC) + OC) % OC; };
+    for (var la = FOG_OLD_SEED[0]; la < FOG_OLD_SEED[1]; la += 0.5) for (var lo = FOG_OLD_SEED[2]; lo < FOG_OLD_SEED[3]; lo += 0.5) seed[row(la + 0.25) * OC + col(lo + 0.25)] = 1;
+    FOG_OLD_RINGS.forEach(function (q) { var r0 = row(q[0]), c0 = col(q[1]);
+      for (var dr = -3; dr <= 3; dr++) { var r = r0 + dr, cs = Math.max(0.02, Math.cos((90 - (r + 0.5) / 2) * D2R)), w = Math.min(OC / 2, Math.ceil(Math.sqrt(Math.max(0, 9 - dr * dr)) / cs)); for (var dc = -w; dc <= w; dc++) seed[r * OC + ((c0 + dc) % OC + OC) % OC] = 1; } });
+    var i = 0, cur = 0; for (var k = 0; k < parts.length; k++) { var run = parseInt(parts[k], 36) || 0; if (cur) for (var j = i; j < i + run; j++) if (!seed[j]) fogDisc(90 - (Math.floor(j / OC) + 0.5) / 2, -180 + (j % OC + 0.5) / 2, 1); i += run; cur = 1 - cur; }
   }
   function fogLoad(s) {
-    FOG.bits.fill(0); FOG.n = 0; FOG.cell = -1; FOG.all = s === 'all'; FOG.loaded = true;
-    if (typeof s === 'string' && s.indexOf('f1:') === 0) { var parts = s.slice(3).split(','), i = 0, N = FC * FR, cur = 0, sum = 0;
-      for (var a = 0; a < parts.length; a++) sum += parseInt(parts[a], 36) || 0;
-      if (sum === N) for (var k = 0; k < parts.length; k++) { var run = parseInt(parts[k], 36) || 0; if (cur) for (var j = i; j < i + run; j++) fogSet(j); i += run; cur = 1 - cur; } }   // a file that does not add up is ignored, never half-read
-    fogSeed(); return FOG.n;
+    FOG.bits.fill(0); FOG.pts = []; FOG.n = 0; FOG.cell = -1; FOG.rc = 0; FOG.all = s === 'all'; FOG.loaded = true; FOG.v++;
+    if (typeof s === 'string' && s.indexOf('f2:') === 0) { var vs = s.slice(3).split(',').map(function (x) { return parseInt(x, 36); }); if (vs.every(function (v) { return v >= 0 && v < 18001 * 108000; })) vs.forEach(function (v) { fogAround(fogRow(fogLat(v)) * FC + fogCol(fogLon(v)), FOG_KM[v % 3]); FOG.pts.push(v); }); }   // a file that does not read is ignored, never half-read
+    if (!FOG.pts.length) fogHome();
+    if (typeof s === 'string' && s.indexOf('f1:') === 0) fogOld(s);
+    return FOG.n;
   }
   function fogMark(lat, lon, agl) {   // true when she has revealed something new (the only time the page saves); the cell she is in is remembered, so a still bird costs one comparison
-    if (FOG.all || !FOG.loaded) return false; var i = fogRow(lat) * FC + fogCol(lon), rad = agl > 20000 ? 3 : 1; if (i === FOG.cell && rad <= FOG.rad) return false; FOG.cell = i; FOG.rad = rad; return fogAround(lat, lon, rad) > 0;
+    if (FOG.all || !FOG.loaded) return false; var i = fogRow(lat) * FC + fogCol(lon), rc = agl > FOG_HIGH[1] ? 2 : agl > FOG_HIGH[0] ? 1 : 0; if (i === FOG.cell && rc <= FOG.rc) return false; FOG.cell = i; FOG.rc = rc; return fogDisc(lat, lon, rc) > 0;
   }
-  function fogPath(V) {   // the seen ground as one clip in plane degrees: a strip for each run of a row, a soft disc on every edge cell (never smaller than a mark her eye can find on the whole map)
-    if (FOG.all) return null; var path = new Path2D(), o = { x: 0, y: 0 }, rad = Math.max(0.42, 1.6 / V.k), EPS = 0.02;
-    var strip = function (la0, la1, lo0, lo1) { var m = Math.max(1, Math.ceil((lo1 - lo0) / 2)), t; P(la1, lo0, o); path.moveTo(o.x, o.y); for (t = 1; t <= m; t++) { P(la1, lo0 + (lo1 - lo0) * t / m, o); path.lineTo(o.x, o.y); } for (t = m; t >= 0; t--) { P(la0, lo0 + (lo1 - lo0) * t / m, o); path.lineTo(o.x, o.y); } };
-    for (var r = 0; r < FR; r++) { var la1 = 90 - r / 2, c = 0;
-      while (c < FC) { while (c < FC && !fogHas(r * FC + c)) c++; if (c >= FC) break; var c0 = c; while (c < FC && fogHas(r * FC + c)) c++;
-        strip(la1 - 0.5 - EPS, Math.min(90, la1 + EPS), -180 + c0 / 2, -180 + c / 2);
-        for (var e = c0; e < c; e++) { var i = r * FC + e, edge = e === c0 || e === c - 1 || r === 0 || r === FR - 1 || !fogHas(i - FC) || !fogHas(i + FC);
-          if (!edge) continue; P(la1 - 0.25, -180 + e / 2 + 0.25, o); path.moveTo(o.x + rad, o.y); path.arc(o.x, o.y, rad, 0, 6.2832); } } }   // every sub-path turns the same way, so the union never cancels
-    return path;
+  function fogPaths() {   // the trail as one path for each disc size, in plane degrees (null: the whole world is seen). Neighbours are joined, so a straight flight has straight sides, not a string of beads
+    if (FOG.all) return null; var c = FOG.pp[S.proj]; if (c && c.v === FOG.v) return c.p;
+    var p = [new Path2D(), new Path2D(), new Path2D()], last = [null, null, null], o = { x: 0, y: 0 };
+    FOG.pts.forEach(function (v) { var rc = v % 3, l = last[rc]; P(fogLat(v), fogLon(v), o);
+      if (l && Math.hypot(o.x - l.x, o.y - l.y) <= FOG_LINK) p[rc].lineTo(o.x, o.y); else { p[rc].moveTo(o.x, o.y); p[rc].lineTo(o.x + 0.001, o.y); } last[rc] = { x: o.x, y: o.y }; });
+    FOG.pp[S.proj] = { v: FOG.v, p: p }; return p;
+  }
+  function fogMask(g, V, fp) {   // the trail as alpha on a cleared canvas, under the plane's transform: a run of round strokes from the rim's outside in, each lifting it one step, the last solid. Stroke width is in plane degrees, so every disc is round on the screen on any map
+    g.save(); g.lineCap = 'round'; g.lineJoin = 'round'; g.strokeStyle = '#000';
+    for (var rc = 0; rc < 3; rc++) { var r = FOG_KM[rc] / 111.2, f = Math.min(FOG_FEATHER / V.k, r * 0.6);
+      for (var i = 0; i < FOG_RINGS; i++) { g.globalAlpha = 1 / (FOG_RINGS - i); g.lineWidth = Math.max(2 * r + f - 2 * f * i / (FOG_RINGS - 1), 0.9 / V.k); g.stroke(fp[rc]); } }
+    g.restore();
   }
 
   /* ---------- THE CLOSE LOOK: real water, roads and towns past K_TILE, read with the game's own decoder (world-features.js) ---------- */
@@ -391,7 +410,7 @@ window.WMAP712 = (function () {
     if (V.k < K_TILE || !window.WFR_FEATURES || !window.WFR_WORLD) return []; var z = V.k >= K_Z12 ? 12 : 9, hw = V.w / 2 / V.k, hh = V.h / 2 / V.k, pts = [[-1, -1], [1, -1], [-1, 1], [1, 1], [0, 0]], x0 = 1e9, x1 = -1e9, y0 = 1e9, y1 = -1e9, n = Math.pow(2, z);
     pts.forEach(function (p) { var ll = invP(V.cX + p[0] * hw, V.cY + p[1] * hh); if (!ll) return; var t = WFR_WORLD.tileAt(Math.max(-85, Math.min(85, ll.lat)), ll.lon, z); x0 = Math.min(x0, t.x); x1 = Math.max(x1, t.x); y0 = Math.min(y0, t.y); y1 = Math.max(y1, t.y); });
     if (x1 < x0 || x1 - x0 > 7 || y1 - y0 > 7) return []; var out = [];
-    for (var y = y0; y <= y1; y++) for (var x = x0; x <= x1; x++) if (x >= 0 && x < n && y >= 0 && y < n && fogSeen(WFR_WORLD.tileLat(z, y + 0.5), WFR_WORLD.tileLon(z, x + 0.5))) out.push({ z: z, x: x, y: y, k: tileKey(z, x, y) });
+    for (var y = y0; y <= y1; y++) for (var x = x0; x <= x1; x++) if (x >= 0 && x < n && y >= 0 && y < n && fogTile(z, x, y)) out.push({ z: z, x: x, y: y, k: tileKey(z, x, y) });
     return out;
   }
   function tileAsk(V) {
@@ -458,7 +477,7 @@ window.WMAP712 = (function () {
     if (!ensure(S.proj)) { g.setTransform(dpr, 0, 0, dpr, 0, 0); drawWaiting(g); return; }
     if (S.needHome) { S.needHome = false; homeView(); }   // the first look, once the canvas has its size
     clampView(); var B = S.built[S.proj], px = 1 / S.k, offs = copies(), bs = S.base[S.proj], V = curV();
-    var paperUp = S.proj === 'pole' && PP.on && !!PP.cv;   // 76 review: nothing is drawn or sharpened under the laid paper (735b: in Standard it stops at the ground she has seen, and past that is bare paper)
+    var paperUp = S.proj === 'pole' && PP.on && !!PP.cv && (CLASSIC || (CACHE && !HEAL.direct));   // 76 review: nothing is drawn or sharpened under the laid paper (735b: in Standard it stops at the ground she has seen, and past that is bare paper)
     if (!CACHE || HEAL.direct) layerSteps(B, S.proj, V, g, HEAL.direct, HEAL.direct).forEach(function (f) { f(); });
     else {
       var bv = baseV(S.proj);
@@ -556,7 +575,7 @@ window.WMAP712 = (function () {
   }
   function drawPaper(g) {   // the laid paper: one picture, plain scale and offset (the plane's origin at the disc's centre, P7.s of its pixels a degree)
     if (!PP.cv) return false; var P7 = PAPER725, N = PP.cv.width, ks = S.k / P7.s, d = S.dpr, ox = S.cw / 2 - S.cX * S.k, oy = S.ch / 2 - S.cY * S.k;
-    g.save(); var fp = CLASSIC ? null : PP.fv === FOG.v ? PP.fp : (PP.fv = FOG.v, PP.fp = fogPath(curV())); if (fp) { g.setTransform(S.k * d, 0, 0, S.k * d, d * ox, d * oy); g.clip(fp); } g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true; g.drawImage(PP.cv, d * (ox - N / 2 * ks), d * (oy - N / 2 * ks), d * N * ks, d * N * ks); g.restore(); PP.draws++; return true;
+    g.save(); var fp = CLASSIC ? null : fogPaths(); if (fp) { g.setTransform(1, 0, 0, 1, 0, 0); g.clearRect(0, 0, g.canvas.width, g.canvas.height); g.setTransform(S.k * d, 0, 0, S.k * d, d * ox, d * oy); fogMask(g, curV(), fp); g.globalCompositeOperation = 'source-atop'; } g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true; g.drawImage(PP.cv, d * (ox - N / 2 * ks), d * (oy - N / 2 * ks), d * N * ks, d * N * ks); if (fp) { g.globalCompositeOperation = 'destination-over'; g.fillStyle = PAPER; g.fillRect(0, 0, g.canvas.width, g.canvas.height); } g.restore(); PP.draws++; return true;
   }
   function paperSwitch(on) {
     PP.on = !!on; var b = $('wmap725paper'), c = $('wmap725credit'); if (b) b.setAttribute('aria-pressed', String(PP.on)); if (c) c.hidden = !(PP.on && S.proj === 'pole');
@@ -666,7 +685,7 @@ window.WMAP712 = (function () {
       draws: S.draws, ms: S.ms, opens: S.opens, toggles: S.toggles, gestures: S.gestures, sel: S.sel ? { name: S.sel.name, lat: S.sel.lat, lon: S.sel.lon, km: S.sel.km, kind: S.sel.kind, word: S.sel.word, bearing: S.sel.bearing, anti: S.sel.anti } : null, canvases: S.made, canvasBytes: S.cvs.reduce(function (a, c) { return a + c.width * c.height * 4; }, 0), overlays: Object.keys(S.built).map(function (k) { return k + ':' + S.built[k].ov.map(function (o) { return o.id; }).join('+'); }), rect: r ? { l: r.left, t: r.top, w: r.width, h: r.height } : null,
       citiesShown: D ? D.cities.filter(function (c) { return c.drawnAt === S.draws - 1 && c.shown > 0.3; }).map(function (c) { return c.name; }) : null,
       paper: { on: PP.on, loaded: !!PP.cv, failed: PP.failed, fails: PP.fails, tries: PP.tries, loading: PP.loading, draws: PP.draws, waits: PP.waits, path: PP.path, decodeMs: PP.decodeMs, strips: PP.strips, stripMs: PP.stripMs, holdsFull: !!PP.img, released: PP.released, cacheSide: PP.cv ? PP.cv.width : 0, cx: PAPER725.cx, cy: PAPER725.cy, r: PAPER725.r, s: PAPER725.s, a: PAPER725.a },
-      map735: { heal: { checks: HEAL.checks, lost: HEAL.lost, rebuilds: HEAL.rebuilds, direct: HEAL.direct, why: HEAL.why }, you: S.youAt || null, fog: { n: FOG.n, all: FOG.all, v: FOG.v }, tiles: { fetched: TL.fetched, fails: TL.fails, held: TL.map.size, pending: TL.q.length + TL.busy, inPicture: S.detail ? S.detail.tiles : 0, fresh: !!(S.detail && S.detail.fv === FOG.v && !S.detail.stale && sameV(S.detail.V, curV())) }, kMax: K_MAX },
+      map735: { heal: { checks: HEAL.checks, lost: HEAL.lost, rebuilds: HEAL.rebuilds, direct: HEAL.direct, why: HEAL.why }, you: S.youAt || null, fog: { n: FOG.n, all: FOG.all, v: FOG.v, pts: FOG.pts.length }, tiles: { fetched: TL.fetched, fails: TL.fails, held: TL.map.size, pending: TL.q.length + TL.busy, inPicture: S.detail ? S.detail.tiles : 0, fresh: !!(S.detail && S.detail.fv === FOG.v && !S.detail.stale && sameV(S.detail.V, curV())) }, kMax: K_MAX },
       ready: Object.keys(S.built), building: S.job ? S.job.proj : (S.rjob && S.rjob.kind === 'base' ? S.rjob.proj : null), rendering: !!(S.rjob || S.dt), base: Object.keys(S.base), renders: S.renders.slice(), progress: S.progress, waits: S.waits, jobs: S.jobs.slice(), error: S.error, counts: D ? { land: D.land.length, coast: D.coast.length, lakes: D.lakes.length, glaciers: D.glaciers.length, rivers: D.rivers.length, cities: D.cities.length, regions: D.regions.length } : null }; },
     project: toScreen, unproject: fromScreen };
 })();
