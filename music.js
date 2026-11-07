@@ -277,7 +277,7 @@
     var f = hz(e.m), att = e.tap ? 0.009 : (melody ? 0.03 : 0.016), dec, peak;   /* 684 (Obito): her taps keep a quick 9 ms attack (Expert's window is +-60 ms; her saved offset was timed on a click); the song's own notes 30 ms */
     if (melody) { dec = Math.max(0.9, 0.85 * e.d * spb); peak = REF * db(2) * e.v; stats.lastMelAt = t; }   /* 657: the guard reads when a melody note was scheduled */
     else { dec = 0.9; peak = REF * 0.85 * e.v; }
-    var end = t + att + dec + 0.04, v = voice(t, end, melody ? 'mel' : 'harp'); if (!v) return;
+    var end = t + att + dec + 0.04, v = voice(t, end, melody || e.tap ? 'mel' : 'harp'); if (!v) return;   /* 763: her bass tap's harp too (710b's law: never a note she played) */
     var o = keep(v, ctx.createOscillator()); o.setPeriodicWave(melody ? SOFT.flute : SOFT.harp); o.frequency.value = f;
     var top = Math.min(5200, f * (melody ? 3.5 : 5));
     var lp = keep(v, ctx.createBiquadFilter()); lp.type = 'lowpass'; lp.Q.value = 0.3;
@@ -292,7 +292,7 @@
     run(v, o, t, end);
   }
   function bass(e, t, out) {
-    var att = 0.008, dec = 0.22, end = t + att + dec + 0.04, v = voice(t, end, 'bass'); if (!v) return;
+    var att = 0.008, dec = 0.22, end = t + att + dec + 0.04, v = voice(t, end, e.tap ? 'mel' : 'bass'); if (!v) return;   /* 763 */
     var o = keep(v, ctx.createOscillator()); o.type = 'triangle'; o.frequency.value = hz(e.m);
     var lp = keep(v, ctx.createBiquadFilter()); lp.type = 'lowpass'; lp.frequency.value = 320; lp.Q.value = 0.6;
     var g = keep(v, ctx.createGain()); pluck(g, t, REF * db(-10) * 3.2 * e.v, att, dec);
@@ -504,7 +504,7 @@
   /* 689: one bass note NOW from her tap, on the session's bass strip (Mute and the volume reach it): the song's own bass voice at its exact
      pitch, and a soft harp an octave up so a phone's small speaker carries it (OURS/DRAFT, for her ear) */
   function bassNote(m) { if (!sess || !ctx) return false; stats.bassTapped = (stats.bassTapped || 0) + 1; var t = ctx.currentTime + 0.005;
-    bass({ m: m, v: 1 }, t, sess.strips.bass); harpLike({ b: 0, k: 'harp', m: m + 12, d: 0.5, v: 0.55, tap: true }, t, sess.strips.bass, sess.spb, false); return true; }
+    bass({ m: m, v: 1, tap: true }, t, sess.strips.bass); harpLike({ b: 0, k: 'harp', m: m + 12, d: 0.5, v: 0.55, tap: true }, t, sess.strips.bass, sess.spb, false); return true; }
   var HOLDS_OF = {};
   /* 620 U2 "GEM CUT" (Marth, Oct 15 ~23:55: "make it sound like the sand level in sonic or some egeyption shi"). ORIGINAL: composed here; no
      melody, riff or hook from any game's song. E Phrygian dominant (E F G# A B C D): the home chord is E major and the tune leans on the half
@@ -549,7 +549,7 @@
   /* 658 U3: the held note's sound, only while she holds it (657's law: only what she plays sounds). A soft pad (root + fifth, two saws each
      +-6 ct through a 700 Hz lowpass) on the session's pad strip, so Mute and the volume reach it; droneOff ramps it to 0 in 60 ms. */
   var drones = 0, lastDrone = null;
-  function drone(m, secs) { if (!sess || !ctx) return null; var t = ctx.currentTime + 0.005, end = t + Math.max(0.3, secs || 4) + 0.4, v = voice(t, end, 'pad'); if (!v) return null;
+  function drone(m, secs) { if (!sess || !ctx) return null; var t = ctx.currentTime + 0.005, end = t + Math.max(0.3, secs || 4) + 0.4, v = voice(t, end, 'mel'); if (!v) return null;
     var lp = keep(v, ctx.createBiquadFilter()); lp.type = 'lowpass'; lp.frequency.value = 700; lp.Q.value = 0.4;
     var g = keep(v, ctx.createGain()), pk = REF * db(-24) * 4.5, ms = [m, m + 7], i, s, o, og;
     g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(pk, t + 0.06);
