@@ -497,6 +497,7 @@ window.WFR_BIRDS = (function () {
     g.scale.setScalar(D.size || 0.5); g.rotation.order = 'YXZ';
     g.userData.wfr = { kind: k, wingL: wingL, wingR: wingR, tail: tail, legs: legs, head: head, meshes: meshes.length };
     if (opts.folded) g.userData.wings = [wingL, wingR];
+    if (window.WFR_BIRD758) WFR_BIRD758.dress(THREE, { g: g, wingL: wingL, wingR: wingR }, k, lin);   /* 758: the model on this rig (birds758.js); a failed load leaves the bird above */
     return { g: g, wingL: wingL, wingR: wingR, tail: tail, legs: legs, head: head };
   };
 

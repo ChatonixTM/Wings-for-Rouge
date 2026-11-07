@@ -64,7 +64,7 @@ window.WFR_SURF732 = (function () {
     sh.fragmentShader = HEAD754 + 'varying vec2 vW754; uniform vec3 uEye712;\n' + sh.fragmentShader.replace(b, b + '\n' + text754('vW754', 'uEye712', '1.0'));
     return true;
   }
-  var sea754 = { patch: patch754, shift: function (dx, dz) { o754[0] -= dx; o754[1] -= dz; n754.shifts++; set754(); }, tick: function (t) { t754 = t; set754(); },
+  var sea754 = { patch: patch754, shift: function (dx, dz) { o754[0] -= dx; o754[1] -= dz; n754.shifts++; set754(); if (window.WFR_LOOK755B) window.WFR_LOOK755B.shift(dx, dz); }, tick: function (t) { t754 = t; set754(); },
     amp: function (k) { U754.uK754.value = U754.uSea754.value ? S754.AMP * k : 0; }, peek: function () { return { on: ON, amp: U754.uK754.value, patched: n754.patched, shifts: n754.shifts, off: o754.slice() }; } };
   function canvasTex(fill, size) { var c = document.createElement('canvas'); c.width = c.height = size; var g = c.getContext('2d', { willReadFrequently: true }); g.fillStyle = fill; g.fillRect(0, 0, size, size); var t = new T.CanvasTexture(c); t.wrapS = t.wrapT = T.RepeatWrapping; t.anisotropy = 4; return { t: t, c: c, g: g }; }
   function load(src, done, fail) { var im = new Image(); im.onload = function () { try { done(im); } catch (e) { fail(e); } }; im.onerror = function () { fail(new Error('decode')); }; im.src = src; }
@@ -84,12 +84,13 @@ window.WFR_SURF732 = (function () {
   function groundPatch(sh) {   // the ground's shader (key 'travel712far', shared by the roads and water: they get the same text, uDet732 = 0)
     var vA = 'vW712t = wp712t.xz;', fA = '#include <alphamap_fragment>', fB = '#include <aomap_fragment>';
     if (sh.vertexShader.indexOf(vA) < 0 || sh.fragmentShader.indexOf(fA) < 0 || sh.fragmentShader.indexOf(fB) < 0 || sh.fragmentShader.indexOf('varying vec2 vW712t;') < 0) { st.faults.push('ground: an anchor is missing, not patched'); return; }
-    sh.uniforms.uGr732 = { value: groundTex() }; sh.uniforms.uGrK732 = U.k; sh.uniforms.uDet732 = { value: (this.polygonOffset || MODE === 'nodetail') ? 0 : 1 }; uniforms754(sh);
-    sh.vertexShader = 'varying float vD732;\n' + sh.vertexShader.replace(vA, vA + ' vD732 = distance( wp712t.xyz, uEye712t );');
-    sh.fragmentShader = HEAD754 + 'uniform vec3 uEye712t; uniform sampler2D uGr732; uniform vec3 uGrK732; uniform float uDet732; varying float vD732;\n' + sh.fragmentShader
+    sh.uniforms.uGr732 = { value: groundTex() }; sh.uniforms.uGrK732 = U.k; sh.uniforms.uDet732 = { value: (this.polygonOffset || MODE === 'nodetail') ? 0 : 1 }; uniforms754(sh); if (window.WFR_LOOK755B) window.WFR_LOOK755B.uniforms(sh, T, this.polygonOffset);
+    sh.vertexShader = (window.WFR_LOOK755B ? window.WFR_LOOK755B.headV() : '') + 'varying float vD732;\n' + sh.vertexShader.replace(vA, vA + ' vD732 = distance( wp712t.xyz, uEye712t );' + (window.WFR_LOOK755B ? window.WFR_LOOK755B.vert() : ''));
+    sh.fragmentShader = (window.WFR_LOOK755B ? window.WFR_LOOK755B.head() : '') + HEAD754 + 'uniform vec3 uEye712t; uniform sampler2D uGr732; uniform vec3 uGrK732; uniform float uDet732; varying float vD732;\n' + sh.fragmentShader
       .replace(fA, [
         'float sh732 = 1.0;',
         'float m754 = uDet732 * smoothstep( 0.0, 0.03, diffuseColor.b - diffuseColor.g ) * smoothstep( 0.05, 0.12, diffuseColor.b - diffuseColor.r );',   // 754: the sea by its colour: blue over green and over red (737's ramp and the photo's water; the land never is)
+        window.WFR_LOOK755B ? window.WFR_LOOK755B.text('m754', 'uDet755', 'uEye712t', 'vD732') : '',   // 755b: the sea in the main sea's colours, the land in the photos' grain and the island's palette
         '{ float k732 = uDet732 * ( 1.0 - m754 ) * ( 1.0 - smoothstep( ' + f(C.FADE0) + ', ' + f(C.FADE1) + ', vD732 ) );',   // grain and relief fade with true distance; 754: a grass photo never lay right on the water
         '  if ( k732 > 0.002 ) {',
         '    vec2 q732 = vec2( vW712t.x, -vW712t.y );',   // world x, and -z: the photo's tangent is +x, its bitangent -z, its normal +y

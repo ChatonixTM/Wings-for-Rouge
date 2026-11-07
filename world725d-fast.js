@@ -145,6 +145,7 @@ window.WFR_FAST725D = (function () {
 
   install();
   return { C: C, WORDS: WORDS, install: install, aglFor: aglFor, steer: steer, hud: hud, set: set, end: end, drop: drop, door: door,
+    veil: veilEl, fade: fade,   /* 751b: the reload's way back wears the same dusk */
     routeKm: function () { return R.on ? R.km : null; }, arrivals: function () { return R.arrivals; },   /* 757: read each frame by fast forward; state() would force a style read */
     state: function () { var v = veil ? +getComputedStyle(veil).opacity : 0; return { on: R.on, to: R.to, name: R.name, sets: R.sets, arrivals: R.arrivals, breaks: R.breaks, ends: Object.assign({}, R.ends), km: R.km, kmMin: R.kmMin, at: R.at || null, wantAgl: R.wantAgl, maxY: R.maxY, frames: R.frames,
       drop: { phase: DR.phase, drops: DR.drops, reveals: DR.reveals, aborts: DR.aborts, last: DR.last, glide: DR.glide, err: DR.err, veil: v }, ground: D && D.ground ? D.ground() : null,
