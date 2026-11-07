@@ -922,6 +922,12 @@ html.ui716.ui726 #side703{width:58px!important;height:58px!important}
 html.ui716.ui726 .round,html.ui716.ui726 #evPause{width:44px;height:44px;box-sizing:border-box;border-radius:50%;border:1.5px solid var(--k-line);background:var(--u-g,none) center/20px 20px no-repeat,var(--k-glass)!important;filter:none;box-shadow:var(--k-crest-shadow)}
 html.ui716.ui726 #evPause{--u-g:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23ffffff' stroke='rgba(10,20,64,.5)' stroke-width='.9' stroke-linejoin='round' d='M6 4.2h4.4v15.6H6zM13.6 4.2H18v15.6h-4.4z'/%3E%3C/svg%3E")}
 html.ui716.ui726 #questsBtn720{border:1.5px solid var(--k-line);background:var(--k-glass);box-shadow:var(--k-crest-shadow)}
+/* ---- 757: fast forward, past the gate, Standard only (Marth, Nov 7). 52 px; the pips sit to its left; a place of its own in each orientation ---- */
+#ff757{position:fixed;z-index:6;right:calc(env(safe-area-inset-right,0px) + 88px);top:calc(env(safe-area-inset-top,0px) + 250px);width:52px;height:52px;margin:0;padding:0;box-sizing:border-box;border-radius:50%;border:1.5px solid rgba(255,255,255,.55);background:rgba(16,22,44,.66);color:#f4f7ff;font:700 19px/1 var(--k-sans,system-ui),system-ui,sans-serif;pointer-events:auto;touch-action:manipulation;user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent}
+#ff757[hidden]{display:none}#ff757.on{font-size:18px;color:#0e1830;background:#7be6d3;border-color:#d8fff7;box-shadow:0 0 12px 2px rgba(90,220,200,.6)}
+#ff757 .p757{position:absolute;right:calc(100% + 5px);top:50%;transform:translateY(-50%);display:flex;flex-direction:column;gap:4px;pointer-events:none}#ff757 .p757[hidden]{display:none}
+#ff757 .p757 i{display:block;width:8px;height:8px;box-sizing:border-box;border-radius:50%;border:1.5px solid #ffe58a;box-shadow:0 0 2px rgba(0,0,0,.7)}#ff757 .p757 i.f{background:#ffe58a}
+@media (orientation:landscape) and (max-height:520px){#ff757{right:calc(env(safe-area-inset-right,0px) + 76px);top:calc(env(safe-area-inset-top,0px) + 136px)}}
 /* ---- 735b: the words along the top, and the chick bar with all its actions in view (Standard only). Marth, Nov 6: "string it along the top" ---- */
 html.ui716 .hud{padding-top:calc(max(env(safe-area-inset-top,0px),6px) + 12px)}   /* six px of room on a phone with no status bar; his iPhone's status bar already leaves it */
 html.ui716 #wordsTop735{position:absolute;left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));top:max(calc(env(safe-area-inset-top,0px) - 6px),1px);height:16px;overflow:hidden;white-space:nowrap;text-overflow:ellipsis;text-align:center;font:600 11.5px/16px var(--k-sans,var(--body));letter-spacing:.015em;color:#eef4ff;text-shadow:0 1px 2px rgba(0,4,24,.75);pointer-events:none;background:linear-gradient(90deg,transparent,rgba(8,14,48,.5) 16%,rgba(8,14,48,.5) 84%,transparent)}
@@ -1112,71 +1118,71 @@ html.ui716.ui726 .warm{border-radius:12px;font-family:var(--k-sans);filter:none;
 <div class="rhRes" id="rhRes" hidden aria-live="polite"><b id="resRank"></b><span id="resLine"></span><small id="resTime"></small><small id="resNew" hidden></small></div>   <!-- 672 OURS/DRAFT words: Paused, Resume, Quit song -->
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-<script src="toon.js?v=aa7982747499"></script>
+<script src="toon.js?v=a2dcb4e673d5"></script>
 <script>(function () { let classic = false; try { classic = localStorage.getItem('wfr.look') === 'classic'; } catch (e) { /* private mode: Standard */ }
   window.WFR_DOOR = classic ? { w: 1.2, h: 2, classic: true } : { w: 1.5, h: 2.9, classic: false }; }());   /* 683 C1: THE doorway, local units (x HS 1.6: Standard 2.4 x 4.64 m; a villager, drawn 3.67-3.72 m, is 80% of it; the brief's 2.6 left him at 89%). The ring houses, the 641 house, the cabins and the walk read it. Classic is frozen (Marth, Oct 14, board 645): its doors stay 1.2 x 2. The look is read as the game reads it (it reloads on a switch). */</script>
-<script src="gltf-loader.js?v=aa7982747499"></script>
-<script src="skeleton-utils.js?v=aa7982747499"></script>
-<script src="meshopt-decoder.js?v=aa7982747499"></script>
-<script src="models.js?v=aa7982747499"></script>
-<script src="people.js?v=aa7982747499"></script>
-<script src="villagers.js?v=aa7982747499"></script>
-<script src="tex-photos.js?v=aa7982747499"></script>
-<script src="textures.js?v=aa7982747499"></script>
-<script src="birds.js?v=aa7982747499"></script>
-<script src="humans.js?v=aa7982747499"></script>
-<script src="folk.js?v=aa7982747499"></script>
-<script src="trees.js?v=aa7982747499"></script>
-<script src="treehouses.js?v=aa7982747499"></script>
-<script src="cabins.js?v=aa7982747499"></script>
-<script src="cave.js?v=aa7982747499"></script>
-<script src="hermits.js?v=aa7982747499"></script>
-<script src="sounds.js?v=aa7982747499"></script>
-<script src="music.js?v=aa7982747499"></script>
-<script src="battle703-song.js?v=aa7982747499"></script>
-<script src="music-orchestra.js?v=aa7982747499"></script>
-<script src="rhythm.js?v=aa7982747499"></script>
-<script src="pictograms.js?v=aa7982747499"></script>
-<script src="chick-wear.js?v=aa7982747499"></script>
-<script src="hedgehogs.js?v=aa7982747499"></script>
-<script src="opening.js?v=aa7982747499"></script>
-<script src="skypiea.js?v=aa7982747499"></script>
-<script src="pirate.js?v=aa7982747499"></script>
-<script src="atmo.js?v=aa7982747499"></script>
-<script src="world-realism.js?v=aa7982747499"></script>
-<script src="boat.js?v=aa7982747499"></script>
-<script src="weather.js?v=aa7982747499"></script>
-<script src="village-build.js?v=aa7982747499"></script>
-<script src="runes.js?v=aa7982747499"></script>
-<script src="fall748.js?v=aa7982747499"></script>
-<script src="hearts714.js?v=aa7982747499"></script>
-<script src="world712-frame.js?v=aa7982747499"></script>
-<script src="creative712.js?v=aa7982747499"></script>
-<script src="world712-carib.js?v=aa7982747499"></script>
-<script src="world712-dunns.js?v=aa7982747499"></script>
-<script src="world712-travel.js?v=aa7982747499"></script>
-<script src="world-surfaces732.js?v=aa7982747499"></script>
-<script src="world-terrain.js?v=aa7982747499"></script>
-<script src="world-features.js?v=aa7982747499"></script>
-<script src="world-vegetation.js?v=aa7982747499"></script>
-<script src="world725d-fast.js?v=aa7982747499"></script>
-<script src="world-chicks.js?v=aa7982747499"></script>
-<script src="world-imagery.js?v=aa7982747499"></script>
-<script src="world712-photo.js?v=aa7982747499"></script>
-<script src="hawkwake.js?v=aa7982747499"></script>
-<script src="hawkfight.js?v=aa7982747499"></script>
-<script src="hawkarena.js?v=aa7982747499"></script>
-<script src="orchard.js?v=aa7982747499"></script>
-<script src="net678.js?v=aa7982747499"></script>
-<script src="net678-config.js?v=aa7982747499"></script>
-<script src="net721.js?v=aa7982747499"></script>
-<script src="animals714.js?v=aa7982747499"></script>
-<script src="world-people.js?v=aa7982747499"></script>
-<script src="world-animals.js?v=aa7982747499"></script>
-<script src="world-traffic.js?v=aa7982747499"></script>
-<script src="world-huts.js?v=aa7982747499"></script>
-<script src="world-interiors.js?v=aa7982747499"></script>
-<script src="world-quests.js?v=aa7982747499"></script>
+<script src="gltf-loader.js?v=a2dcb4e673d5"></script>
+<script src="skeleton-utils.js?v=a2dcb4e673d5"></script>
+<script src="meshopt-decoder.js?v=a2dcb4e673d5"></script>
+<script src="models.js?v=a2dcb4e673d5"></script>
+<script src="people.js?v=a2dcb4e673d5"></script>
+<script src="villagers.js?v=a2dcb4e673d5"></script>
+<script src="tex-photos.js?v=a2dcb4e673d5"></script>
+<script src="textures.js?v=a2dcb4e673d5"></script>
+<script src="birds.js?v=a2dcb4e673d5"></script>
+<script src="humans.js?v=a2dcb4e673d5"></script>
+<script src="folk.js?v=a2dcb4e673d5"></script>
+<script src="trees.js?v=a2dcb4e673d5"></script>
+<script src="treehouses.js?v=a2dcb4e673d5"></script>
+<script src="cabins.js?v=a2dcb4e673d5"></script>
+<script src="cave.js?v=a2dcb4e673d5"></script>
+<script src="hermits.js?v=a2dcb4e673d5"></script>
+<script src="sounds.js?v=a2dcb4e673d5"></script>
+<script src="music.js?v=a2dcb4e673d5"></script>
+<script src="battle703-song.js?v=a2dcb4e673d5"></script>
+<script src="music-orchestra.js?v=a2dcb4e673d5"></script>
+<script src="rhythm.js?v=a2dcb4e673d5"></script>
+<script src="pictograms.js?v=a2dcb4e673d5"></script>
+<script src="chick-wear.js?v=a2dcb4e673d5"></script>
+<script src="hedgehogs.js?v=a2dcb4e673d5"></script>
+<script src="opening.js?v=a2dcb4e673d5"></script>
+<script src="skypiea.js?v=a2dcb4e673d5"></script>
+<script src="pirate.js?v=a2dcb4e673d5"></script>
+<script src="atmo.js?v=a2dcb4e673d5"></script>
+<script src="world-realism.js?v=a2dcb4e673d5"></script>
+<script src="boat.js?v=a2dcb4e673d5"></script>
+<script src="weather.js?v=a2dcb4e673d5"></script>
+<script src="village-build.js?v=a2dcb4e673d5"></script>
+<script src="runes.js?v=a2dcb4e673d5"></script>
+<script src="fall748.js?v=a2dcb4e673d5"></script>
+<script src="hearts714.js?v=a2dcb4e673d5"></script>
+<script src="world712-frame.js?v=a2dcb4e673d5"></script>
+<script src="creative712.js?v=a2dcb4e673d5"></script>
+<script src="world712-carib.js?v=a2dcb4e673d5"></script>
+<script src="world712-dunns.js?v=a2dcb4e673d5"></script>
+<script src="world712-travel.js?v=a2dcb4e673d5"></script>
+<script src="world-surfaces732.js?v=a2dcb4e673d5"></script>
+<script src="world-terrain.js?v=a2dcb4e673d5"></script>
+<script src="world-features.js?v=a2dcb4e673d5"></script>
+<script src="world-vegetation.js?v=a2dcb4e673d5"></script>
+<script src="world725d-fast.js?v=a2dcb4e673d5"></script>
+<script src="world-chicks.js?v=a2dcb4e673d5"></script>
+<script src="world-imagery.js?v=a2dcb4e673d5"></script>
+<script src="world712-photo.js?v=a2dcb4e673d5"></script>
+<script src="hawkwake.js?v=a2dcb4e673d5"></script>
+<script src="hawkfight.js?v=a2dcb4e673d5"></script>
+<script src="hawkarena.js?v=a2dcb4e673d5"></script>
+<script src="orchard.js?v=a2dcb4e673d5"></script>
+<script src="net678.js?v=a2dcb4e673d5"></script>
+<script src="net678-config.js?v=a2dcb4e673d5"></script>
+<script src="net721.js?v=a2dcb4e673d5"></script>
+<script src="animals714.js?v=a2dcb4e673d5"></script>
+<script src="world-people.js?v=a2dcb4e673d5"></script>
+<script src="world-animals.js?v=a2dcb4e673d5"></script>
+<script src="world-traffic.js?v=a2dcb4e673d5"></script>
+<script src="world-huts.js?v=a2dcb4e673d5"></script>
+<script src="world-interiors.js?v=a2dcb4e673d5"></script>
+<script src="world-quests.js?v=a2dcb4e673d5"></script>
 <script>
 (() => {
 'use strict';
@@ -2263,7 +2269,7 @@ function travel712Enter() {
   if (!S.seen.travel712) { S.seen.travel712 = 1; save(); toast('The whole world is open. Pause has Fly home.', 4200); }   // DRAFT words, his to approve
 }
 function travel712Leave(why) {
-  const T = TRAVEL712, W = WFR_WORLD; if (!T.on) return; tf723DunnsOff();
+  const T = TRAVEL712, W = WFR_WORLD; if (!T.on) return; tf723DunnsOff(); ff757End(why); if (FF757.btn) FF757.btn.hidden = true;   /* 757 */
   const ll = W.toLatLon(T.f, S.pos.x, S.pos.z), p = W.toLocal(W.HOMEF, ll.lat, ll.lon);
   for (let i = T.masks.length - 1; i >= 0; i--) T.masks[i][0].layers.mask = T.masks[i][1]; T.masks = []; T.lifted = null; T.birdOn = null;
   camera.layers.mask = T.saved.cam; sun.shadow.camera.layers.mask = T.saved.shadow; camera.near = T.saved.near; camera.far = T.saved.far; camera.updateProjectionMatrix(); FOG_AIR.near = T.saved.fogN; FOG_AIR.far = T.saved.fogF;
@@ -2295,7 +2301,7 @@ function travel712Fly(dt) {   // the travel flight: the island's own feel (turn 
   S.flutT = Math.max(0, S.flutT - dt); S.flutCd = Math.max(0, S.flutCd - dt); const z755 = !!(HOGS && HOGS.air && HOGS.air()), c755 = tf723Speed(B), k737 = Math.max(S.flutT > 0 ? CTRL755.FLUT : 1, z755 ? CTRL755.ZOOM : 1); if (S.flutT > 0 && !T.flut755) S.speed *= CTRL755.FLUT; T.flut755 = S.flutT > 0;   // 737 + 755: a burst of the height's own speed, felt at any height; Flutter lands at once, as home's +9 does
   S.speed += (c755 * k737 - S.speed) * Math.min(1, dt * (k737 > 1 && c755 * k737 > S.speed ? 3 : 0.6));   // 755: the quick rate only ever lifts her; a bird already faster eases down at the old rate
   if (window.WFR_INTERIORS729) S.speed = WFR_INTERIORS729.cap(S.speed, S.pos, S.yaw);   /* 729: closing on a door she slows */
-  const ground = travel712H(S.pos.x, S.pos.z), agl = S.pos.y - ground, hz = S.speed * Math.cos(S.pitch);
+  const ground = travel712H(S.pos.x, S.pos.z), agl = S.pos.y - ground, hz = S.speed * Math.cos(S.pitch) * ff757K(dt);   /* 757 */
   let vy = S.speed * Math.sin(S.pitch); const dcap = Math.max(25, 0.25 * agl) * (st.loadingUnder(S.pos.x, S.pos.z) ? 0.3 : 1); if (vy < -dcap) vy = -dcap;   // the descent waits for the ground to load
   S.pos.x += Math.sin(S.yaw) * hz * dt; S.pos.z += Math.cos(S.yaw) * hz * dt; S.pos.y += vy * dt;
   const g723 = travel712H(S.pos.x, S.pos.z), floor = g723 + tf723Floor(); if (S.pos.y < floor) { S.pos.y = Math.max(S.pos.y + (floor - S.pos.y) * Math.min(1, dt * (LAND751.up > 0 ? 0.7 : 1.5)), g723 + (LAND751.up > 0 ? 0 : 2)); S.pitch = Math.max(S.pitch, 0.05); }
@@ -2345,7 +2351,7 @@ function land751Hud() {   // from travel712Hud: which of its hidden buttons stay
   if ($('breath').hidden === (S.mode === 'swim')) $('breath').hidden = S.mode !== 'swim'; return o; }
 function land751Press() {   // doLand past the gate: the only door to the token
   const L = LAND751, T = TRAVEL712; S.mode = 'landing'; S.landT = 0; S.landY = S.pos.y; S.landDone = false; S.landTo = null; S.camOff = 0; $('land').hidden = true; chirp();
-  L.tok = true; L.ph = 'glide'; L.pg = null; L.dy = 0; L.presses++; T.homeSteer = false; if (window.WFR_FAST725D && WFR_FAST725D.state().on) WFR_FAST725D.end('land'); }
+  L.tok = true; L.ph = 'glide'; L.pg = null; L.dy = 0; L.presses++; T.homeSteer = false; ff757End('land'); if (window.WFR_FAST725D && WFR_FAST725D.state().on) WFR_FAST725D.end('land'); }
 function land751G(dt) {   // the ground under her feet. A finer sheet arriving moves the ground under a bird who did not move: that step is faded out over 0.3 s, never a pop
   const L = LAND751, at = Math.max(0, travel712H(S.pos.x, S.pos.z));
   if (L.pg != null) { const d = Math.max(0, travel712H(L.px, L.pz)) - L.pg; if (Math.abs(d) > 0.02) { L.dy -= d; L.rate = Math.abs(L.dy) / L.POP; L.pops++; L.popT = S.t; L.popMax = Math.max(L.popMax, Math.abs(d)); } }
@@ -2415,6 +2421,30 @@ function ctrl755Tick(dt, real) {   // from travel712Frame: the island's clocks t
   if (S.mode !== 'menu' && S.mode !== 'paused' && chick && S.nestDone) { const c = S.chick; c.food = Math.max(10, c.food - dt / 180); c.happy = Math.max(10, c.happy - dt / 300); S.petCd = Math.max(0, S.petCd - dt); for (const f of fruitTrees) f.back = Math.max(0, f.back - dt); }   // chickTick's hunger, as at home
   navHud(real); quickTick(real); nvTick(real, nvLive()); nv3Tick(); nvBtnDraw();
 }
+/* 757 FAST FORWARD (tools/wiring/wire-757-ff.js; Marth, Nov 7 2026, verbatim: "the option to ⏩ up to 5x speed once you depart the island"; "only be included for free 3 times (as a bird somewhere will actually teach it)"; "show some sort of indicator for the use(s)").
+   k is what her horizontal step is multiplied by, eased (RATE a second) toward the step she chose. VMAX is the fastest over the ground it will take her (Zoom and the height keep their own speed under it). T_ARR: on a held course it gives way so the last leg is flown at the course's own pace. Every number and word DRAFT for Marth. */
+var FF757 = { FREE: 3, STEPS: [5, 3, 2], RATE: 2, T_ARR: 20, VMAX: 90000, i: -1, k: 1, btn: null, lab: null, row: null, pips: [], arr: 0, taps: 0, spent: 0, ends: {}, kMax: 1 };
+function ff757S() { return S.ff || (S.ff = { uses: FF757.FREE, taught: false }); }
+function ff757Can() { return !classicLook && TRAVEL712.on && S.mode === 'fly' && !S.talking && !(window.WFR_INTERIORS729 && WFR_INTERIORS729.k1()); }
+function ff757Draw() { const F = FF757, s = ff757S(); if (!F.btn) return; const t = F.i < 0 ? '⏩' : F.STEPS[F.i] + '×'; if (F.lab.textContent !== t) F.lab.textContent = t; F.btn.classList.toggle('on', F.i >= 0); F.row.hidden = !!s.taught;
+  F.pips.forEach((p, j) => { p.className = j < s.uses ? 'f' : ''; }); F.btn.setAttribute('aria-label', 'Fast forward' + (F.i < 0 ? '' : ', ' + F.STEPS[F.i] + ' times') + (s.taught ? '' : ', ' + s.uses + ' free left')); }
+function ff757Make() { const F = FF757, b = document.createElement('button'); b.id = 'ff757'; b.type = 'button'; b.hidden = true; F.lab = document.createElement('span'); F.row = document.createElement('span'); F.row.className = 'p757'; F.row.setAttribute('aria-hidden', 'true');
+  for (let j = 0; j < F.FREE; j++) { const p = document.createElement('i'); F.pips.push(p); F.row.appendChild(p); } b.appendChild(F.lab); b.appendChild(F.row); b.addEventListener('pointerdown', (e) => { e.preventDefault(); ff757Tap(); }); $('nightBtn').parentNode.appendChild(b); F.btn = b; ff757Draw(); }
+function ff757End(why) { const F = FF757, s = ff757S(); if (F.i < 0) return; F.i = -1; if (why !== 'off') F.k = 1; F.ends[why] = (F.ends[why] || 0) + 1; ff757Draw(); if (!s.taught && s.uses <= 0) toast('That was your last free one. A bird out there can teach it for good.', 3600); }
+function ff757Tap() { const F = FF757, s = ff757S(); F.taps++; if (!ff757Can()) return;
+  if (F.i < 0) { if (!s.taught) { if (s.uses <= 0) return; s.uses--; save(); } F.i = 0; F.spent++; toast(s.taught ? 'Fast forward. Tap again: 3×, 2×, off.' : 'Fast forward. ' + s.uses + ' free left. Tap again: 3×, 2×, off.', 2600); }
+  else if (F.i < F.STEPS.length - 1) F.i++; else ff757End('off');
+  ff757Draw(); }
+function ff757Hud() { const F = FF757, s = ff757S(), show = ff757Can() && (F.i >= 0 || !!s.taught || s.uses > 0); if (!F.btn) { if (!show) return; ff757Make(); } if (F.btn.hidden === show) F.btn.hidden = !show;
+  if (F.i >= 0 && window.WFR_INTERIORS729 && WFR_INTERIORS729.k1()) ff757End('door'); }
+function ff757K(dt) {   // from travel712Fly, once a flying frame: the step she chose, given way to a door, a held course's end and VMAX
+  const F = FF757, T = TRAVEL712, R = window.WFR_FAST725D; let m = F.i < 0 ? 1 : F.STEPS[F.i];
+  if (R) { const a = R.arrivals(); if (a !== F.arr) { F.arr = a; ff757End('arrived'); m = 1; } }
+  if (m === 1 && F.k === 1) return 1;
+  if (m > 1) { const v = Math.max(S.speed, 1), km = T.homeSteer ? T.homeKm : R ? R.routeKm() : null; if (km != null) m = Math.min(m, Math.max(1, km * 1000 / (F.T_ARR * v))); m = Math.min(m, Math.max(1, F.VMAX / v));
+    if (window.WFR_INTERIORS729 && WFR_INTERIORS729.cap(1e9, S.pos, S.yaw) < 1e9) m = 1; }
+  F.k += (m - F.k) * Math.min(1, dt * F.RATE); if (Math.abs(F.k - m) < 0.002) F.k = m; if (F.k > F.kMax) F.kMax = F.k; return F.k; }
+function ff757Peek() { const F = FF757, s = ff757S(), b = F.btn; return { i: F.i, step: F.i < 0 ? 0 : F.STEPS[F.i], k: F.k, kMax: F.kMax, uses: s.uses, taught: !!s.taught, taps: F.taps, spent: F.spent, ends: Object.assign({}, F.ends), shown: !!(b && !b.hidden), label: b ? F.lab.textContent : null, pips: F.pips.filter((p) => p.className === 'f').length, vmax: F.VMAX }; }
 function travel712Frame(dt, real) {   // THE ALLOW-LIST: nothing of the island runs here
   const T = TRAVEL712, t0 = performance.now(); T.frames++; if (window.WFR_SURF732) WFR_SURF732.sea754.tick(S.t);
   try {
@@ -2430,7 +2460,7 @@ function travel712Frame(dt, real) {   // THE ALLOW-LIST: nothing of the island r
     else if (S.mode !== 'paused') travel712Leave('nest');
     if (T.on) {
       travel712Recentre(); tf723Dunns(dt); const k751 = land751Tick(dt); T.st.update(camera.position, (window.WFR_INTERIORS729 && WFR_INTERIORS729.k1()) || TF723.stOpt || k751); if (window.WFR_VEG) WFR_VEG.tick(camera.position, dt); travel712Air(); travel712Hud(); if (HOGS && HOGS.travel) HOGS.travel(dt); if (window.WFR_FAST725D) WFR_FAST725D.hud(T, viewYaw()); if (window.WFR_QUESTS720) WFR_QUESTS720.travelHud(T, viewYaw()); sunFollow();
-      atkTravel748(dt);   /* 748 */
+      atkTravel748(dt);   /* 748 */ ff757Hud();   /* 757 */
       if (WXR) WXR.tick(dt, real);   // the weather goes with her
       T.maxY = Math.max(T.maxY, S.pos.y);
       if (T.homeKm < TRAVEL712_C.OFF / 1000 && S.pos.y <= TRAVEL712_C.TOP2 + 1 && !LAND751.tok) travel712Leave('home');   // 725d: the island's ceiling (TOP2) would snap a higher bird down in one frame
@@ -2445,7 +2475,7 @@ function travel712Frame(dt, real) {   // THE ALLOW-LIST: nothing of the island r
 /* 725d DROP HERE (tools/wiring/wire-725d-fast.js; Su 37 relaying Marth's reference refs-1104/e5b16dd7.png: from the world map, zoom in, tap "Drop here",
    and you are there). The door world725d-fast.js opens behind its soft veil: she is placed at a lat/lon in the travel zone, the camera with her, slow
    (never 18 km/s at 350 m). Returns 'ok', 'wait' (the streamer is still being made), 'closed' (before the climb gate, or boxed) or 'fault'. */
-function fast725dPlace(lat, lon, y) {
+function fast725dPlace(lat, lon, y) { ff757End('drop');   /* 757 */
   const T = TRAVEL712, W = WFR_WORLD; if (!TRAVEL712_C || !bird || !(T.on || travel712Open())) return 'closed'; travel712Prep(); if (!T.st) return T.prepFault || T.fault ? 'fault' : 'wait';
   const p = W.toLocal(T.on ? T.f : W.HOMEF, lat, lon); travel712Shift(p.x - S.pos.x, p.z - S.pos.z);   // one delta for everything that is hers
   S.mode = 'fly'; S.pos.y = y; S.pitch = 0; S.yawV = 0; S.speed = Math.min(S.speed, 20); bird.position.copy(S.pos);
@@ -3029,7 +3059,7 @@ const S = { mode: 'menu', pos: new THREE.Vector3(-110, 30, -60), yaw: 0.6, pitch
   chick: { stats: { fly: 0, run: 0, str: 0, sta: 0, swim: 0 }, happy: 60, food: 70, stage: 0, pets: 0, at: Date.now() }, fruit: null, chickFeel: 2, chickFeelT: 0, petCd: 0 };
 var CH728 = (() => { try { return window.WFR_CHICKS728 ? WFR_CHICKS728.early({ S, BIRDS, MOVES, FEEL, FEEL0, BREATH, birds3d: window.WFR_BIRDS || null, kind: () => kind, classic: () => classicLook,   /* 740 */ raw: (() => { try { return JSON.parse(CREATIVE712_SEED || localStorage.getItem('wfr.save') || 'null'); } catch (e) { return null; } })() }) : null; } catch (e) { console.error('728 chicks: ' + e.message); return null; } })();   /* 728a: every chick a bird of BIRDS, before the save's kind is read (world-chicks.js) */
 const input = { sx: 0, sy: 0 };
-(function load() { try { const s = JSON.parse(CREATIVE712_SEED || localStorage.getItem('wfr.save') || 'null');   /* 712 S2: in the creative world its own seed, never her file */ if (s && s.level) { S.level = Math.min(LEVEL_MAX, s.level); S.xp = S.level >= LEVEL_MAX ? 0 : s.xp || 0; S.coins = s.coins || 0; S.nestDone = !!s.nestDone; S.found = s.found || {}; S.storySeen = !!s.storySeen; S.tutDone = !!s.tutDone; S.built = s.built || 0; S.lessons = s.lessons || {}; S.owlLv = typeof s.owlLv === 'number' ? s.owlLv : null; S.nestTier = s.nestTier || 1; S.mats = s.mats || {}; S.eagleFound = !!s.eagleFound; S.treatsTaken = s.treats || []; S.fishCaught = s.fish || 0; S.clock = typeof s.clock === 'number' ? s.clock % 2700 : 600; S.beakWas = s.beak || null; S.cutPending = s.cutQ || []; S.twigsTaken = s.twigs || []; S.read = s.read || {}; S.seen = s.seen || {}; S.inv = s.inv || {}; S.hearts = window.WFR_HEARTS ? WFR_HEARTS.clean(s.hearts) : null; /* 714 */ S.ani714 = s.ani714 && typeof s.ani714 === 'object' && s.ani714.xp && typeof s.ani714.xp === 'object' ? { xp: s.ani714.xp } : null; /* 714a: the days each animal paid its XP */ S.toolIn = s.toolIn || 0; S.played = typeof s.played === 'number' ? s.played : 0;   /* 631 */ S.given = typeof s.given === 'number' ? s.given : (s.built || 0) + (s.toolIn || 0); /* 581: every build and every tool in hand took a tool given */ S.grown = typeof s.grown === 'number' ? s.grown : 0; S.marks = Array.isArray(s.marks) ? s.marks : []; S.quests = s.quests && typeof s.quests === 'object' ? s.quests : null; S.people724 = s.people724 && typeof s.people724 === 'object' ? s.people724 : null; /* 720 + 724b */ S.village = s.village && typeof s.village === 'object' ? s.village : null; /* 641 §G + 646 */   /* 641 U1 */ S.world = s.world && typeof s.world === 'object' ? s.world : {}; S.choices = Array.isArray(s.choices) ? s.choices : [];   /* 703 ship 10 */ S.dawns = typeof s.dawns === 'number' ? s.dawns : 0; S.runes = typeof s.runes === 'number' ? s.runes : 0; S.huethers = typeof s.huethers === 'number' ? s.huethers : 0; S.runeRec = s.runeRec && typeof s.runeRec === 'object' ? s.runeRec : {};   /* 632 U4 */ S.songs = s.songs && typeof s.songs === 'object' ? s.songs : {};   /* 658: the songs she has opened */ S.songBest = s.songBest && typeof s.songBest === 'object' ? s.songBest : {};   /* 658 U2: her best per song and row */ S.orchard = s.orchard && typeof s.orchard === 'object' ? s.orchard : {};   /* 637: the dawn each fruit was picked */   /* 643 worlds */ S.sky = s.sky && typeof s.sky === 'object' ? { seen: !!s.sky.seen, ended: !!s.sky.ended, told: !!s.sky.told, where: s.sky.where === 'temple' ? 'temple' : 'home', ...(typeof s.sky.toldDay === 'number' ? { toldDay: s.sky.toldDay } : {}) } : null;   /* 627: toldDay kept across a reload */   /* 610: where = home | temple */   // 627: told = the evening's word was said
+(function load() { try { const s = JSON.parse(CREATIVE712_SEED || localStorage.getItem('wfr.save') || 'null');   /* 712 S2: in the creative world its own seed, never her file */ if (s && s.level) { S.level = Math.min(LEVEL_MAX, s.level); S.xp = S.level >= LEVEL_MAX ? 0 : s.xp || 0; S.coins = s.coins || 0; S.nestDone = !!s.nestDone; S.found = s.found || {}; S.storySeen = !!s.storySeen; S.tutDone = !!s.tutDone; if (s.ff) S.ff = { uses: Math.max(0, Math.min(FF757.FREE, s.ff.uses | 0)), taught: !!s.ff.taught }; /* 757 */ S.built = s.built || 0; S.lessons = s.lessons || {}; S.owlLv = typeof s.owlLv === 'number' ? s.owlLv : null; S.nestTier = s.nestTier || 1; S.mats = s.mats || {}; S.eagleFound = !!s.eagleFound; S.treatsTaken = s.treats || []; S.fishCaught = s.fish || 0; S.clock = typeof s.clock === 'number' ? s.clock % 2700 : 600; S.beakWas = s.beak || null; S.cutPending = s.cutQ || []; S.twigsTaken = s.twigs || []; S.read = s.read || {}; S.seen = s.seen || {}; S.inv = s.inv || {}; S.hearts = window.WFR_HEARTS ? WFR_HEARTS.clean(s.hearts) : null; /* 714 */ S.ani714 = s.ani714 && typeof s.ani714 === 'object' && s.ani714.xp && typeof s.ani714.xp === 'object' ? { xp: s.ani714.xp } : null; /* 714a: the days each animal paid its XP */ S.toolIn = s.toolIn || 0; S.played = typeof s.played === 'number' ? s.played : 0;   /* 631 */ S.given = typeof s.given === 'number' ? s.given : (s.built || 0) + (s.toolIn || 0); /* 581: every build and every tool in hand took a tool given */ S.grown = typeof s.grown === 'number' ? s.grown : 0; S.marks = Array.isArray(s.marks) ? s.marks : []; S.quests = s.quests && typeof s.quests === 'object' ? s.quests : null; S.people724 = s.people724 && typeof s.people724 === 'object' ? s.people724 : null; /* 720 + 724b */ S.village = s.village && typeof s.village === 'object' ? s.village : null; /* 641 §G + 646 */   /* 641 U1 */ S.world = s.world && typeof s.world === 'object' ? s.world : {}; S.choices = Array.isArray(s.choices) ? s.choices : [];   /* 703 ship 10 */ S.dawns = typeof s.dawns === 'number' ? s.dawns : 0; S.runes = typeof s.runes === 'number' ? s.runes : 0; S.huethers = typeof s.huethers === 'number' ? s.huethers : 0; S.runeRec = s.runeRec && typeof s.runeRec === 'object' ? s.runeRec : {};   /* 632 U4 */ S.songs = s.songs && typeof s.songs === 'object' ? s.songs : {};   /* 658: the songs she has opened */ S.songBest = s.songBest && typeof s.songBest === 'object' ? s.songBest : {};   /* 658 U2: her best per song and row */ S.orchard = s.orchard && typeof s.orchard === 'object' ? s.orchard : {};   /* 637: the dawn each fruit was picked */   /* 643 worlds */ S.sky = s.sky && typeof s.sky === 'object' ? { seen: !!s.sky.seen, ended: !!s.sky.ended, told: !!s.sky.told, where: s.sky.where === 'temple' ? 'temple' : 'home', ...(typeof s.sky.toldDay === 'number' ? { toldDay: s.sky.toldDay } : {}) } : null;   /* 627: toldDay kept across a reload */   /* 610: where = home | temple */   // 627: told = the evening's word was said
   if (s.chick && s.chick.stats) { S.chick = Object.assign(S.chick, s.chick);   // time away: a little hungrier, never harmed (floors at 10)
     const mins = Math.max(0, (Date.now() - (s.chick.at || Date.now())) / 60000); S.chick.food = Math.max(10, S.chick.food - mins / 3); S.chick.happy = Math.max(10, S.chick.happy - mins / 5); }
   if (s.kind && BIRDS[s.kind] && isOpen(BIRDS[s.kind])) kind = s.kind; } } catch (e) { /* a fresh start */ } }());
@@ -3045,7 +3075,7 @@ if (typeof S.clock !== 'number') S.clock = 600;   // a new game starts mid-morni
 for (const i of S.treatsTaken || []) if (houses[i]) { houses[i].treatTaken = true; if (houses[i].treat) houses[i].treat.visible = false; }   // a treat eaten stays eaten
 for (const n of OLDNESTS) if (S.seen && S.seen['nest:' + n.id]) { n.taken = true; n.treat.visible = false; }   // and a keepsake taken from an old nest (528)
 function save() { if (window.__wfrRestoring) return; try { const s_ = JSON.stringify({ savedAt: Date.now(), level: S.level, xp: S.xp, nestDone: S.nestDone, found: S.found, kind, storySeen: S.storySeen, tutDone: S.tutDone, built: S.built, lessons: S.lessons, nestTier: S.nestTier, mats: S.mats, eagleFound: S.eagleFound, treats: houses.filter((h) => h.treatTaken).map((h) => h.i), twigs: (() => { try { return twigs.map((t, i) => t.visible ? -1 : i).filter((i) => i >= 0); } catch (e) { return S.twigsTaken || []; } })(),   /* a save before the twigs exist must not lose the whole save */
-    fish: S.fishCaught || 0, clock: Math.round(S.clock || 0), played: Math.round(S.played || 0), /* 631 */ beak: S.fruit ? S.fruit.type.id : null, cutQ: (() => { try { return cutQ.slice(); } catch (e) { return S.cutPending || []; } })(), read: S.read, seen: S.seen, owlLv: S.owlLv, inv: S.inv, coins: S.coins || 0, hearts: hearts714Save(), ani714: S.ani714 || null, /* 714 */ toolIn: S.toolIn || 0, given: S.given || 0, grown: S.grown || 0, marks: S.marks || [], village: S.village || null, /* 641 U1 */ world: S.world || {}, dawns: S.dawns || 0, /* 643 worlds */ choices: Array.isArray(S.choices) ? S.choices : [], /* 703 ship 10: choices remembered (713) */ quests: S.quests || null, people724: S.people724 || null, /* 720 + 724b */ sky: S.sky || { seen: false, ended: false }, runes: S.runes || 0, huethers: S.huethers || 0, runeRec: S.runeRec || {}, /* 632 U4 */ orchard: S.orchard || {}, /* 637 */ songs: S.songs || {}, /* 658 */ songBest: S.songBest || {}, /* 658 U2 */ chick: Object.assign({}, S.chick, { at: Date.now() }), chicks: S.chicks || {} /* 728a */ }); const o_ = net721Own(s_); window.__wfrLastSave = o_; if (!window.__wfrWxTest) { localStorage.setItem('wfr.save', o_); localStorage.setItem(fileKey(ACTIVE), o_); } } catch (e) { /* private mode: it still plays */ } }   // 665 P1: a test link's visit writes nothing
+    ff: S.ff, /* 757 */ fish: S.fishCaught || 0, clock: Math.round(S.clock || 0), played: Math.round(S.played || 0), /* 631 */ beak: S.fruit ? S.fruit.type.id : null, cutQ: (() => { try { return cutQ.slice(); } catch (e) { return S.cutPending || []; } })(), read: S.read, seen: S.seen, owlLv: S.owlLv, inv: S.inv, coins: S.coins || 0, hearts: hearts714Save(), ani714: S.ani714 || null, /* 714 */ toolIn: S.toolIn || 0, given: S.given || 0, grown: S.grown || 0, marks: S.marks || [], village: S.village || null, /* 641 U1 */ world: S.world || {}, dawns: S.dawns || 0, /* 643 worlds */ choices: Array.isArray(S.choices) ? S.choices : [], /* 703 ship 10: choices remembered (713) */ quests: S.quests || null, people724: S.people724 || null, /* 720 + 724b */ sky: S.sky || { seen: false, ended: false }, runes: S.runes || 0, huethers: S.huethers || 0, runeRec: S.runeRec || {}, /* 632 U4 */ orchard: S.orchard || {}, /* 637 */ songs: S.songs || {}, /* 658 */ songBest: S.songBest || {}, /* 658 U2 */ chick: Object.assign({}, S.chick, { at: Date.now() }), chicks: S.chicks || {} /* 728a */ }); const o_ = net721Own(s_); window.__wfrLastSave = o_; if (!window.__wfrWxTest) { localStorage.setItem('wfr.save', o_); localStorage.setItem(fileKey(ACTIVE), o_); } } catch (e) { /* private mode: it still plays */ } }   // 665 P1: a test link's visit writes nothing
 /* 665 P2 (Jiraiya + Minato, Oct 15): a SAVE WHEN SHE LEAVES THE APP. Hidden or pagehide calls save() itself, so its guards hold (662's restore,
    P1's test link). It stands down first when the save would land in the wrong place: another file is being made active (a reload will load
    it), this file was just erased (New game), or she has not played this visit (the title only; a load that fell back to a fresh start). */
@@ -4710,8 +4740,8 @@ function map705El() {
   return m;
 }
 function wmap712Hook(m) {   // 712e (Marth, Oct 28: "Not just Jamaica, the whole world."): the chart's World tab; world712-mapview.js draws it, the island chart is untouched
-  let data = 'world712-map.js'; { const ORCH_SRC = 'world712-map.js?v=aa7982747499'; data = ORCH_SRC; }   // named as build-site.js finds a lazy file, so her app carries it offline
-  { const ORCH_SRC = 'world712-mapview.js?v=aa7982747499'; const s = document.createElement('script'); s.src = ORCH_SRC; s.async = true; s.onload = () => { if (window.WMAP712) { WMAP712.attach(m, data, () => { if (MAP705.open) { map705Size(); map705Draw(); } }); map735Hook(); } }; document.head.appendChild(s); }
+  let data = 'world712-map.js'; { const ORCH_SRC = 'world712-map.js?v=a2dcb4e673d5'; data = ORCH_SRC; }   // named as build-site.js finds a lazy file, so her app carries it offline
+  { const ORCH_SRC = 'world712-mapview.js?v=a2dcb4e673d5'; const s = document.createElement('script'); s.src = ORCH_SRC; s.async = true; s.onload = () => { if (window.WMAP712) { WMAP712.attach(m, data, () => { if (MAP705.open) { map705Size(); map705Draw(); } }); map735Hook(); } }; document.head.appendChild(s); }
 }
 /* 735 THE TRUE MAP (Marth, Nov 5 2026, verbatim: "in the vid u can see im nowhere near the village but the marker / the map says i am"). Trunks; tools/wiring/wire-735-map.js; guard tests/map735.js.
    One place says where she is: map735You. The chart's land is painted straight onto the canvas on show from pixels held in memory (no hidden canvas to come back empty). Ruby is HER and nothing else:
@@ -7140,7 +7170,7 @@ function bgMusicTick(dt) {
    after the title's flight (606), and unpacked a few ms per frame; until they are in, a cue is skipped silently and the game's
    music plays as before. The game's music always wins: if anything starts WFR_MUSIC while the orchestra plays (the pause, the
    menu, a cutscene), the orchestra bows out. */
-const ORCH_SRC = 'orch-samples.js?v=aa7982747499';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
+const ORCH_SRC = 'orch-samples.js?v=a2dcb4e673d5';   // build-site.js copies, stamps and precaches this name (it is not a <script src> tag)
 const orch = { on: false, asked: false, ready: false, failed: false, queue: null, bufs: {}, n: 0, bad: 0, pending: 0, ms: 0, cue: null, sawTalk: false, prev: null, muted: null, skipped: 0, err: '' };
 window.WFR_ORCH_STATE = orch;   // the benches read it: the count, the timing, the cue
 const orchHolds = () => !!(window.WFR_ORCH && WFR_ORCH.playing);
@@ -8476,7 +8506,7 @@ try { if (localStorage.getItem('wfr.debug') === '1') window.__wfr = { eagle: () 
   world: () => { const c = wcave(), m = owlM(); return { on: c.on, got: c.got, picked: c.picked, day: c.day, done: c.done, dawns: S.dawns || 0, caps: worldCaps().map((s) => [s.visible, +s.position.x.toFixed(2), +s.position.y.toFixed(2), +s.position.z.toFixed(2)]), caveAt: CAVE ? [CAVE.x, CAVE.y, CAVE.z] : null, caveIndex: CAVE ? houses.indexOf(CAVE) : -1, inside: S.inside === CAVE, glowGap: (() => { const gm = CAVE && CAVE.parts && CAVE.parts.near && CAVE.parts.near.getObjectByName('cave:glow'); if (!gm) return null; const P = gm.geometry.attributes.position, v = new THREE.Vector3(); return worldCaps().map((s) => { let best = 1e9; for (let i = 0; i < P.count; i += 2) { v.fromBufferAttribute(P, i); gm.localToWorld(v); const d = Math.hypot(v.x - s.position.x, v.z - s.position.z); if (d < best) best = d; } return +best.toFixed(2); }); })(), owlAt: m ? m.g.position.toArray() : null, owlShown: m ? m.g.visible : null, me: S.pos.toArray(), pill: $('quest').textContent, talking: !!S.talking, who: $('talkWho').textContent, line: $('talkText').textContent, level: S.level, xp: S.xp, hemi: HEMI.intensity, fogFar: FOG_AIR.far, evening: isEvening(), clock: S.clock, toast: $('toast').hidden ? '' : $('toast').textContent, what: storyLines(), arrow: (goalTarget() || { toArray: () => null }).toArray() }; },   /* 643 worlds */
   worldSet: (o) => { Object.assign(wcave(), o); save(); hud(); }, faceTo: (x, z) => { S.yaw = Math.atan2(x - S.pos.x, z - S.pos.z); S.camYaw = S.yaw; }, free: () => { if (!S.inside) return true; const L = toLocal(S.inside, S.pos.x, S.pos.z); return freeIn(S.inside, roomOf(S.inside), L.x, L.z); }, perchOwl: () => { const m = owlM(); if (!m) return false; S.mode = 'walk'; S.speed = 0; S.pos.set(m.at.x + 0.4, m.at.y + standOf(kind), m.at.z + 0.4); if (bird) bird.position.copy(S.pos); S.inside = null; S.landTo = null; hud(); return true; },   /* on his tree top, inside its radius (groundAt holds a walker there) */ standAt: (x, y, z) => { S.mode = 'walk'; S.speed = 0; S.pos.set(x, y, z); if (bird) bird.position.copy(S.pos); hud(); },
   light: () => { const c = wlight(), m = falconM(), R = lightRings(); return { on: c.on, got: c.got, best: c.best, whole: c.whole, done: c.done, n: LT.n, t: +LT.t.toFixed(2), lightY, axis: [LIGHT.x, LIGHT.z], rings: R.map((r) => [r.visible, +r.position.x.toFixed(2), +r.position.y.toFixed(2), +r.position.z.toFixed(2), r.material === LT.mats[0]]), falconAt: m ? m.g.position.toArray() : null, falconShown: m ? m.g.visible : null, me: S.pos.toArray(), mode: S.mode, speed: S.speed, diveTop: MOVES[kind].dive * diveK(), stand: standOf(kind), pill: $('quest').textContent, talking: !!S.talking, who: $('talkWho').textContent, line: $('talkText').textContent, level: S.level, xp: S.xp, toast: $('toast').hidden ? '' : $('toast').textContent, what: storyLines(), arrow: (goalTarget() || { toArray: () => null }).toArray() }; },   /* 643 world two */
-  lightSet: (o) => { Object.assign(wlight(), o); save(); hud(); }, stick: (sx, sy) => { input.sx = sx; input.sy = sy; },   /* 643 world two: a guard holds a dive through the stick the game reads */
+  ff757: () => ff757Peek(), /* 757 */ lightSet: (o) => { Object.assign(wlight(), o); save(); hud(); }, stick: (sx, sy) => { input.sx = sx; input.sy = sy; },   /* 643 world two: a guard holds a dive through the stick the game reads */
   lightFly: (x, y, z, pitch, yaw) => { S.mode = 'fly'; S.pos.set(x, y, z); S.pitch = pitch; S.speed = 14; S.yaw = yaw == null ? Math.atan2(-x, -z) : yaw; S.camYaw = S.yaw; if (bird) bird.position.copy(S.pos); LT.prev.copy(S.pos); LT.wasFly = true; },   /* 643 world two: fly() with the trail's segment restarted here (a teleport is not a flight: its segment must not pass a ring) */
   nv: () => ({ on: NV.on, t: NV.t, dur: NV.dur, cd: NV.cd, starts: NV.starts, L0: typeof S.owlLv === 'number' ? S.owlLv : null, durNow: nvDur(), level: S.level, xp: S.xp, need: need(S.level), live: NV.list.map((e) => [e.m.opacity, e.op, e.m.color.getHex(), e.col.getHex()]), count: nvList().length, shells: NV.shells.length, shellsVis: NV.shells.filter((s) => s.visible).length, btn: !$('nightBtn').hidden, op: $('nightBtn').style.opacity, outline: NV_OUTLINE.color.getHex(), objs: (() => { let n = 0; scene.traverse(() => { n++; }); return n; })() }),
   nvFoe: () => { const b = buildBird('cardinal', true); b.position.copy(S.pos).add(new THREE.Vector3(3, 0.5, 3)); scene.add(b); return nvFoe(b); }, nv3: () => { const u = NV_DIM.material.uniforms, b = NV3.btn, r = b.getBoundingClientRect(); return { dimVis: NV_DIM.visible, dimA: +u.uA.value.toFixed(4), dimC: u.uC.value.getHex(), dark: NV_DARK.getHex(), flash: NV_FLASH.getHex(), dimOp: NV_DIM_OP, fx: NV3.fx.classList.contains('on'), st: NV3.st, cls: b.className, nvp: b.style.getPropertyValue('--nvp'), num: NV3.num.textContent, nos: NV3.nos, gm: [NV_GM.color.getHex(), +NV_GM.opacity.toFixed(4)], gs: [NV_GS.color.getHex(), +NV_GS.opacity.toFixed(4)], lifted: NV3.lifted.map(([s, ro]) => [s.renderOrder, ro]), shellRO: NV.shells.map((s) => s.renderOrder), outlineT: NV_OUTLINE.transparent, rect: [r.left, r.top, r.width, r.height, innerWidth, innerHeight], t: NV.t, on: NV.on, cd: NV.cd, played: S.played || 0, tier: nvTier(S.level), cdSet: NV3.cdSet, da: NV3.da, dk: NV3.dk.getHex(), gk: NV3.gk, ops: NV_MATS.map((m) => +m.opacity.toFixed(4)), cam: camera.getWorldPosition(new THREE.Vector3()).toArray(), me: S.pos.toArray(), owl: NV3.owl, kind, can: nvBirdCan(), jay: nvJayOpen(), owlTier: nvTier(NV_OWL_LV), starts: NV.starts, btnShown: !b.hidden }; },
@@ -11591,7 +11621,7 @@ requestAnimationFrame(frame);
 })();
 </script>
 <script>
-/* Rouge's own app (build aa7982747499): work offline after the first visit, and ask the phone to keep her save. */
+/* Rouge's own app (build a2dcb4e673d5): work offline after the first visit, and ask the phone to keep her save. */
 if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
 if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
 </script>
