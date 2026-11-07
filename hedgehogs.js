@@ -422,10 +422,10 @@
     }
     const v1 = new THREE.Vector3(), fwd = new THREE.Vector3(), right = new THREE.Vector3(), QI = new THREE.Quaternion(), SC = new THREE.Vector3();
     const night = () => S.clock >= 1950 || S.clock < 120;   // dusk to dawn: the hedgehogs' busy time
-    function zoomLook(dt) {
-      const want = Z.t > 0 ? 1 : 0; Z.k += (want - Z.k) * Math.min(1, dt * 6); if (!want && Z.k < 0.01) Z.k = 0;
+    function zoomLook(dt, air) {   // 755: air is given only by travel(): true while Flutter bursts; out there the FOV is the travel camera's
+      const want = Z.t > 0 || air ? 1 : 0; Z.k += (want - Z.k) * Math.min(1, dt * 6); if (!want && Z.k < 0.01) Z.k = 0;
       const cam = api.camera, fov = ZOOM.fov0 + (ZOOM.fov1 - ZOOM.fov0) * Z.k;
-      if (cam.fov !== fov) { cam.fov = Z.k === 0 ? ZOOM.fov0 : fov; cam.updateProjectionMatrix(); }   // exactly 62 again after
+      if (air === undefined && cam.fov !== fov) { cam.fov = Z.k === 0 ? ZOOM.fov0 : fov; cam.updateProjectionMatrix(); }   // exactly 62 again after
       const rig = api.rig(), legs = rig && rig.legs, gh = ghosts(rig);
       if (Z.t > 0 && legs && S.mode === 'walk') {   // ~60 rad/s: too fast to follow, with a faint pair half a phase behind (on the ground)
         const ph = S.t * ZOOM.legRate;
@@ -436,10 +436,11 @@
       streaks.visible = Z.k > 0.02 && !!bird;
       if (streaks.visible) {
         fwd.set(Math.sin(S.yaw), 0, Math.cos(S.yaw)); right.set(fwd.z, 0, -fwd.x);
-        streakLane.forEach((l, i) => { l.z = (l.z + dt * 9) % 5; const b = S.pos;
-          v1.copy(b).addScaledVector(right, l.x).addScaledVector(fwd, -0.6 - l.z); v1.y = b.y - 0.3 + l.y;
+        const q = air === undefined ? 1 : 3;   // 755: over open sea they are all the speed there is to see: three times the spread, length and rush (DRAFT)
+        streakLane.forEach((l, i) => { l.z = (l.z + dt * 9 * q) % 5; const b = S.pos;
+          v1.copy(b).addScaledVector(right, l.x * q).addScaledVector(fwd, -0.6 - l.z * q); v1.y = b.y - 0.3 + l.y * q;
           streakPos[i * 6] = v1.x; streakPos[i * 6 + 1] = v1.y; streakPos[i * 6 + 2] = v1.z;
-          v1.addScaledVector(fwd, -l.len); streakPos[i * 6 + 3] = v1.x; streakPos[i * 6 + 4] = v1.y; streakPos[i * 6 + 5] = v1.z; });
+          v1.addScaledVector(fwd, -l.len * q); streakPos[i * 6 + 3] = v1.x; streakPos[i * 6 + 4] = v1.y; streakPos[i * 6 + 5] = v1.z; });
         streakGeo.attributes.position.needsUpdate = true; streaks.material.opacity = 0.55 * Z.k;
       }
       Z.dustT -= dt;
@@ -517,11 +518,12 @@
 
     function travel(dt) {   // 737: past the gate pre() and tick() do not run (they are the island's), so a press out there never ended and the button never rested (sea737 P4: it stays at 1): the timer and the button only
       if (Z.t > 0) { Z.t -= dt; if (Z.t <= 0 || !zoomable()) endZoom(); } else if (Z.cd > 0) Z.cd = Math.max(0, Z.cd - dt);
+      zoomLook(dt, S.flutT > 0);   // 755: the streaks and their ease, for Zoom and for Flutter
       const zOn = !!S.lessons.zoom && S.mode === 'fly' && zoomable() && !(ui && ui.hidden);
       if (zoomBtn.hidden === zOn) zoomBtn.hidden = !zOn;
       if (zOn) { const o = (Z.t > 0 && !fast()) || Z.cd > 0 ? '0.5' : '1'; if (zoomBtn.style.opacity !== o) zoomBtn.style.opacity = o; }
     }
-    const API = { poke748: (reach, r, fresh) => { let n = 0; if (!site.visible) return 0; for (const h of fam) { const p = h.g.position; if (reach(p.x, p.y + 0.2, p.z, r + 0.25) && fresh(h)) { h.curlTo = 1; h.curlT = 0; n++; } } return n; }, air: () => (Z.t > 0 && S.mode === 'fly' ? 1 : 0), pre, tick, travel, deliver, openBook, state: () => ({ met: !!S.seen.hogsMet, returned: !!S.seen.hogsBook, bookSeen: !!S.seen.bookSeen, zoom: !!S.lessons.zoom }) };
+    const API = { poke748: (reach, r, fresh) => { let n = 0; if (!site.visible) return 0; for (const h of fam) { const p = h.g.position; if (reach(p.x, p.y + 0.2, p.z, r + 0.25) && fresh(h)) { h.curlTo = 1; h.curlT = 0; n++; } } return n; }, air: () => (Z.t > 0 && S.mode === 'fly' ? 1 : 0), streaks, pre, tick, travel, deliver, openBook, state: () => ({ met: !!S.seen.hogsMet, returned: !!S.seen.hogsBook, bookSeen: !!S.seen.bookSeen, zoom: !!S.lessons.zoom }) };
     if (debugOn) root.WFR_HOGS.dbg = {
       state: () => ({ met: !!S.seen.hogsMet, returned: !!S.seen.hogsBook, bookSeen: !!S.seen.bookSeen, lesson: !!S.lessons.zoom, mode: S.mode, talking: !!S.talking, talkingHogs,
         zoom: { t: Z.t, cd: Z.cd, k: Z.k, hold: Z.hold, by: Z.by, starts: Z.starts, fov: api.camera.fov }, bookOpen, story: !story.hidden, at: api.panels.at(), count: api.panels.count(),
