@@ -304,7 +304,7 @@ window.WMAP712 = (function () {
        THE CLOSE LOOK: past k 200, OpenFreeMap's own water, roads and place names, each vertex through P(), the relief and sea laid under them, credited only while drawn. ---------- */
   var WITNESS = 'rgb(228,212,170)';   // 753a: the base's corner, a shade off paper: paperLike() refuses paper, her eye cannot tell them apart
   var HEAL = { need: true, checks: 0, lost: 0, rebuilds: 0, fails: 0, direct: false, why: '' };
-  var YOU = null, WORDS = null;   // the page's doors: a function returning { lat, lon, bearing, away }, and (735b) her place in plain words
+  var YOU = null, WORDS = null; var MK = null;   // the page's doors: a function returning { lat, lon, bearing, away }, and (735b) her place in plain words
   function hasPixels(c) { try { var p = c.__p || [c.width >> 1, c.height >> 1]; return c.getContext('2d').getImageData(p[0], p[1], 1, 1).data[3] > 0; } catch (e) { return false; } }
   function paperLike(d) { return Math.abs(d[0] - 241) < 7 && Math.abs(d[1] - 226) < 7 && Math.abs(d[2] - 184) < 7; }
   function witness(g, B, bs) {   // true when the kept pictures are really there: each source read, then the base's own witness pixel carried onto this canvas and read back
@@ -533,7 +533,7 @@ window.WMAP712 = (function () {
       else { g.beginPath(); for (var s2 = 0; s2 < 10; s2++) { var r2 = s2 % 2 ? 2.6 : 6, a2 = s2 * Math.PI / 5; g.lineTo(Math.sin(a2) * r2, -Math.cos(a2) * r2); } g.closePath(); g.fillStyle = '#f2b134'; g.fill(); g.lineWidth = 1.1; g.strokeStyle = INK; g.stroke(); }   // a place she knows: a gold star
       g.restore(); });
     if (S.sel) { var ss = toScreen(S.sel.lat, S.sel.lon); g.beginPath(); g.arc(ss.x, ss.y, 9, 0, 6.2832); g.lineWidth = 2; g.strokeStyle = '#c0821e'; g.stroke(); g.beginPath(); g.arc(ss.x, ss.y, 11, 0, 6.2832); g.lineWidth = 1; g.strokeStyle = 'rgba(255,242,194,.9)'; g.stroke(); }
-    if (!CLASSIC) drawYou(g); tileCredit();   // 735: her, over every mark
+    if (MK) MK.draw(g, toScreen, S.cw, S.ch); if (!CLASSIC) drawYou(g); tileCredit();   // 735: her, over every mark
     g.strokeStyle = INK; g.lineWidth = 1.2; g.strokeRect(0.6, 0.6, S.cw - 1.2, S.ch - 1.2);
     if (S.proj === 'pole' && PP.on && !PP.cv) drawWaiting(g, PP.progress);   // 76 review: the paper is being decoded and laid: the soft card, never a frozen frame
     S.marks = marks; S.draws++; S.ms = Math.round((performance.now() - t0) * 10) / 10;
@@ -606,9 +606,10 @@ window.WMAP712 = (function () {
   function wireGestures(cv) {
     var ptr = new Map(), G = null, lastTap = null;
     var rel = function (e) { var b = cv.getBoundingClientRect(); return { x: e.clientX - b.left, y: e.clientY - b.top }; };
+    var hold = function (g0) { setTimeout(function () { if (G !== g0 || g0.mode !== 'tap' || ptr.size !== 1 || !S.built[S.proj]) return; var ll = fromScreen(g0.x0, g0.y0); if (!ll) return; g0.mode = 'held'; MK.press(g0.x0, g0.y0, ll); }, MK.hold); };   // 743: a held thumb is a fourth gesture; it ends without a pan or a pick
     var startPinch = function () { var a = Array.from(ptr.values()), m = { x: (a[0].x + a[1].x) / 2, y: (a[0].y + a[1].y) / 2 }; G = { mode: 'pinch', d0: Math.max(10, Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y)), k0: S.k, X: S.cX + (m.x - S.cw / 2) / S.k, Y: S.cY + (m.y - S.ch / 2) / S.k }; S.gestures++; };
     cv.addEventListener('pointerdown', function (e) { e.preventDefault(); try { cv.setPointerCapture(e.pointerId); } catch (_) {} var q = rel(e); ptr.set(e.pointerId, q);
-      if (ptr.size === 1) G = { mode: 'tap', x0: q.x, y0: q.y, t0: performance.now(), cX: S.cX, cY: S.cY }; else if (ptr.size === 2) startPinch(); });
+      if (MK) MK.down(); if (ptr.size === 1) { G = { mode: 'tap', x0: q.x, y0: q.y, t0: performance.now(), cX: S.cX, cY: S.cY }; if (MK && MK.can()) hold(G); } else if (ptr.size === 2) startPinch(); });
     cv.addEventListener('pointermove', function (e) { if (!ptr.has(e.pointerId) || !G) return; e.preventDefault(); var q = rel(e); ptr.set(e.pointerId, q);
       if (G.mode === 'tap' && Math.hypot(q.x - G.x0, q.y - G.y0) > 8) { G.mode = 'pan'; S.gestures++; }
       if (G.mode === 'pan') { S.cX = G.cX - (q.x - G.x0) / S.k; S.cY = G.cY - (q.y - G.y0) / S.k; clampView(); want(); }
@@ -687,5 +688,5 @@ window.WMAP712 = (function () {
       paper: { on: PP.on, loaded: !!PP.cv, failed: PP.failed, fails: PP.fails, tries: PP.tries, loading: PP.loading, draws: PP.draws, waits: PP.waits, path: PP.path, decodeMs: PP.decodeMs, strips: PP.strips, stripMs: PP.stripMs, holdsFull: !!PP.img, released: PP.released, cacheSide: PP.cv ? PP.cv.width : 0, cx: PAPER725.cx, cy: PAPER725.cy, r: PAPER725.r, s: PAPER725.s, a: PAPER725.a },
       map735: { heal: { checks: HEAL.checks, lost: HEAL.lost, rebuilds: HEAL.rebuilds, direct: HEAL.direct, why: HEAL.why }, you: S.youAt || null, fog: { n: FOG.n, all: FOG.all, v: FOG.v, pts: FOG.pts.length }, tiles: { fetched: TL.fetched, fails: TL.fails, held: TL.map.size, pending: TL.q.length + TL.busy, inPicture: S.detail ? S.detail.tiles : 0, fresh: !!(S.detail && S.detail.fv === FOG.v && !S.detail.stale && sameV(S.detail.V, curV())) }, kMax: K_MAX },
       ready: Object.keys(S.built), building: S.job ? S.job.proj : (S.rjob && S.rjob.kind === 'base' ? S.rjob.proj : null), rendering: !!(S.rjob || S.dt), base: Object.keys(S.base), renders: S.renders.slice(), progress: S.progress, waits: S.waits, jobs: S.jobs.slice(), error: S.error, counts: D ? { land: D.land.length, coast: D.coast.length, lakes: D.lakes.length, glaciers: D.glaciers.length, rivers: D.rivers.length, cities: D.cities.length, regions: D.regions.length } : null }; },
-    project: toScreen, unproject: fromScreen };
+    project: toScreen, unproject: fromScreen, marks: function (o) { MK = o; want(); }, redraw: want, tapButton: tapButton };
 })();
