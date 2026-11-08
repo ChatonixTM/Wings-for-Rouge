@@ -21,7 +21,7 @@ window.WFR_TRAVEL712 = (function () {
   'use strict';
   var W = window.WFR_WORLD, PX = 256, WORLD = 2 * Math.PI * 6378137;
   /* Every number DRAFT (plan section 3: the iPhone 12 budget, unmeasured on the phone). */
-  var C = { ON: 20000, OFF: 18000, RECENTRE: 10000, TOP: 1800, TOP2: 20000, KNOTS: [[1800, 60], [6000, 600], [20000, 6000]], XP_V: 30,
+  var C = { ON: 2000, OFF: 1800, RECENTRE: 10000, TOP: 1800, TOP2: 20000, KNOTS: [[1800, 60], [6000, 600], [20000, 6000]], XP_V: 30,
     DRAWN: 64, KEPT: 96, LOADS: 4, BUILDS: 1, GRID: 32, SPLIT: 1.25, VDEPTH: 3, FLOOR: 30, LAYER: 7, REFR: !W ? 7432843 : isFinite(W.curveR()) ? W.curveR() : 1e30, FAR_MIN: 60000, FAR_MAX: 800000, FAR_PAD: 150000,
     FLAT: 0.25, SEA_Z: 8, SKIRT_K: 4, FETCH_MS: 12000, FAR_NEAR: 8000, FAR_P: 0.5, DRAWN_DEEP: 44 };   /* W-TERRAIN (Nov 4): the LOD's error is the sheet's spacing scaled by the ground's own relief (never below FLAT of it); an all-sea tile stops at SEA_Z; skirts reach SKIRT_K coarser spacings of the edge's slope */
 
