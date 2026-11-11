@@ -61,6 +61,8 @@ window.WFR_TREES = (function () {
     let a = seed | 0;
     return function () { a = a + 0x6D2B79F5 | 0; let t = Math.imul(a ^ a >>> 15, 1 | a); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; };
   }
+  const SOFT761 = (function () { try { return !(window.WFR_DOOR && window.WFR_DOOR.classic) && localStorage.getItem('wfr.bar') !== 'off'; } catch (e) { return !(window.WFR_DOOR && window.WFR_DOOR.classic); } })();   // 761b THE BAR: rounded crowns (Classic is frozen)
+  let CROWN761 = null;   // the crown being built: its lumps' normals lean out from its middle
   const clamp01 = (v) => Math.max(0, Math.min(1, v));
   const sstep = (a, b, x) => { const t = clamp01((x - a) / (b - a)); return t * t * (3 - 2 * t); };
 
@@ -151,7 +153,7 @@ window.WFR_TREES = (function () {
     return function (x, y, z) {
       const t = clamp01((y - y0) / (y1 - y0));
       const out = clamp01(Math.hypot(x - (cx || 0), z - (cz || 0)) / (rIn || 2));
-      let s = 0.4 + 0.64 * Math.pow(t, 0.8);          // dark beneath, bright crown
+      let s = (SOFT761 ? 0.66 : 0.4) + (SOFT761 ? 0.46 : 0.64) * Math.pow(t, 0.8);          // dark beneath, bright crown
       s *= 0.7 + 0.3 * out;                            // dark inside, lit at the rim
       s *= 0.93 + 0.14 * hash(x * 2.3, z * 2.3 + y * 1.7, 578);   // 578: a soft dapple of leaf clusters (same point, same value: no seams)
       const warm = 0.11 * sstep(0.45, 1, t) * (0.6 + 0.4 * out), cool = 0.09 * (1 - sstep(0, 0.5, t));   // gold where the sun lands, blue-green in the shade
@@ -192,6 +194,12 @@ window.WFR_TREES = (function () {
       P.setXYZ(i, cx + x * k * (sq ? sq[0] : 1), cy + y * k * flat * (sq ? sq[1] : 1), cz + z * k * (sq ? sq[2] : 1));
       U.setXY(i, U.getX(i) * 2, U.getY(i) * 2);
     }
+    if (SOFT761) {   // 761b: the same triangles, rounded light: each normal leans out from its lump and from the crown (the old flat faces read as cut paper), each lump lit on top and dark at its seam with the next
+      const Nn = geo.attributes.normal, K0 = CROWN761 || [cx, cy, cz];
+      for (let i = 0; i < P.count; i++) { const px = P.getX(i), py = P.getY(i), pz = P.getZ(i), lx = px - cx, ly = py - cy, lz = pz - cz, ll = Math.hypot(lx, ly, lz) || 1, gx = px - K0[0], gy = py - K0[1], gz = pz - K0[2], gl = Math.hypot(gx, gy, gz) || 1, nx = lx / ll * 0.6 + gx / gl * 0.4, ny = ly / ll * 0.6 + gy / gl * 0.4 + 0.3, nz = lz / ll * 0.6 + gz / gl * 0.4, nl = Math.hypot(nx, ny, nz) || 1; Nn.setXYZ(i, nx / nl, ny / nl, nz / nl); }
+      const lit = (x, y, z, f) => { const c = shade(x, y, z, f), k = 0.74 + 0.48 * sstep(-0.75 * r, 0.7 * r, y - cy); return [c[0] * k, c[1] * k, c[2] * k]; };
+      B.add(geo, null, lit, false); geo.dispose(); return;
+    }
     B.add(geo, null, shade, true); geo.dispose();
   }
 
@@ -220,7 +228,7 @@ window.WFR_TREES = (function () {
     SPECIES.krumm = { canopy: B.geometry(), top: 4.8, r: 0.8 };
     /* OAK: a broad crown of lumpy clumps at different heights (never one flat slab), top ≈ 7.0 */
     B = new Builder(T);
-    { const sh = canopyShade(3.3, 7.1, 0, 0, 2.6), R = rng(4401);
+    { const sh = canopyShade(3.3, 7.1, 0, 0, 2.6), R = rng(4401); CROWN761 = [0, 4.9, 0];
       clump(T, B, 0, 5.35, 0, 1.75, 1, 11, sh);
       const ring = [[0.0, 1.55, 4.85, 1.3, 1], [1.4, 1.6, 4.4, 1.1, 0], [2.6, 1.5, 5.15, 1.25, 1], [3.9, 1.65, 4.55, 1.15, 0], [5.1, 1.5, 5.25, 1.1, 0]];
       ring.forEach((c, k) => clump(T, B, Math.cos(c[0]) * c[1], c[2] + R() * 0.25, Math.sin(c[0]) * c[1], c[3] * (0.95 + R() * 0.12), c[4], 20 + k, sh));
@@ -228,12 +236,12 @@ window.WFR_TREES = (function () {
     SPECIES.oak = { canopy: B.geometry(), top: 7.0, r: 0.95 };
     /* BIRCH: an airy, taller-than-wide crown — small overlapping clumps wound up the stem, hanging a little */
     B = new Builder(T);
-    { const sh = canopyShade(3.0, 7.4, 0, 0, 1.3), R = rng(5501);
+    { const sh = canopyShade(3.0, 7.4, 0, 0, 1.3), R = rng(5501); CROWN761 = [0, 5.0, 0];
       for (let k = 0; k < 9; k++) {
         const f = k / 8, a = k * 2.4, rr = 0.55 * Math.sin(Math.PI * (0.15 + f * 0.8)) + 0.12;
         clump(T, B, Math.cos(a) * rr, 3.7 + f * 2.85, Math.sin(a) * rr, (0.62 + 0.22 * Math.sin(Math.PI * (0.1 + f * 0.85))) * (0.92 + R() * 0.16), k === 2 || k === 6 ? 1 : 0, 60 + k, sh, [1, 1.18, 1]);
       } }
-    SPECIES.birch = { canopy: B.geometry(), top: 7.3, r: 0.7 };
+    CROWN761 = null; SPECIES.birch = { canopy: B.geometry(), top: 7.3, r: 0.7 };
 
     /* WOOD (one shared bark material; instance colour gives brown / white / silver) */
     B = new Builder(T); trunk(T, B, 6.4, 0.42, 0.08, { seg: 7, hseg: 4, shade: woodShade(6.4), lobes: true });
@@ -362,6 +370,7 @@ window.WFR_TREES = (function () {
   /* ═════════ materials: MeshStandard, vertex colours × instance colours, wind on the leaves ═════════ */
   function swayable(mat, amp, flut) {
     mat.onBeforeCompile = function (shader) {
+      if (SOFT761) shader.fragmentShader = shader.fragmentShader.replace('#include <lights_fragment_end>', '#include <lights_fragment_end>\n  reflectedLight.indirectDiffuse += diffuseColor.rgb * lightProbe[ 0 ] * vec3( 0.26, 0.36, 0.24 );');   // 761b
       shader.uniforms.uWindT = wind; shader.uniforms.uWindA = { value: amp }; shader.uniforms.uFlut = { value: flut || 0 }; shader.uniforms.uSunXZ = sunXZ;
       shader.vertexShader = 'uniform float uWindT;\nuniform float uWindA;\nuniform float uFlut;\nuniform vec2 uSunXZ;\n' + shader.vertexShader.replace('#include <begin_vertex>',
         '#include <begin_vertex>\n' +
@@ -385,6 +394,7 @@ window.WFR_TREES = (function () {
     const bark = texFor(T, 'bark', renderer), barkBump = bark && window.WFR_TEX ? (function () { try { return WFR_TEX.get((WFR_TEX.names.indexOf('barkTree') >= 0 ? 'barkTree' : 'bark') + 'Bump', renderer); } catch (e) { return null; } }()) : null;
     const wood = new T.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.95, metalness: 0, map: bark || null });
     if (barkBump) { wood.bumpMap = barkBump; wood.bumpScale = 0.04; }
+    if (SOFT761) wood.onBeforeCompile = function (shader) { shader.fragmentShader = shader.fragmentShader.replace('#include <lights_fragment_end>', '#include <lights_fragment_end>\n  reflectedLight.indirectDiffuse += diffuseColor.rgb * lightProbe[ 0 ] * vec3( 0.34, 0.31, 0.27 );'); };   // 761b
     const leaf = swayable(new T.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.9, metalness: 0, map: texFor(T, 'leaf', renderer) }), 0.014 * amp, 0.012 * amp);
     const needle = swayable(new T.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.92, metalness: 0, map: texFor(T, 'needle', renderer) }), 0.009 * amp, 0.005 * amp);
     const fern = swayable(new T.MeshStandardMaterial({ color: 0xffffff, vertexColors: true, roughness: 0.85, metalness: 0, side: T.DoubleSide, map: texFor(T, 'needle', renderer) }), 0.05 * amp, 0.01 * amp);
@@ -405,6 +415,7 @@ window.WFR_TREES = (function () {
     bark: { pine: 0x7a5638, oak: 0x6f4c32, birch: 0xffffff, snag: 0xa79e92, krumm: 0x6a5442, stump: 0x8a6646 },
   };
 
+  if (SOFT761) ['pine', 'fir', 'krumm'].forEach((k) => { PAL[k] = PAL[k].map((h) => { const f = (s) => Math.min(255, Math.round(((h >> s) & 255) * 1.6)); return (f(16) << 16) | (f(8) << 8) | f(0); }); });   // 761b
   /* ═════════ the ecology: which tree grows where ═════════ */
   function chooseKind(sp, i, o) {
     const g = sp.y + 0.2, r = hash(sp.x, sp.z, 1), dl = Math.hypot(sp.x - o.lake.x, sp.z - o.lake.z), dp = Math.hypot((sp.x - o.peaks.x) * 0.8, sp.z - o.peaks.z);

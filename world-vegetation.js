@@ -215,7 +215,7 @@ window.WFR_VEG = (function () {
     var res = WFR_TREES.plant(THREE, specs, { renderer: renderer, kindOf: function (sp, i) { return KINDS[i]; }, understory: false, shadows: false, wind: 0, fruitEvery: 0 });
     var G = {}; res.meshes.forEach(function (m) { G[m.name.replace('trees:', '')] = m.geometry; });   // the shared species geometry (never disposed: the island's forest draws it)
     var bark = (WFR_TREES.palettes && WFR_TREES.palettes.bark) || { pine: 0x7a5638, oak: 0x6f4c32, birch: 0xffffff, snag: 0xa79e92, krumm: 0x6a5442 };
-    var B = function (k) { return srgb(THREE, bark[k], lin); }, K = function (i) { return srgb(THREE, CROWN[i], lin); };
+    var B = function (k) { var c = srgb(THREE, bark[k], lin); if (BAR761 && k !== 'birch' && k !== 'snag') { c.r *= 0.58; c.g *= 0.64; c.b *= 0.74; } return c; }, K = function (i) { return srgb(THREE, CROWN[i], lin); };
     var out = [merge(THREE, [[G.woodStraight, B('pine')], [G.pine, K(PINE)]]), merge(THREE, [[G.woodStraight, B('pine')], [G.fir, K(FIR)]]), merge(THREE, [[G.woodBent, B('krumm')], [G.krumm, K(KRUMM)]]),
       merge(THREE, [[G.woodOak, B('oak')], [G.oak, K(OAK)]]), merge(THREE, [[G.woodBirch, B('birch')], [G.birch, K(BIRCH)]]), merge(THREE, [[G.woodSnag, B('snag')]])];
     var tops = out.map(function (g) { return g.boundingBox.max.y; });   // trap 115: a declared size is not the geometry; the top is read from the built box
@@ -224,6 +224,7 @@ window.WFR_VEG = (function () {
   function midGeos(THREE, lin) {
     var cone = shaded(THREE, new THREE.ConeGeometry(2.1, 6.4, 7, 1, true).translate(0, 4.2, 0), 1.0, 7.4, 0.42, 1.05), stem = shaded(THREE, new THREE.CylinderGeometry(0.22, 0.38, 1.4, 4, 1, true).translate(0, 0.7, 0), 0, 1.4, 0.6, 0.8);
     var blob = shaded(THREE, new THREE.IcosahedronGeometry(1, 0).scale(2.8, 2.2, 2.8).translate(0, 5.0, 0), 2.8, 7.2, 0.45, 1.05), trunk = shaded(THREE, new THREE.CylinderGeometry(0.26, 0.42, 3.2, 5, 1, true).translate(0, 1.6, 0), 0, 3.2, 0.6, 0.85);
+    if (BAR761) { var pb = blob.attributes.position, nb = blob.attributes.normal; for (var ib = 0; ib < pb.count; ib++) { var qx = pb.getX(ib), qy = pb.getY(ib) - 5.0, qz = pb.getZ(ib), ql = Math.hypot(qx, qy, qz) || 1; nb.setXYZ(ib, qx / ql, qy / ql, qz / ql); } }   // 761b: rounded light on the same 20 triangles
     var g0 = merge(THREE, [[stem, srgb(THREE, 0x7a5638, lin)], [cone, srgb(THREE, CROWN[PINE], lin)]]), g1 = merge(THREE, [[trunk, srgb(THREE, 0x6f4c32, lin)], [blob, srgb(THREE, CROWN[OAK], lin)]]);
     return { geos: [g0, g1], tops: [g0.boundingBox.max.y, g1.boundingBox.max.y] };
   }
@@ -237,7 +238,7 @@ window.WFR_VEG = (function () {
         'vec3 rVeg = wpVeg.xyz - uEyeVeg; float dVeg = length( rVeg.xz );', 'rVeg.y -= dVeg * dVeg / ( 2.0 * ' + REFR.toFixed(1) + ' );', 'wpVeg.xyz = uEyeVeg + rVeg * uInvKVeg;',
         'vec4 mvPosition = viewMatrix * wpVeg;', 'gl_Position = projectionMatrix * mvPosition;'].join(NL))
         .replace('#include <fog_vertex>', '#include <fog_vertex>' + NL + '#ifdef USE_FOG' + NL + '  fogDepth /= uInvKVeg;' + NL + '#endif');
-      sh.fragmentShader = 'uniform vec4 uHoleVeg; varying vec2 vWVeg;' + NL + sh.fragmentShader.replace('void main() {', 'void main() {' + NL + '  if ( vWVeg.x > uHoleVeg.x && vWVeg.x < uHoleVeg.z && vWVeg.y > uHoleVeg.y && vWVeg.y < uHoleVeg.w ) discard;');
+      if (BAR761) sh.vertexShader = sh.vertexShader.replace('#include <lights_lambert_vertex>', '#include <lights_lambert_vertex>' + NL + '  vLightFront += lightProbe[ 0 ] * vec3( 0.82, 1.13, 0.75 );'); sh.fragmentShader = 'uniform vec4 uHoleVeg; varying vec2 vWVeg;' + NL + sh.fragmentShader.replace('void main() {', 'void main() {' + NL + '  if ( vWVeg.x > uHoleVeg.x && vWVeg.x < uHoleVeg.z && vWVeg.y > uHoleVeg.y && vWVeg.y < uHoleVeg.w ) discard;');
     };
     m.customProgramCacheKey = function () { return 'wfrveg1'; };
     return m;
@@ -251,14 +252,21 @@ window.WFR_VEG = (function () {
      places (two materials, one key, one compile at load). Clumps are made per 16 m chunk (anchored in lat/lon out there: the re-centres carry them),
      a few chunks a frame within a time budget, nearest first; the drawn list is put together from the chunks' rank-sorted lists. */
   var GC = { CH: 16, SP: 1.0, R: 110, FULL: 24, THIN: 0.1, CAP: 16000, BUILD_MS: 1.0, VEG_MS: 2.2, ASM_EVERY: 4, AGL: 140, BLADES: 6, H: 0.8, LAYER_ONLY: 30 };
+  var BAR761 = (function () { try { return !(window.WFR_DOOR && window.WFR_DOOR.classic) && localStorage.getItem('wfr.bar') !== 'off'; } catch (e) { return !(window.WFR_DOOR && window.WFR_DOOR.classic); } })();   // 761b THE BAR: Classic is frozen; 'off' is the state before it
+  if (BAR761) { GC.SP = 0.65; GC.THIN = 0.03; }   // 761b: the clumps closer together (0.65 m apart, was 1 m: 2.4 times as many where she stands). The game's reach (110 m), full ring (24 m) and cap (16,000 clumps) are KEPT, so the ring falls away faster to fit the same count (V13): thicker than before out to about 46 m, thinner beyond (46 to 70 m: 3,693 clumps against 5,554; 70 to 110 m: 1,151 against 4,481). The shade sheet's 3,200 triangles are a plain cost (9,600 with the fog's two sheets, held back)
+  function fr761(dist) { return dist < GC.FULL ? 1 : GC.THIN + (1 - GC.THIN) * Math.pow(1 - Math.min(1, (dist - GC.FULL) / (GC.R - GC.FULL)), 4); }   // 761b: the share of clumps shown at a distance (the ring's rule, written once)
+  function barColour761() { return ['vec2 uvB = ( iPos.xz - uBarC.xy ) * uBarC.z + 0.5; float shB = texture2D( uBarTex, uvB ).r * uBarC.w * ( 1.0 - smoothstep( 0.40, 0.5, max( abs( uvB.x - 0.5 ), abs( uvB.y - 0.5 ) ) ) );',
+    'float pA = sin( iPos.x * 0.062 + sin( iPos.z * 0.044 ) * 1.7 ) * cos( iPos.z * 0.053 + sin( iPos.x * 0.039 ) * 1.9 ), pB = sin( iPos.x * 0.117 + iPos.z * 0.073 + pA * 2.0 ), lightB = smoothstep( -0.42, 0.62, pA + pB * 0.28 );',
+    'float upB = clamp( position.y / ' + GC.H.toFixed(3) + ', 0.0, 1.0 ); vec3 tipB = mix( vec3( 0.22, 0.50, 0.24 ), vec3( 0.60, 0.82, 0.46 ), lightB * ( 1.0 - shB ) );',
+    'vec3 colB = mix( vec3( 0.05, 0.17, 0.10 ), tipB, pow( upB, 1.4 ) ) * mix( vec3( 1.0 ), vec3( 0.40, 0.50, 0.58 ), shB );', 'vColor.xyz = colB * iSc.yzw;'].join(String.fromCharCode(10)); }
   var GD = [0, 0.55, 1, 0.8, 0.5, 0.9, 0.8, 0, 0.35, 0.45, 0, 0];   // a class's grass: the forest floor thin, the town's lawns, no blade in a mangrove or a car park
   var GCOL = [[0.95, 1, 0.9], [1.18, 1.05, 0.62], [1, 1, 1], [0.8, 0.95, 0.85], [1.02, 0.95, 0.72], [0.95, 1.06, 0.95], [1, 1, 0.88], [1, 1, 1], [0.76, 0.86, 0.74], [0.95, 1.02, 0.9]];
   function grassGeo(THREE, lin) {   // one clump: BLADES blades of three triangles (two segments and a tip), dark at the root, lit at the tip; every normal up
     var P = [], Cc = [], N = [], base = srgb(THREE, 0x6a9a3e, lin);
     for (var b = 0; b < GC.BLADES; b++) {
       var h = hash3(b, 3, 91), a = b / GC.BLADES * Math.PI * 2 + ((h & 255) / 255 - 0.5), rr = 0.05 + ((h >>> 8) & 255) / 255 * 0.28, bx = Math.cos(a) * rr, bz = Math.sin(a) * rr;
-      var ht = GC.H * (0.6 + ((h >>> 16) & 255) / 255 * 0.45), fa = ((h >>> 24) & 255) / 255 * Math.PI, sx = Math.cos(fa), sz = Math.sin(fa), w = 0.035 + (b % 3) * 0.01, ln = 0.12 + (b % 2) * 0.1;
-      var Lx = bx + Math.cos(a) * ln * ht, Lz = bz + Math.sin(a) * ln * ht;   // the tip, leaning outward
+      var ht = GC.H * (0.6 + ((h >>> 16) & 255) / 255 * 0.45), fa = ((h >>> 24) & 255) / 255 * Math.PI, sx = Math.cos(fa), sz = Math.sin(fa), w = (0.035 + (b % 3) * 0.01) * (BAR761 ? 1.1 : 1), ln = 0.12 + (b % 2) * 0.1;
+      var la = BAR761 ? fa * 2 : a, Lx = bx + Math.cos(la) * ln * ht, Lz = bz + Math.sin(la) * ln * ht;   // the tip, leaning outward
       var v = [[bx - sx * w, 0, bz - sz * w], [bx + sx * w, 0, bz + sz * w], [bx + (Lx - bx) * 0.3 - sx * w * 0.7, ht * 0.55, bz + (Lz - bz) * 0.3 - sz * w * 0.7], [bx + (Lx - bx) * 0.3 + sx * w * 0.7, ht * 0.55, bz + (Lz - bz) * 0.3 + sz * w * 0.7], [Lx, ht, Lz]];
       var sh = [0.5, 0.5, 0.82, 0.82, 1.12], tri = [[0, 1, 3], [0, 3, 2], [2, 3, 4]];
       for (var t = 0; t < 3; t++) for (var k = 0; k < 3; k++) { var q = tri[t][k]; P.push(v[q][0], v[q][1], v[q][2]); N.push(0, 1, 0); Cc.push(base.r * sh[q], base.g * sh[q], base.b * sh[q] * 0.95); }
@@ -270,12 +278,12 @@ window.WFR_VEG = (function () {
     var REFR = (window.WFR_TRAVEL712 && WFR_TRAVEL712.C && WFR_TRAVEL712.C.REFR) || 7432843, NL = String.fromCharCode(10);
     var m = new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide }); m.name = 'veg:grass';
     m.onBeforeCompile = function (sh) {
-      sh.uniforms.uGrassT = GU.uGrassT; sh.uniforms.uGrassW = GU.uGrassW; sh.uniforms.uGrassDir = GU.uGrassDir; sh.uniforms.uEyeG = own.uEye; sh.uniforms.uInvKG = own.uInvK; sh.uniforms.uHoleG = own.uHole;
-      sh.vertexShader = 'attribute vec4 iPos; attribute vec4 iSc; uniform float uGrassT; uniform float uGrassW; uniform vec2 uGrassDir; uniform vec3 uEyeG; uniform float uInvKG; varying vec2 vWG;' + NL + sh.vertexShader
-        .replace('#include <color_vertex>', '#include <color_vertex>' + NL + 'vColor.xyz *= iSc.yzw;')
-        .replace('#include <begin_vertex>', ['float cG = cos( iPos.w ), sG = sin( iPos.w ); vec3 pG = position * iSc.x;', 'vec3 transformed = vec3( cG * pG.x + sG * pG.z, pG.y, -sG * pG.x + cG * pG.z );',
+      if (BAR761) { sh.uniforms.uBarTex = GU.uBarTex; sh.uniforms.uBarC = GU.uBarC; sh.uniforms.uHerG = GU.uHerG; } sh.uniforms.uGrassT = GU.uGrassT; sh.uniforms.uGrassW = GU.uGrassW; sh.uniforms.uGrassDir = GU.uGrassDir; sh.uniforms.uEyeG = own.uEye; sh.uniforms.uInvKG = own.uInvK; sh.uniforms.uHoleG = own.uHole;
+      sh.vertexShader = (BAR761 ? 'uniform sampler2D uBarTex; uniform vec4 uBarC; uniform vec3 uHerG;' + NL : '') + 'attribute vec4 iPos; attribute vec4 iSc; uniform float uGrassT; uniform float uGrassW; uniform vec2 uGrassDir; uniform vec3 uEyeG; uniform float uInvKG; varying vec2 vWG;' + NL + sh.vertexShader
+        .replace('#include <color_vertex>', '#include <color_vertex>' + NL + (BAR761 ? barColour761() : 'vColor.xyz *= iSc.yzw;'))
+        .replace('#include <begin_vertex>', ['float cG = cos( iPos.w ), sG = sin( iPos.w ); vec3 pG = position * iSc.x;' + (BAR761 ? ' float eG = length( iPos.xz - uHerG.xy ); pG.xz *= 1.0 + 1.5 * smoothstep( 16.0, 96.0, eG );' : ''), 'vec3 transformed = vec3( cG * pG.x + sG * pG.z, pG.y, -sG * pG.x + cG * pG.z );',
           'float phG = dot( iPos.xz, vec2( 0.071, 0.053 ) ), hG = position.y / ' + GC.H.toFixed(3) + ';', 'float swG = ( sin( uGrassT * 1.7 - phG ) * 0.6 + sin( uGrassT * 4.3 + phG * 2.3 ) * 0.22 + 0.45 ) * uGrassW;',
-          'transformed.xz += uGrassDir * ( swG * hG * hG * pG.y * 1.6 ); transformed.y -= swG * swG * hG * hG * pG.y * 0.5;', 'transformed += iPos.xyz;'].join(NL))
+          'transformed.xz += uGrassDir * ( swG * hG * hG * pG.y * 1.6 ); transformed.y -= swG * swG * hG * hG * pG.y * 0.5;' + (BAR761 ? NL + 'vec2 awG = iPos.xz - uHerG.xy; float puG = uHerG.z * smoothstep( 2.6, 0.4, eG ); transformed.xz += ( awG / max( eG, 0.2 ) ) * ( puG * hG * hG * pG.y * 1.3 ); transformed.y -= puG * hG * hG * pG.y * 0.4; vColor.xyz *= 1.0 + 0.55 * swG * hG;' : ''), 'transformed += iPos.xyz;'].join(NL))
         .replace('#include <project_vertex>', ['vec4 wpG = modelMatrix * vec4( transformed, 1.0 ); vWG = wpG.xz;', 'vec3 rG = wpG.xyz - uEyeG; float dG = length( rG.xz );', 'rG.y -= dG * dG / ( 2.0 * ' + REFR.toFixed(1) + ' );', 'wpG.xyz = uEyeG + rG * uInvKG;',
           'vec4 mvPosition = viewMatrix * wpG;', 'gl_Position = projectionMatrix * mvPosition;'].join(NL))
         .replace('#include <lights_lambert_vertex>', '#include <lights_lambert_vertex>' + NL + '#ifdef DOUBLE_SIDED' + NL + '  vLightBack = vLightFront;' + NL + '#endif')
@@ -350,7 +358,7 @@ window.WFR_VEG = (function () {
     if (window.WFR_LANDCLASS) window.WFR_LANDCLASS.onArrive(function () { st.dirty = true; if (GT) GT.stale = true; });   // 772a: a land cover tile came: the trees and the grass round her are chosen again
 
     /* ═════ THE GRASS FIELDS: one out there (lat/lon chunks), one on the island (local chunks) ═════ */
-    var GU = { uGrassT: { value: 0 }, uGrassW: { value: 0.3 }, uGrassDir: { value: new THREE.Vector2(0.8, 0.6) } }, gGeo = grassGeo(THREE, lin), GT = null;
+    var GU = { uGrassT: { value: 0 }, uGrassW: { value: 0.3 }, uGrassDir: { value: new THREE.Vector2(0.8, 0.6) }, uBarTex: { value: null }, uBarC: { value: new THREE.Vector4(0, 0, 1 / 224, 0) }, uHerG: { value: new THREE.Vector3() } }, gGeo = grassGeo(THREE, lin), GT = null;
     function field(name, layer, own) {
       var g = new THREE.InstancedBufferGeometry(); ['position', 'normal', 'color'].forEach(function (k) { g.setAttribute(k, gGeo.attributes[k]); });
       var aP = new THREE.InstancedBufferAttribute(new Float32Array(GC.CAP * 4), 4), aS = new THREE.InstancedBufferAttribute(new Float32Array(GC.CAP * 4), 4); aP.setUsage(THREE.DynamicDrawUsage); aS.setUsage(THREE.DynamicDrawUsage);
@@ -358,7 +366,7 @@ window.WFR_VEG = (function () {
       var m = new THREE.Mesh(g, grassMat(THREE, GU, own)); m.name = name; m.frustumCulled = false; m.layers.set(layer); m.layers.enable(GC.LAYER_ONLY); m.castShadow = false; m.receiveShadow = false; m.matrixAutoUpdate = false; scene.add(m);
       return { mesh: m, geo: g, aP: aP, aS: aS, chunks: new Map(), n: 0, key: null, built: 0, rebuilt: 0, buildMs: 0, buildMax: 0, stale: false, f: null, asm: 0, want: [], need: false };
     }
-    GT = field('veg:grass:travel', C.LAYER, { uEye: u.uEye, uInvK: u.uInvK, uHole: u.uHole });
+    GT = field('veg:grass:travel', C.LAYER, { uEye: u.uEye, uInvK: u.uInvK, uHole: u.uHole }); if (BAR761) GT.mesh.renderOrder = C.ORDER + 0.02;
     var GI = field('veg:grass:island', 0, { uEye: { value: new THREE.Vector3() }, uInvK: { value: 1 }, uHole: { value: new THREE.Vector4(1, 1, -1, -1) } });
     var ISL = opts.island || null;
     function islandDens(x, z) {   // the island's meadow band (the terrain painter's: over the beach, under the rock), never the dunes, the village's trodden green or a floor
@@ -375,10 +383,10 @@ window.WFR_VEG = (function () {
     }
     function buildChunk(F, ch, geo) {   // every candidate on a jittered 0.8 m grid in the chunk, kept by its class's (or the island's) grass, sorted by its rank
       var t0 = performance.now(), n = Math.round(GC.CH / GC.SP), out = [], f = geo ? geo.f : null, H = geo ? geo.H : ISL.H, salt = geo ? 77 : 78;
-      var cbm = geo ? bmGrass(ch.cx, ch.cz) : 0; if (!geo) floorNear = floorsIn(ch);   // the real colour at the chunk's middle (the photo is ~600 m a pixel: one read a chunk)
+      var cv761 = new Uint8Array(16), cut761b = BAR761 ? fr761(Math.max(0, (ch.dist || 0) - GC.CH - 24)) : 2, cbm = geo ? bmGrass(ch.cx, ch.cz) : 0; if (!geo) floorNear = floorsIn(ch);   // the real colour at the chunk's middle (the photo is ~600 m a pixel: one read a chunk)
       for (var j = 0; j < n; j++) for (var i = 0; i < n; i++) {
         var h0 = hash3(ch.i * 64 + i, ch.j * 64 + j, salt), rank = ((h0 >>> 20) & 4095) / 4096, ju = ((h0 & 1023) / 1023 - 0.5) * 0.9, jv = (((h0 >>> 10) & 1023) / 1023 - 0.5) * 0.9;
-        var a = (i + 0.5 + ju) / n, b = (j + 0.5 + jv) / n, x = ch.x0 + ch.ax * a + ch.bx * b, z = ch.z0 + ch.az * a + ch.bz * b, dens, cls = -1;
+        if (rank >= cut761b) continue; var a = (i + 0.5 + ju) / n, b = (j + 0.5 + jv) / n, x = ch.x0 + ch.ax * a + ch.bx * b, z = ch.z0 + ch.az * a + ch.bz * b, dens, cls = -1;
         if (geo) { var X = ch.X0 + ch.aX * a + ch.bX * b, Y = ch.Y0 + ch.aY * a + ch.bY * b; cls = core.classAtXY(X, Y); if (cls === BLK || core.hitPath()) continue;
           if (cls === NONE) { var G772 = window.WFR_LANDCLASS, g772 = G772 ? G772.grass(X, Y, ch.i * 64 + i, ch.j * 64 + j) : 0; if (g772) { if (rank >= GD[g772] * G772.gk) continue; cls = g772; } }   // 772a: the grass asks the same map where the masks are silent
           if (cls === NONE) { if (core.hitZ() >= 14) continue; dens = cbm; } else dens = GD[cls]; }
@@ -387,11 +395,11 @@ window.WFR_VEG = (function () {
         var y = H(x, z); if (geo && y < 1.0) continue;   // the sea and the beach's last metre
         var h1 = hash3(ch.i * 64 + i, ch.j * 64 + j, salt + 1), sc = 0.8 + (h1 & 255) / 255 * 0.45, vv = 0.88 + ((h1 >>> 8) & 255) / 255 * 0.24, K = cls >= 0 && cls < GCOL.length ? GCOL[cls] : [1, 1, 1];
         if (!geo) { var nz = Math.sin(x * 0.021 + Math.cos(z * 0.017) * 2.1) * Math.cos(z * 0.019 + Math.sin(x * 0.013) * 1.7); K = nz > 0.25 ? [1.12, 1.04, 0.7] : nz < -0.3 ? [0.82, 0.96, 0.8] : [1, 1, 1]; }   // the island's dry and lush patches (its painter's noise)
-        out.push([rank, x, y - 0.04, z, ((h1 >>> 16) & 1023) / 1023 * 6.2832, sc, K[0] * vv, K[1] * vv, K[2] * vv]);
+        cv761[Math.max(0, Math.min(3, (b * 4) | 0)) * 4 + Math.max(0, Math.min(3, (a * 4) | 0))]++; out.push([rank, x, y - 0.04, z, ((h1 >>> 16) & 1023) / 1023 * 6.2832, sc, K[0] * vv, K[1] * vv, K[2] * vv]);
       }
       out.sort(function (p, q) { return p[0] - q[0]; });
       var d = new Float32Array(out.length * 9); for (var k = 0; k < out.length; k++) d.set(out[k], k * 9);
-      ch.d = d; ch.n = out.length; ch.stale = false; ch.f = f; var ms = performance.now() - t0; F.buildMs += ms; if (ms > F.buildMax) F.buildMax = ms; F.built++;
+      ch.d = d; ch.cv = cv761; ch.cut = Math.min(1, cut761b); ch.bd = ch.dist || 0; ch.n = out.length; ch.stale = false; ch.f = f; var ms = performance.now() - t0; F.buildMs += ms; if (ms > F.buildMax) F.buildMax = ms; F.built++;
     }
     function chunksNear(F, cam, geo) {   // the chunks whose middle is within R + a chunk of her: lat/lon cells out there, local squares on the island
       var list = [], R = GC.R + GC.CH;
@@ -404,7 +412,7 @@ window.WFR_VEG = (function () {
             if (!ch2 || ch2.f !== f) { var p00 = W.toLocal(f, la1, lo0), p10 = W.toLocal(f, la1, lo0 + dn), p01 = W.toLocal(f, la0, lo0);   // the chunk's north-west corner and its two edges (a = east, b = south)
               var old = ch2; ch2 = { k: k2, i: r, j: c, x0: p00.x, z0: p00.z, ax: p10.x - p00.x, az: p10.z - p00.z, bx: p01.x - p00.x, bz: p01.z - p00.z, X0: (lo0 + 180) / 360, aX: dn / 360, bX: 0, Y0: tileY(W, la1), aY: 0, bY: tileY(W, la0) - tileY(W, la1), d: null, n: 0, f: f };
               ch2.cx = ch2.x0 + (ch2.ax + ch2.bx) / 2; ch2.cz = ch2.z0 + (ch2.az + ch2.bz) / 2;
-              if (old && old.d && old.f) { var q0 = W.toLatLon(old.f, old.cx, old.cz), q1 = W.toLocal(f, q0.lat, q0.lon), ddx = q1.x - old.cx, ddz = q1.z - old.cz, dd = old.d; for (var t = 0; t < old.n; t++) { dd[t * 9 + 1] += ddx; dd[t * 9 + 3] += ddz; } ch2.d = dd; ch2.n = old.n; ch2.stale = true; }   // re-centred: carried by the shift, rebuilt soon
+              if (old && old.d && old.f) { var q0 = W.toLatLon(old.f, old.cx, old.cz), q1 = W.toLocal(f, q0.lat, q0.lon), ddx = q1.x - old.cx, ddz = q1.z - old.cz, dd = old.d; for (var t = 0; t < old.n; t++) { dd[t * 9 + 1] += ddx; dd[t * 9 + 3] += ddz; } ch2.d = dd; ch2.cv = old.cv; ch2.cut = old.cut; ch2.bd = old.bd; ch2.n = old.n; ch2.stale = true; }   // re-centred: carried by the shift, rebuilt soon
               F.chunks.set(k2, ch2); }
             var d2 = Math.hypot(ch2.cx - cam.x, ch2.cz - cam.z); if (d2 > R) continue; ch2.dist = d2; list.push(ch2); } }
       }
@@ -412,10 +420,10 @@ window.WFR_VEG = (function () {
     }
     function assemble(F, cam) {   // the drawn list: each chunk's rank-sorted clumps up to the share its distance allows (the far clumps a little larger)
       var P = F.aP.array, Sx = F.aS.array, n = 0, R2 = GC.R * GC.R;
-      for (var c = 0; c < F.want.length && n < GC.CAP; c++) { var ch = F.want[c]; if (!ch.d) continue; var d = ch.d;
-        for (var k = 0; k < ch.n && n < GC.CAP; k++) { var o = k * 9, dx = d[o + 1] - cam.x, dz = d[o + 3] - cam.z, r2 = dx * dx + dz * dz; if (r2 > R2) continue;
-          var dist = Math.sqrt(r2), fr = dist < GC.FULL ? 1 : Math.max(GC.THIN, 1 - (dist - GC.FULL) / (GC.R - GC.FULL) * (1 - GC.THIN)); if (d[o] >= fr) continue;
-          var up = Math.min(1.6, Math.pow(1 / fr, 0.35)); P[n * 4] = d[o + 1]; P[n * 4 + 1] = d[o + 2]; P[n * 4 + 2] = d[o + 3]; P[n * 4 + 3] = d[o + 4]; Sx[n * 4] = d[o + 5] * up; Sx[n * 4 + 1] = d[o + 6]; Sx[n * 4 + 2] = d[o + 7]; Sx[n * 4 + 3] = d[o + 8]; n++; } }
+      for (var c = 0; c < F.want.length && n < GC.CAP; c++) { var ch = F.want[c]; if (!ch.d) continue; var d = ch.d, cut761 = BAR761 ? fr761(Math.max(0, Math.hypot(ch.cx - cam.x, ch.cz - cam.z) - GC.CH)) : 2;
+        for (var k = 0; k < ch.n && n < GC.CAP; k++) { var o = k * 9; if (d[o] >= cut761) break; var dx = d[o + 1] - cam.x, dz = d[o + 3] - cam.z, r2 = dx * dx + dz * dz; if (r2 > R2) continue;
+          var dist = Math.sqrt(r2), fr = BAR761 ? fr761(dist) : dist < GC.FULL ? 1 : Math.max(GC.THIN, 1 - (dist - GC.FULL) / (GC.R - GC.FULL) * (1 - GC.THIN)); if (d[o] >= fr) continue;
+          var up = Math.min(BAR761 ? 1.2 : 1.6, Math.pow(1 / fr, 0.35)); P[n * 4] = d[o + 1]; P[n * 4 + 1] = d[o + 2]; P[n * 4 + 2] = d[o + 3]; P[n * 4 + 3] = d[o + 4]; Sx[n * 4] = d[o + 5] * up; Sx[n * 4 + 1] = d[o + 6]; Sx[n * 4 + 2] = d[o + 7]; Sx[n * 4 + 3] = d[o + 8]; n++; } }
       F.n = n; F.geo.instanceCount = n; F.aP.updateRange.offset = 0; F.aP.updateRange.count = n * 4; F.aP.needsUpdate = true; F.aS.updateRange.offset = 0; F.aS.updateRange.count = n * 4; F.aS.needsUpdate = true; F.asm++;
     }
     var GH = { hold: false };   // the bench's hold: no chunk made and no list re-made while it is on (its motion test: only the wind moves the blades)
@@ -425,9 +433,9 @@ window.WFR_VEG = (function () {
       var key = Math.floor(cam.x / 8) + ',' + Math.floor(cam.z / 8);
       if (key !== F.key || (geo && geo.f !== F.f)) { F.key = key; F.f = geo ? geo.f : null; F.want = chunksNear(F, cam, geo); F.need = true;
         if (F.chunks.size > F.want.length * 3) { var keep = new Set(F.want.map(function (c) { return c.k; })); F.chunks.forEach(function (c, k) { if (!keep.has(k)) F.chunks.delete(k); }); } }
-      if (F.stale) { F.stale = false; F.want.forEach(function (c) { if (c.d) c.stale = true; }); }
+      if (F.stale) { F.stale = false; F.want.forEach(function (c) { if (c.d) c.stale = true; }); } if (BAR761) for (var w761 = 0; w761 < F.want.length; w761++) { var c761 = F.want[w761]; if (c761.d && c761.cut < 1 && c761.dist < c761.bd - 16) c761.stale = true; }
       var t0 = performance.now(), any = false;
-      outer: for (var pass = 0; pass < 2; pass++) for (var i = 0; i < F.want.length; i++) { var ch = F.want[i]; if (pass === 0 ? ch.d : !ch.stale) continue; buildChunk(F, ch, geo); any = true; if (pass) F.rebuilt++; if (performance.now() - t0 > (budget == null ? GC.BUILD_MS : budget)) break outer; }
+      outer: for (var pass = (budget != null && budget < 0) ? 2 : 0; pass < 2; pass++) for (var i = 0; i < F.want.length; i++) { var ch = F.want[i]; if (pass === 0 ? ch.d : !ch.stale) continue; var c0 = performance.now(); buildChunk(F, ch, geo); any = true; if (pass) F.rebuilt++; var c1 = performance.now(); if (c1 - t0 + (BAR761 ? c1 - c0 : 0) > (budget == null ? GC.BUILD_MS : budget)) break outer; }
       F.since = (F.since || 0) + 1; var late = performance.now() - t0 > (budget == null ? GC.BUILD_MS : budget) * 0.7 && !F.need && F.since < 12;   // a frame already spent: the list waits a frame (never longer than her own move)
       if (late && (any || F.pend)) { F.pend = true; return; }
       if (F.need || (any && F.since >= GC.ASM_EVERY)) { F.need = false; F.since = 0; assemble(F, cam); } else if (any) F.pend = true; else if (F.pend && F.since >= GC.ASM_EVERY) { F.pend = false; F.since = 0; assemble(F, cam); }   // the drawn list re-made at most every few frames while chunks come in (her own move re-makes it at once)
@@ -460,7 +468,7 @@ window.WFR_VEG = (function () {
         st.lastF = f;
         if (st.tintQ.size) { var it = st.tintQ.entries().next().value; st.tintQ.delete(it[0]); tint(it[1]); }   // one tile a frame
         if (st.clock - st.tImz > 1) { st.tImz = st.clock; stt.tiles.forEach(function (rec, k) { if (rec.vegImz !== undefined && rec.im712 && rec.im712.z !== rec.vegImz) st.tintQ.set(k, rec); }); }   // the photo came after the tint: tint again over it
-        grassTick(GT, cam, agl, { f: f, H: H }, Math.max(0.3, Math.min(GC.BUILD_MS, GC.VEG_MS - tv)));   // the trees and the grass share one budget a frame
+        grassTick(GT, cam, agl, { f: f, H: H }, BAR761 && tv > 1.5 && (st.gw761 = (st.gw761 || 0) + 1) <= 2 ? -1 : (st.gw761 = 0, Math.max(0.3, Math.min(GC.BUILD_MS, GC.VEG_MS - tv))));   // the trees and the grass share one budget a frame
         if (GI.n) { GI.n = 0; GI.geo.instanceCount = 0; GI.key = null; }
       } catch (e) { st.fault = String(e && e.message || e); }
       var ms = performance.now() - t0; st.tick.push(+ms.toFixed(3)); if (st.tick.length > 20000) st.tick.shift();
@@ -488,7 +496,10 @@ window.WFR_VEG = (function () {
       return out;
     }
     subscribe();   // at load when the features unit is already there: it reads landcover / landuse only for a listener, so the first tiles carry them too
-    S = { core: core, st: st, api: { tick: tick, island: island, peek: peek, core: core, group: group, material: mat, grass: { travel: GT.mesh, island: GI.mesh, U: GU, LAYER_ONLY: GC.LAYER_ONLY, H: GH } } };
+    function cover761(cb) { var F = TR.on ? GT : GI, full = Math.max(1, Math.pow(GC.CH / GC.SP / 4, 2) * 0.55); for (var i = 0; i < F.want.length; i++) { var c = F.want[i]; if (c.cv) cb(c, 16, Math.max(1, full * (c.cut == null ? 1 : c.cut))); } }   // 761b: where the grass stands (a chunk built part-deep is counted against that depth)
+    function nearTrees761(cb) { var RK = [0.24, 0.24, 0.3, 0.46, 0.3, 0.1]; for (var i = 0; i < near.length; i++) { var a = near[i].instanceMatrix.array, top = sp.tops[i]; for (var k = 0; k < st.n[i]; k++) { var ht = a[k * 16 + 5] * top; cb(a[k * 16 + 12], a[k * 16 + 14], ht, ht * RK[i]); } } }   // 761b: every full tree: x, z, height, crown radius
+    function key761() { var F = TR.on ? GT : GI; return st.sels[0] + '/' + (F.built >> 4); }   // 761b: changes when the near list or the chunks do
+    S = { core: core, st: st, api: { tick: tick, island: island, peek: peek, core: core, group: group, material: mat, nearTrees: nearTrees761, vegKey: key761, grass: { travel: GT.mesh, island: GI.mesh, U: GU, BU: GU, cover: cover761, LAYER_ONLY: GC.LAYER_ONLY, H: GH } } };
     return S.api;
   }
 
