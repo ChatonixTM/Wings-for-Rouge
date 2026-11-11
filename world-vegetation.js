@@ -109,17 +109,19 @@ window.WFR_VEG = (function () {
     function ingest(z, x, y, d) {
       var t0 = (typeof performance !== 'undefined' ? performance.now() : Date.now()), M = z >= 14 ? C.MASK_HI : C.MASK_LO, cls = new Uint8Array(M * M), blk = new Uint8Array(M * M), ext = d && d.extent, i, j, k;
       var lists = [d && d.landcover, d && d.landuse, d && d.park];
+      var spk772 = (window.WFR_LANDCLASS && window.WFR_LANDCLASS.live && window.WFR_LANDCLASS.live()) ? new Uint8Array(M * M) : null, QUIET772 = { military: 1, neighbourhood: 1, quarter: 1, suburb: 1 };   // 772a: the cells the map has SPOKEN for with a word the vegetation does not know (landuse = stadium ...): the fill plants nothing there. QUIET772: outlines that are NOT ground cover (the land of an army, the name of a neighbourhood): the fill plants in them by the class NASA gives, as where the map is silent
       for (k = 0; k < lists.length; k++) { var L = lists[k]; if (!L) continue; for (i = 0; i < L.length; i++) { var e = L[i], nm = String(e.subclass || e.cls || e['class'] || '').toLowerCase(), v = CLS[nm];
         if (!v && e.cls && e.subclass) v = CLS[String(e.cls).toLowerCase()];
-        if (!v) continue; try { fill(ringsOf(e).map(function (rg) { return toPx(rg, z, x, y, M, ext); }), M, v === BLK ? blk : cls, v === BLK ? 1 : v, v !== BLK); } catch (err) { stats.bad++; } } }
+        if (!v) { if (spk772 && QUIET772[nm] !== 1 && QUIET772[String(e.cls || '').toLowerCase()] !== 1) { try { fill(ringsOf(e).map(function (rg) { return toPx(rg, z, x, y, M, ext); }), M, spk772, 1, false); } catch (err) { stats.bad++; } } continue; } try { fill(ringsOf(e).map(function (rg) { return toPx(rg, z, x, y, M, ext); }), M, v === BLK ? blk : cls, v === BLK ? 1 : v, v !== BLK); } catch (err) { stats.bad++; } } }
       var B = [d && d.water, d && d.buildings];
       for (k = 0; k < B.length; k++) { if (!B[k]) continue; for (i = 0; i < B[k].length; i++) { try { fill(ringsOf(B[k][i]).map(function (rg) { return toPx(rg, z, x, y, M, ext); }), M, blk, 1, false); } catch (err) { stats.bad++; } } }
       var RD = d && d.roads, cell = 40075016.7 * Math.cos(m0lat(z, y) * D2R) / Math.pow(2, z) / M, road = new Uint8Array(M * M), foot = new Uint8Array(M * M);   // cell: a mask cell's size in metres (at the tile's middle)
+      var AW772 = d && d.aeroway; if (AW772) for (i = 0; i < AW772.length; i++) { try { var a772 = AW772[i]; if (a772.lines) { for (j = 0; j < a772.lines.length; j++) stroke(toPx(a772.lines[j], z, x, y, M, ext), M, blk, (a772.width || 25) / 2 / cell + 0.71); } else fill(ringsOf(a772).map(function (rg) { return toPx(rg, z, x, y, M, ext); }), M, (spk772 && (a772.cls === 'aerodrome' || a772.cls === 'heliport')) ? spk772 : blk, 1, false); } catch (err) { stats.bad++; } }   // 772a: runways, taxiways and aprons are pavement (blocked, with the margin); an aerodrome's own outline is spoken for
       if (RD) for (i = 0; i < RD.length; i++) { var rd = RD[i], wd = rd.width || 6, isW = rd.cls === 'water', thin = !isW && wd <= 3.2, rr = thin ? 0.5 : wd / 2 / cell + 0.71;   // a footpath marks only the cells it crosses, and only for the grass (a canopy over a path is real)
         for (j = 0; j < (rd.lines || []).length; j++) { try { stroke(toPx(rd.lines[j], z, x, y, M, ext), M, isW ? blk : thin ? foot : road, rr); } catch (err) { stats.bad++; } } stats.roads++; }
       var out = new Uint8Array(M * M), edge = z >= 14;   // a detailed tile's green is narrowed one cell at its edges (a tree never stands just outside its wood); a coarse one's is not (its cells are 50 m+)
       for (j = 0; j < M; j++) for (i = 0; i < M; i++) {
-        var q = j * M + i, v2 = cls[q]; if (blk[q] || road[q]) { out[q] = BLK; continue; } if (!v2) continue; var keep = 1;
+        var q = j * M + i, v2 = cls[q]; if (blk[q] || road[q]) { out[q] = BLK; continue; } if (!v2) { if ((spk772 && spk772[q]) || (edge && hasBlkNear(blk, M, q))) out[q] = BLK; continue; } var keep = 1;
         for (var dj = -1; dj <= 1 && keep; dj++) for (var di = -1; di <= 1; di++) { var jj = j + dj, ii = i + di; if (jj < 0 || ii < 0 || jj >= M || ii >= M) continue; var qq = jj * M + ii; if (blk[qq]) { keep = 0; break; } if (edge && !cls[qq] && !road[qq]) { keep = 2; break; } }
         out[q] = keep === 1 ? v2 : keep === 0 ? BLK : NONE;   // beside water or a roof: known bare; at a wood's edge: nothing
         if (out[q] && out[q] !== BLK && foot[q]) out[q] |= 128;   // the path flag (grass only)
@@ -173,6 +175,7 @@ window.WFR_VEG = (function () {
           var hk = ((h0 >>> 20) & 4095) / 4096; if (hk >= 0.9) continue;   // no class keeps a point past the forest's own density: skip the lookup
           J.cand++; var cls = zooms.length ? classAtXY((lon + 180) / 360, Yc + dY * (lat - latC)) : NONE, p = null, viaBm = false;
           if (cls === BLK) continue;
+          var f772 = 0, lf772 = 0, hf772 = 1; if (cls === NONE) { var L772 = window.WFR_LANDCLASS, v772 = L772 ? L772.tree((lon + 180) / 360, Yc + dY * (lat - latC), r, c) : 0; if (v772) { if (hk >= Dn[v772] * L772.k) continue; cls = v772; f772 = L772.last; lf772 = L772.leaf; hf772 = L772.h; } }   // 772a: where the map is silent, NASA's yearly land cover class decides (world-landclass772.js); the map still wins wherever it speaks
           if (cls === NONE) {   // no class here: a detailed map (z14) means nothing grows; else the real colour decides
             if ((zooms.length && hitZ >= 14) || !o.bm) continue;
             p = W.toLocal(f, lat, lon); var fr = o.bm(p.x, p.z); if (!fr || hk >= fr * C.BM_D * (J.near ? 1 : 0.9)) continue; cls = FOREST; viaBm = true;
@@ -180,6 +183,7 @@ window.WFR_VEG = (function () {
           if (!p) p = W.toLocal(f, lat, lon); var gy = o.H(p.x, p.z); if (gy < C.SEA) continue;   // the coarse ground says sea here: no tree on the water
           var h1 = hash3(r, c, salt + 7), u = (h1 & 65535) / 65536, kind = kindFor(cls, lat, gy, u); if (kind < 0) continue;
           var ht = heightFor(cls, lat, gy) * (0.75 + ((h1 >>> 16) & 255) / 255 * 0.45), yaw = ((h1 >>> 24) & 255) / 256 * Math.PI * 2;
+          if (f772) { var M772 = window.WFR_LANDCLASS; if (lf772) kind = M772.kind(kind, lf772, u, lat); ht *= hf772; M772.kept(f772); }   // 772a: the leaf the land cover names (needle or broad), its height, and the count the guard reads
           o.put(kind, p.x, gy - C.SINK, p.z, yaw, ht, h0, h1, lat, cls, sz, bnd);
           if (viaBm) J.bm++;
           if (bnd) J.nb++; else J.total++; if (J.total >= J.cap && (!J.near || J.nb >= J.capB)) { J.done = true; return true; }
@@ -343,6 +347,7 @@ window.WFR_VEG = (function () {
       col.needsUpdate = true; rec.vegTinted = any; if (any) st.tinted++; st.tintMs = Math.max(st.tintMs, performance.now() - t0);
     }
     TR.layers.push({ id: 'veg', onTile: function (rec) { st.onTiles++; st.tintQ.set(rec.key, rec); }, onDrop: function (rec) { st.tintQ.delete(rec.key); } });   // the streamer's layer hooks (world712-travel.js opts.layers); after the imagery's, so the photo is painted first
+    if (window.WFR_LANDCLASS) window.WFR_LANDCLASS.onArrive(function () { st.dirty = true; if (GT) GT.stale = true; });   // 772a: a land cover tile came: the trees and the grass round her are chosen again
 
     /* ═════ THE GRASS FIELDS: one out there (lat/lon chunks), one on the island (local chunks) ═════ */
     var GU = { uGrassT: { value: 0 }, uGrassW: { value: 0.3 }, uGrassDir: { value: new THREE.Vector2(0.8, 0.6) } }, gGeo = grassGeo(THREE, lin), GT = null;
@@ -375,6 +380,7 @@ window.WFR_VEG = (function () {
         var h0 = hash3(ch.i * 64 + i, ch.j * 64 + j, salt), rank = ((h0 >>> 20) & 4095) / 4096, ju = ((h0 & 1023) / 1023 - 0.5) * 0.9, jv = (((h0 >>> 10) & 1023) / 1023 - 0.5) * 0.9;
         var a = (i + 0.5 + ju) / n, b = (j + 0.5 + jv) / n, x = ch.x0 + ch.ax * a + ch.bx * b, z = ch.z0 + ch.az * a + ch.bz * b, dens, cls = -1;
         if (geo) { var X = ch.X0 + ch.aX * a + ch.bX * b, Y = ch.Y0 + ch.aY * a + ch.bY * b; cls = core.classAtXY(X, Y); if (cls === BLK || core.hitPath()) continue;
+          if (cls === NONE) { var G772 = window.WFR_LANDCLASS, g772 = G772 ? G772.grass(X, Y, ch.i * 64 + i, ch.j * 64 + j) : 0; if (g772) { if (rank >= GD[g772] * G772.gk) continue; cls = g772; } }   // 772a: the grass asks the same map where the masks are silent
           if (cls === NONE) { if (core.hitZ() >= 14) continue; dens = cbm; } else dens = GD[cls]; }
         else dens = islandDens(x, z);
         if (rank >= dens) continue;

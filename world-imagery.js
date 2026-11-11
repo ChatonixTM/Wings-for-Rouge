@@ -21,7 +21,7 @@ window.WFR_IMAGERY = (function () {
   'use strict';
   var C = { MAXZ: 8, PIN: 2, KEEP: 40, LOADS: 4, PX: 256, SEA: 0.5, GAIN: 1.0, RETRY: 20000, DRAPE: true,
     URL: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/BlueMarble_NextGeneration/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpeg' };   // WMTS RESTful: {TileMatrix}/{TileRow}/{TileCol} = z/y/x
-  var CREDIT = 'Earth imagery: Blue Marble, NASA Earth Observatory (MODIS). We acknowledge the use of imagery provided by services from NASA\'s Global Imagery Browse Services (GIBS), part of NASA\'s Earth Science Data and Information System (ESDIS).';
+  var CREDIT = 'Earth imagery: Blue Marble, NASA Earth Observatory (MODIS). We acknowledge the use of imagery provided by services from NASA\'s Global Imagery Browse Services (GIBS), part of NASA\'s Earth Science Data and Information System (ESDIS). Land cover: MODIS MCD12Q1 v061 (Terra + Aqua), NASA LP DAAC.';
   var stats = { asked: 0, loaded: 0, errors: 0, painted: 0, repainted: 0, cached: 0, cacheBytes: 0, cacheMax: 0, pinned: 0, inflight: 0, paintMsMax: 0, lastError: null };
   var cache = new Map(), pend = new Set(), failed = new Map(), q = [], inflight = 0, lives = [], main = null, canvas = null, ctx = null;
   function keyOf(z, x, y) { return z + '/' + x + '/' + y; }

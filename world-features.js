@@ -139,12 +139,12 @@ window.WFR_FEATURES = (function () {
   function Out() { this.p = []; this.n = []; this.c = []; this.uv = []; this.i = []; }
   Out.prototype.v = function (x, y, z, nx, ny, nz, r, g, b, u, v) { this.p.push(x, y, z); this.n.push(nx, ny, nz); this.c.push(r, g, b); if (this.uv) this.uv.push(u || 0, v || 0); return this.p.length / 3 - 1; };
   var poiWant = null;   /* 729: world-interiors.js asks for shops, cafes and offices near the quests */
-  function want(z, t) { var w = { transportation: 1, water: 1, waterway: 1, place: z <= 12 ? 1 : 0, building: z >= 14 ? 1 : 0 }; if (listeners.length) { w.landcover = 1; w.landuse = 1; } if (poiWant && z >= 14 && t && poiWant(t)) w.poi = 1; return w; }
+  function want(z, t) { var w = { transportation: 1, water: 1, waterway: 1, place: z <= 12 ? 1 : 0, building: z >= 14 ? 1 : 0 }; if (listeners.length) { w.landcover = 1; w.landuse = 1; if (window.WFR_LANDCLASS && window.WFR_LANDCLASS.live && window.WFR_LANDCLASS.live()) w.aeroway = 1; } if (poiWant && z >= 14 && t && poiWant(t)) w.poi = 1; return w; }
   function startJob(t) {
-    var st = T.st, f = T.f, L = decodeTile(t.raw, want(t.z, t)), order = ['water', 'waterway', 'transportation', 'building', 'place', 'landcover', 'landuse', 'poi'], lays = [];
+    var st = T.st, f = T.f, L = decodeTile(t.raw, want(t.z, t)), order = ['water', 'waterway', 'transportation', 'building', 'place', 'landcover', 'landuse', 'aeroway', 'poi'], lays = [];
     for (var i = 0; i < order.length; i++) if (L[order[i]]) lays.push(L[order[i]]);
     var a = W.toLocal(f, t.nw.lat, t.nw.lon), b = W.toLocal(f, t.se.lat, t.se.lon), cx = (a.x + b.x) / 2, cz = (a.z + b.z) / 2, pr = st.probe(cx, cz);
-    t.job = { lakeK: 0, f: f, ax: a.x, az: a.z, lays: lays, li: 0, fi: 0, wall: new Out(), roof: new Out(), gnd: new Out(), wallN: 0, nB: 0, nR: 0, nW: 0, places: [], feed: listeners.length ? { landcover: [], landuse: [], water: [], buildings: [], roads: [], pois: [] } : null, terrZ: pr ? pr.zoom : -1 };
+    t.job = { lakeK: 0, f: f, ax: a.x, az: a.z, lays: lays, li: 0, fi: 0, wall: new Out(), roof: new Out(), gnd: new Out(), wallN: 0, nB: 0, nR: 0, nW: 0, places: [], feed: listeners.length ? { landcover: [], landuse: [], aeroway: [], water: [], buildings: [], roads: [], pois: [] } : null, terrZ: pr ? pr.zoom : -1 };
     t.job.gnd.uv = null; t.job.terrA = { x0: Math.min(a.x, b.x), x1: Math.max(a.x, b.x), z0: Math.min(a.z, b.z), z1: Math.max(a.z, b.z) }; stats.jobs++;
   }
   function stepJob(t, deadline) {   // true when done
@@ -172,6 +172,7 @@ window.WFR_FEATURES = (function () {
       for (i = 0; i < ps.length; i++) { if (J.feed) J.feed.water.push(feedPoly(t, J, ps[i], E, P['class'])); if (!WATER_SKIP[P['class']]) { lake(t, J, ps[i], E, ft.id); J.nW++; } } return; }
     if (name === 'place') { var pc = P['class'], nm = P['name:en'] || P.name_en || P.name; if (!PLACE_R[pc] || !nm || ft.type !== 1 || !ft.rings[0]) return; if (t.z === 9 && !(pc === 'city' || pc === 'town' || pc === 'island')) return;
       var g = llOf(t.z, t.x, t.y, ft.rings[0][0], ft.rings[0][1], E); if (ft.rings[0][0] < 0 || ft.rings[0][0] >= E || ft.rings[0][1] < 0 || ft.rings[0][1] >= E) return; J.places.push({ name: String(nm), cls: pc, rank: P.rank || 9, lat: g.lat, lon: g.lon }); return; }
+    if (name === 'aeroway') { if (J.feed && J.feed.aeroway) { if (ft.type === 3) { ps = polygons(ft.rings); for (i = 0; i < ps.length; i++) J.feed.aeroway.push(feedPoly(t, J, ps[i], E, P['class'])); } else if (ft.type === 2) J.feed.aeroway.push(feedLine(t, ft.rings, E, P['class'], P['class'] === 'runway' ? 60 : 25)); } return; }   // 772a: pavement for the listeners (areas as polygons; a centre line with a DRAFT width: runway 60 m, taxiway 25 m)
     if ((name === 'landcover' || name === 'landuse') && J.feed && ft.type === 3) { ps = polygons(ft.rings); for (i = 0; i < ps.length; i++) J.feed[name].push(feedPoly(t, J, ps[i], E, P['class'], P.subclass)); }
   }
   function feedLine(t, rings, E, cls, w) { var out = []; for (var i = 0; i < rings.length; i++) { var r = rings[i], ll = new Float64Array(r.length); for (var k = 0; k < r.length; k += 2) { var g = llOf(t.z, t.x, t.y, r[k], r[k + 1], E); ll[k] = g.lon; ll[k + 1] = g.lat; } out.push(ll); } return { cls: cls, width: w, lines: out }; }   // a line for the listeners: [lon, lat] pairs and its drawn width (m)
