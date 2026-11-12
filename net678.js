@@ -20,7 +20,7 @@
   const EXTRAP = 0.3;            /* seconds it may carry on at its last velocity when the buffer runs dry; then it holds */
   const SNAP = 12;               /* metres between two snapshots: farther = it appears there (a reconnect, a long hitch) */
   const BUF = 12;                /* snapshots kept: 1.2 s at 10 Hz */
-  const RULES = { y: [-7, 7], t: [-2, 2], p: [-2000, 2000], k: 12, m: 5, n: 12 };   /* MIRRORS net678.rules.json (tests/net678.js compares the two): what the sender clamps to and what the fake transport refuses */
+  const RULES = { y: [-7, 7], t: [-2, 2], p: [-2000, 2000], k: 12, m: 5, n: 12, a: [0, 2], q: 1e9 };   /* SU39 (782): a and q, the strike, OPTIONAL in the rules (the nine stay required) */   /* MIRRORS net678.rules.json (tests/net678.js compares the two): what the sender clamps to and what the fake transport refuses */
   const SILENCE = 8;             /* seconds without a packet: the ghost is gone */
   const ALPHABET = 'ABCDEFGHJKMNPQRSTUVWXYZ23456789';   /* no lookalikes: no I, L, O, 0, 1 */
   const CODE_RE = /^[A-HJ-NP-Z2-9]{4,6}$/, PLAYER_RE = /^[a-z0-9]{6,12}$/;
@@ -36,11 +36,13 @@
   function realNow() { return (typeof performance !== 'undefined' && performance.now ? performance.now() : Date.now()) / 1000; }
   function pack(me, name, ms) {   /* the packet, inside the published rules whatever the caller hands over: wrapped, clamped, cut. Never send what the rules refuse. */
     const p = Array.isArray(me.p) ? me.p : [0, 0, 0];
-    return { v: 1, k: String(me.k || 'cardinal').slice(0, RULES.k), p: [+fin(p[0], RULES.p[0], RULES.p[1]).toFixed(2), +fin(p[1], RULES.p[0], RULES.p[1]).toFixed(2), +fin(p[2], RULES.p[0], RULES.p[1]).toFixed(2)], y: +wrapAngle(me.y).toFixed(3), t: +fin(me.t, RULES.t[0], RULES.t[1]).toFixed(3), f: me.f ? 1 : 0, m: String(me.m || 'walk').slice(0, RULES.m), n: cleanName(name).slice(0, RULES.n), s: Math.max(0, Math.round(fin(ms, 0, 1e15))) };
+    return { v: 1, k: String(me.k || 'cardinal').slice(0, RULES.k), p: [+fin(p[0], RULES.p[0], RULES.p[1]).toFixed(2), +fin(p[1], RULES.p[0], RULES.p[1]).toFixed(2), +fin(p[2], RULES.p[0], RULES.p[1]).toFixed(2)], y: +wrapAngle(me.y).toFixed(3), t: +fin(me.t, RULES.t[0], RULES.t[1]).toFixed(3), f: me.f ? 1 : 0, m: String(me.m || 'walk').slice(0, RULES.m), n: cleanName(name).slice(0, RULES.n), s: Math.max(0, Math.round(fin(ms, 0, 1e15))), a: Math.round(fin(me.a, RULES.a[0], RULES.a[1])), q: Math.round(fin(me.q, 0, RULES.q)) };
   }
+  function packed(me, name, ms) { const o = pack(me, name, ms); if (N.noStrike || me.a == null) { delete o.a; delete o.q; } return o; }   /* SU39 (782): the strike rides along only while the published rules take it */
   function refused(o) {   /* why net678.rules.json would refuse this packet, or '': the fake transport's gate, the published rules line by line */
     if (!o || typeof o !== 'object' || Array.isArray(o)) return 'not an object';
-    const keys = Object.keys(o).sort().join(','); if (keys !== 'f,k,m,n,p,s,t,v,y') return 'keys ' + keys;
+    const keys = Object.keys(o).sort().join(','); if (keys !== 'f,k,m,n,p,s,t,v,y' && keys !== 'a,f,k,m,n,p,q,s,t,v,y') return 'keys ' + keys;   /* SU39 (782): or with the strike, a and q */
+    if ('a' in o && (o.a !== 0 && o.a !== 1 && o.a !== 2)) return 'a'; if ('q' in o && (typeof o.q !== 'number' || !Number.isFinite(o.q) || o.q < 0 || o.q > RULES.q)) return 'q';
     const isN = (v) => typeof v === 'number' && Number.isFinite(v);
     if (o.v !== 1) return 'v';
     if (typeof o.k !== 'string' || o.k.length > RULES.k) return 'k';
@@ -71,7 +73,7 @@
     const y = num(o.y, -7, 7), t = num(o.t, -2, 2); if (y === null || t === null) return null;
     const B = N.G && N.G.BIRDS; const k = typeof o.k === 'string' && B && B[o.k] ? o.k : 'cardinal';
     const m = o.m === 'fly' || o.m === 'walk' || o.m === 'swim' ? o.m : 'walk';
-    return { v: 1, k, p, y, t, f: o.f ? 1 : 0, m, n: cleanName(o.n), s: num(o.s, 0, 1e12) || 0, id: typeof o.id === 'string' && PLAYER_RE.test(o.id) ? o.id : '' };
+    return { v: 1, k, p, y, t, f: o.f ? 1 : 0, m, n: cleanName(o.n), s: num(o.s, 0, 1e12) || 0, id: typeof o.id === 'string' && PLAYER_RE.test(o.id) ? o.id : '', a: o.a === 1 || o.a === 2 ? o.a : 0, q: num(o.q, 0, 1e9) };   /* SU39 (782): the strike (q null from an older phone) */
   }
 
   /* ---------- transports ---------- */
@@ -89,7 +91,7 @@
   function firebaseTransport(cfg, code, player) {
     const fns = []; let ref = null, roomRef = null, off = null, closed = false, pending = null;
     const bad = (e) => { N.refused++; N.lastWhy = String(e && e.message || e); };   /* v1.1: a refused write is COUNTED (state().refused); v1 swallowed it, and his phone's writes were refused for a whole evening */
-    const T = { kind: 'firebase', ready: false, send(o) { if (ref) ref.set(o).catch(bad); else pending = o; }, on(fn) { fns.push(fn); }, close() { closed = true; try { if (off) off(); if (ref) ref.remove(); } catch (e) { /* gone already */ } } };
+    const T = { kind: 'firebase', ready: false, send(o) { if (ref) ref.set(o).catch((e) => { bad(e); if ('a' in o && /permission/i.test(String(e && (e.code || e.message) || e))) N.noStrike = true; }); else pending = o; },   /* SU39 (782): rules not yet republished: the strike is dropped from then on, the flight goes on */ on(fn) { fns.push(fn); }, close() { closed = true; try { if (off) off(); if (ref) ref.remove(); } catch (e) { /* gone already */ } } };
     (async () => {
       try {
         if (!window.firebase) { await loadScript(SDK + 'firebase-app-compat.js'); await loadScript(SDK + 'firebase-database-compat.js'); }
@@ -139,6 +141,7 @@
     if (g && (g.k !== o.k || g.name !== o.n)) { ghostDrop(); g = null; }
     if (!g) { g = N.ghost = ghostMake(o.k, o.n); g.at.set(o.p[0], o.p[1], o.p[2]); g.g.position.copy(g.at); g.prev.copy(g.at); g.yaw = o.y; g.seen = N.t; arrived(g); }   /* v1.1: it is heard flying in */
     g.lastRecv = N.t;
+    if (o.q != null) { if (g.q != null && o.q > g.q && o.a && N.G.poked) { N.strikesIn = (N.strikesIn || 0) + 1; try { N.G.poked({ a: o.a, p: o.p, y: o.y }); } catch (e) { /* a poke never stops the flight */ } } if (g.q == null || o.q > g.q || o.q < g.q - 1000) g.q = o.q; }   /* SU39 (782): a new strike from them: the game judges it against HER true place (fair on her own phone) */
     const ts = o.s / 1000, B = g.buf, z = B.length ? B[B.length - 1] : null;   /* v1.1: s is the sender's real clock in ms; the snapshots sit on ITS timeline, whatever the delivery did (packets bunch on a network) */
     if (z) { if (ts <= z.ts) { if (ts < z.ts - 5) { B.length = 0; g.off = null; } else return; }   /* an old or repeated packet keeps the ghost alive and never moves it back; a clock 5 s back is their page reloaded: a fresh stream */
       else if (Math.hypot(o.p[0] - z.p[0], o.p[1] - z.p[1], o.p[2] - z.p[2]) > SNAP) { B.length = 0; g.off = null; g.at.set(o.p[0], o.p[1], o.p[2]); g.prev.copy(g.at); g.yaw = o.y; } }   /* far away (a reconnect, a long hitch): it appears there, it does not glide across the island */
@@ -180,7 +183,7 @@
       if (!N.G) return; N.t += dt; const g = N.ghost;
       const now = realNow(), rdt = N.rnow ? Math.min(0.25, Math.max(0, now - N.rnow)) : 0; N.rnow = now;   /* v1.1: the ghost moves on the REAL clock: the other bird's time is not slowed by our pouch or our frame cap */
       if (N.T && N.code) {
-        if (now - N.lastSend >= RATE - 0.004) { N.lastSend = now; const me = N.G.me(); if (me) { N.seq++; N.T.send(pack(me, N.name, now * 1000)); N.sent++; } }   /* 10 a second; null until she is in the world; pack() keeps every field inside the rules */
+        if (now - N.lastSend >= RATE - 0.004) { N.lastSend = now; const me = N.G.me(); if (me) { N.seq++; N.T.send(packed(me, N.name, now * 1000)); N.sent++; } }   /* 10 a second; null until she is in the world; pack() keeps every field inside the rules */
         if (N.T.drain) N.T.drain(now);
       }
       if (!g) return;
@@ -202,11 +205,12 @@
     },
     state() { const g = N.ghost; let progs = null;   /* the programs the ghost's materials use (trap 188: a ghost must make no new program) */
       if (g && N.G.renderer) { progs = []; g.g.traverse((o) => { if (o.material) { const pr = N.G.renderer.properties.get(o.material), p = pr && (pr.currentProgram || pr.program); progs.push(p ? p.cacheKey : null); } }); }
-      return { ready: API.ready(), configured: !!config(), fake: !!window.WFR_NET678_FAKE, status: N.status, err: N.err, code: N.code, player: N.player, name: N.name, sent: N.sent, recv: N.recv, dropped: N.dropped, refused: N.refused, lastWhy: N.lastWhy, rate: RATE, delay: DELAY, rules: RULES, t: N.t, transport: N.T ? N.T.kind : null, jitter: N.T && N.T.jit ? { delivered: N.T.delivered, lost: N.T.lost, queued: N.T.queue.length } : null, saved: roomSaved(), ghost: g ? { at: g.at.toArray(), tgt: g.tgt.toArray(), yaw: g.yaw, k: g.k, name: g.name, visible: !!g.g.parent, pk: g.pk, seq: g.seq, silence: N.t - g.lastRecv, progs, how: g.how, buf: g.buf.length, off: g.off, maxSpeed: g.maxSpeed, maxStep: g.maxStep, frames: g.frames, interpN: g.interpN, bandIn: g.bandIn, bandOut: g.bandOut, extrapT: g.extrapT, heldT: g.heldT, snaps: g.snaps, grow: +(g.g.scale.x / g.sz).toFixed(3), tagA: +g.tag.material.opacity.toFixed(3), growN: g.growN, arrive: +g.arrive.toFixed(2) } : null }; },
+      return { ready: API.ready(), configured: !!config(), fake: !!window.WFR_NET678_FAKE, status: N.status, err: N.err, code: N.code, player: N.player, name: N.name, sent: N.sent, recv: N.recv, dropped: N.dropped, refused: N.refused, lastWhy: N.lastWhy, noStrike: !!N.noStrike, strikesIn: N.strikesIn || 0, rate: RATE, delay: DELAY, rules: RULES, t: N.t, transport: N.T ? N.T.kind : null, jitter: N.T && N.T.jit ? { delivered: N.T.delivered, lost: N.T.lost, queued: N.T.queue.length } : null, saved: roomSaved(), ghost: g ? { at: g.at.toArray(), tgt: g.tgt.toArray(), yaw: g.yaw, k: g.k, name: g.name, visible: !!g.g.parent, pk: g.pk, seq: g.seq, silence: N.t - g.lastRecv, progs, how: g.how, buf: g.buf.length, off: g.off, maxSpeed: g.maxSpeed, maxStep: g.maxStep, frames: g.frames, interpN: g.interpN, bandIn: g.bandIn, bandOut: g.bandOut, extrapT: g.extrapT, heldT: g.heldT, snaps: g.snaps, grow: +(g.g.scale.x / g.sz).toFixed(3), tagA: +g.tag.material.opacity.toFixed(3), growN: g.growN, arrive: +g.arrive.toFixed(2) } : null }; },
     _fake() { return N.T && N.T.kind === 'fake' ? N.T : null; },
     _jitter(o) {   /* the guard: deliver with jitter { min, max (s), drop (0..1), seed, band: [lo, hi] m/s }, and zero the ghost's instruments; null turns it off */
       const T = N.T; if (!T || !T.jitter) return false; T.jitter(o); N.band = o && Array.isArray(o.band) ? o.band : null;
       const g = N.ghost; if (g) { g.maxSpeed = 0; g.maxStep = 0; g.frames = 0; g.bandIn = 0; g.bandOut = 0; g.interpN = 0; g.extrapT = 0; g.heldT = 0; } return true; },
+    _packed(me, name, ms) { return packed(me, name, ms); }, _noStrike(b) { N.noStrike = !!b; return N.noStrike; },   /* SU39 (782): the bench's: the packer, and the old-rules switch the Firebase refusal flips */
     _inject(o, d) { if (N.T) N.T.inject ? N.T.inject(o, d) : onPacket(o); else onPacket(o); }
   };
   window.WFR_NET678 = API;
