@@ -21,10 +21,10 @@ window.WFR_SEASONS = (function () {
      NIGHT: the cards' light at night, as a share of day. GAIN: their light by day. GREEN: the share of broadleaves still green. The last row: the warm lean of the sun, sky fill and ground bounce by day. */
   var C = { N: 420, R: 40, RATE: 30, FULL: 6, RAIN: 0.5, FALL: [0.9, 1.7], SWAY: [0.35, 1.1], SIZE: [0.3, 0.5], LIE: 5, FADE: 1.6, CLOSE: 0.16, CLOSE_R: 18,
     PER: 0.55, LIT: [8, 72], LSIZE: [0.34, 0.62], FAR: [90, 135], LIFT: 0.08, NIGHT: 0.3, GAIN: 0.9, GREEN: 0.1, WIND: [0.8, 0.6], DRIFT: 0.35, GUST: 1.6,
-    SUN: 0xffc27a, SUNK: 0.5, SKY: 0xffdfae, SKYK: 0.45, GND: 0x8a6a30, GNDK: 0.5 };
+    SUN: 0xffc27a, SUNK: 0.5, SKY: 0xffdfae, SKYK: 0.45, GND: 0x8a6a30, GNDK: 0.5, FOG: 0xf0d6a2, FOGK: 0.5 };   /* SU39: FOG, FOGK: the day air's warm gold (Marth's standard, Nov 12) */
   /* THE PALETTES (sRGB): gold, amber, orange, rust for the oaks; the birches go yellow. KEPT: the leaf a still-green tree drops. */
   var PAL = { oak: [0xe3b63a, 0xe8c04a, 0xd9a02f, 0xd8892c, 0xdb7a2a, 0xd0642e, 0xc4552c, 0xb8452e, 0xa8402a], birch: [0xe6c444, 0xf0d15a, 0xd9b23a, 0xe3b63a, 0xdba832], big: 0xd9952e,
-    kept: 0xa9ad3c, bush: 0xc9a23a, fern: 0xb8963a, brown: 0x8a5a2a, grass: [1.25, 1.02, 0.7], meadow: [0.3, 0.24] };
+    kept: 0xa9ad3c, bush: 0xc9a23a, fern: 0xb8963a, brown: 0x8a5a2a, grass: [1.55, 1.0, 0.45], meadow: [0.55, 0.45] };   /* SU39: the grass and the meadow far more golden (was [1.25, 1.02, 0.7] and [0.3, 0.24]): the standard's wood is gold to the ground */
   var TAU = Math.PI * 2, ST = 14, TS = 8;
   var X = null, fault = null, why = null, held = false, name = null;
   var stat = { born: 0, landed: 0, wet: 0, full: 0, ticks: 0, tickMs: 0, tickMax: 0, lights: 0, day: 0, buildMs: 0, cuts: 0 };
@@ -82,7 +82,7 @@ window.WFR_SEASONS = (function () {
   function build(io) {
     var THREE = io.THREE, scene = io.scene, lin = !!(io.renderer && io.renderer.outputEncoding === THREE.sRGBEncoding), col = new THREE.Color(), c2 = new THREE.Color(), i, j, k;
     var Z = { on: true, THREE: THREE, cam: io.camera, H: io.H, water: io.water, night: io.night || null, rain: io.rain || null, inside: io.inside || null, classic: io.classic || null, away: io.away || null,
-      undo: [], cSun: new THREE.Color(C.SUN), cSky: new THREE.Color(C.SKY), cGnd: new THREE.Color(C.GND), dir: new THREE.Vector3() };
+      undo: [], cSun: new THREE.Color(C.SUN), cSky: new THREE.Color(C.SKY), cGnd: new THREE.Color(C.GND), cFog: new THREE.Color(C.FOG), dir: new THREE.Vector3() };
     /* the broadleaves, read from the forest's own instances: x, crown middle y, z, crown radius, its leaf colour (r, g, b), the crown's height as a share of its radius */
     var list = [], src = [], kinds = { oak: 0, birch: 0, big: 0 };
     [['oak', 2.9, 5.0, 0.9, PAL.oak], ['birch', 1.5, 5.0, 2.2, PAL.birch]].forEach(function (sp) {
@@ -231,14 +231,14 @@ window.WFR_SEASONS = (function () {
 
   /* ---------- THE LIGHT: called where the game sets its lights' colours: by the sky clock when it repaints (before the realism pass reads the fill), and each frame after the air's own grade
      (atmo.js sets the sun and the fill every frame). A colour this file has already leaned, and nobody has set since, is left alone: asked twice, it leans once. ---------- */
-  var WROTE = new Float64Array(9);
+  var WROTE = new Float64Array(12);
   function lean(c, to, k, w) { if (c.r === WROTE[w] && c.g === WROTE[w + 1] && c.b === WROTE[w + 2]) return 0; c.lerp(to, k); WROTE[w] = c.r; WROTE[w + 1] = c.g; WROTE[w + 2] = c.b; return 1; }
-  function light(sun, hemi, na, k) {
+  function light(sun, hemi, na, k, fog) {   /* SU39: and the air itself (fog: the island's day air, never the water's), toward a hanging gold (the standard's painted wood, 06) */
     if (!X || !X.on || held) return;
     try {
       if (X.away && X.away()) return;
       var day = (1 - (na || 0)) * (1 - 0.6 * (k || 0)); stat.day = +day.toFixed(3); if (!(day > 0)) return;
-      if (lean(sun.color, X.cSun, C.SUNK * day, 0) | lean(hemi.color, X.cSky, C.SKYK * day, 3) | lean(hemi.groundColor, X.cGnd, C.GNDK * day, 6)) stat.lights++;
+      if (lean(sun.color, X.cSun, C.SUNK * day, 0) | lean(hemi.color, X.cSky, C.SKYK * day, 3) | lean(hemi.groundColor, X.cGnd, C.GNDK * day, 6) | (fog && fog.color ? lean(fog.color, X.cFog, C.FOGK * day, 9) : 0)) stat.lights++;
     } catch (e) { fail('light', e); }
   }
 
