@@ -333,7 +333,13 @@
      under a name rising over the view. 'sea': open fifths climbing, airy (the water ahead); 'land': a warm rise that settles home on its root; 'found':
      a bright little turn for a place she discovers. Triangle and sine only, slow attacks, long tails, a soft fifth under the last note. */
   var PHR = { sea: [[0, 62, 0.5], [0.32, 69, 0.5], [0.64, 74, 0.55], [1.0, 76, 1.4, 69]], land: [[0, 67, 0.4], [0.26, 71, 0.4], [0.52, 74, 0.45], [0.8, 72, 0.5], [1.12, 67, 1.5, 60]],
-    found: [[0, 72, 0.3], [0.2, 76, 0.3], [0.4, 79, 0.35], [0.62, 84, 1.2, 76]] };
+    found: [[0, 72, 0.3], [0.2, 76, 0.3], [0.4, 79, 0.35], [0.62, 84, 1.2, 76]],
+    /* 781 (ours): 'get', a find held up: a quick climb in A major that leaps a sixth and rings, the third under it; 'door', the Haven's door: low, a
+       question that turns warm; 'haven', the garden's arrival: a lilting fall and rise that lands home; 'buy', a purchase: two bright steps and a bell */
+    get: [[0, 64, 0.16], [0.11, 68, 0.16], [0.22, 71, 0.18], [0.36, 73, 0.22], [0.56, 81, 1.5, 73], [0.62, 88, 1.0]],
+    door: [[0, 57, 0.6], [0.45, 60, 0.55], [0.9, 64, 0.6], [1.35, 69, 1.6, 61]],
+    haven: [[0, 74, 0.35], [0.3, 72, 0.35], [0.6, 69, 0.4], [0.95, 71, 0.4], [1.3, 74, 0.45], [1.7, 78, 1.6, 66]],
+    buy: [[0, 79, 0.12], [0.1, 84, 0.18], [0.24, 91, 0.7, 84]] };
   function phrase(kind, o) {
     o = o || {}; var P2 = PHR[kind] || PHR.land;
     if (!ctx || !bus || (isMuted && isMuted()) || voices >= MAX_VOICES) return false;

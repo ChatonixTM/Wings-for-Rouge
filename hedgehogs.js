@@ -544,7 +544,9 @@
     return API;
   }
 
-  const WFR_HOGS = { NAMES, BOOK_PAGES_OK, DUNES, ZOOM, CURL_R, makeDunes, init, _guardOf: guard, _duneAt: duneAt };
+  /* 781 U4: the Market's keeper is a hedgehog, built by this file's own builder (borrowed, not drawn again): { g, body, spines } */
+  function keeper(THREE, scale, fur) { return buildHog(THREE, 'keeper', scale || 1, fur || 0x8a6a48, spinePoses(THREE)); }
+  const WFR_HOGS = { NAMES, BOOK_PAGES_OK, DUNES, ZOOM, CURL_R, makeDunes, init, keeper, _guardOf: guard, _duneAt: duneAt };
   root.WFR_HOGS = WFR_HOGS;
   if (typeof module !== 'undefined' && module.exports) module.exports = WFR_HOGS;
 }(typeof window !== 'undefined' ? window : globalThis));

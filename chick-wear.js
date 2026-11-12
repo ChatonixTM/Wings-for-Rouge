@@ -26,9 +26,12 @@ window.WFR_WEAR = (function () {
     { id: 'hat', name: 'a cone hat', emoji: '\u{1F389}' }, { id: 'crown', name: 'a little crown', emoji: '\u{1F451}' }, { id: 'bow', name: 'a bow', emoji: '\u{1F380}' },
     { id: 'scarf', name: 'a scarf', emoji: '\u{1F9E3}' }, { id: 'glasses', name: 'round glasses', emoji: '\u{1F453}' }, { id: 'cape', name: 'a cape', emoji: '\u{1F9E5}' },
     { id: 'flower', name: 'a flower', emoji: '\u{1F33C}' }, { id: 'bandana', name: 'a bandana', emoji: '\u{1F3F4}' }, { id: 'bell', name: 'a bell', emoji: '\u{1F514}' }, { id: 'thread', name: 'the red thread', emoji: '\u{1F9F5}' },
+    /* 781 U4: four more, sold at the Chick Haven's Market for coins (shop: owned in S.chick.haven781.owned). DRAFT names. */
+    { id: 'sunhat', name: 'a sun hat', emoji: '\u{1F452}', shop: true }, { id: 'flowercrown', name: 'a flower crown', emoji: '\u{1F490}', shop: true },
+    { id: 'satchel', name: 'a little satchel', emoji: '\u{1F45D}', shop: true }, { id: 'starpin', name: 'a star pin', emoji: '\u{2B50}', shop: true },
   ];
-  const SLOT = { hat: 'head', crown: 'head', bow: 'head', flower: 'head', bandana: 'head', glasses: 'face', scarf: 'neck', thread: 'neck', bell: 'neck', cape: 'back' };
-  function can(c, id) { const it = HELD.concat(WEAR).find((x) => x.id === id); if (!it) return false; return !it.needs || !!(c && c.marks && c.marks[it.needs]); }
+  const SLOT = { hat: 'head', crown: 'head', bow: 'head', flower: 'head', bandana: 'head', glasses: 'face', scarf: 'neck', thread: 'neck', bell: 'neck', cape: 'back', sunhat: 'head', flowercrown: 'head', satchel: 'back', starpin: 'face' };
+  function can(c, id) { const it = HELD.concat(WEAR).find((x) => x.id === id); if (!it) return false; if (it.shop) return !!(c && c.haven781 && c.haven781.owned && c.haven781.owned[id]); return !it.needs || !!(c && c.marks && c.marks[it.needs]); }
   function lam(THREE, color, extra) { return new THREE.MeshLambertMaterial(Object.assign({ color }, extra || {})); }
   function basic(THREE, color) { return new THREE.MeshBasicMaterial({ color }); }
   /* every piece is built in the chick body's own space: head centre (0, 0.45, 0.14) r 0.29, beak tip (0, 0.42, 0.56), body r 0.42 */
@@ -48,6 +51,10 @@ window.WFR_WEAR = (function () {
     scarf: (T) => { const m = new T.Mesh(new T.TorusGeometry(0.3, 0.07, 8, 14), lam(T, 0xc8574b)); m.rotation.x = Math.PI / 2; m.position.set(0, 0.22, 0.08); return m; },
     thread: (T) => { const m = new T.Mesh(new T.TorusGeometry(0.31, 0.02, 6, 14), lam(T, 0xc8314a)); m.rotation.x = Math.PI / 2; m.position.set(0, 0.2, 0.08); return m; },
     bell: (T) => { const g = new T.Group(); const r = new T.Mesh(new T.TorusGeometry(0.3, 0.015, 6, 14), lam(T, 0x8b5e34)); r.rotation.x = Math.PI / 2; r.position.set(0, 0.2, 0.08); g.add(r); const b = new T.Mesh(new T.SphereGeometry(0.06, 8, 6), lam(T, 0xf2b134)); b.position.set(0, 0.14, 0.4); g.add(b); return g; },
+    sunhat: (T) => { const g = new T.Group(); const br = new T.Mesh(new T.CylinderGeometry(0.34, 0.34, 0.025, 18), lam(T, 0xe8c87a)); br.position.set(0, 0.45 + 0.24, 0.12); g.add(br); const cr = new T.Mesh(new T.CylinderGeometry(0.17, 0.2, 0.16, 14), lam(T, 0xe8c87a)); cr.position.set(0, 0.45 + 0.33, 0.12); g.add(cr); const bd = new T.Mesh(new T.CylinderGeometry(0.205, 0.205, 0.045, 14), lam(T, 0xc8574b)); bd.position.set(0, 0.45 + 0.28, 0.12); g.add(bd); return g; },
+    flowercrown: (T) => { const g = new T.Group(); const C = [0xff8fa3, 0xfff2a8, 0xffffff, 0xb59cf0]; for (let i = 0; i < 9; i++) { const a = i / 9 * Math.PI * 2, f = new T.Mesh(new T.SphereGeometry(0.05, 6, 4), lam(T, C[i % 4])); f.position.set(Math.cos(a) * 0.19, 0.45 + 0.25, 0.12 + Math.sin(a) * 0.19); g.add(f); } const v = new T.Mesh(new T.TorusGeometry(0.19, 0.016, 5, 16), lam(T, 0x5d9b45)); v.rotation.x = Math.PI / 2; v.position.set(0, 0.45 + 0.24, 0.12); g.add(v); return g; },
+    satchel: (T) => { const g = new T.Group(); const b = new T.Mesh(new T.BoxGeometry(0.24, 0.2, 0.1), lam(T, 0x8b5e34)); b.position.set(0.3, 0.05, -0.18); b.rotation.y = 0.5; g.add(b); const f = new T.Mesh(new T.BoxGeometry(0.245, 0.09, 0.105), lam(T, 0x6e4529)); f.position.set(0.3, 0.12, -0.18); f.rotation.y = 0.5; g.add(f); const s = new T.Mesh(new T.TorusGeometry(0.33, 0.014, 5, 16), lam(T, 0x6e4529)); s.rotation.set(Math.PI / 2, 0.55, 0); s.position.set(0, 0.2, 0.02); g.add(s); return g; },
+    starpin: (T) => { const sh = new T.Shape(); for (let i = 0; i < 10; i++) { const r = i % 2 ? 0.035 : 0.085, a = Math.PI / 2 + i * Math.PI / 5; if (i) sh.lineTo(Math.cos(a) * r, Math.sin(a) * r); else sh.moveTo(Math.cos(a) * r, Math.sin(a) * r); } const m = new T.Mesh(new T.ExtrudeGeometry(sh, { depth: 0.02, bevelEnabled: false }), lam(T, 0xf2b134, { emissive: 0x5a3a00 })); m.position.set(0.17, 0.62, 0.36); m.rotation.y = 0.45; return m; },
     cape: (T) => { const m = new T.Mesh(new T.PlaneGeometry(0.6, 0.62), lam(T, 0x8a5a9c, { side: T.DoubleSide })); m.position.set(0, 0.05, -0.42); m.rotation.x = 0.25; return m; },
   };
   function apply(THREE, chick, c) {
