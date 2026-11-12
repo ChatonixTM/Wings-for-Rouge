@@ -18,6 +18,9 @@
    THE MARKET a stall with a striped awning, kept by Thimble, a hedgehog (hedgehogs.js's own builder, borrowed). Coins (fall748's, the game's only coin) buy:
              WEAR four new wearables (chick-wear.js, shop: true), TOYS that stand in the Haven and cheer the chick, FRUIT that pushes one strength four times a
              tree fruit (into her beak: the game's own Feed gives it), EGGS shown 'soon' (his "One now, eggs later"). Prices: PRICES, set from a measured hunt.
+   KEEPSAKES (Marth, Nov 12, picking between the two: "Just the Haven") a little two-tier shelf by the toys holds every keepsake her chick has kept (the Feed's
+             own record, S.chick.marks: nothing new saved); now and then the chick takes one down and plays with it (it hops over to the shelf, the keepsake hops down to it and bounces round it,
+             hearts, mood +3), then it goes back to its place. The seven keepsakes come from cabins.js / cave.js (o.keepsake(id)). DRAFT.
    SAVED     S.chick.haven781 = { visits, met, owned: { id: true }, toys: [id], spent } (S.chick is saved whole).
    COST      built once at load into one group, hidden until she is in: one floor, one wall, one instanced grass, one instanced flower field, the trees' own
              instanced meshes, a few plain meshes and canvas signs; Lambert only (the game's programs). Nothing is made or freed per visit.
@@ -29,7 +32,7 @@ window.WFR_HAVEN781 = (function () {
   var API = { error: '' };
   var K = { Y: 135, R: 14.6, FLOOR_R: 21, WALL_R: 16, WALL_H: 1.5, DOOR_R: 0.62, NEAR: 2.4 };
   /* the garden, in its own frame (metres from its middle; +z is the home door's side) */
-  var P = { arrive: [0, 11.4], door: [0, 15.55], pond: [-6.2, -3.2, 2.9], chick: [-3.4, -6.4], market: [7.4, -4.8], counter: [5.6, -3.6], school: [-8.6, 5.6], ring: [0.6, -10.6, 2.5], post: [2.6, 6.4] };
+  var P = { arrive: [0, 11.4], door: [0, 15.55], pond: [-6.2, -3.2, 2.9], chick: [-3.4, -6.4], shelf: [-8.4, -7.8], market: [7.4, -4.8], counter: [5.6, -3.6], school: [-8.6, 5.6], ring: [0.6, -10.6, 2.5], post: [2.6, 6.4] };
   /* DRAFT prices in coins, set from a measured island (Su 41, Nov 12, Lv 30 save): 23 animals, each fall drops a coin at its row's chance (fall748.js), so a
      whole sweep pays about 5.0 coins (0.22 a fall) and the island refills 240 s after she leaves an animal's sight. A keen hunt (a fall every ~30 s with the
      travel) makes about 25 coins an hour; ordinary play, hunting now and then, about 5-10. So a fruit is a few minutes' hunting, a toy about twenty, a wear about
@@ -163,6 +166,51 @@ window.WFR_HAVEN781 = (function () {
       shade(g, true); return g;
     }
     function placeToys() { var hv = state(); (hv.toys || []).forEach(function (id) { if (toyG[id]) return; var t = TOYS.find(function (q) { return q.id === id; }); if (!t) return; var m = toyMesh(id); m.position.set(t.at[0], 0, t.at[1]); m.rotation.y = hash(id.length) * 6; root.add(m); toyG[id] = m; }); }
+    /* HER CHICK'S KEEPSAKES: the shelf (built at load, empty slots), a sprite per kept keepsake, and the chick's play with one at a time */
+    var SLOTS = [[-0.75, 0.98], [-0.25, 0.98], [0.25, 0.98], [0.75, 0.98], [-0.6, 0.38], [0, 0.38], [0.6, 0.38]];
+    var shelf = (function () {
+      var g = new THREE.Group(), wood = function (w, h, d) { return shade(o.tex(new THREE.Mesh(new THREE.BoxGeometry(w, h, d), lam(0x8b5e34)), 'planks', 1, 1), true); };
+      [-1.05, 1.05].forEach(function (x) { var s = wood(0.1, 1.5, 0.5); s.position.set(x, 0.75, 0); g.add(s); });
+      [0.18, 0.78, 1.38].forEach(function (y) { var b = wood(2.2, 0.07, 0.5); b.position.set(0, y, 0); g.add(b); });
+      var back = wood(2.2, 1.4, 0.05); back.position.set(0, 0.74, -0.24); g.add(back);
+      var sign = board(THREE, 'Keepsakes', 1.2, 0.3, { size: 80 }); sign.position.set(0, 1.64, 0.02); g.add(sign);
+      g.position.set(P.shelf[0], 0, P.shelf[1]); g.rotation.y = Math.atan2(-P.shelf[0], -P.shelf[1]); root.add(g); return g;
+    })();
+    var kept = {}, keptN = 0, play = { t: 5, cur: null, n: 0, said: false };
+    function keepType(id) { try { return o.keepsake ? o.keepsake(id) : null; } catch (e) { return null; } }
+    function slotAt(i) { var q = SLOTS[i], ry = shelf.rotation.y, z = 0.06; return { x: P.shelf[0] + q[0] * Math.cos(ry) + z * Math.sin(ry), y: q[1], z: P.shelf[1] - q[0] * Math.sin(ry) + z * Math.cos(ry) }; }
+    function home(k) { shelf.add(k.sp); k.sp.position.set(SLOTS[k.i][0], SLOTS[k.i][1], 0.06); }
+    function placeKept() {
+      var marks = (L().S.chick && L().S.chick.marks) || {};
+      Object.keys(marks).forEach(function (id) { if (kept[id] || keptN >= SLOTS.length) return; var t = keepType(id); if (!t || !t.emoji) return;
+        var sp = o.sprite(t.emoji, 0.4); var k = { id: id, i: keptN++, sp: sp, name: t.name }; kept[id] = k; home(k); });
+    }
+    function playTick(dt, Lt, S) {   /* one keepsake at a time, never in a scene, the Market or a talk */
+      var chick = Lt.chick();
+      if (play.cur && (S.talking || H.panel)) return;   /* a talk or the Market holds the play where it is (Obito) */
+      if (!play.cur) {
+        play.t -= dt; if (play.t > 0) return;
+        var ids = Object.keys(kept); if (!ids.length || !chick || S.talking || H.panel) { play.t = 4; return; }
+        var k = kept[ids[play.n++ % ids.length]];
+        play.cur = { k: k, u: 0, wait: 0, from: null, hearts: false, a: Math.random() * 6.28 };
+        var f = Math.atan2(-P.shelf[0], -P.shelf[1]), fw = toW(P.shelf[0] + Math.sin(f) * 1.3, P.shelf[1] + Math.cos(f) * 1.3);   /* it goes to its shelf first (unless it is following her) */
+        if (!(Lt.FOLLOW && Lt.FOLLOW.with) && chick.userData) { play.cur.was = chick.userData.home ? chick.userData.home.clone() : null; chick.userData.home = new THREE.Vector3(fw.x, K.Y + 0.3, fw.z); chick.userData.life = null; }
+        if (!play.said) { play.said = true; try { Lt.toast('Your chick takes ' + k.name + ' down from its shelf to play.', 2600); } catch (e) { /* fine */ } }
+        return;
+      }
+      var c = play.cur, k = c.k, sp = k.sp; if (c.wait == null) c.u += dt;
+      if (!chick) { home(k); play.cur = null; play.t = 6; return; }
+      var cx = chick.position.x - C.x, cz = chick.position.z - C.z;
+      if (c.wait != null) { c.wait += dt; if (Math.hypot(cx - P.shelf[0], cz - P.shelf[1]) > 2.0 && c.wait < 6) return;   /* until it stands at the shelf (or 6 s) */
+        c.wait = null; c.u = 0; c.from = slotAt(k.i); root.add(sp); sp.position.set(c.from.x, c.from.y, c.from.z); }
+      c.a += dt * 1.6; var ox = cx + Math.sin(c.a) * 0.55, oz = cz + Math.cos(c.a) * 0.55;   /* its spot: circling the chick as it nudges it along */
+      if (c.u < 0.8) { var s = sm(c.u / 0.8); sp.position.set(c.from.x + (ox - c.from.x) * s, c.from.y + (0.25 - c.from.y) * s + Math.sin(s * Math.PI) * 0.9, c.from.z + (oz - c.from.z) * s); }
+      else if (c.u < 5.6) { sp.position.set(ox, 0.25 + Math.abs(Math.sin(c.u * 4.2)) * 0.3, oz);
+        chick.rotation.y = Math.atan2(ox - cx, oz - cz);
+        if (!c.hearts && c.u > 2.4) { c.hearts = true; try { Lt.chirp(); Lt.burstHearts(chick.position); } catch (e) { /* fine */ } if (S.chick && !H.playMood) { H.playMood = true; S.chick.happy = Math.min(100, (S.chick.happy || 0) + 3); }   /* once a visit (DRAFT, Obito: not a mood farm) */ H.plays = (H.plays || 0) + 1; } }
+      else if (c.u < 6.4) { if (!c.back) c.back = sp.position.clone(); var b = sm((c.u - 5.6) / 0.8), to = slotAt(k.i); sp.position.set(c.back.x + (to.x - c.back.x) * b, c.back.y + (to.y - c.back.y) * b + Math.sin(b * Math.PI) * 0.9, c.back.z + (to.z - c.back.z) * b); }
+      else { home(k); if (c.was && chick.userData && !(Lt.FOLLOW && Lt.FOLLOW.with)) { chick.userData.home = c.was; chick.userData.life = null; } play.cur = null; play.t = 14 + Math.random() * 8; }   /* and back to its own spot (Obito) */
+    }
     /* THE NEST-TREE DOOR (outside, always): placed on the trunk's measured face */
     var outside = new THREE.Group(); outside.name = 'haven781:door';
     (function nestDoor() {
@@ -185,7 +233,7 @@ window.WFR_HAVEN781 = (function () {
     function clampIn(p) {   /* the wall, the pond, the stall and the shelter hold her (a circle each) */
       var l = loc(p), d = Math.hypot(l.x, l.z), R = K.R; if (d > R) { l.x *= R / d; l.z *= R / d; }
       var push = function (cx, cz, r) { var dx = l.x - cx, dz = l.z - cz, q = Math.hypot(dx, dz); if (q < r && q > 1e-4) { l.x = cx + dx / q * r; l.z = cz + dz / q * r; } };
-      push(P.pond[0], P.pond[1], P.pond[2] + 0.35); push(P.market[0], P.market[1], 2.1); push(P.school[0], P.school[1], 1.75); push(P.post[0], P.post[1], 0.35);
+      push(P.pond[0], P.pond[1], P.pond[2] + 0.35); push(P.market[0], P.market[1], 2.1); push(P.school[0], P.school[1], 1.75); push(P.post[0], P.post[1], 0.35); push(P.shelf[0], P.shelf[1], 1.25);
       p.x = C.x + l.x; p.z = C.z + l.z;
     }
     /* THE BUTTON: what the game's own action button says here */
@@ -244,7 +292,7 @@ window.WFR_HAVEN781 = (function () {
       var a = toW(P.arrive[0], P.arrive[1]); S.mode = 'walk'; S.inside = null; S.insideTH = null; S.pos.set(a.x, K.Y + Lt.standOf(), a.z); S.yaw = Math.PI; S.camYaw = S.yaw; S.camCut = true; S.speed = 0; S.vy = 0; S.hopY = 0;
       H.follow = !!(Lt.FOLLOW && Lt.FOLLOW.with); if (Lt.FOLLOW) { Lt.FOLLOW.with = false; if (Lt.FOLLOW.ring) Lt.FOLLOW.ring.length = 0; Lt.FOLLOW.last = null; }
       if (chick) { var c = toW(P.chick[0], P.chick[1]); chick.position.set(c.x, K.Y + 0.3, c.z); var U = chick.userData; U.home = chick.position.clone(); U.where = 'haven'; U.pendWord = null; U.life = null; }
-      placeToys(); Lt.save(); Lt.hud();
+      placeToys(); placeKept(); play.t = 5; H.playMood = false; Lt.save(); Lt.hud();
     }
     function arrival() {
       var Lt = L(), S = Lt.S, cine = o.cine, chick = Lt.chick(), first = !!H.first, dur = first ? 6.4 : 3.6, runAt = first ? 2.9 : 0.5, said = false, met = false, hopY = 0, cyaw = 0;
@@ -352,6 +400,7 @@ window.WFR_HAVEN781 = (function () {
       var sp = toyG.pinwheel && toyG.pinwheel.userData.spin; if (sp) sp.rotation.z += dt * 3;
       if (H.hog) { H.hog.g.scale.y = 1.55 * (1 + 0.025 * Math.sin(t * 2)); H.hog.g.rotation.y = 0.35 * Math.sin(t * 0.4); if (H.apron) H.apron.rotation.y = H.hog.g.rotation.y; }
       if (toyG.ball) toyG.ball.children[0].position.y = 0.32 + Math.abs(Math.sin(t * 2.2)) * 0.12;
+      if (!(o.cine && o.cine.on())) playTick(dt, Lt, S); else if (play.cur) { home(play.cur.k); play.cur = null; play.t = 6; }
       var hv = state(); if (hv.toys.length && S.chick) S.chick.happy = Math.min(100, (S.chick.happy || 0) + dt * 0.05 * hv.toys.length);   /* toys: the chick plays while she is here */
     }
     function camClamp(cam) {   /* after the game has placed its camera: inside the wall, above the lawn */
@@ -360,8 +409,9 @@ window.WFR_HAVEN781 = (function () {
       if (cam.position.y < K.Y + 0.6) cam.position.y = K.Y + 0.6;
     }
     API.inst = { root: root, door: outside, ground: ground, button: button, press: press, tick: tick, camClamp: camClamp, enter: enter, leave: leave, openMarket: openMarket, closeMarket: closeMarket, buy: buy, find: find,
+      playNow: function () { placeKept(); if (!play.cur) play.t = 0; return Object.keys(kept); }, kept: function () { return Object.keys(kept).map(function (id) { return { id: id, slot: kept[id].i, playing: !!(play.cur && play.cur.k.id === id), world: (function () { var v = new THREE.Vector3(); kept[id].sp.getWorldPosition(v); return v.toArray(); })() }; }); },
       on: function () { return H.in; }, y: K.Y, center: C, K: K, P: P, PRICES: PRICES, LINES: LINES, toW: toW, near: function () { return H.near; },
-      peek: function () { var hv = (function () { try { return state(); } catch (e) { return null; } })(); return { ok: ok, in: H.in, near: H.near, enters: H.enters, leaves: H.leaves, visits: hv && hv.visits, met: hv && hv.met, owned: hv && Object.keys(hv.owned || {}), toys: hv && hv.toys.slice(), spent: hv && hv.spent, panel: !!H.panel, tab: H.tab, bought: H.bought || 0, trees: H.trees, rootVisible: root.visible, door: o.door, error: API.error }; } };
+      peek: function () { var hv = (function () { try { return state(); } catch (e) { return null; } })(); return { ok: ok, in: H.in, near: H.near, enters: H.enters, leaves: H.leaves, visits: hv && hv.visits, met: hv && hv.met, owned: hv && Object.keys(hv.owned || {}), toys: hv && hv.toys.slice(), spent: hv && hv.spent, kept: Object.keys(kept), plays: H.plays || 0, playing: play.cur ? play.cur.k.id : null, panel: !!H.panel, tab: H.tab, bought: H.bought || 0, trees: H.trees, rootVisible: root.visible, door: o.door, error: API.error }; } };
     return API.inst;
   }
   API.create = create; API.K = K; API.P = P; API.PRICES = PRICES; API.FRUIT = FRUIT; API.TOYS = TOYS; API.LINES = LINES;
