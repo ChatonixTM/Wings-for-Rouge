@@ -281,7 +281,26 @@ window.WFR_TREES = (function () {
       clump(T, B, 0, 0.45, 0, 0.6, 0, 71, sh, [1.1, 0.85, 1.1]); clump(T, B, 0.5, 0.32, 0.25, 0.45, 0, 72, sh); clump(T, B, -0.4, 0.3, -0.3, 0.42, 0, 73, sh); clump(T, B, 0.05, 0.75, -0.05, 0.36, 0, 74, sh); }
     SPECIES.bush = B.geometry();
     B = new Builder(T);
-    { // fern: 7 fronds that arch up and droop out, each a tapered 4-segment ribbon with a mid-rib fold
+    if (!(window.WFR_DOOR && window.WFR_DOOR.classic)) { // SU39 (Marth, Nov 11: "the graphics are STILL ass"): the old fern read as a folded green sheet beside her. Now 9 fronds, each a
+      // thin stem arching up and out with pairs of leaflets down both sides (long at the middle, short at the tip), so the plant reads as a fern
+      // from any side. Same unit size (fronds ~1 m), same material and instance colours; Classic keeps the old ribbon.
+      const sh = (x, y) => { const s = 0.5 + 0.65 * clamp01(y / 0.7); return [s, s * 1.04, s * 0.88]; };
+      const R = rng(9191);
+      for (let f = 0; f < 9; f++) {
+        const a = f / 9 * Math.PI * 2 + (R() - 0.5) * 0.5, len = 0.8 + R() * 0.45, ca = Math.cos(a), sa = Math.sin(a), lift = 0.42 + R() * 0.22, K = 9;
+        const at = (t) => { const d = t * len; return [ca * d, 0.04 + Math.sin(t * Math.PI * 0.85) * lift * len - t * t * 0.18, sa * d]; };
+        for (let k = 1; k < K; k++) {
+          const t = k / K, p = at(t), q = at(Math.min(1, t + 0.7 / K)), w = (0.2 * Math.sin(Math.PI * Math.min(1, t * 0.9 + 0.08)) + 0.03) * len, dn = 0.05 + 0.08 * t;
+          for (const side of [-1, 1]) {   // a leaflet: its root on the stem, its tip out to the side, a little forward and drooping
+            const tip = [p[0] + (-sa * side) * w + ca * w * 0.35, p[1] - dn, p[2] + (ca * side) * w + sa * w * 0.35, side < 0 ? 0 : 1, t];
+            B.tri([p[0], p[1] + 0.01, p[2], 0.5, t], [q[0], q[1] + 0.01, q[2], 0.5, t + 0.08], tip, sh, 1);
+          }
+        }
+        const b0 = at(0), b1 = at(0.5), b2 = at(1), sw = 0.012;   // the stem itself, thin
+        B.tri([b0[0] - sa * sw, b0[1], b0[2] + ca * sw, 0.45, 0], [b0[0] + sa * sw, b0[1], b0[2] - ca * sw, 0.55, 0], [b1[0], b1[1], b1[2], 0.5, 0.5], sh, 1);
+        B.tri([b1[0] - sa * sw, b1[1], b1[2] + ca * sw, 0.45, 0.5], [b1[0] + sa * sw, b1[1], b1[2] - ca * sw, 0.55, 0.5], [b2[0], b2[1], b2[2], 0.5, 1], sh, 1);
+      }
+    } else { // fern: 7 fronds that arch up and droop out, each a tapered 4-segment ribbon with a mid-rib fold
       const sh = (x, y) => { const s = 0.55 + 0.6 * clamp01(y / 0.7); return [s, s * 1.04, s * 0.9]; };
       for (let f = 0; f < 7; f++) {
         const a = f / 7 * Math.PI * 2 + (f % 2) * 0.25, len = 0.95 + (f % 3) * 0.2, ca = Math.cos(a), sa = Math.sin(a);

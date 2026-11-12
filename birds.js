@@ -647,9 +647,15 @@ window.WFR_BIRDS = (function () {
     gs.sh = ease(gs.sh, o.shake ? 1 : 0, Math.min(1, dt * 8));
     gs.f = ease(gs.f, Math.min(G.fmax, G.f0 + G.fk * drive), Math.min(1, dt * 5));
     gs.dr = ease(gs.dr, drive, Math.min(1, dt * 6));   // the stride lengthens and shortens with her speed, never in one frame (a stop once snapped the legs 0.27 rad)
+    var ph0 = gs.ph;   // SU39: where the cycle was, so a foot coming down this frame is known
     if (gs.g > 0.02) gs.ph = frac(gs.ph + gs.f * dt * (v < -0.05 ? -1 : 1));   // backing up runs the cycle backward
     var ph = gs.ph, g = gs.g, ve = gs.dr / size;   // her speed in body units a second
-    var out = { y: 0, pitch: 0, roll: 0, yaw: 0 };
+    var out = { y: 0, pitch: 0, roll: 0, yaw: 0, steps: 0 };
+    /* SU39 (board 778, "putter patter"): out.steps = feet that touched down this frame (a hop: both at once, as the cycle comes round to 0; a stride: one
+       foot at 0 and one at 0.5), only while she is really walking (the gait mostly on, not in the air). The game plays the sound; this only counts. */
+    if (gs.g > 0.5 && !o.air && dt > 0 && ph !== ph0) { var fw = v >= -0.05, a0 = fw ? ph0 : ph, a1 = fw ? ph : ph0, wrap = a1 < a0;
+      if (G.style === 'hop') { if (wrap) out.steps = 2; }
+      else { var n0 = Math.floor(a0 * 2), n1 = Math.floor(a1 * 2) + (wrap ? 2 : 0); out.steps = Math.max(0, Math.min(2, n1 - n0)); } }
     var th = [0, 0], ft = [0, 0], sc = [1, 1], hz = 0, hy = 0, tp = 0, ty = 0, fan = 1;
     if (G.style === 'hop') {
       /* a hop: both feet on the ground for `contact` of the cycle, sliding back under her as she goes (planted), then a

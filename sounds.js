@@ -23,10 +23,10 @@
 (function () {
   'use strict';
   var ctx = null, bus = null, busLp = null, noise = null, isMuted = null, voices = 0;
-  var MAX_VOICES = 6, ambT = 8, rnd = Math.random, noBreath = false, last = null;
+  var MAX_VOICES = 6, ambT = 8, rnd = Math.random, noBreath = false, last = null, stepsOn = 0, stepN = 0;   // SU39: steps ringing now, steps played
 
   /* per-kind loudness, measured offline over many renders so the loudest variant peaks ~0.22 at vol 1, distance 0 */
-  var CAL = { cardinal: 0.2, 'cardinal:chip': 0.22, bluejay: 0.14, 'bluejay:pump': 0.2, crow: 0.17, falcon: 0.19, owl: 0.21, eagle: 0.2, hawk: 0.165 };
+  var CAL = { cardinal: 0.2, 'cardinal:chip': 0.22, bluejay: 0.14, 'bluejay:pump': 0.2, crow: 0.17, falcon: 0.19, owl: 0.21, eagle: 0.2, hawk: 0.165, gull: 0.16, pelican: 0.2, mongoose: 0.12, crab: 0.14, dolphin: 0.12 };   // SU39: the animals' levels DRAFT (unmeasured)
 
   function init(c, dest, opts) {
     if (!c) return false;
@@ -51,7 +51,7 @@
   function run(v, s, t0, t1) { v.srcs++; s.onended = function () { if (--v.srcs === 0) finish(v); }; s.start(t0); s.stop(t1); }
   function finish(v) {
     for (var i = 0; i < v.nodes.length; i++) { try { v.nodes[i].disconnect(); } catch (e) { /* already gone */ } }
-    v.nodes.length = 0; voices = Math.max(0, voices - 1);
+    v.nodes.length = 0; if (v.step) stepsOn = Math.max(0, stepsOn - 1); else voices = Math.max(0, voices - 1);   // SU39: a step is counted apart from the calls
   }
   function envGain(v, t, dur, vol, atk, rel) {
     if (atk + rel > dur) { var k = dur / (atk + rel); atk *= k; rel *= k; }
@@ -213,8 +213,23 @@
       if (V === 2) return seq(1, 0, function () { return cry(1.6 * D * j(0.08), P, 2); });
       return seq(1, 0, function () { return cry(1.4 * D * j(0.08), P, 1); });
     },
+    /* SU39 · THE ISLAND'S ANIMALS (board 778; Marth, Nov 11 2026, verbatim: "Animals need to make noise"). Same tonal rules as the birds.
+       LAUGHING GULL: a run of falling "kyah" notes, nasal (a formant), quickening. 0 = the laugh, 1 = one long call */
+    gull: function (P, D, V) {
+      function kyah(f, d, vol) { return [d, T({ pts: [[0, f * 0.92], [d * 0.25, f], [d, f * 0.72]], dur: d, vol: vol, type: 'triangle', fm: [2.5, 0.3], formant: [1500, 3, 8], lp: 3200, atk: 0.02, rel: 0.06 })]; }
+      if (V === 1) return seq(1, 0, function () { return kyah(1150 * P, 0.42 * D * j(0.08), 0.9); });
+      var n = ri(4, 7); return seq(n, 0.2 * D, function (i) { return kyah(1250 * P * (1 - 0.035 * i), (0.17 - 0.008 * i) * D * j(0.08), 0.85); });
+    },
+    /* BROWN PELICAN: mostly quiet; a low soft grunt or two */
+    pelican: function (P, D, V) { return seq(ri(1, 2), 0.32 * D, function () { var d = 0.2 * D * j(0.1); return [d, T({ pts: [[0, 190 * P], [d, 140 * P]], dur: d, vol: 0.9, type: 'triangle', harm: 0.3, lp: 900, atk: 0.03, rel: 0.08 })]; }); },
+    /* MONGOOSE: a quick bright chitter */
+    mongoose: function (P, D, V) { return seq(ri(5, 9), 0.06 * D, function (i) { var d = 0.04 * D * j(0.15), f = 2100 * P * j(0.05); return [d, T({ pts: [[0, f], [d, f * 1.18]], dur: d, vol: 0.7, fm: [1.5, 0.2], lp: 4200, atk: 0.006, rel: 0.02 })]; }); },
+    /* LAND CRAB: two or three tiny dry clicks of the claws */
+    crab: function (P, D, V) { return seq(ri(2, 3), 0.09 * D, function () { var d = 0.018 * j(0.2), f = 3200 * P * j(0.08); return [d, T({ pts: [[0, f], [d, f * 0.7]], dur: d, vol: 0.6, type: 'triangle', lp: 5000, atk: 0.002, rel: 0.012 })]; }); },
+    /* BOTTLENOSE DOLPHIN: a rising whistle that bends, sometimes twice */
+    dolphin: function (P, D, V) { return seq(ri(1, 2), 0.5 * D, function () { var d = 0.38 * D * j(0.1); return [d, T({ pts: [[0, 2300 * P], [d * 0.4, 3600 * P], [d * 0.7, 3100 * P], [d, 4200 * P]], dur: d, vol: 0.75, vib: [9, 0.01], lp: 5200, atk: 0.03, rel: 0.08 })]; }); },
   };
-  var VARIANTS = { cardinal: 3, 'cardinal:chip': 1, bluejay: 3, 'bluejay:pump': 1, crow: 3, falcon: 3, owl: 3, eagle: 3, hawk: 3 };
+  var VARIANTS = { cardinal: 3, 'cardinal:chip': 1, bluejay: 3, 'bluejay:pump': 1, crow: 3, falcon: 3, owl: 3, eagle: 3, hawk: 3, gull: 2, pelican: 1, mongoose: 1, crab: 1, dolphin: 1 };
   var VOICE_LP = { owl: 900 };          // the owl is all chest
   var DEFAULT_DIST = { hawk: 0.55 };    // the hawk is heard far away unless the game says otherwise
   var KINDS = Object.keys(R);
@@ -298,7 +313,39 @@
     windV.g.gain.cancelScheduledValues(t); windV.g.gain.setTargetAtTime(G, t, 0.08); windV.last.L = L; windV.last.gain = G; windV.last.freq = F; windV.last.t = t; windV.n++; windV.g.gain.setTargetAtTime(0, t + 0.3, 0.12);
     return true;
   }
+  /* SU39 · FOOTSTEPS (board 778; Marth, Nov 11 2026, verbatim: "Slight putter patter for the birds and slight heavier sound do the eagle hawk etc and other
+     animals"). One step: a soft tonal tap (a sine dropping fast in pitch, no click: a 4 ms attack) and, on grass, a faint brush of air under it. weight
+     0 = a small bird (high, light, short: the pitter-patter), 1 = an eagle or a deer (lower, longer, a little louder: a padded thud). surface: 'grass'
+     (default), 'wood' (a hollow knock, no brush), 'sand' (softer, a duller brush), 'stone' (a short dry tap). Never more than 2 steps ringing; muted with the bus. */
+  function step(o) {
+    o = o || {};
+    if (!ctx || !bus || (isMuted && isMuted()) || stepsOn >= 2) return false;
+    var w = Math.max(0, Math.min(1, o.weight || 0)), sf = o.surface || 'grass', vol = (o.vol != null ? o.vol : 0.6) * Math.pow(10, (-18 * Math.max(0, Math.min(1, o.distance || 0))) / 20);
+    var f0 = (1400 - 1150 * w) * j(0.08), f1 = f0 * (sf === 'wood' ? 0.62 : 0.45), d = (0.035 + 0.06 * w) * j(0.12), pk = (0.05 + 0.05 * w) * vol * (sf === 'sand' ? 0.6 : 1);
+    var v = { nodes: [], srcs: 0, step: true }, vg = keep(v, ctx.createGain()); vg.gain.value = 1; stepsOn++; stepN++;
+    var tail = vg; if (o.pan && ctx.createStereoPanner) { var pn = keep(v, ctx.createStereoPanner()); pn.pan.value = Math.max(-1, Math.min(1, o.pan)); vg.connect(pn); tail = pn; } tail.connect(bus);
+    var t = ctx.currentTime + 0.005 + (o.when > 0 ? o.when : 0);
+    tone(v, vg, t, { pts: [[0, f0], [d, f1]], dur: d, vol: pk, type: sf === 'wood' ? 'triangle' : 'sine', atk: 0.004, rel: d * 0.7, lp: sf === 'stone' ? 5000 : 2200 + 1600 * (1 - w) });
+    if (sf === 'grass' || sf === 'sand') breath(v, vg, t, sf === 'sand' ? 1800 : 3200 - 1400 * w, d * 1.6, pk * (sf === 'sand' ? 0.35 : 0.5));
+    return true;
+  }
+  /* SU39 · A PLACE'S PHRASE (board 779 (5): "an ocarina of time inspired country introduction"; ours, nothing of Nintendo's): four or five soft notes
+     under a name rising over the view. 'sea': open fifths climbing, airy (the water ahead); 'land': a warm rise that settles home on its root; 'found':
+     a bright little turn for a place she discovers. Triangle and sine only, slow attacks, long tails, a soft fifth under the last note. */
+  var PHR = { sea: [[0, 62, 0.5], [0.32, 69, 0.5], [0.64, 74, 0.55], [1.0, 76, 1.4, 69]], land: [[0, 67, 0.4], [0.26, 71, 0.4], [0.52, 74, 0.45], [0.8, 72, 0.5], [1.12, 67, 1.5, 60]],
+    found: [[0, 72, 0.3], [0.2, 76, 0.3], [0.4, 79, 0.35], [0.62, 84, 1.2, 76]] };
+  function phrase(kind, o) {
+    o = o || {}; var P2 = PHR[kind] || PHR.land;
+    if (!ctx || !bus || (isMuted && isMuted()) || voices >= MAX_VOICES) return false;
+    var v = { nodes: [], srcs: 0 }, vg = keep(v, ctx.createGain()); vg.gain.value = o.vol != null ? o.vol : 0.5; vg.connect(bus); voices++;
+    var hz = function (m) { return 440 * Math.pow(2, (m - 69) / 12); }, t0 = ctx.currentTime + 0.02;
+    for (var i = 0; i < P2.length; i++) { var n = P2[i], f = hz(n[1]);
+      tone(v, vg, t0 + n[0], { pts: [[0, f], [n[2], f * 0.998]], dur: n[2], vol: 0.11, type: 'triangle', atk: 0.06, rel: n[2] * 0.6, lp: 3000, vib: n[2] > 1 ? [4.5, 0.004] : null });
+      if (n[3]) tone(v, vg, t0 + n[0] + 0.05, { pts: [[0, hz(n[3])], [n[2], hz(n[3])]], dur: n[2], vol: 0.06, atk: 0.2, rel: n[2] * 0.7, lp: 2000 }); }
+    return true;
+  }
   window.WFR_SOUND = {
+    step: step, get steps() { return stepN; }, phrase: phrase,
     init: init, setMuted: setMuted, call: call, wind: wind, windState: windState, near: near, ambient: ambient, KINDS: KINDS, VARIANTS: VARIANTS, MOODS: MOODS, CAL: CAL,
     get voices() { return voices; },
     _test: { seed: seed, breath: function (on) { noBreath = !on; }, last: function () { return last; } },

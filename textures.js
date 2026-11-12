@@ -763,6 +763,24 @@ window.WFR_TEX = (function () {
         const s = (now() - t0) / 1000;
         t.offset.set(s * 0.006 + Math.sin(s * 0.21) * 0.01, s * 0.004 + Math.cos(s * 0.17) * 0.01);
       };
+      /* SU39 (Marth, Nov 11 2026, verbatim: "can we make it so that all grass within 1000 m is generated? same with the water ??"): THE OPEN SEA
+         past the 1400 m square. One more mesh, a child of the sea (so it is shown, hidden and moved with it), its material the sea's own
+         (no new program): a square ring 1400 to 7000 m across, deep teal, its uv carrying on from the inner square's so the ripples run on
+         without a seam. The air's haze (FOG_AIR) ends it at the horizon, never an edge. */
+      if (!sea.getObjectByName('sea:open')) {
+        const OUT = 7000, IN = 1400, K = 5, cell = OUT / K, oP = [], oC = [], oU = [], oI = [], deep = DEEP.clone();
+        let v = 0;
+        for (let j = 0; j < K; j++) for (let i = 0; i < K; i++) {
+          const x0 = -OUT / 2 + i * cell, y0 = -OUT / 2 + j * cell; if (Math.abs(x0 + cell / 2) < IN / 2 && Math.abs(y0 + cell / 2) < IN / 2) continue;   // the inner square is the island's sea
+          const D = 4;   // each cell cut 4 x 4 so the haze reads per vertex at a fair spacing
+          for (let b = 0; b <= D; b++) for (let a = 0; a <= D; a++) { const x = x0 + cell * a / D, y = y0 + cell * b / D; oP.push(x, y, 0); oC.push(deep.r, deep.g, deep.b); oU.push(x / IN + 0.5, y / IN + 0.5); }
+          for (let b = 0; b < D; b++) for (let a = 0; a < D; a++) { const q = v + b * (D + 1) + a; oI.push(q, q + 1, q + D + 2, q, q + D + 2, q + D + 1); }
+          v += (D + 1) * (D + 1);
+        }
+        const og = new T.BufferGeometry(); og.setAttribute('position', new T.Float32BufferAttribute(oP, 3)); og.setAttribute('color', new T.Float32BufferAttribute(oC, 3)); og.setAttribute('uv', new T.Float32BufferAttribute(oU, 2));
+        const nn = new Float32Array(oP.length); for (let q = 2; q < nn.length; q += 3) nn[q] = 1; og.setAttribute('normal', new T.BufferAttribute(nn, 3)); og.setIndex(oI);
+        const open = new T.Mesh(og, m); open.name = 'sea:open'; open.renderOrder = sea.renderOrder; open.frustumCulled = false; sea.add(open);
+      }
       api.seaDressed = { verts: p.count };
       return true;
     } catch (e) { api.seaDressed = { error: String(e && e.message || e) }; return false; }

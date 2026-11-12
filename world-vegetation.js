@@ -260,6 +260,12 @@ window.WFR_VEG = (function () {
     'float upB = clamp( position.y / ' + GC.H.toFixed(3) + ', 0.0, 1.0 ); vec3 tipB = mix( vec3( 0.22, 0.50, 0.24 ), vec3( 0.60, 0.82, 0.46 ), lightB * ( 1.0 - shB ) );',
     'vec3 colB = mix( vec3( 0.05, 0.17, 0.10 ), tipB, pow( upB, 1.4 ) ) * mix( vec3( 1.0 ), vec3( 0.40, 0.50, 0.58 ), shB );', 'vColor.xyz = colB * iSc.yzw;'].join(String.fromCharCode(10)); }
   var GD = [0, 0.55, 1, 0.8, 0.5, 0.9, 0.8, 0, 0.35, 0.45, 0, 0];   // a class's grass: the forest floor thin, the town's lawns, no blade in a mangrove or a car park
+  /* SU39 THE FAR GRASS (Marth, Nov 12 2026, verbatim: "in that screenshot the grass doesnt look loaded passed 100 meters"; Nov 11: "all grass within 1000 m"). On the island, past the
+     near field: clumps of three single-triangle blades on a 2 m grid, from IN0 out to R (the far clumps larger, thinning past THIN0), built once for the whole island
+     (nearest squares first, within a time budget) and re-listed as she moves. The island's near grass's own material (the season's tint and the sway are its own), one
+     more draw; a far clump carries a NEGATIVE scale, which the shader reads to grow it in past the near ring and sink it at its own edge. Every number DRAFT. */
+  var FAR39 = (function () { try { return !(window.WFR_DOOR && window.WFR_DOOR.classic) && localStorage.getItem('wfr.bar') !== 'off' && localStorage.getItem('wfr.far39') !== 'off'; } catch (e) { return false; } })();   // its own switch: 'wfr.far39' = 'off' is the game without it; Classic is frozen
+  var GF = { CH: 32, SP: 2.0, IN0: 52.0, IN1: 76.0, R: 280.0, THIN0: 150, KEEP: 0.45, CAP: 36000, SC: 1.7, MOVE: 6, BUILD_MS: 4, FIRST_MS: 60, AGL: 320 };
   var GCOL = [[0.95, 1, 0.9], [1.18, 1.05, 0.62], [1, 1, 1], [0.8, 0.95, 0.85], [1.02, 0.95, 0.72], [0.95, 1.06, 0.95], [1, 1, 0.88], [1, 1, 1], [0.76, 0.86, 0.74], [0.95, 1.02, 0.9]];
   function grassGeo(THREE, lin) {   // one clump: BLADES blades of three triangles (two segments and a tip), dark at the root, lit at the tip; every normal up
     var P = [], Cc = [], N = [], base = srgb(THREE, 0x6a9a3e, lin);
@@ -281,9 +287,9 @@ window.WFR_VEG = (function () {
       if (BAR761) { sh.uniforms.uBarTex = GU.uBarTex; sh.uniforms.uBarC = GU.uBarC; sh.uniforms.uHerG = GU.uHerG; } sh.uniforms.uGrassT = GU.uGrassT; sh.uniforms.uGrassW = GU.uGrassW; sh.uniforms.uGrassDir = GU.uGrassDir; sh.uniforms.uEyeG = own.uEye; sh.uniforms.uInvKG = own.uInvK; sh.uniforms.uHoleG = own.uHole;
       sh.vertexShader = (BAR761 ? 'uniform sampler2D uBarTex; uniform vec4 uBarC; uniform vec3 uHerG;' + NL : '') + 'attribute vec4 iPos; attribute vec4 iSc; uniform float uGrassT; uniform float uGrassW; uniform vec2 uGrassDir; uniform vec3 uEyeG; uniform float uInvKG; varying vec2 vWG;' + NL + sh.vertexShader
         .replace('#include <color_vertex>', '#include <color_vertex>' + NL + (BAR761 ? barColour761() : 'vColor.xyz *= iSc.yzw;'))
-        .replace('#include <begin_vertex>', ['float cG = cos( iPos.w ), sG = sin( iPos.w ); vec3 pG = position * iSc.x;' + (BAR761 ? ' float eG = length( iPos.xz - uHerG.xy ); pG.xz *= 1.0 + 1.5 * smoothstep( 16.0, 96.0, eG );' : ''), 'vec3 transformed = vec3( cG * pG.x + sG * pG.z, pG.y, -sG * pG.x + cG * pG.z );',
+        .replace('#include <begin_vertex>', ['float cG = cos( iPos.w ), sG = sin( iPos.w ); vec3 pG = position * iSc.x;' + (BAR761 ? ' float eG = length( iPos.xz - uHerG.xy ), farG = step( iSc.x, 0.0 ); pG = position * abs( iSc.x ); pG.xz *= 1.0 + 1.5 * smoothstep( 16.0, 96.0, eG ); pG.y *= mix( 1.0 - smoothstep( ' + (GC.R - 30).toFixed(1) + ', ' + GC.R.toFixed(1) + ', eG ), smoothstep( ' + GF.IN0.toFixed(1) + ', ' + GF.IN1.toFixed(1) + ', eG ) * ( 1.0 - smoothstep( ' + (GF.R - 40).toFixed(1) + ', ' + GF.R.toFixed(1) + ', eG ) ), farG );' : ''),   /* SU39: at the ring's edge the blades sink into the ground (the ground is their colour), never pop */ 'vec3 transformed = vec3( cG * pG.x + sG * pG.z, pG.y, -sG * pG.x + cG * pG.z );',
           'float phG = dot( iPos.xz, vec2( 0.071, 0.053 ) ), hG = position.y / ' + GC.H.toFixed(3) + ';', 'float swG = ( sin( uGrassT * 1.7 - phG ) * 0.6 + sin( uGrassT * 4.3 + phG * 2.3 ) * 0.22 + 0.45 ) * uGrassW;',
-          'transformed.xz += uGrassDir * ( swG * hG * hG * pG.y * 1.6 ); transformed.y -= swG * swG * hG * hG * pG.y * 0.5;' + (BAR761 ? NL + 'vec2 awG = iPos.xz - uHerG.xy; float puG = uHerG.z * smoothstep( 2.6, 0.4, eG ); transformed.xz += ( awG / max( eG, 0.2 ) ) * ( puG * hG * hG * pG.y * 1.3 ); transformed.y -= puG * hG * hG * pG.y * 0.4; vColor.xyz *= 1.0 + 0.55 * swG * hG;' : ''), 'transformed += iPos.xyz;'].join(NL))
+          'transformed.xz += uGrassDir * ( swG * hG * hG * pG.y * 1.6 ); transformed.y -= swG * swG * hG * hG * pG.y * 0.5;' + (BAR761 ? NL + 'vec2 awG = iPos.xz - uHerG.xy; float puG = uHerG.z * smoothstep( 3.4, 0.5, eG ); transformed.xz += ( awG / max( eG, 0.2 ) ) * ( puG * hG * hG * pG.y * 1.5 ); transformed.y -= puG * hG * pG.y * 0.62; vColor.xyz *= 1.0 + 0.55 * swG * hG;' : ''), 'transformed += iPos.xyz;'].join(NL))
         .replace('#include <project_vertex>', ['vec4 wpG = modelMatrix * vec4( transformed, 1.0 ); vWG = wpG.xz;', 'vec3 rG = wpG.xyz - uEyeG; float dG = length( rG.xz );', 'rG.y -= dG * dG / ( 2.0 * ' + REFR.toFixed(1) + ' );', 'wpG.xyz = uEyeG + rG * uInvKG;',
           'vec4 mvPosition = viewMatrix * wpG;', 'gl_Position = projectionMatrix * mvPosition;'].join(NL))
         .replace('#include <lights_lambert_vertex>', '#include <lights_lambert_vertex>' + NL + '#ifdef DOUBLE_SIDED' + NL + '  vLightBack = vLightFront;' + NL + '#endif')
@@ -369,6 +375,16 @@ window.WFR_VEG = (function () {
     GT = field('veg:grass:travel', C.LAYER, { uEye: u.uEye, uInvK: u.uInvK, uHole: u.uHole }); if (BAR761) GT.mesh.renderOrder = C.ORDER + 0.02;
     var GI = field('veg:grass:island', 0, { uEye: { value: new THREE.Vector3() }, uInvK: { value: 1 }, uHole: { value: new THREE.Vector4(1, 1, -1, -1) } });
     var ISL = opts.island || null;
+    var GFI = null;   /* SU39: the far grass (the island only) */
+    if (FAR39 && ISL && String(grassMat).indexOf('farG') > 0) { var fP = [], fN = [], fC = [], fb = srgb(THREE, 0x6a9a3e, lin);
+      for (var fb0 = 0; fb0 < 3; fb0++) { var fa = fb0 / 3 * Math.PI * 2 + 0.4, fr = 0.18, fx = Math.cos(fa) * fr, fz = Math.sin(fa) * fr, fs = fa + Math.PI / 2, fw = 0.075, fh = GC.H * (0.8 + 0.12 * fb0), lx = fx + Math.cos(fa) * 0.18 * fh, lz = fz + Math.sin(fa) * 0.18 * fh;
+        var fv = [[fx - Math.cos(fs) * fw, 0, fz - Math.sin(fs) * fw, 0.5], [fx + Math.cos(fs) * fw, 0, fz + Math.sin(fs) * fw, 0.5], [lx, fh, lz, 1.12]];
+        for (var fk = 0; fk < 3; fk++) { fP.push(fv[fk][0], fv[fk][1], fv[fk][2]); fN.push(0, 1, 0); fC.push(fb.r * fv[fk][3], fb.g * fv[fk][3], fb.b * fv[fk][3] * 0.95); } }
+      var fg = new THREE.InstancedBufferGeometry(); fg.setAttribute('position', new THREE.Float32BufferAttribute(fP, 3)); fg.setAttribute('normal', new THREE.Float32BufferAttribute(fN, 3)); fg.setAttribute('color', new THREE.Float32BufferAttribute(fC, 3));
+      var faP = new THREE.InstancedBufferAttribute(new Float32Array(GF.CAP * 4), 4), faS = new THREE.InstancedBufferAttribute(new Float32Array(GF.CAP * 4), 4); faP.setUsage(THREE.DynamicDrawUsage); faS.setUsage(THREE.DynamicDrawUsage);
+      fg.setAttribute('iPos', faP); fg.setAttribute('iSc', faS); fg.instanceCount = 0; fg.boundingSphere = new THREE.Sphere(new THREE.Vector3(), 1e9);
+      var fm = new THREE.Mesh(fg, GI.mesh.material); fm.name = 'veg:grass:island:far'; fm.frustumCulled = false; fm.layers.set(0); fm.layers.enable(GC.LAYER_ONLY); fm.castShadow = false; fm.receiveShadow = false; fm.matrixAutoUpdate = false; scene.add(fm);
+      GFI = { mesh: fm, geo: fg, aP: faP, aS: faS, chunks: [], made: false, next: 0, n: 0, key: null, built: 0, buildMs: 0, asm: 0, asmMs: 0 }; }
     function islandDens(x, z) {   // the island's meadow band (the terrain painter's: over the beach, under the rock), never the dunes, the village's trodden green or a floor
       var I = ISL, h = I.H(x, z); if (h < I.water + 1.4 || h > 24) return 0;
       if (I.dunes && I.dunes.at && Math.hypot(x - I.dunes.at.x, z - I.dunes.at.z) < (I.dunes.r || 45) + 6) return 0;
@@ -435,6 +451,7 @@ window.WFR_VEG = (function () {
         if (F.chunks.size > F.want.length * 3) { var keep = new Set(F.want.map(function (c) { return c.k; })); F.chunks.forEach(function (c, k) { if (!keep.has(k)) F.chunks.delete(k); }); } }
       if (F.stale) { F.stale = false; F.want.forEach(function (c) { if (c.d) c.stale = true; }); } if (BAR761) for (var w761 = 0; w761 < F.want.length; w761++) { var c761 = F.want[w761]; if (c761.d && c761.cut < 1 && c761.dist < c761.bd - 16) c761.stale = true; }
       var t0 = performance.now(), any = false;
+      if (budget == null || budget >= 0) { var unb39 = 0; for (var u39 = 0; u39 < F.want.length; u39++) if (!F.want[u39].d) unb39++; if (unb39 > 6 && unb39 > F.want.length * 0.2) { budget = 90; F.need = true; F.fills39 = (F.fills39 || 0) + 1; } }   // SU39 (Marth, Nov 11: "i also dont like how it takes so long/ not much of the grass is already generated"): a field mostly unmade (the game's start, a jump, a landing far off) is made whole in one frame, not over two seconds
       outer: for (var pass = (budget != null && budget < 0) ? 2 : 0; pass < 2; pass++) for (var i = 0; i < F.want.length; i++) { var ch = F.want[i]; if (pass === 0 ? ch.d : !ch.stale) continue; var c0 = performance.now(); buildChunk(F, ch, geo); any = true; if (pass) F.rebuilt++; var c1 = performance.now(); if (c1 - t0 + (BAR761 ? c1 - c0 : 0) > (budget == null ? GC.BUILD_MS : budget)) break outer; }
       F.since = (F.since || 0) + 1; var late = performance.now() - t0 > (budget == null ? GC.BUILD_MS : budget) * 0.7 && !F.need && F.since < 12;   // a frame already spent: the list waits a frame (never longer than her own move)
       if (late && (any || F.pend)) { F.pend = true; return; }
@@ -469,13 +486,34 @@ window.WFR_VEG = (function () {
         if (st.tintQ.size) { var it = st.tintQ.entries().next().value; st.tintQ.delete(it[0]); tint(it[1]); }   // one tile a frame
         if (st.clock - st.tImz > 1) { st.tImz = st.clock; stt.tiles.forEach(function (rec, k) { if (rec.vegImz !== undefined && rec.im712 && rec.im712.z !== rec.vegImz) st.tintQ.set(k, rec); }); }   // the photo came after the tint: tint again over it
         grassTick(GT, cam, agl, { f: f, H: H }, BAR761 && tv > 1.5 && (st.gw761 = (st.gw761 || 0) + 1) <= 2 ? -1 : (st.gw761 = 0, Math.max(0.3, Math.min(GC.BUILD_MS, GC.VEG_MS - tv))));   // the trees and the grass share one budget a frame
-        if (GI.n) { GI.n = 0; GI.geo.instanceCount = 0; GI.key = null; }
+        if (GI.n) { GI.n = 0; GI.geo.instanceCount = 0; GI.key = null; } if (GFI && GFI.n) { GFI.n = 0; GFI.geo.instanceCount = 0; GFI.key = null; }   /* SU39: the far grass too */
       } catch (e) { st.fault = String(e && e.message || e); }
       var ms = performance.now() - t0; st.tick.push(+ms.toFixed(3)); if (st.tick.length > 20000) st.tick.shift();
     }
+    function farMake() {   // SU39: the island cut in GF.CH squares; each square's clumps made once, nearest first
+      var half = 380, n = Math.ceil(half * 2 / GF.CH); for (var j = 0; j < n; j++) for (var i = 0; i < n; i++) { var x0 = -half + i * GF.CH, z0 = -half + j * GF.CH; GFI.chunks.push({ i: i, j: j, x0: x0, z0: z0, cx: x0 + GF.CH / 2, cz: z0 + GF.CH / 2, d: null, n: 0 }); }
+      GFI.made = true; }
+    function farBuild(ch) {   // the far clumps of one square: a jittered 2 m grid kept by the island's own meadow test, each with its rank (for the thinning far out)
+      var m = Math.round(GF.CH / GF.SP), out = []; for (var j = 0; j < m; j++) for (var i = 0; i < m; i++) { var h0 = hash3(ch.i * 97 + i, ch.j * 97 + j, 79), ju = ((h0 & 1023) / 1023 - 0.5) * 0.95, jv = (((h0 >>> 10) & 1023) / 1023 - 0.5) * 0.95;
+        var x = ch.x0 + (i + 0.5 + ju) * GF.SP, z = ch.z0 + (j + 0.5 + jv) * GF.SP; if (!islandDens(x, z)) continue; var h1 = hash3(ch.i * 97 + i, ch.j * 97 + j, 80), nz = Math.sin(x * 0.021 + Math.cos(z * 0.017) * 2.1) * Math.cos(z * 0.019 + Math.sin(x * 0.013) * 1.7), K = nz > 0.25 ? [1.12, 1.04, 0.7] : nz < -0.3 ? [0.82, 0.96, 0.8] : [1, 1, 1], vv = 0.88 + ((h1 >>> 8) & 255) / 255 * 0.24;
+        out.push(((h0 >>> 20) & 4095) / 4096, x, ISL.H(x, z) - 0.04, z, ((h1 >>> 16) & 1023) / 1023 * 6.2832, -(0.85 + (h1 & 255) / 255 * 0.4) * GF.SC, K[0] * vv, K[1] * vv, K[2] * vv); }
+      ch.d = new Float32Array(out); ch.n = out.length / 9; GFI.built++; }
+    function farTick(cam, agl) {
+      if (!GFI || GH.hold) return; var F = GFI; if (agl > GF.AGL) { if (F.n) { F.n = 0; F.geo.instanceCount = 0; } F.key = null; return; } if (!F.made) farMake();
+      var t0 = performance.now(), lim = F.next === 0 ? GF.FIRST_MS : GF.BUILD_MS, any = false;
+      if (F.next < F.chunks.length) { var order = F.chunks.filter(function (c) { return !c.d; }).sort(function (a, b) { return Math.hypot(a.cx - cam.x, a.cz - cam.z) - Math.hypot(b.cx - cam.x, b.cz - cam.z); });
+        for (var c = 0; c < order.length; c++) { var ch = order[c]; if (Math.hypot(ch.cx - cam.x, ch.cz - cam.z) > GF.R + GF.CH) break; farBuild(ch); F.next++; any = true; if (performance.now() - t0 > lim) break; } F.buildMs += performance.now() - t0; }
+      var key = Math.floor(cam.x / GF.MOVE) + ',' + Math.floor(cam.z / GF.MOVE); if (key === F.key && !any) return; F.key = key;
+      var t1 = performance.now(), P = F.aP.array, Sx = F.aS.array, n = 0, R2 = GF.R * GF.R, r0 = GF.IN0 - 6, r02 = r0 * r0;
+      var near39 = []; for (var q0 = 0; q0 < F.chunks.length; q0++) { var c0 = F.chunks[q0]; if (!c0.d) continue; c0.dc = Math.hypot(c0.cx - cam.x, c0.cz - cam.z); if (c0.dc > GF.R + GF.CH || c0.dc < r0 - GF.CH) continue; near39.push(c0); } near39.sort(function (a, b) { return a.dc - b.dc; });   // nearest squares first: at the cap the farthest go, never a hole
+      for (var q = 0; q < near39.length && n < GF.CAP; q++) { var cq = near39[q], d = cq.d;
+        for (var k = 0; k < cq.n && n < GF.CAP; k++) { var o = k * 9, dx = d[o + 1] - cam.x, dz = d[o + 3] - cam.z, r2 = dx * dx + dz * dz; if (r2 > R2 || r2 < r02) continue; var dist = Math.sqrt(r2), keep = 1 - (1 - GF.KEEP) * Math.min(1, Math.max(0, (dist - GF.THIN0) / (GF.R - GF.THIN0))); if (d[o] >= keep) continue;
+          P[n * 4] = d[o + 1]; P[n * 4 + 1] = d[o + 2]; P[n * 4 + 2] = d[o + 3]; P[n * 4 + 3] = d[o + 4]; Sx[n * 4] = d[o + 5] * (1 + 0.6 * Math.min(1, dist / GF.R)); Sx[n * 4 + 1] = d[o + 6]; Sx[n * 4 + 2] = d[o + 7]; Sx[n * 4 + 3] = d[o + 8]; n++; } }
+      F.n = n; F.geo.instanceCount = n; F.aP.updateRange.offset = 0; F.aP.updateRange.count = n * 4; F.aP.needsUpdate = true; F.aS.updateRange.offset = 0; F.aS.updateRange.count = n * 4; F.aS.needsUpdate = true; F.asm++; F.asmMs = Math.max(F.asmMs, performance.now() - t1);
+    }
     function island(cam, dt) {   // each island frame (the island's own branch of the page's frame)
       if (!ISL) return; var t0 = performance.now();
-      try { grassClock(dt); var g = ISL.H(cam.x, cam.z); grassTick(GI, cam, cam.y - Math.max(g, ISL.water), null); if (GT.n) { GT.n = 0; GT.geo.instanceCount = 0; GT.key = null; } } catch (e) { st.fault = 'island: ' + String(e && e.message || e); }
+      try { grassClock(dt); var g = ISL.H(cam.x, cam.z); grassTick(GI, cam, cam.y - Math.max(g, ISL.water), null); farTick(cam, cam.y - Math.max(g, ISL.water)); if (GT.n) { GT.n = 0; GT.geo.instanceCount = 0; GT.key = null; } } catch (e) { st.fault = 'island: ' + String(e && e.message || e); }
       var ms = performance.now() - t0; st.islandTick = st.islandTick || []; st.islandTick.push(+ms.toFixed(3)); if (st.islandTick.length > 20000) st.islandTick.shift();
     }
     function progs() { if (!renderer || !renderer.info) return {}; var P = renderer.info.programs; return { programs: P.length, vegPrograms: P.filter(function (q) { return String(q.cacheKey).indexOf('wfrveg1') >= 0; }).length, grassPrograms: P.filter(function (q) { return String(q.cacheKey).indexOf('wfrgrass1') >= 0; }).length }; }
@@ -485,7 +523,7 @@ window.WFR_VEG = (function () {
       var out = Object.assign({ near: sum(st.n), mid: sum(st.nm), band: sum(st.nb), bandShapes: st.nb.slice(), midTris: md.geos.map(function (g) { return g.attributes.position.count / 3; }), perKind: KINDS.reduce(function (acc, k, i) { acc[k] = st.n[i]; return acc; }, {}), midShapes: st.nm.slice(),
         masks: core.masks.size, zooms: core.zooms(), core: Object.assign({}, core.stats), subs: st.subs, sels: st.sels.slice(), selMs: st.selMs.map(function (x) { return +x.toFixed(2); }), selMax: st.selMax.map(function (x) { return +x.toFixed(2); }), selFrames: st.frames.slice(),
         cand: st.cand.slice(), bm: st.bm.slice(), fault: st.fault, tinted: st.tinted, tintMs: +st.tintMs.toFixed(2), tintQ: st.tintQ.size, onTiles: st.onTiles, agl: st.agl == null ? null : +st.agl.toFixed(1), drawCalls: near.length + mid.length + band.length, tris: sp.tris, material: mat.uuid, inScene: group.parent === scene, shifts: st.shifts,
-        grass: { travel: gf(GT), island: gf(GI), t: +GU.uGrassT.value.toFixed(3), w: +GU.uGrassW.value.toFixed(3), wind: st.wind, tris: gGeo.attributes.position.count / 3 } }, progs());   // the bench's read: the page keeps its renderer to itself
+        grass: { far39: GFI ? { n: GFI.n, built: GFI.built, of: GFI.chunks.length, buildMs: +GFI.buildMs.toFixed(1), asm: GFI.asm, asmMs: +GFI.asmMs.toFixed(2) } : null, travel: gf(GT), island: gf(GI), t: +GU.uGrassT.value.toFixed(3), w: +GU.uGrassW.value.toFixed(3), wind: st.wind, tris: gGeo.attributes.position.count / 3 } }, progs());   // the bench's read: the page keeps its renderer to itself
       if (o && o.tick) { out.tickQ = quant(st.tick); out.islandQ = quant(st.islandTick); if (o.reset) { st.tick = []; st.islandTick = []; st.selMax = [0, 0]; GT.buildMax = 0; GI.buildMax = 0; } }
       if (o && o.instances) { out.inst = []; [[near, st.n, 0], [mid, st.nm, 1], [band, st.nb, 2]].forEach(function (L) { L[0].forEach(function (m, i) { var a = m.instanceMatrix.array; for (var k = 0; k < L[1][i]; k++) out.inst.push([a[k * 16 + 12], a[k * 16 + 13], a[k * 16 + 14], L[2], i, a[k * 16 + 5]]); }); }); }
       if (o && o.ring && st.at[0] && TR.st) { var c0 = st.at[0], rr0 = o.ring[0], rr1 = o.ring[1], lat8 = [0, 0, 0, 0, 0, 0, 0, 0], drw = [0, 0, 0, 0, 0, 0, 0, 0], sec = function (x, z) { return Math.floor((Math.atan2(z - c0.z, x - c0.x) + Math.PI) / (2 * Math.PI) * 8) % 8; };   // the audit (veg712 V6): the near forest's own lattice in a ring round where the near list was chosen, against the trees drawn there
