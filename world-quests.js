@@ -374,8 +374,13 @@ window.WFR_QUESTS720 = (function () {
     for (i = 0; i < Q.active.length; i++) if (Q.active[i].id === key) a = Q.active[i];
     if (!a) { a = WFR_INTERIORS729.questFor(id, X.S.dawns || 0); if (!a) return false; Q.active.push(a); }
     Q.lm[key] = 1; finish(a, 'went inside'); return true; }
+  function pinLm(id) {   /* 783 #130: a country's arrival names a landmark that calls her inland: its quest is made (as checkWorld makes one) and pinned, so the arrow and the level card follow it */
+    if (!st.inited || !LMB[id] || Q.lm[id]) return false; var L = LMB[id], a = activeLm(id);
+    if (!a) { a = { id: 'lm:' + id, kind: 'lm', lm: id, giver: null, gname: null, e: L.e, title: L.title, line: L.line, legs: [{ k: 'lm', lm: id }], leg: 0, xp: L.xp, runes: L.runes, day: X.S.dawns || 0 }; Q.active.push(a); }
+    Q.pin = a.id; st.events.push('pin ' + a.id); saveNow(); hudNow(); refreshBoard(); return true; }
   function lmPeek(id) { var L = LMB[id]; if (!L || !st.inited) return null; var h = lmHere(L); return { id: id, d: h ? +h.d.toFixed(1) : null, agl: h && h.agl != null ? +h.agl.toFixed(1) : null, ok: h ? h.ok : null, where: h ? h.where : null, done: !!Q.lm[id] }; }
 
-  return { C: C, WORDS: WORDS, LANDMARKS: LANDMARKS, place: place, inside: function (id) { return inside729(id); }, init: init, tick: tick, draw: draw, travelHud: travelHud, talk: talk, goal: goal, pill: pill, peek: peek, lmPeek: lmPeek,
+  return { C: C, WORDS: WORDS, LANDMARKS: LANDMARKS, place: place, inside: function (id) { return inside729(id); }, init: init, tick: tick, draw: draw, travelHud: travelHud, talk: talk, goal: goal, pill: pill, peek: peek, lmPeek: lmPeek, pinLm: pinLm,
+    lmDone: function (id) { return !!(st.inited && Q && Q.lm[id]); }, pinned: function () { var a = pinned(); return a ? a.id : null; },
     offers: function (pid) { return st.inited ? offers(pid) : false; }, open: function (on) { openBoard(on); } };
 })();

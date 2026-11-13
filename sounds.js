@@ -345,7 +345,11 @@
     crack: [[0, 91, 0.05], [0.05, 86, 0.08]],
     hatch: [[0, 65, 0.42], [0.36, 69, 0.42], [0.72, 72, 0.5], [1.14, 77, 0.7, 69], [1.7, 76, 0.36], [2.0, 74, 0.36], [2.32, 72, 1.9, 65]],
     count: [[0, 76, 0.22]], go: [[0, 76, 0.12], [0.12, 83, 0.7, 76]],
-    win: [[0, 72, 0.15], [0.14, 76, 0.15], [0.28, 79, 0.15], [0.44, 84, 0.5], [0.8, 83, 0.2], [1.0, 84, 1.4, 76]] };
+    win: [[0, 72, 0.15], [0.14, 76, 0.15], [0.28, 79, 0.15], [0.44, 84, 0.5], [0.8, 83, 0.2], [1.0, 84, 1.4, 76]],
+    /* 783 #130 (ours): 'country', a land rising out of the sea under its name: a slow climb in D from the A below, a step past the octave, and it lands
+       wide on the sixth with the fifth under it; 'call', a rumour that pulls her inland: a question that turns and hangs */
+    country: [[0, 57, 0.55, 50], [0.42, 62, 0.5], [0.84, 66, 0.55], [1.3, 69, 0.5], [1.72, 71, 0.45], [2.08, 74, 0.55], [2.56, 78, 2.4, 69]],
+    call: [[0, 74, 0.5], [0.45, 71, 0.45], [0.9, 76, 1.7, 67]] };
   function phrase(kind, o) {
     o = o || {}; var P2 = PHR[kind] || PHR.land;
     if (!ctx || !bus || (isMuted && isMuted()) || voices >= MAX_VOICES) return false;
