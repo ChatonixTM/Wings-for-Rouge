@@ -14,7 +14,7 @@
      5 'back'    a dip to dark, back on her, the bars go, her own camera takes over.
    While it plays she flies on, level, slowed to a glide and turned gently toward the coast (her thumb is not read); after it her own speed returns over 2 s.
    THE PATTERN: one row per country in PLACES (place, trigger area = a coarse coastline and how many km is "within sight", the shot's targets, the title,
-   the line under it, the call inland). Jamaica is the only row filled. A new country is a new row, nothing else.
+   the line under it, the call inland). Jamaica first; since #135 (779) Cuba, Hispaniola, the Caymans, Puerto Rico and the Yucatan too. A new country is a new row, nothing else.
    The page hands it (create): the kit (cine.js), the world's frame (WFR_WORLD), the travel zone's state and ground, Classic, title39, the sounds, the quests'
    pin, save and toast. It never touches the island. Every word and number a DRAFT for Marth's pen and thumb (the coastline points are public geography,
    coarse, for Izumi to check on a chart). */
@@ -31,9 +31,50 @@ window.WFR_ARRIVE783 = (function () {
          slow move in toward the beach with the look rising from the shore to the Blue Mountains; then the look turns west along the range toward the call.
          [lat, lon, metres]. A row without a shot gets one made from the nearest coast (camAt's fallback) */
       shot: { cam0: [17.835, -76.596, 260], cam1: [17.852, -76.590, 330], look0: [17.893, -76.585, 30], look1: [18.0467, -76.5792, 1900], fov: [36, 30] },
-      call: { lm: 'dunns', lat: 18.4116, lon: -77.1406, h: 120, over: 'A rumour on the wind', name: 'Dunn\'s River Falls', line: 'A river that comes down to the sea in steps. North, over the hills.' } }
+      call: { lm: 'dunns', e: '💦', lat: 18.4116, lon: -77.1406, h: 120, over: 'A rumour on the wind', name: 'Dunn\'s River Falls', line: 'A river that comes down to the sea in steps. North, over the hills.' } },
+    /* 779 #135 · THE NEXT SHORES (board 779 (5) and 783's pattern; Marth, Nov 11 2026: "Make sure when landing into a new country there's an ocarina of time
+       inspired country introduction. Also see to it that the world building takes from Skyrim or fable"). Jamaica's neighbours, one row each, each its own
+       chosen view (the coast she would first meet coming from Jamaica), its own name and line, and a real landmark that calls her on (its quest in
+       world-quests.js: reaching it pays XP and runes). HISPANIOLA IS ONE ROW: Haiti and the Dominican Republic share one island and one coastline, so the
+       trigger is one shore; two rows would play two scenes back to back at the border. Its line names both. The first mainland is the Yucatan (Mexico).
+       Coastlines coarse, public geography (Izumi's chart check). Every word DRAFT for his pen. */
+    { id: 'cuba', name: 'CUBA', under: 'A long green crocodile asleep on the sea',
+      coast: [[21.86, -84.95], [22.40, -84.40], [22.95, -83.20], [23.15, -82.35], [23.10, -81.55], [23.20, -81.10], [22.95, -80.30], [22.75, -79.90], [22.45, -79.10], [22.10, -78.30],
+        [21.60, -77.25], [21.15, -76.20], [20.70, -75.30], [20.25, -74.13], [20.05, -74.50], [19.90, -75.15], [19.97, -75.85], [19.87, -76.85], [19.83, -77.73], [20.34, -77.12],
+        [20.72, -77.25], [20.70, -78.00], [21.20, -78.60], [21.60, -78.85], [21.75, -79.98], [22.05, -80.45], [22.00, -81.20], [22.35, -82.00], [22.65, -82.90], [22.20, -83.90], [21.75, -84.50]],
+      sight: 40,
+      peak: { lat: 19.9897, lon: -76.8361, h: 1974, name: 'Pico Turquino' },   /* the Sierra Maestra, straight up from the south shore */
+      shot: { cam0: [19.735, -76.900, 320], cam1: [19.752, -76.885, 400], look0: [19.872, -76.860, 40], look1: [19.9897, -76.8361, 1700], fov: [40, 34] },   /* ~15 km off: the range whole, not one slope */
+      call: { lm: 'havana', e: '🏛️', lat: 23.1352, lon: -82.3596, h: 60, over: 'A rumour on the wind', name: 'Old Havana', line: 'Painted streets under a great white dome, and a sea wall where the whole city sits to watch the waves.' } },
+    { id: 'hispaniola', name: 'HISPANIOLA', under: 'Haiti and the Dominican Republic, one island between them',
+      coast: [[18.60, -74.45], [18.65, -74.12], [18.45, -73.09], [18.52, -72.63], [18.55, -72.34], [19.10, -72.70], [19.45, -72.69], [19.65, -73.10], [19.85, -73.40], [19.95, -72.80],
+        [19.76, -72.20], [19.85, -71.65], [19.80, -70.70], [19.65, -69.90], [19.30, -69.15], [18.95, -68.75], [18.60, -68.33], [18.42, -68.45], [18.40, -68.95], [18.45, -69.90],
+        [18.22, -70.30], [18.15, -71.08], [17.60, -71.42], [17.95, -71.75], [18.23, -72.53], [18.18, -73.50], [18.25, -74.20], [18.32, -74.45]],
+      sight: 40,
+      peak: { lat: 18.3640, lon: -71.9780, h: 2680, name: 'the Massif de la Selle' },
+      shot: { cam0: [18.100, -72.600, 340], cam1: [18.120, -72.580, 440], look0: [18.232, -72.530, 30], look1: [18.3640, -71.9780, 2400], fov: [40, 34] },   /* off Jacmel, Haiti's south shore, ~14 km out */
+      call: { lm: 'citadelle', e: '🏰', lat: 19.5733, lon: -72.2436, h: 900, over: 'A rumour on the wind', name: 'The Citadelle', line: 'A stone fortress on a mountain top, built by free people to keep their freedom. North, over the mountains.' } },
+    { id: 'cayman', name: 'THE CAYMAN ISLANDS', under: 'Three low islands over the deepest blue',
+      coast: [[19.38, -81.42], [19.37, -81.33], [19.37, -81.27], [19.36, -81.15], [19.34, -81.08], [19.29, -81.08], [19.28, -81.18], [19.28, -81.26], [19.26, -81.36], [19.29, -81.40]],   /* Grand Cayman */
+      sight: 40,
+      peak: { lat: 19.33, lon: -81.25, h: 20, name: 'the island' },   /* flat: the look ends low, across the island to its sound */
+      shot: { cam0: [19.300, -81.480, 650], cam1: [19.310, -81.455, 760], look0: [19.335, -81.392, 0], look1: [19.355, -81.270, 0], fov: [40, 34] },   /* off Seven Mile Beach, high: a flat island is seen from above */
+      call: { lm: 'stingray', e: '🌊', lat: 19.3743, lon: -81.3049, h: 0, over: 'A rumour on the wind', name: 'Stingray City', line: 'A sandbar in the sound where the rays glide up to meet you, in water no deeper than your knees.' } },
+    { id: 'puertorico', name: 'PUERTO RICO', under: 'The island of enchantment',
+      coast: [[18.51, -67.16], [18.49, -66.60], [18.47, -66.10], [18.38, -65.62], [18.25, -65.60], [18.05, -65.83], [17.97, -66.25], [17.97, -66.65], [17.95, -67.20], [18.20, -67.18], [18.38, -67.27]],
+      sight: 40,
+      peak: { lat: 18.1725, lon: -66.5917, h: 1338, name: 'Cerro de Punta' },
+      shot: { cam0: [18.530, -66.140, 260], cam1: [18.512, -66.130, 330], look0: [18.4706, -66.1239, 40], look1: [18.1725, -66.5917, 1300], fov: [36, 30] },   /* off San Juan, El Morro on its point */
+      call: { lm: 'yunque', e: '🐸', lat: 18.3106, lon: -65.7867, h: 700, over: 'A rumour on the wind', name: 'El Yunque', line: 'A rainforest on a mountain, loud at dusk with little frogs that sing their own name.' } },
+    { id: 'yucatan', name: 'MEXICO', under: 'The Yucatan, where the rivers run underground',
+      coast: [[18.50, -88.30], [19.30, -87.45], [20.21, -87.43], [20.63, -87.07], [21.16, -86.83], [21.60, -87.10], [21.60, -88.15], [21.28, -89.66], [20.86, -90.40], [19.85, -90.53],
+        [19.35, -90.72], [18.65, -91.80], [18.00, -91.00], [17.90, -89.20]],   /* the peninsula, closed across the land in the south */
+      sight: 40,
+      peak: { lat: 20.6843, lon: -88.5678, h: 30, name: 'the forest' },
+      shot: { cam0: [20.330, -87.250, 900], cam1: [20.310, -87.285, 1000], look0: [20.2147, -87.4291, 0], look1: [20.150, -87.700, 0], fov: [40, 34] },   /* north-east of Tulum, high, looking down the coast to its temple on the cliff: the reef, the beach's curve, the forest */
+      call: { lm: 'chichen', e: '☀️', lat: 20.6843, lon: -88.5678, h: 30, over: 'A rumour on the wind', name: 'Chichen Itza', line: 'A pyramid in the forest, where the spring sun draws a serpent down its stairs. Inland, across the flat green.' } }
   ];
-  var K = { SKIP: 0.8, A: 3.4, DIP: 0.4, C1: 9.8, D1: 12.6, E: 13.0, DUR: 14.6, TITLE: 4.7, CALL: 10.2, HOLD_MAX: 4, PRE_MAX: 8, CAP: 24, REL: 2, OUT0: 3000, OUT1: 1500, CAMY0: 380, CAMY1: 520 };
+  var K = { SKIP: 0.8, A: 3.4, DIP: 0.4, C1: 9.8, D1: 12.6, E: 13.0, DUR: 14.6, TITLE: 4.7, CALL: 10.2, HOLD_MAX: 4, PRE_MAX: 8, CAP: 24, REL: 2, OUT0: 3000, OUT1: 1500, CAMY0: 380, CAMY1: 520, GAP: 12 };
   function sm(x) { x = x < 0 ? 0 : x > 1 ? 1 : x; return x * x * (3 - 2 * x); }
   function lerp(a, b, t) { return a + (b - a) * t; }
   /* km on a flat patch (good to a few hundred metres at these distances): the gap from a point to the coastline, 0 inside it */
@@ -136,7 +177,7 @@ window.WFR_ARRIVE783 = (function () {
       try { cine.fade(0); } catch (e) { /* fine */ }
       if (P) {
         if (!R.said) { try { o.title('', P.name, P.under, 'country'); } catch (e) { /* fine */ } R.said = true; }   /* skipped before the name rose: the name still rises, over her own flight */
-        if (!R.pinned && P.call) { pinCall(); try { if (o.toast && st.pinned) o.toast('💦 ' + P.call.name + ' calls. The arrow points the way.', 3400); } catch (e) { /* fine */ } }
+        if (!R.pinned && P.call) { pinCall(); try { if (o.toast && st.pinned) o.toast((P.call.e || '✨') + ' ' + P.call.name + ' calls. The arrow points the way.', 3400); } catch (e) { /* fine */ } }
       }
       st.lastEnd = { how: how, k: R ? +R.k.toFixed(2) : null };
       R = null;
@@ -147,8 +188,9 @@ window.WFR_ARRIVE783 = (function () {
       st.since += real || 0;
       if (R || !o.T.on || !o.T.f) return;
       var S = o.S, ll = W.toLatLon(o.T.f, S.pos.x, S.pos.z), sn = seen(), km = [];
-      for (var j = 0; j < PLACES.length; j++) km.push(nearest(PLACES[j], ll.lat, ll.lon)); st.lastKm = +km[0].km.toFixed(2);   /* the bench's reading, kept in every state */
+      for (var j = 0; j < PLACES.length; j++) km.push(nearest(PLACES[j], ll.lat, ll.lon)); st.lastKm = +km[0].km.toFixed(2); st.kmAll = km.map(function (x) { return +x.km.toFixed(1); });   /* the bench's reading, kept in every state (779: every row's too) */
       if (o.classic()) { st.why = 'classic'; return; }   /* Classic is frozen (board 645): nothing here ever plays there */
+      if (st.ends && st.since < K.GAP) { st.why = 'gap'; return; }   /* 779: one country's scene never runs straight into the next's */
       for (var i = 0; i < PLACES.length; i++) { var P = PLACES[i], n = km[i]; if (sn[P.id]) continue;
         if (n.km > P.sight) { st.pre = 0; continue; }
         var why = busyWhy(); if (why) { st.why = why; return; }
@@ -168,7 +210,7 @@ window.WFR_ARRIVE783 = (function () {
       return hz;
     }
     function peek() { return { made: st.made, on: st.on, k: R ? +R.k.toFixed(2) : null, plays: st.plays, skips: st.skips, ends: st.ends, refused: st.refused, why: st.why, lastKm: st.lastKm, wait: st.wait, holds: st.holds,
-      beats: st.beats.slice(), last: st.last, camD: st.camD == null ? null : st.camD, camMax: st.camMax || 0, loadedIn: st.loadedIn == null ? null : st.loadedIn, loadedAll: st.loadedAll == null ? null : st.loadedAll, lastEnd: st.lastEnd || null, pinned: !!st.pinned, err: st.err, seen: Object.assign({}, seen()), places: PLACES.map(function (p) { return p.id; }) }; }
+      beats: st.beats.slice(), last: st.last, camD: st.camD == null ? null : st.camD, camMax: st.camMax || 0, loadedIn: st.loadedIn == null ? null : st.loadedIn, loadedAll: st.loadedAll == null ? null : st.loadedAll, lastEnd: st.lastEnd || null, pinned: !!st.pinned, err: st.err, kmAll: st.kmAll ? st.kmAll.slice() : null, seen: Object.assign({}, seen()), places: PLACES.map(function (p) { return p.id; }) }; }
     function probe(lat, lon) {   /* the bench's question: from here, would a country's arrival be due (and if not, why)? It plays nothing */
       if (o.classic()) return 'classic'; var sn = seen();
       for (var i = 0; i < PLACES.length; i++) { var P = PLACES[i], n = nearest(P, lat, lon); if (n.km <= P.sight) return sn[P.id] ? 'seen ' + P.id : 'due ' + P.id; } return 'none'; }
