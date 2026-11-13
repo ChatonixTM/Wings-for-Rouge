@@ -179,6 +179,7 @@ window.WFR_TRAFFIC = (function () {
 
   function init(ctx) {
     if (st.inited) return true; X = ctx || {};
+    if (window.WFR_LIFE790) try { WFR_LIFE790.init(X); } catch (e) { st.lifeFault = String(e && e.message || e); }   /* 790 B: life everywhere (world-life790.js) rides this module's init and tick; it refuses Classic itself */
     try {
       if (!X.THREE || !X.scene || !window.WFR_WORLD) { st.fault = 'init: no THREE, scene or WFR_WORLD'; return false; }
       if (X.classic && X.classic()) { st.fault = 'classic look: the traffic is Standard only (board 645)'; return false; }
@@ -194,6 +195,7 @@ window.WFR_TRAFFIC = (function () {
     } catch (e) { st.fault = 'init: ' + (e && e.message || e); return false; }
   }
   function tick(dt) {
+    if (window.WFR_LIFE790) WFR_LIFE790.tick(dt);   /* 790 B */
     if (!st.inited || !st.enabled) return; var t0 = performance.now(); dt = dt || 0;
     try {
       st.t += dt; var T = X.TR, on = !!(T && T.on && T.f && T.st && X.S && X.S.pos); st.mode = on ? 'travel' : 'off';
