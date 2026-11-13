@@ -96,7 +96,7 @@ window.WFR_QUESTS720 = (function () {
   /* ---------- the record: S.quests (saved by the page's save()), S.people724 (the help tally, 724b) ---------- */
   function clean(q) {
     q = q && typeof q === 'object' ? q : {}; var o = { v: C.SAVE_V, active: Array.isArray(q.active) ? q.active.filter(function (a) { return a && a.id && Array.isArray(a.legs); }) : [],
-      done: Array.isArray(q.done) ? q.done.slice(-C.DONE_KEEP) : [], given: q.given && typeof q.given === 'object' ? q.given : {}, lm: q.lm && typeof q.lm === 'object' ? q.lm : {}, pin: q.pin || null };
+      done: Array.isArray(q.done) ? q.done.slice(-C.DONE_KEEP) : [], given: q.given && typeof q.given === 'object' ? q.given : {}, lm: q.lm && typeof q.lm === 'object' ? q.lm : {}, pin: q.pin || null, daily: q.daily && typeof q.daily === 'object' ? { d: +q.daily.d || 0, n: +q.daily.n || 0 } : null };   /* 786: the day's errands so far */
     if (o.pin && !o.active.some(function (a) { return a.id === o.pin; })) o.pin = o.active.length ? o.active[o.active.length - 1].id : null; return o; }
   function help(pid) { var P = X.S.people724 || (X.S.people724 = {}); return P[pid] || (P[pid] = { help: 0 }); }
   function saveNow() { try { X.save(); } catch (e) { st.fault = 'save: ' + (e && e.message || e); } }
@@ -145,12 +145,18 @@ window.WFR_QUESTS720 = (function () {
   function isGiver(pid) {   // the cheap test first (a sixth of the townsfolk, the four village friends), then the errand itself
     var c = st.givers.get(pid); if (c == null) { c = pid.indexOf('v:') === 0 ? !!GIVERS_ISLAND[pid.slice(2)] : hash('q720:' + pid) % C.GIVER_MOD === 0; st.givers.set(pid, c); } return c; }
   function offers(pid) {   // a ❗: a giver, after the Crow's lesson (before it, people only sing), with no errand of theirs running, under their count
-    if (!X.S.lessons || !X.S.lessons.crow || !isGiver(pid)) return false; if ((Q.given[pid] || 0) >= C.PER_PERSON || activeFrom(pid) || Q.active.length >= C.MAX_ACTIVE) return false;
+    if (!X.S.lessons || !X.S.lessons.crow || !isGiver(pid)) return false; if (((Q.given[pid] || 0) >= C.PER_PERSON && !daily(pid)) || activeFrom(pid) || Q.active.length >= C.MAX_ACTIVE) return false;
     var g = gen(pid); return !!g && !(g.kind === 'lm' && (Q.lm[g.lm] || activeLm(g.lm))); }
 
+  /* 786 #134 (the loop after the story): once a villager on her island has asked their three, they ask again most days: two errands a day across the
+     island (from Lv 30 or the Hawk beaten), each paying its XP and runes and DAILY.coins coins too. DRAFT numbers. */
+  var DAILY = { n: 2, coins: 3 };
+  function dailyLeft() { var d = X.day ? X.day() : -1, q = Q.daily; return !q || q.d !== d ? DAILY.n : Math.max(0, DAILY.n - (q.n || 0)); }
+  function daily(pid) { return pid.indexOf('v:') === 0 && !!(X.daily && X.daily()) && dailyLeft() > 0; }
   /* ---------- the errand's life: accept, a leg done, the reward ---------- */
   function accept(g) {
     var a = JSON.parse(JSON.stringify(g)); a.leg = 0; a.day = X.S.dawns || 0; delete a.ask;
+    if (a.giver && (Q.given[a.giver] || 0) >= C.PER_PERSON && daily(a.giver)) { var dd = X.day ? X.day() : -1; if (!Q.daily || Q.daily.d !== dd) Q.daily = { d: dd, n: 0 }; Q.daily.n++; a.daily = 1; st.dailies = (st.dailies || 0) + 1; }   /* 786 */
     if (a.kind === 'lm') { var had = activeLm(a.lm); if (had) { had.giver = a.giver; had.gname = a.gname; } else Q.active.push(a); }
     else Q.active.push(a);
     Q.given[a.giver] = (Q.given[a.giver] || 0) + 1; Q.pin = (activeLm(a.lm) || a).id; st.accepted++; st.events.push('accept ' + a.id); saveNow(); hudNow(); refreshBoard(); return a; }
@@ -162,6 +168,7 @@ window.WFR_QUESTS720 = (function () {
     if (a.giver) { var h = help(a.giver); h.help++; h.last = a.item || (LMB[a.lm] && LMB[a.lm].name) || ''; }
     if (a.to && a.kind !== 'find') { var h2 = help(a.to); h2.help++; h2.last = a.item; }
     X.S.runes = (X.S.runes || 0) + (a.runes || 0); st.completed++; st.events.push('finish ' + a.id + ' ' + how);
+    if (a.daily && X.coin) { try { X.coin(DAILY.coins, a.title); } catch (e) { /* the errand is done without its coins */ } st.dailyPaid = (st.dailyPaid || 0) + DAILY.coins; }   /* 786 */
     try { X.toast(fill(WORDS.fin, { t: a.title }) + '  ' + fill(WORDS.reward, { xp: a.xp, r: a.runes }), 3400); } catch (e) { /* no toast */ }
     try { if (X.ding) X.ding(); } catch (e) { /* no sound */ }
     try { X.xp(a.xp, a.title); } catch (e) { saveNow(); }   // gainXP saves and calls hud()
@@ -362,7 +369,7 @@ window.WFR_QUESTS720 = (function () {
   }
   function peek() {
     var b = st.btn ? st.btn.getBoundingClientRect() : null;
-    return { inited: st.inited, fault: st.fault, open: st.open, opens: st.opens, closes: st.closes, accepted: st.accepted, completed: st.completed, events: st.events.slice(-12),
+    return { inited: st.inited, fault: st.fault, open: st.open, opens: st.opens, closes: st.closes, accepted: st.accepted, completed: st.completed, events: st.events.slice(-12), daily: Q ? Q.daily : null, dailies: st.dailies || 0, dailyPaid: st.dailyPaid || 0, dailyLeft: Q && X ? dailyLeft() : null,   /* 786 */
       active: Q ? Q.active.map(function (a) { var L = a.legs[a.leg] || {}; return { id: a.id, kind: a.kind, leg: a.leg, legs: a.legs.length, k: L.k || null, next: L.who || L.base || L.lm || null, giver: a.giver, to: a.to || null, title: a.title, step: stepText(a) }; }) : [],
       nearId: X && X.S.nearPerson724 ? idOf(X.S.nearPerson724) : null,
       done: Q ? Q.done.map(function (d) { return d.id; }) : [], pin: Q ? Q.pin : null, given: Q ? Object.assign({}, Q.given) : {}, lm: Q ? Object.assign({}, Q.lm) : {}, lmLast: st.lmLast,

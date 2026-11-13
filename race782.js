@@ -33,7 +33,9 @@ window.WFR_RACE782 = (function () {
   var CUPS = [
     { id: 'acorn', name: 'Acorn Cup', ribbon: 'the Acorn Ribbon', win: 6, again: 2, rivals: [[14, 18, 10, 18, 32], [10, 35, 14, 14, 7], [18, 14, 32, 21, 10]] },   /* ~37.5 s on the course: a plain chick cheered well comes in about a second behind; ten points a strength and her cheers win by about one */
     { id: 'willow', name: 'Willow Cup', ribbon: 'the Willow Ribbon', win: 10, again: 3, need: 'acorn', rivals: [[110, 120, 90, 140, 220], [100, 230, 110, 120, 90], [120, 110, 220, 160, 100]] },
-    { id: 'oak', name: 'Old Oak Cup', ribbon: 'the Old Oak Ribbon', win: 16, again: 5, need: 'willow', rivals: [[380, 420, 360, 450, 600], [360, 620, 400, 420, 340], [420, 380, 600, 500, 360]] }];
+    { id: 'oak', name: 'Old Oak Cup', ribbon: 'the Old Oak Ribbon', win: 16, again: 5, need: 'willow', rivals: [[380, 420, 360, 450, 600], [360, 620, 400, 420, 340], [420, 380, 600, 500, 360]] },
+    /* 786 #134 (the loop after the story): the CHAMPION CUP, opened by the Old Oak Cup; three champions of our own (DRAFT names); ~23.0-23.2 s: a chick at 650 in every strength ties them, at 700 it wins */
+    { id: 'champ', name: 'Champion Cup', ribbon: 'the Champion Ribbon', win: 30, again: 8, need: 'oak', names: ['Thistle', 'Marigold', 'Clove'], rivals: [[620, 680, 580, 700, 800], [580, 820, 620, 640, 540], [680, 620, 800, 720, 580]] }];
   var PAY = { second: 2, other: 1 };
   var LINES = {   /* DRAFT, for his pen */
     nochick: 'The start line. Chicks race here, round the meadow. You need a chick of your own first.',
@@ -228,7 +230,7 @@ window.WFR_RACE782 = (function () {
       var lt = Lt(), S = lt.S, st = S.chick.stats || {}, rs = state(), el = panelEl(); R.panel = 'cups'; S.talking = true; R.held = true; R.opens = (R.opens || 0) + 1;
       var h = '<h3>The Race<span>\u{1FA99} ' + (S.coins || 0) + '</span></h3><div class="how">' + LINES.how + '</div><div class="stats">' + STATW.map(function (q) { var v = cl(st[q[0]]); return '<span>' + q[1] + ' <i>Lv ' + lvl(v) + '</i><u><b style="width:' + Math.round((v % 50) / 50 * 100) + '%"></b></u></span>'; }).join('') + '</div><div class="rows">';
       CUPS.forEach(function (c, i) { var on = open(c.id), won = rs.won[c.id] || 0;
-        h += '<div class="row"><div class="e">' + ['\u{1F330}', '\u{1F33F}', '\u{1F333}'][i] + '</div><div class="t"><b>' + c.name + (won ? ' ✓' : '') + '</b><small>' + (on ? (won ? 'Won ' + won + (won > 1 ? ' times' : ' time') + ' · a win pays \u{1FA99} ' + c.again : 'Win: \u{1FA99} ' + c.win + ' and ' + c.ribbon) + ' · vs ' + RIVALS.map(function (r) { return r.name; }).join(', ') : 'Win the ' + CUPS[i - 1].name + ' to open it') + '</small></div><button type="button" data-cup="' + c.id + '"' + (on ? '' : ' disabled') + '>' + (on ? 'Race' : '\u{1F512}') + '</button></div>'; });
+        h += '<div class="row"><div class="e">' + ['\u{1F330}', '\u{1F33F}', '\u{1F333}', '\u{1F3C6}'][i] + '</div><div class="t"><b>' + c.name + (won ? ' ✓' : '') + '</b><small>' + (on ? (won ? 'Won ' + won + (won > 1 ? ' times' : ' time') + ' · a win pays \u{1FA99} ' + c.again : 'Win: \u{1FA99} ' + c.win + ' and ' + c.ribbon) + ' · vs ' + (c.names || RIVALS.map(function (r) { return r.name; })).join(', ') : 'Win the ' + CUPS[i - 1].name + ' to open it') + '</small></div><button type="button" data-cup="' + c.id + '"' + (on ? '' : ' disabled') + '>' + (on ? 'Race' : '\u{1F512}') + '</button></div>'; });
       h += '</div><button type="button" class="close" data-close="1">Not now</button>'; el.innerHTML = h;
     }
     function onPanel(e) { var b = e.target.closest('button'); if (!b) return; if (b.dataset.close) { closePanel(); return; } if (b.dataset.cup) { var c = b.dataset.cup; var el = document.getElementById('race782p'); if (el) el.remove(); R.panel = null; start(c); return; } if (b.dataset.again) { var cc = R.cup ? R.cup.id : 'acorn'; var el2 = document.getElementById('race782p'); if (el2) el2.remove(); R.panel = null; openPanel(); return; } }
@@ -260,6 +262,7 @@ window.WFR_RACE782 = (function () {
       R.cup = cup; R.on = true; R.held = true; R.ran = true; R.ph = 'intro'; R.runs++; R.result = null; R.cheersIgnored = 0; S.talking = true; camInit = false;
       var cs = W(at(K.CH_S, K.CH_L).x, at(K.CH_S, K.CH_L).z); S.mode = 'walk'; S.speed = 0; S.vy = 0; S.pos.set(cs.x, o.ground(cs.x, cs.z) + lt.standOf(), cs.z); S.yaw = faceIn(); S.camYaw = S.yaw; S.camCut = true;
       me = racer(S.chick.stats || {}, 0); me.lane = LANE_ME; me.cre = cl((S.chick.stats || {}).cre);
+      RV.forEach(function (m, i) { m.name = (cup.names && cup.names[i]) || RIVALS[i].name; });   /* 786: the Champion Cup's own rivals */
       rv = cup.rivals.map(function (st, i) { var r = racer(st, i + 1); r.lane = RV[i].lane; r.m = RV[i]; return r; });
       var H = hudEl(); R.hud = H; H.cup.textContent = cup.name; H.el.style.opacity = '0';
       var said = false, cnt = -1, H0 = H;
@@ -359,7 +362,7 @@ window.WFR_RACE782 = (function () {
       var res = R.result = { cup: cup.id, place: place, pay: pay, first: first, time: +me.fin.toFixed(2), me: splits(me), rivals: rv.map(function (r) { return { name: r.m.name, time: +r.fin.toFixed(2), splits: splits(r) }; }), puffs: me.puffs, puffT: +me.puffT.toFixed(2), cheers: me.cheers, coins: S.coins, advice: advise() };
       R.last = { cup: cup.id, how: how, paid: pay, place: place };
       var next = CUPS[CUPS.indexOf(cup) + 1];
-      if (first && cine) { var ok = cine.itemGet({ emoji: '\u{1F3F5}️', name: cup.ribbon, over: 'You won', line: (next ? 'The ' + next.name + ' is open now. ' : 'All three cups are yours! ') + '\u{1FA99} +' + pay, done: function () { result(); } }); if (ok) { S.talking = true; return; } }
+      if (first && cine) { var ok = cine.itemGet({ emoji: '\u{1F3F5}️', name: cup.ribbon, over: 'You won', line: (next ? 'The ' + next.name + ' is open now. ' : 'Every cup is yours! ') + '\u{1FA99} +' + pay, done: function () { result(); } }); if (ok) { S.talking = true; return; } }
       result();
     }
     function splits(r) { return [1, 2, 3, 4].map(function (k) { return +((r.at[k] != null ? r.at[k] : r.fin) - (r.at[k - 1] != null ? r.at[k - 1] : 0)).toFixed(2); }); }

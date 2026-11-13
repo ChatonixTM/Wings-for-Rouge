@@ -87,7 +87,7 @@ window.WFR_HOMES784 = (function () {
       evening: ['There, the first star. Make a wish.', 'My charts say the north star never moves. Unlike you.'],
       night: ['Mm... wake me if a star falls... zz.', 'Zz... the hunter\'s belt... zz.'],
       out: 'Faye is out watching the sky. Her star charts are pinned to the wall.' },
-    state: { hawk: 'They say you faced the Hawk. The whole village sleeps better.', strong: 'Look at you! Strong wings now. Hardly the little bird who first came by.',
+    state: { hawk: 'They say you faced the Hawk. The whole village sleeps better.', hawkFriend: 'They say you beat the Hawk, and then held out your wing to him. Brave, both times.',   /* 786: DRAFT */ strong: 'Look at you! Strong wings now. Hardly the little bird who first came by.',
       chick: 'How is your little one? Bring the chick by some time.', noChick: 'Still building your nest? Every bird starts with a twig.' },
     /* Su 43: what she has done for THEM (a tool she brought: S.marks), and for the village (its builds); the season outside; coming home to find her in */
     deed: { fix: 'The hammer you brought me? I have mended half the village with it.', paint: 'See my shutter? Painted with the brush you carried here.',
@@ -415,7 +415,7 @@ window.WFR_HOMES784 = (function () {
     function sleepy(c) { return c >= 2100; }   /* in bed once the night is deep (the village goes in at 2040); up at dawn (the clock wraps to 0) */
     function stateLine() {
       var Lt = late(), S = Lt.S;
-      if (Lt.hawkWon && Lt.hawkWon()) return LINES.state.hawk;
+      if (Lt.hawkWon && Lt.hawkWon()) return S.world && S.world.hawk && S.world.hawk.friend === 1 ? LINES.state.hawkFriend : LINES.state.hawk;   /* 786: befriended, they say so */
       if ((S.level || 1) >= STRONG) return LINES.state.strong;
       if (S.nestDone && Lt.chick && Lt.chick()) return LINES.state.chick;
       if (!S.nestDone) return LINES.state.noChick;

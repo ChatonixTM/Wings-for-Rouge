@@ -34,10 +34,13 @@ window.WFR_SCHOOL782 = (function () {
   var RIVALS = [
     { name: 'Puddle', col: 0x8fd0f2, st: { str: 14, sta: 22, swim: 40, run: 12, cre: 0 }, word: 'steady at the edge' },
     { name: 'Sorrel', col: 0xf2a65a, st: { str: 34, sta: 30, swim: 12, run: 70, cre: 0 }, word: 'quick on its feet' },
-    { name: 'Burr', col: 0xc9a06a, st: { str: 80, sta: 60, swim: 24, run: 16, cre: 0 }, word: 'the strongest of the three' }];
+    { name: 'Burr', col: 0xc9a06a, st: { str: 80, sta: 60, swim: 24, run: 16, cre: 0 }, word: 'the strongest of the three' },
+    /* 786 #134 (the loop after the story): the ring's CHAMPION, opened by beating Burr; the Race's Champion Cup has Thistle too. Sim (ideal cheering, 120 bouts):
+       a chick at 200 in every strength wins Puff Push ~27%, the Tug ~46%; at 300, ~69% and ~85% (DRAFT) */
+    { name: 'Thistle', col: 0x9a7fc4, st: { str: 300, sta: 260, swim: 160, run: 200, cre: 0 }, word: 'the champion of the ring' }];
   var GAMES = {
-    push: { id: 'push', name: 'Puff Push', emoji: '\u{1FAB5}', ribbons: ['the Moss Ribbon', 'the Fern Ribbon', 'the Oak Ribbon'], win: [5, 8, 12], again: 2, secs: K.PP_T },
-    tug: { id: 'tug', name: 'Vine Tug', emoji: '\u{1F33F}', ribbons: ['the Vine Ribbon', 'the Ivy Ribbon', 'the Wisteria Ribbon'], win: [5, 8, 12], again: 2, secs: K.TUG_T } };
+    push: { id: 'push', name: 'Puff Push', emoji: '\u{1FAB5}', ribbons: ['the Moss Ribbon', 'the Fern Ribbon', 'the Oak Ribbon', 'the Champion\'s Moss'], win: [5, 8, 12, 25], again: 2, secs: K.PP_T },
+    tug: { id: 'tug', name: 'Vine Tug', emoji: '\u{1F33F}', ribbons: ['the Vine Ribbon', 'the Ivy Ribbon', 'the Wisteria Ribbon', 'the Champion\'s Vine'], win: [5, 8, 12, 25], again: 2, secs: K.TUG_T } };
   var PAY = { lose: 1, draw: 1 };
   var LINES = {   /* DRAFT, for his pen */
     school: 'Lessons for chicks: songs, dances, drawings. Drop your chick off; it learns while you play.',

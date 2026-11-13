@@ -80,7 +80,7 @@ window.WFR_HERMITS = (function () {
     woven: [['Beanda', 'Three white feathers, a needle of bone, and a little song. Hold still...'], ['Beanda', 'There. A cloak for your chick. The rain will not chill it now.']],   // 697 DRAFT
     mendPoor: function (p, n) { return [['Beanda', 'A cold like that takes ' + p + ' runes of herbs, dear, and you have ' + n + '.'], ['Beanda', 'The rune course up by the sky island pays well. I will be here.']]; },
     mended: [['Beanda', 'Willow bark, warm honey, and a little song. Hold still...'], ['Beanda', 'There. Your chick\'s cold is mended. Keep it out of the rain.']],
-    beandie: function (n) { return [['Beandie', 'Fruit for your chick, nails for the village. Blades and such come later, if that hawk gets bold.'], ['Beandie', 'You have ' + n + ' runes. Stand at a thing on my counter to see its price.']]; },
+    beandie: function (n, won) { return [['Beandie', won ? 'Fruit for your chick, nails for the village. Blades? Nobody asks for blades, now the Hawk is beaten.' : 'Fruit for your chick, nails for the village. Blades and such come later, if that hawk gets bold.'], ['Beandie', 'You have ' + n + ' runes. Stand at a thing on my counter to see its price.']]; },   /* 786: won, the line knows the Hawk was beaten (DRAFT) */
     poor: function (p, n) { return [['Beandie', 'That is ' + p + ' runes. You have ' + n + '. Come back richer.']]; },
     beakFull: [['Beandie', 'Your beak is full. Come back with it empty.']],
     noChick: [['Beandie', 'Fruit is for a chick, and you have none yet.']],
@@ -369,7 +369,7 @@ window.WFR_HERMITS = (function () {
           else if (API.healHer && API.healHer.need && API.healHer.need()) { var hp = API.healHer.price(); if (runes() < hp) say(LINES.mendPoor(hp, runes())); else { pay(hp); API.healHer.heal(); Lt.save(); Lt.hud(); say([['Beanda', API.healHer.line || 'There. You are mended.']]); } }
           else if (weaveable()) weave();   /* 697 */
           else say(!(S.nestDone && Lt.chick()) ? LINES.beandaNoChick : chickCloaked() ? LINES.beandaWell : LINES.beandaCloak(S.huethers || 0));
-        } else { S.seen = S.seen || {}; S.seen.beandie632 = true; Lt.save(); say(LINES.beandie(runes())); }
+        } else { S.seen = S.seen || {}; S.seen.beandie632 = true; Lt.save(); say(LINES.beandie(runes(), !Lt.classic() && !!(S.world && S.world.hawk && (S.world.hawk.won === 1 || (S.world.hawk.call && S.world.hawk.call.arena === 2))))); }   /* 786 */
         return true;
       } catch (e) { fail(e); return false; }
     }
