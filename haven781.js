@@ -129,7 +129,7 @@ window.WFR_HAVEN781 = (function () {
       /* the School: an open shelter, a slate, three stools */
       var sx = P.school[0], sz = P.school[1]; [[-1.2, -0.7], [1.2, -0.7], [-1.2, 0.7], [1.2, 0.7]].forEach(function (q) { post(sx + q[0], sz + q[1], 2.3); });
       var roof = shade(o.tex(new THREE.Mesh(new THREE.BoxGeometry(3, 0.14, 2.1), lam(0x8b5e34)), 'planks', 2, 1), true); add(roof, sx, 2.36, sz); roof.rotation.z = 0.08;
-      var slate = board(THREE, 'School\nopening soon', 1.8, 1.0, { bg: '#2f3a33', ink: '#eef4e6', size: 86 }); slate.position.set(sx, 1.3, sz - 0.68); root.add(slate); slate.rotation.y = 0;
+      var slate = board(THREE, o.schoolOpen ? 'School\nsongs · dances · drawings' : 'School\nopening soon', 1.8, 1.0, { bg: '#2f3a33', ink: '#eef4e6', size: 86 }); slate.position.set(sx, 1.3, sz - 0.68); root.add(slate); slate.rotation.y = 0;
       var face = Math.atan2(-sx, -sz); slate.rotation.y = face; slate.position.set(sx + Math.sin(face) * -0.6, 1.3, sz + Math.cos(face) * -0.6);
       for (var i = 0; i < 3; i++) { var st = shade(o.tex(new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.24, 0.32, 9), lam(0x8b6a44)), 'bark', 1, 1), true); add(st, sx + Math.sin(face) * 0.7 + Math.cos(face) * (i - 1) * 0.7, 0.16, sz + Math.cos(face) * 0.7 - Math.sin(face) * (i - 1) * 0.7); }
       /* the Ring: a sandy circle and mossy stumps round it */
@@ -139,7 +139,7 @@ window.WFR_HAVEN781 = (function () {
       /* 782 #129 · THE RACE'S BOARD by the home door (his "Haven, race outside": the course runs on the island; this board takes her and her chick out to its line) */
       if (o.race) { var rb = board(THREE, 'THE RACE\nout by the meadow', 1.5, 0.8, { bg: '#7a2f2a', size: 92 }); var rf = Math.atan2(0 - P.race[0], 7 - P.race[1]); rb.position.set(P.race[0], 1.35, P.race[1]); rb.rotation.y = rf; root.add(rb); H.raceBoard = rb;
         [-0.62, 0.62].forEach(function (d) { post(P.race[0] + Math.cos(rf) * d, P.race[1] - Math.sin(rf) * d, 1.7); }); }
-      var rs = board(THREE, 'The Ring\nopening soon', 1.4, 0.7, { size: 80 }); rs.position.set(P.ring[0] + 3.3, 1.2, P.ring[1] + 0.8); rs.rotation.y = Math.atan2(-(P.ring[0] + 3.3), -(P.ring[1] + 0.8)); root.add(rs); post(P.ring[0] + 3.3, P.ring[1] + 0.8 - 0.05, 0.9);
+      var rs = board(THREE, o.schoolOpen ? 'The Ring\nPuff Push · Vine Tug' : 'The Ring\nopening soon', 1.4, 0.7, { size: 80 });   /* 782 #132: open */ rs.position.set(P.ring[0] + 3.3, 1.2, P.ring[1] + 0.8); rs.rotation.y = Math.atan2(-(P.ring[0] + 3.3), -(P.ring[1] + 0.8)); root.add(rs); post(P.ring[0] + 3.3, P.ring[1] + 0.8 - 0.05, 0.9);
     })();
     /* THE MARKET: four posts, a counter, a striped awning, crates of wares, its sign, Thimble behind the counter */
     (function market() {
@@ -260,7 +260,7 @@ window.WFR_HAVEN781 = (function () {
       if (Math.hypot(l.x - P.post[0], l.z - P.post[1]) < 1.8) return 'post';
       return null;
     }
-    var LABEL = { door: '\u{1F423} Chick Haven', home: '\u{1F3E0} Home', market: '\u{1F6D2} Market', school: '\u{1F4DC} Read', ring: '\u{1F4DC} Read', post: '\u{1F4DC} Read', race: '\u{1F3C1} Race' };
+    var LABEL = { door: '\u{1F423} Chick Haven', home: '\u{1F3E0} Home', market: '\u{1F6D2} Market', school: o.school ? '\u{1F3EB} School' : '\u{1F4DC} Read', ring: o.school ? '\u{1F343} Ring' : '\u{1F4DC} Read', post: '\u{1F4DC} Read', race: '\u{1F3C1} Race' };   /* 782 #132: the School and the Ring open */
     function button(el) {
       var Lt = L(), S = Lt.S; if (!ok || (o.classic && o.classic())) return false; var n = nearOf(S); H.near = n;
       if (!n) return false; var lab = LABEL[n]; if (el.textContent !== lab) el.textContent = lab; if (el.hidden) el.hidden = false; return true;
@@ -270,8 +270,8 @@ window.WFR_HAVEN781 = (function () {
       if (n === 'door') { enter(); return true; }
       if (n === 'home') { leave(); return true; }
       if (n === 'market') { openMarket(); return true; }
-      if (n === 'school') { Lt.toast(LINES.school, 4200); return true; }
-      if (n === 'ring') { Lt.toast(LINES.ring, 4200); return true; }
+      if (n === 'school') { if (o.school && o.school('school')) return true; Lt.toast(LINES.school, 4200); return true; }   /* 782 #132: school782.js */
+      if (n === 'ring') { if (o.school && o.school('ring')) return true; Lt.toast(LINES.ring, 4200); return true; }
       if (n === 'post') { Lt.toast(LINES.post, 3800); return true; }
       if (n === 'race') { if (o.race) o.race(); return true; }   /* 782 #129: out to the start line, her chick with her */
       return false;
@@ -303,11 +303,11 @@ window.WFR_HAVEN781 = (function () {
       H.in = true; root.visible = true; H.enters++; document.documentElement.classList.add('haven781'); hv.visits = (hv.visits || 0) + 1; H.first = hv.visits === 1;
       var a = toW(P.arrive[0], P.arrive[1]); S.mode = 'walk'; S.inside = null; S.insideTH = null; S.pos.set(a.x, K.Y + Lt.standOf(), a.z); S.yaw = Math.PI; S.camYaw = S.yaw; S.camCut = true; S.speed = 0; S.vy = 0; S.hopY = 0;
       H.follow = !!(Lt.FOLLOW && Lt.FOLLOW.with); if (Lt.FOLLOW) { Lt.FOLLOW.with = false; if (Lt.FOLLOW.ring) Lt.FOLLOW.ring.length = 0; Lt.FOLLOW.last = null; }
-      if (chick) { var c = toW(P.chick[0], P.chick[1]); chick.position.set(c.x, K.Y + 0.3, c.z); var U = chick.userData; U.home = chick.position.clone(); U.where = 'haven'; U.pendWord = null; U.life = null; }
+      if (chick && !(o.chickAway && o.chickAway())) { var c = toW(P.chick[0], P.chick[1]); chick.position.set(c.x, K.Y + 0.3, c.z); var U = chick.userData; U.home = chick.position.clone(); U.where = 'haven'; U.pendWord = null; U.life = null; }   /* 782 #132: a chick at school stays on its stool */
       placeToys(); placeKept(); play.t = 5; H.playMood = false; Lt.save(); Lt.hud();
     }
     function arrival() {
-      var Lt = L(), S = Lt.S, cine = o.cine, chick = Lt.chick(), first = !!H.first, dur = first ? 6.4 : 3.6, runAt = first ? 2.9 : 0.5, said = false, met = false, hopY = 0, cyaw = 0;
+      var Lt = L(), S = Lt.S, cine = o.cine, chick = o.chickAway && o.chickAway() ? null : Lt.chick(), first = !!H.first,   /* 782 #132: at school it does not run to her */ dur = first ? 6.4 : 3.6, runAt = first ? 2.9 : 0.5, said = false, met = false, hopY = 0, cyaw = 0;
       var c0 = chick ? chick.position.clone() : null, her = S.pos.clone(), stop = new THREE.Vector3(), runS = chick ? Math.min(8, 4.6 + ((S.chick.stats || {}).run || 0) / 25) : 0;   /* its Run sets the pace */
       if (c0) { var dx = her.x - c0.x, dz = her.z - c0.z, d = Math.hypot(dx, dz); stop.set(her.x - dx / d * 0.75, c0.y, her.z - dz / d * 0.75); cyaw = Math.atan2(dx, dz); }
       var runT = c0 ? c0.distanceTo(stop) / runS : 0, arriveT = runAt + runT;
@@ -344,7 +344,7 @@ window.WFR_HAVEN781 = (function () {
         if (done) return; done = true; H.in = false; root.visible = false; H.leaves++; document.documentElement.classList.remove('haven781');
         S.mode = 'walk'; S.pos.set(D.fx + Math.sin(D.yaw) * 1.4, D.y + Lt.standOf(), D.fz + Math.cos(D.yaw) * 1.4); S.yaw = D.yaw; S.camYaw = S.yaw; S.camCut = true; S.speed = 0; S.vy = 0;
         if (to && Lt.ground) { S.pos.set(to.x, Lt.ground(to.x, to.z) + Lt.standOf(), to.z); S.yaw = to.yaw; S.camYaw = S.yaw; }   /* 782 #129: out at the Race's line */
-        if (chick) { var U = chick.userData, h = Lt.chickSpot(); U.where = 'home'; U.life = null; if (H.follow && Lt.FOLLOW) { Lt.FOLLOW.with = true; chick.position.set(S.pos.x + Math.sin(D.yaw + 2) * 0.9, D.y + 0.3, S.pos.z + Math.cos(D.yaw + 2) * 0.9); U.home = h; } else { chick.position.copy(h); U.home = h.clone(); } }
+        if (chick && !(o.chickAway && o.chickAway())) { var U = chick.userData, h = Lt.chickSpot(); U.where = 'home'; U.life = null; if (H.follow && Lt.FOLLOW) { Lt.FOLLOW.with = true; chick.position.set(S.pos.x + Math.sin(D.yaw + 2) * 0.9, D.y + 0.3, S.pos.z + Math.cos(D.yaw + 2) * 0.9); U.home = h; } else { chick.position.copy(h); U.home = h.clone(); } }
         Lt.save(); Lt.hud();
       };
       if (!cine) { out(); return true; }
@@ -415,7 +415,7 @@ window.WFR_HAVEN781 = (function () {
       var sp = toyG.pinwheel && toyG.pinwheel.userData.spin; if (sp) sp.rotation.z += dt * 3;
       if (H.hog) { H.hog.g.scale.y = 1.55 * (1 + 0.025 * Math.sin(t * 2)); H.hog.g.rotation.y = 0.35 * Math.sin(t * 0.4); if (H.apron) H.apron.rotation.y = H.hog.g.rotation.y; }
       if (toyG.ball) toyG.ball.children[0].position.y = 0.32 + Math.abs(Math.sin(t * 2.2)) * 0.12;
-      if (!(o.cine && o.cine.on())) playTick(dt, Lt, S); else if (play.cur) { home(play.cur.k); play.cur = null; play.t = 6; }
+      if (!(o.cine && o.cine.on()) && !(o.chickAway && o.chickAway())) playTick(dt, Lt, S); else if (play.cur) { home(play.cur.k); play.cur = null; play.t = 6; }
       var hv = state(); if (hv.toys.length && S.chick) S.chick.happy = Math.min(100, (S.chick.happy || 0) + dt * 0.05 * hv.toys.length);   /* toys: the chick plays while she is here */
     }
     function camClamp(cam) {   /* after the game has placed its camera: inside the wall, above the lawn */

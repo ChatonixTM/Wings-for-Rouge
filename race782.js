@@ -199,7 +199,7 @@ window.WFR_RACE782 = (function () {
     var LABEL = '\u{1F3C1} Race';
     function nearOf(S) { if (!S || S.mode !== 'walk' || S.talking || S.inside || R.on || R.panel || (o.haven && o.haven())) return false; var w = W(R.signAt.x, R.signAt.z); return Math.hypot(S.pos.x - w.x, S.pos.z - w.z) < K.NEAR + 0.6 && Math.abs(S.pos.y - o.ground(S.pos.x, S.pos.z)) < 2.5; }
     function button(el) { if (o.classic && o.classic()) return false; var S = Lt().S, n = nearOf(S); R.near = n; if (!n) return false; if (el.textContent !== LABEL) el.textContent = LABEL; if (el.hidden) el.hidden = false; return true; }
-    function press() { if (!R.near || R.on || R.panel || (cine && cine.on())) return false; var lt = Lt(); if (!lt.chick() || !lt.S.nestDone) { lt.toast(LINES.nochick, 3800); return true; } openPanel(); return true; }
+    function press() { if (!R.near || R.on || R.panel || (cine && cine.on())) return false; var lt = Lt(); if (!lt.chick() || !lt.S.nestDone) { lt.toast(LINES.nochick, 3800); return true; } if (o.busy && o.busy()) { lt.toast(o.busy(), 3800); return true; } openPanel(); return true; }   /* 782 #132: busy: at school */
     /* THE PANEL: three cups, her chick's strengths */
     function css() {
       if (document.getElementById('race782css')) return; var s = document.createElement('style'); s.id = 'race782css';
@@ -256,7 +256,7 @@ window.WFR_RACE782 = (function () {
     function rankOf() { var all = [me].concat(rv); var mine = me.done ? me.fin : null; var ahead = 0; all.forEach(function (r) { if (r === me) return; if (me.done) { if (r.done && r.fin < me.fin) ahead++; } else if (r.done || r.s > me.s) ahead++; }); return ahead + 1; }
     function start(cupId) {
       var lt = Lt(), S = lt.S, chick = lt.chick(), cup = CUPS.find(function (q) { return q.id === cupId; });
-      if (!cup || !open(cupId) || !chick || !S.nestDone || !cine || R.on || cine.on()) { S.talking = false; R.held = true; R.panel = null; release(); return false; }
+      if (!cup || !open(cupId) || !chick || !S.nestDone || !cine || R.on || cine.on() || (o.busy && o.busy())) { S.talking = false; R.held = true; R.panel = null; release(); return false; }
       R.cup = cup; R.on = true; R.held = true; R.ran = true; R.ph = 'intro'; R.runs++; R.result = null; R.cheersIgnored = 0; S.talking = true; camInit = false;
       var cs = W(at(K.CH_S, K.CH_L).x, at(K.CH_S, K.CH_L).z); S.mode = 'walk'; S.speed = 0; S.vy = 0; S.pos.set(cs.x, o.ground(cs.x, cs.z) + lt.standOf(), cs.z); S.yaw = faceIn(); S.camYaw = S.yaw; S.camCut = true;
       me = racer(S.chick.stats || {}, 0); me.lane = LANE_ME; me.cre = cl((S.chick.stats || {}).cre);
@@ -382,7 +382,7 @@ window.WFR_RACE782 = (function () {
       h += '<button type="button" class="go2" data-again="1">Race again</button><button type="button" class="close" data-close="1">Done</button>'; el.innerHTML = h;
     }
     function abort() { if (!R.on || !cine) return; var sc = cine.current(); R.aborting = true; if (sc && sc.name === 'race782') cine.end('abort'); R.aborting = false; }
-    function fromHaven() { if (!o.leaveHaven) return false; return o.leaveHaven({ x: W(at(K.CH_S, K.CH_L).x, at(K.CH_S, K.CH_L).z).x, z: W(at(K.CH_S, K.CH_L).x, at(K.CH_S, K.CH_L).z).z, yaw: faceIn(), title: 'The Race', then: function () { var lt = Lt(); if (lt.chick() && lt.S.nestDone) openPanel(); } }); }
+    function fromHaven() { if (!o.leaveHaven) return false; if (o.busy && o.busy()) { Lt().toast(o.busy(), 3800); return true; } return o.leaveHaven({ x: W(at(K.CH_S, K.CH_L).x, at(K.CH_S, K.CH_L).z).x, z: W(at(K.CH_S, K.CH_L).x, at(K.CH_S, K.CH_L).z).z, yaw: faceIn(), title: 'The Race', then: function () { var lt = Lt(); if (lt.chick() && lt.S.nestDone) openPanel(); } }); }
     var api = {
       root: root, tick: tick, mown: mown, button: button, press: press, fromHaven: fromHaven, openPanel: openPanel, closePanel: closePanel, start: start, abort: abort,
       on: function () { return R.on; }, holds: function () { return !!(R.on || R.held); }, near: function () { return R.near; },

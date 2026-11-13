@@ -493,7 +493,7 @@ window.WFR_HOMES784 = (function () {
     /* a tool handed to them at home: they go straight out of the door to use it (the game's own plan, from their doorstep) */
     function out(r, hr) {
       var Lt = late(), n = hr.n, h = r.home784.house; restore(hr); n.g.visible = true; h.openT = Math.max(h.openT, 3); r.home784.here = null; stats.outs++;
-      log.push(r.home784.who + ' goes out to use it'); if (Lt.toast) Lt.toast(r.home784.who + ' hurries out of the door to use it.', 3000);
+      log.push(r.home784.who + ' goes out to use it'); if (Lt.toastNext) Lt.toastNext(r.home784.who + ' hurries out of the door to use it.', 3000); else if (Lt.toast) Lt.toast(r.home784.who + ' hurries out of the door to use it.', 3000);   /* 782 #132: after her thanks, never over it */
     }
     function near() {
       var Lt = late(), S = Lt.S; if (!cur || S.inside !== cur || S.mode !== 'walk' || S.talking) return null;
