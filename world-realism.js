@@ -144,5 +144,6 @@ window.WFR_REALISM = (function () {
       tickMs: TICKMS.slice(), envBytes: W.envBytes || 0,
       sky: SKY ? { src: SKY.src, w: SKY.w, h: SKY.h, clamp: SKY.clamp, licence: SKY.licence } : null, C: C };
   }
-  return { renderer: renderer, attach: attach, tick: tick, peek: peek, C: C, patch: patch };
+  function nightNow() { try { return W.night ? +W.night() || 0 : 0; } catch (e) { return 0; } }   /* 790 A: the city's lit windows read the page's night (0..1) */
+  return { renderer: renderer, attach: attach, tick: tick, peek: peek, C: C, patch: patch, nightNow: nightNow };
 })();

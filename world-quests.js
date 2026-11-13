@@ -86,6 +86,7 @@ window.WFR_QUESTS720 = (function () {
     { id: 'chichen', e: '☀️', name: 'Chichen Itza', title: 'See Chichen Itza', where: 'Yucatan, Mexico', lat: 20.6843, lon: -88.5678, kind: 'see', r: 800, aglMax: 800, xp: 130, runes: 16, line: 'A stepped pyramid in the forest. At the equinox the sun draws a serpent down its stairs.' }
   ];
   if (window.WFR_INTERIORS729 && WFR_INTERIORS729.LANDMARKS) LANDMARKS = LANDMARKS.concat(WFR_INTERIORS729.LANDMARKS);   /* 729: Shanghai, Beijing, Tokyo, Shibuya, Shinjuku (world-interiors.js) */
+  if (window.WFR_PLACES790 && WFR_PLACES790.LANDMARKS) LANDMARKS = LANDMARKS.concat(WFR_PLACES790.LANDMARKS.filter(function (L) { return !LANDMARKS.some(function (M) { return M.id === L.id; }); }));   /* 790 D: the named places' big ones (places790.js: the CN Tower, Rouge Park, Trafalgar Square, the Pitons...); each lists itself on the board only near her (near790 m) */
   var LMB = {}; LANDMARKS.forEach(function (L) { LMB[L.id] = L; });
 
   var X = null, V = null, Q = null;   // the page's ctx; one reused goal vector; S.quests
@@ -351,7 +352,7 @@ window.WFR_QUESTS720 = (function () {
     h += '<h3>' + WORDS.avail + '</h3>';
     var n = 0; if (X.S.lessons && X.S.lessons.crow && !(X.TR && X.TR.on)) { (X.npcs || []).forEach(function (v) { if (Math.hypot(v.g.position.x - X.S.pos.x, v.g.position.z - X.S.pos.z) < 120 && offers('v:' + v.name)) n++; }); if (X.P && X.P.each) X.P.each(function (id) { if (offers(id)) n++; }); }
     st.near = n; if (Q.active.length >= C.MAX_ACTIVE) h += '<div class="q720hint">' + esc(WORDS.busy) + '</div>'; else if (n) h += '<div class="q720hint">' + esc(fill(WORDS.near, { n: n === 1 ? 'One person' : n + ' people', have: n === 1 ? 'has' : 'have' })) + '</div>';
-    for (i = 0; i < LANDMARKS.length; i++) { var L = LANDMARKS[i]; if (Q.lm[L.id] || activeLm(L.id)) continue;
+    for (i = 0; i < LANDMARKS.length; i++) { var L = LANDMARKS[i]; if (Q.lm[L.id] || activeLm(L.id)) continue; if (L.near790 && !(st.lm[L.id] && st.lm[L.id].d <= L.near790)) continue;   /* 790 D: a named place waits on the board until she is near it */
       h += row({ e: L.e, title: L.title, line: L.where + '. ' + L.line, xp: L.xp, runes: L.runes }, '', '<button type="button" data-q="' + L.id + '" data-a="start">' + WORDS.start + '</button>'); }
     if (Q.done.length) { h += '<h3>' + WORDS.done + ' (' + Q.done.length + ')</h3>'; for (i = Q.done.length - 1; i >= Math.max(0, Q.done.length - 8); i--) { var d = Q.done[i]; h += row({ e: d.e, title: d.title, line: d.giver ? 'For ' + d.giver + '.' : 'Seen with your own eyes.', xp: d.xp, runes: d.runes }, 'done', ''); } }
     return h; }
