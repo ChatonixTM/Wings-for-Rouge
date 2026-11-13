@@ -30,7 +30,7 @@
 window.WFR_HAVEN781 = (function () {
   'use strict';
   var API = { error: '' };
-  var K = { Y: 135, R: 14.6, FLOOR_R: 21, WALL_R: 16, WALL_H: 1.5, DOOR_R: 0.62, NEAR: 2.4 };
+  var K = { Y: 135, R: 14.6, FLOOR_R: 21, WALL_R: 16, WALL_H: 1.5, DOOR_R: 0.62, NEAR: 3.4 };   /* 782 (3): the door's button from 3.4 m (it was 2.4: a stranger at the trunk never saw it) */
   /* the garden, in its own frame (metres from its middle; +z is the home door's side) */
   var P = { arrive: [0, 11.4], door: [0, 15.55], pond: [-6.2, -3.2, 2.9], chick: [-3.4, -6.4], shelf: [-8.4, -7.8], market: [7.4, -4.8], counter: [5.6, -3.6], school: [-8.6, 5.6], ring: [0.6, -10.6, 2.5], post: [2.6, 6.4] };
   /* DRAFT prices in coins, set from a measured island (Su 41, Nov 12, Lv 30 save): 23 animals, each fall drops a coin at its row's chance (fall748.js), so a
@@ -45,8 +45,9 @@ window.WFR_HAVEN781 = (function () {
   var TOYS = [{ id: 'ball', emoji: '\u{26BD}', name: 'a bouncy ball', at: [-1.6, -8.4] }, { id: 'pinwheel', emoji: '\u{1F390}', name: 'a pinwheel', at: [-5.6, -8.2] }, { id: 'drum', emoji: '\u{1FA98}', name: 'a little drum', at: [-1.2, -4.6] }];
   var LINES = {
     shut: 'A little round door, shut tight. Something small will live here one day.',
-    hello: 'Oh! A customer with wings. I keep the Market here. Coins for nice things, that is the deal.',
-    poor: function (p, n) { return 'That one is ' + p + ' coins and you have ' + n + '. Animals out on the island drop them sometimes.'; },
+    hello: 'Oh! A customer with wings. I keep the Market here. Coins for nice things, that is the deal. You earn them by helping: a twig, a tool brought, a lesson, every new level. Animals drop a few too.',   /* 782 (2): she says plainly how coins are earned */
+    poor: function (p, n) { return 'That one is ' + p + ' coins and you have ' + n + '. Bring a villager their tool, learn a lesson, or grow a level: each pays a coin or two.'; },
+    earn: 'Earn coins: a twig 1 · a tool brought 2 · a lesson 2 · a new level 1 · animals now and then',   /* 782 (2): the panel says it too (DRAFT) */
     full: 'Your beak is full. Give that to your chick first.',
     school: 'The School. Lessons for chicks: songs, dances, drawings. The teacher is still on the way. (Opening soon.)',
     ring: 'The Ring. Gentle games for chicks: Puff Push, and a vine tug-of-war. Nobody gets hurt. (Opening soon.)',
@@ -345,7 +346,7 @@ window.WFR_HAVEN781 = (function () {
       if (document.getElementById('market781css')) return; var s = document.createElement('style'); s.id = 'market781css';
       s.textContent = '#market781{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);transform:translateX(-50%);width:min(440px,calc(100vw - 24px));max-height:68vh;overflow:auto;z-index:44;background:#fff8ea;color:#3b2a1a;border-radius:20px;box-shadow:0 14px 40px rgba(0,0,0,.35);padding:14px 14px 10px;font-family:var(--body,system-ui)}' +
         '#market781 h3{margin:0 0 2px;font:600 22px Georgia,serif;display:flex;justify-content:space-between;align-items:center}#market781 h3 span{font:800 16px var(--body,system-ui);color:#8a5a12}' +
-        '#market781 .who{font:italic 13px Georgia,serif;color:#7a5a3a;margin-bottom:8px}#market781 .tabs{display:flex;gap:6px;margin:0 0 10px}#market781 .tabs button{flex:1;min-height:40px;border-radius:12px;border:2px solid rgba(60,40,20,.18);background:#fff8ea;font:800 13px var(--body,system-ui);color:#3b2a1a}#market781 .tabs button.on{background:#f2b134;border-color:#c98a12}' +
+        '#market781 .who{font:italic 13px Georgia,serif;color:#7a5a3a;margin-bottom:4px}#market781 .earn{font:700 12px var(--body,system-ui);color:#6b4a14;background:#fbeccb;border-radius:10px;padding:5px 8px;margin-bottom:8px}#market781 .tabs{display:flex;gap:6px;margin:0 0 10px}#market781 .tabs button{flex:1;min-height:40px;border-radius:12px;border:2px solid rgba(60,40,20,.18);background:#fff8ea;font:800 13px var(--body,system-ui);color:#3b2a1a}#market781 .tabs button.on{background:#f2b134;border-color:#c98a12}' +
         '#market781 .row{display:flex;align-items:center;gap:10px;padding:8px 4px;border-top:1px solid rgba(60,40,20,.1)}#market781 .row .e{font-size:30px;width:40px;text-align:center}#market781 .row .t{flex:1;min-width:0}#market781 .row b{display:block;font:700 15px var(--body,system-ui)}#market781 .row small{display:block;font:600 12px var(--body,system-ui);color:#7a5a3a}' +
         '#market781 .row button{min-width:84px;min-height:44px;border-radius:14px;border:0;background:#3f8f5a;color:#fff;font:800 14px var(--body,system-ui)}#market781 .row button[disabled]{background:#cbbfa8;color:#fff8ea}#market781 .close{display:block;width:100%;margin-top:8px;min-height:44px;border-radius:14px;border:2px solid rgba(60,40,20,.2);background:#fff;font:800 14px var(--body,system-ui);color:#3b2a1a}';
       document.head.appendChild(s);
@@ -360,7 +361,7 @@ window.WFR_HAVEN781 = (function () {
     }
     function draw() {
       var el = H.panel; if (!el) return; var S = L().S, n = S.coins || 0, hv = state();
-      var h = '<h3>Market<span>\u{1FA99} ' + n + '</span></h3><div class="who">Thimble, keeper of the Market</div><div class="tabs">' + [['wear', 'Wear'], ['toys', 'Toys'], ['fruit', 'Fruit'], ['eggs', 'Eggs']].map(function (q) { return '<button type="button" data-tab="' + q[0] + '" class="' + (H.tab === q[0] ? 'on' : '') + '">' + q[1] + '</button>'; }).join('') + '</div>';
+      var h = '<h3>Market<span>\u{1FA99} ' + n + '</span></h3><div class="who">Thimble, keeper of the Market</div><div class="earn">' + LINES.earn + '</div><div class="tabs">' + [['wear', 'Wear'], ['toys', 'Toys'], ['fruit', 'Fruit'], ['eggs', 'Eggs']].map(function (q) { return '<button type="button" data-tab="' + q[0] + '" class="' + (H.tab === q[0] ? 'on' : '') + '">' + q[1] + '</button>'; }).join('') + '</div>';
       wares(H.tab).forEach(function (w) { var can = w.price != null && !w.owned && n >= w.price, lab = w.price == null ? 'Soon' : w.owned ? 'Yours' : '\u{1FA99} ' + w.price;
         h += '<div class="row"><div class="e">' + w.emoji + '</div><div class="t"><b>' + w.name.replace(/^./, function (c) { return c.toUpperCase(); }) + '</b><small>' + w.what + '</small></div><button type="button" data-buy="' + w.kind + ':' + w.id + '"' + (can ? '' : ' disabled') + '>' + lab + '</button></div>'; });
       h += '<button type="button" class="close" data-close="1">Close</button>'; el.innerHTML = h;
@@ -371,7 +372,7 @@ window.WFR_HAVEN781 = (function () {
       el.addEventListener('pointerdown', function (e) { e.stopPropagation(); }, true);
       el.addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; if (b.dataset.close) { closeMarket(); return; } if (b.dataset.tab) { H.tab = b.dataset.tab; draw(); return; } if (b.dataset.buy) buy(b.dataset.buy); });
       draw();
-      if (!hv.met) { hv.met = true; Lt.save(); try { if (o.cine) o.cine.nameCard('Thimble', 'keeper of the Market', 4200); } catch (e) { /* fine */ } Lt.toast(LINES.hello, 4200); }
+      if (!hv.met) { hv.met = true; Lt.save(); try { if (o.cine) o.cine.nameCard('Thimble', 'keeper of the Market', 4200); } catch (e) { /* fine */ } Lt.toast(LINES.hello, 6400); }
     }
     function closeMarket() { if (!H.panel) return; H.panel.remove(); H.panel = null; var S = L().S; S.talking = false; }
     function buy(key) {
