@@ -654,7 +654,7 @@ window.WFR_INTERIORS729 = (function () {
     var d = I.door, p = doorWorld(d, { x: 0, y: 0, z: 0 }), ox = p.x + d.nx * C.EXIT_OUT, oz = p.z + d.nz * C.EXIT_OUT, gy = Math.max(0, X.travelH(ox, oz));
     teardown(); S.mode = 'fly'; S.speed = C.EXIT_V; S.pitch = 0.05; S.yawV = 0; S.yaw = Math.atan2(d.nx, d.nz); S.pos.set(ox, gy + C.EXIT_UP, oz);
     var b = X.bird(); if (b) { b.position.copy(S.pos); b.rotation.set(0, S.yaw, 0); }
-    var cam = X.camera; cam.position.set(S.pos.x - Math.sin(S.yaw) * 6, S.pos.y + 2.4, S.pos.z - Math.cos(S.yaw) * 6); cam.lookAt(S.pos.x + Math.sin(S.yaw) * 6, S.pos.y + 1, S.pos.z + Math.cos(S.yaw) * 6);
+    var cam = X.camera, ca = S.yaw + Math.PI - 1.35; cam.position.set(S.pos.x + Math.sin(ca) * 6, S.pos.y + 2.4, S.pos.z + Math.cos(ca) * 6); cam.lookAt(S.pos.x + Math.sin(S.yaw) * 2, S.pos.y + 0.6, S.pos.z + Math.cos(S.yaw) * 2);   /* 791: out at three-quarters beside her, clear of the building (straight behind her stood 2.8 m inside its wall); the flight's camera swings in behind her */
     if (X.TR.camOff) X.TR.camOff.copy(cam.position).sub(S.pos);
     st.exits++; st.lastExit = { id: d.id, why: why, at: [+ox.toFixed(2), +(gy + C.EXIT_UP).toFixed(2), +oz.toFixed(2)], door: [+p.x.toFixed(2), +p.y.toFixed(2), +p.z.toFixed(2)], t: +(S.t || 0).toFixed(2) }; ev('exit ' + d.id + ' ' + why);
   }
