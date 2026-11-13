@@ -339,7 +339,13 @@
     get: [[0, 64, 0.16], [0.11, 68, 0.16], [0.22, 71, 0.18], [0.36, 73, 0.22], [0.56, 81, 1.5, 73], [0.62, 88, 1.0]],
     door: [[0, 57, 0.6], [0.45, 60, 0.55], [0.9, 64, 0.6], [1.35, 69, 1.6, 61]],
     haven: [[0, 74, 0.35], [0.3, 72, 0.35], [0.6, 69, 0.4], [0.95, 71, 0.4], [1.3, 74, 0.45], [1.7, 78, 1.6, 66]],
-    buy: [[0, 79, 0.12], [0.1, 84, 0.18], [0.24, 91, 0.7, 84]] };
+    buy: [[0, 79, 0.12], [0.1, 84, 0.18], [0.24, 91, 0.7, 84]],
+    /* 782 #129 (ours): 'crack', the shell giving: two tiny high ticks; 'hatch', its first look: a slow rise in F that turns and settles home, a sixth under it;
+       'count' and 'go', the Race's start (one soft note each second, then a leap); 'win', a little climb that rings */
+    crack: [[0, 91, 0.05], [0.05, 86, 0.08]],
+    hatch: [[0, 65, 0.42], [0.36, 69, 0.42], [0.72, 72, 0.5], [1.14, 77, 0.7, 69], [1.7, 76, 0.36], [2.0, 74, 0.36], [2.32, 72, 1.9, 65]],
+    count: [[0, 76, 0.22]], go: [[0, 76, 0.12], [0.12, 83, 0.7, 76]],
+    win: [[0, 72, 0.15], [0.14, 76, 0.15], [0.28, 79, 0.15], [0.44, 84, 0.5], [0.8, 83, 0.2], [1.0, 84, 1.4, 76]] };
   function phrase(kind, o) {
     o = o || {}; var P2 = PHR[kind] || PHR.land;
     if (!ctx || !bus || (isMuted && isMuted()) || voices >= MAX_VOICES) return false;

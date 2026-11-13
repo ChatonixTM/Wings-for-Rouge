@@ -21,6 +21,8 @@
    KEEPSAKES (Marth, Nov 12, picking between the two: "Just the Haven") a little two-tier shelf by the toys holds every keepsake her chick has kept (the Feed's
              own record, S.chick.marks: nothing new saved); now and then the chick takes one down and plays with it (it hops over to the shelf, the keepsake hops down to it and bounces round it,
              hearts, mood +3), then it goes back to its place. The seven keepsakes come from cabins.js / cave.js (o.keepsake(id)). DRAFT.
+   THE RACE  (782 #129) a red board by the home door: its Race button takes her and her chick out through the dark to the Race's start line on the
+             island (race782.js; his "Haven, race outside"), where the cups panel opens.
    SAVED     S.chick.haven781 = { visits, met, owned: { id: true }, toys: [id], spent } (S.chick is saved whole).
    COST      built once at load into one group, hidden until she is in: one floor, one wall, one instanced grass, one instanced flower field, the trees' own
              instanced meshes, a few plain meshes and canvas signs; Lambert only (the game's programs). Nothing is made or freed per visit.
@@ -32,7 +34,7 @@ window.WFR_HAVEN781 = (function () {
   var API = { error: '' };
   var K = { Y: 135, R: 14.6, FLOOR_R: 21, WALL_R: 16, WALL_H: 1.5, DOOR_R: 0.62, NEAR: 3.4 };   /* 782 (3): the door's button from 3.4 m (it was 2.4: a stranger at the trunk never saw it) */
   /* the garden, in its own frame (metres from its middle; +z is the home door's side) */
-  var P = { arrive: [0, 11.4], door: [0, 15.55], pond: [-6.2, -3.2, 2.9], chick: [-3.4, -6.4], shelf: [-8.4, -7.8], market: [7.4, -4.8], counter: [5.6, -3.6], school: [-8.6, 5.6], ring: [0.6, -10.6, 2.5], post: [2.6, 6.4] };
+  var P = { arrive: [0, 11.4], door: [0, 15.55], pond: [-6.2, -3.2, 2.9], chick: [-3.4, -6.4], shelf: [-8.4, -7.8], market: [7.4, -4.8], counter: [5.6, -3.6], school: [-8.6, 5.6], ring: [0.6, -10.6, 2.5], post: [2.6, 6.4], race: [4.4, 11.4] };   /* 782 #129: race, the Race's board by the home door (the course is outside) */
   /* DRAFT prices in coins, set from a measured island (Su 41, Nov 12, Lv 30 save): 23 animals, each fall drops a coin at its row's chance (fall748.js), so a
      whole sweep pays about 5.0 coins (0.22 a fall) and the island refills 240 s after she leaves an animal's sight. A keen hunt (a fall every ~30 s with the
      travel) makes about 25 coins an hour; ordinary play, hunting now and then, about 5-10. So a fruit is a few minutes' hunting, a toy about twenty, a wear about
@@ -134,6 +136,9 @@ window.WFR_HAVEN781 = (function () {
       var sand = o.tex(new THREE.Mesh(new THREE.CircleGeometry(P.ring[2], 36), lam(0xd9c290)), 'sand', 2, 2); sand.rotation.x = -Math.PI / 2; add(sand, P.ring[0], 0.016, P.ring[1]); sand.receiveShadow = true;
       for (var k = 0; k < 10; k++) { var a = k / 10 * Math.PI * 2, hgt = 0.35 + hash(k) * 0.25, sp = shade(o.tex(new THREE.Mesh(new THREE.CylinderGeometry(0.3, 0.34, hgt, 9), lam(0x8b6a44)), 'bark', 1, 1), true); add(sp, P.ring[0] + Math.cos(a) * (P.ring[2] + 0.35), hgt / 2, P.ring[1] + Math.sin(a) * (P.ring[2] + 0.35));
         var mt = new THREE.Mesh(new THREE.CylinderGeometry(0.31, 0.31, 0.06, 9), lam(0x5d8f3c)); add(mt, sp.position.x, hgt + 0.02, sp.position.z); }
+      /* 782 #129 · THE RACE'S BOARD by the home door (his "Haven, race outside": the course runs on the island; this board takes her and her chick out to its line) */
+      if (o.race) { var rb = board(THREE, 'THE RACE\nout by the meadow', 1.5, 0.8, { bg: '#7a2f2a', size: 92 }); var rf = Math.atan2(0 - P.race[0], 7 - P.race[1]); rb.position.set(P.race[0], 1.35, P.race[1]); rb.rotation.y = rf; root.add(rb); H.raceBoard = rb;
+        [-0.62, 0.62].forEach(function (d) { post(P.race[0] + Math.cos(rf) * d, P.race[1] - Math.sin(rf) * d, 1.7); }); }
       var rs = board(THREE, 'The Ring\nopening soon', 1.4, 0.7, { size: 80 }); rs.position.set(P.ring[0] + 3.3, 1.2, P.ring[1] + 0.8); rs.rotation.y = Math.atan2(-(P.ring[0] + 3.3), -(P.ring[1] + 0.8)); root.add(rs); post(P.ring[0] + 3.3, P.ring[1] + 0.8 - 0.05, 0.9);
     })();
     /* THE MARKET: four posts, a counter, a striped awning, crates of wares, its sign, Thimble behind the counter */
@@ -251,10 +256,11 @@ window.WFR_HAVEN781 = (function () {
       if (Math.hypot(l.x - cw[0], l.z - cw[1]) < 2.6) return 'market';
       if (Math.hypot(l.x - P.school[0], l.z - P.school[1]) < 3.2) return 'school';
       if (Math.hypot(l.x - P.ring[0], l.z - P.ring[1]) < P.ring[2] + 1.6) return 'ring';
+      if (o.race && Math.hypot(l.x - P.race[0], l.z - P.race[1]) < 2.0) return 'race';   /* 782 #129 */
       if (Math.hypot(l.x - P.post[0], l.z - P.post[1]) < 1.8) return 'post';
       return null;
     }
-    var LABEL = { door: '\u{1F423} Chick Haven', home: '\u{1F3E0} Home', market: '\u{1F6D2} Market', school: '\u{1F4DC} Read', ring: '\u{1F4DC} Read', post: '\u{1F4DC} Read' };
+    var LABEL = { door: '\u{1F423} Chick Haven', home: '\u{1F3E0} Home', market: '\u{1F6D2} Market', school: '\u{1F4DC} Read', ring: '\u{1F4DC} Read', post: '\u{1F4DC} Read', race: '\u{1F3C1} Race' };
     function button(el) {
       var Lt = L(), S = Lt.S; if (!ok || (o.classic && o.classic())) return false; var n = nearOf(S); H.near = n;
       if (!n) return false; var lab = LABEL[n]; if (el.textContent !== lab) el.textContent = lab; if (el.hidden) el.hidden = false; return true;
@@ -267,6 +273,7 @@ window.WFR_HAVEN781 = (function () {
       if (n === 'school') { Lt.toast(LINES.school, 4200); return true; }
       if (n === 'ring') { Lt.toast(LINES.ring, 4200); return true; }
       if (n === 'post') { Lt.toast(LINES.post, 3800); return true; }
+      if (n === 'race') { if (o.race) o.race(); return true; }   /* 782 #129: out to the start line, her chick with her */
       return false;
     }
     /* IN: the door scene, then the arrival */
@@ -330,19 +337,20 @@ window.WFR_HAVEN781 = (function () {
       });
     }
     /* OUT: the dark, then home at the nest tree's door */
-    function leave() {
+    function leave(to) {   /* to (782 #129, optional): { x, z, yaw, title, then } somewhere else on the island (the Race's start line), not the door */
       var Lt = L(), S = Lt.S, cine = o.cine, D = o.door, chick = Lt.chick(), done = false;
       closeMarket();
       var out = function () {
         if (done) return; done = true; H.in = false; root.visible = false; H.leaves++; document.documentElement.classList.remove('haven781');
         S.mode = 'walk'; S.pos.set(D.fx + Math.sin(D.yaw) * 1.4, D.y + Lt.standOf(), D.fz + Math.cos(D.yaw) * 1.4); S.yaw = D.yaw; S.camYaw = S.yaw; S.camCut = true; S.speed = 0; S.vy = 0;
+        if (to && Lt.ground) { S.pos.set(to.x, Lt.ground(to.x, to.z) + Lt.standOf(), to.z); S.yaw = to.yaw; S.camYaw = S.yaw; }   /* 782 #129: out at the Race's line */
         if (chick) { var U = chick.userData, h = Lt.chickSpot(); U.where = 'home'; U.life = null; if (H.follow && Lt.FOLLOW) { Lt.FOLLOW.with = true; chick.position.set(S.pos.x + Math.sin(D.yaw + 2) * 0.9, D.y + 0.3, S.pos.z + Math.cos(D.yaw + 2) * 0.9); U.home = h; } else { chick.position.copy(h); U.home = h.clone(); } }
         Lt.save(); Lt.hud();
       };
       if (!cine) { out(); return true; }
       return cine.play({ name: 'havenLeave', dur: 2.0, skip: false, freeze: true, bars: true,
         tick: function (t) { if (cine.fade) cine.fade(t < 0.75 ? sm(t / 0.7) : 1 - sm((t - 0.95) / 0.9)); if (t >= 0.78 && !done) { out(); var sc = cine.current && cine.current(); if (sc) sc.freeze = false; } },
-        end: function () { out(); if (cine.fade) cine.fade(0); if (o.title) try { o.title('', 'Home', '', 'land'); } catch (e) { /* fine */ } }
+        end: function () { out(); if (cine.fade) cine.fade(0); if (o.title && !to) try { o.title('', 'Home', '', 'land'); } catch (e) { /* fine */ } if (to && to.then) try { to.then(); } catch (e) { API.error = 'leave: ' + (e && e.message); } }
       });
     }
     /* THE MARKET'S PANEL */

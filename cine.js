@@ -49,7 +49,8 @@ window.WFR_CINE = (function () {
     document.body.appendChild(root);
     var nameEl = document.createElement('div'); nameEl.id = 'name781'; nameEl.setAttribute('aria-live', 'polite'); document.body.appendChild(nameEl);
     var C = { on: null, t: 0, plays: 0, skips: 0, ends: 0, cam: false, p0: new THREE.Vector3(), q0: new THREE.Quaternion(), f0: 50, P: new THREE.Vector3(), L: new THREE.Vector3(), U: new THREE.Vector3(0, 1, 0), M: new THREE.Matrix4(), Q: new THREE.Quaternion(), tapped: false };
-    root.addEventListener('pointerdown', function (e) { e.stopPropagation(); e.preventDefault(); if (C.on && C.t >= (C.on.skip != null ? C.on.skip : 1.5)) { C.tapped = true; } }, true);
+    root.addEventListener('pointerdown', function (e) { e.stopPropagation(); e.preventDefault(); if (C.on && C.on.onTap) { var r = null; try { r = C.on.onTap(C.t, e); } catch (er) { API.error = 'tap: ' + (er && er.message); } if (r !== 'skip') return; C.tapped = true; return; }   /* 782 #129: a scene that takes its own taps (the Race's cheer) */
+      if (C.on && C.on.skip !== false && C.t >= (C.on.skip != null ? C.on.skip : 1.5)) { C.tapped = true; } }, true);   /* 782 #129: skip: false is never skipped (a tap during the Haven's door used to cut it) */
     function showCard(over, name, line) { cOver.textContent = over || ''; cName.textContent = name || ''; cLine.textContent = line || ''; card.classList.remove('on'); void card.offsetWidth; card.classList.add('on'); }
     function play(sc) {
       try { if (o.classic && o.classic()) return false; if (C.on) end('replaced'); } catch (e) { return false; }
@@ -145,8 +146,9 @@ window.WFR_CINE = (function () {
         tick: function (t, real) { if (!said && t >= (a.cardAt != null ? a.cardAt : 0.8)) { said = true; try { if (o.title) o.title(a.over, a.name, a.under, a.kind || 'found'); } catch (e) { /* fine */ } } if (a.tick) a.tick(t, real); },
         end: a.end });
     }
+    function bars(on) { if (!C.on) return; if (on) root.classList.add('bars'); else root.classList.remove('bars'); }   /* 782 #129: a long scene's bars in and out (the Race: bars for the start and the finish, none while they run) */
     function fade(v) { fadeEl.style.opacity = String(Math.max(0, Math.min(1, v))); C.fadeV = v; }
-    var inst = { play: play, end: end, tick: tick, pre: pre, post: post, itemGet: itemGet, nameCard: nameCard, arrival: arrival, card: showCard, fade: fade, current: function () { return C.on; },
+    var inst = { play: play, end: end, tick: tick, pre: pre, post: post, itemGet: itemGet, nameCard: nameCard, arrival: arrival, card: showCard, fade: fade, bars: bars, root: root, current: function () { return C.on; },
       on: function () { return !!C.on; }, frozen: function () { return !!(C.on && C.on.freeze); }, t: function () { return C.t; },
       peek: function () { return { on: C.on ? C.on.name : null, t: +C.t.toFixed(2), plays: C.plays, skips: C.skips, ends: C.ends, bars: root.classList.contains('bars'), fade: +(+fadeEl.style.opacity || 0).toFixed(2), card: card.classList.contains('on') ? { over: cOver.textContent, name: cName.textContent, line: cLine.textContent } : null, nameCard: nameEl.classList.contains('on') ? nameEl.textContent : null, glow: glow.visible, error: API.error, last: API.last }; } };
     return inst;

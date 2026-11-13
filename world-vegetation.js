@@ -390,6 +390,7 @@ window.WFR_VEG = (function () {
       if (I.dunes && I.dunes.at && Math.hypot(x - I.dunes.at.x, z - I.dunes.at.z) < (I.dunes.r || 45) + 6) return 0;
       if (I.village && Math.hypot(x - I.village.x, z - I.village.z) < 24) return 0;
       if (I.groundAt && floorNear) { try { if (I.groundAt(x, z) > h + 0.05) return 0; } catch (e) { /* a floor test that throws: the meadow */ } }
+      if (I.mow) { try { var mw = I.mow(x, z); if (mw < 1) return mw; } catch (e) { /* a mower that throws: the meadow */ } }   /* 782 #129: the Race's track is mown (its chicks stood hidden in the blades) */
       return 1;
     }
     var floorNear = true;
