@@ -523,7 +523,7 @@
       if (zoomBtn.hidden === zOn) zoomBtn.hidden = !zOn;
       if (zOn) { const o = (Z.t > 0 && !fast()) || Z.cd > 0 ? '0.5' : '1'; if (zoomBtn.style.opacity !== o) zoomBtn.style.opacity = o; }
     }
-    const API = { poke748: (reach, r, fresh) => { let n = 0; if (!site.visible) return 0; for (const h of fam) { const p = h.g.position; if (reach(p.x, p.y + 0.2, p.z, r + 0.25) && fresh(h)) { h.curlTo = 1; h.curlT = 0; n++; } } return n; }, air: () => (Z.t > 0 && S.mode === 'fly' ? 1 : 0), streaks, pre, tick, travel, deliver, openBook, state: () => ({ met: !!S.seen.hogsMet, returned: !!S.seen.hogsBook, bookSeen: !!S.seen.bookSeen, zoom: !!S.lessons.zoom }) };
+    const API = { family: () => fam.map((h) => ({ name: h.name, g: h.g })), /* 781 #133: who they are, for the talk's frame and name card */ poke748: (reach, r, fresh) => { let n = 0; if (!site.visible) return 0; for (const h of fam) { const p = h.g.position; if (reach(p.x, p.y + 0.2, p.z, r + 0.25) && fresh(h)) { h.curlTo = 1; h.curlT = 0; n++; } } return n; }, air: () => (Z.t > 0 && S.mode === 'fly' ? 1 : 0), streaks, pre, tick, travel, deliver, openBook, state: () => ({ met: !!S.seen.hogsMet, returned: !!S.seen.hogsBook, bookSeen: !!S.seen.bookSeen, zoom: !!S.lessons.zoom }) };
     if (debugOn) root.WFR_HOGS.dbg = {
       state: () => ({ met: !!S.seen.hogsMet, returned: !!S.seen.hogsBook, bookSeen: !!S.seen.bookSeen, lesson: !!S.lessons.zoom, mode: S.mode, talking: !!S.talking, talkingHogs,
         zoom: { t: Z.t, cd: Z.cd, k: Z.k, hold: Z.hold, by: Z.by, starts: Z.starts, fov: api.camera.fov }, bookOpen, story: !story.hidden, at: api.panels.at(), count: api.panels.count(),

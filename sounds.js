@@ -349,7 +349,14 @@
     /* 783 #130 (ours): 'country', a land rising out of the sea under its name: a slow climb in D from the A below, a step past the octave, and it lands
        wide on the sixth with the fifth under it; 'call', a rumour that pulls her inland: a question that turns and hangs */
     country: [[0, 57, 0.55, 50], [0.42, 62, 0.5], [0.84, 66, 0.55], [1.3, 69, 0.5], [1.72, 71, 0.45], [2.08, 74, 0.55], [2.56, 78, 2.4, 69]],
-    call: [[0, 74, 0.5], [0.45, 71, 0.45], [0.9, 76, 1.7, 67]] };
+    call: [[0, 74, 0.5], [0.45, 71, 0.45], [0.9, 76, 1.7, 67]],
+    /* 781 #133 (ours): 'stat', a chick's strength reaches a level: a quick bright pair; 'level', her level: a climb in G that leaps and rings over its fifth;
+       'levelBig', a level that gives her something new: the climb carried two steps higher to a held top over the octave; 'grow', the chick's new form:
+       a rise in C that turns and lands home, the root under it */
+    stat: [[0, 84, 0.12], [0.1, 88, 0.5, 81]],
+    level: [[0, 67, 0.14], [0.1, 71, 0.14], [0.2, 74, 0.16], [0.32, 79, 0.9, 72]],
+    levelBig: [[0, 67, 0.14], [0.1, 71, 0.14], [0.2, 74, 0.14], [0.3, 79, 0.18], [0.44, 83, 0.2], [0.6, 86, 1.4, 74]],
+    grow: [[0, 72, 0.3], [0.24, 76, 0.3], [0.48, 79, 0.35], [0.76, 84, 0.4], [1.1, 83, 0.3], [1.36, 84, 1.6, 72]] };
   function phrase(kind, o) {
     o = o || {}; var P2 = PHR[kind] || PHR.land;
     if (!ctx || !bus || (isMuted && isMuted()) || voices >= MAX_VOICES) return false;
