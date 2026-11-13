@@ -453,10 +453,10 @@ window.WFR_PEOPLE724 = (function () {
     if (tg.kind === 'town') { var e = st.setById.get(tg.id); if (!e) return false; var sp = e.sp, r = rtOf(sp.id); r.hold = true; r.holdT = st.uTime.value; r.release = 0;
       who = crow ? '💬 ' + sp.name + ', ' + sp.title : '💬'; text = crow ? sp.line : sp.emoji + ' ♪';
       st.talks++; st.lastTalk = { id: sp.id, who: lines ? lines[0][0] : who, text: lines ? lines[0][1] : text };
-      X.say(lines || [[who, text]], function () { r.release = st.uTime.value + 2.5; if (done) done(); }); return true; }
+      X.say(lines || [[who, text]], function () { r.release = st.uTime.value + 2.5; if (done) done(); }, { pos: new X.THREE.Vector3(e.wx, e.wy, e.wz), name: crow ? sp.name : '', role: sp.title || '', top: 1.7 }); return true; }   /* 782 (6): who is speaking, for the shot and the name card */
     var g = tg.g, v = g.getWorldPosition(new X.THREE.Vector3()); if (g.parent === X.scene) g.rotation.y = Math.atan2(S.pos.x - v.x, S.pos.z - v.z);
     var nm = islandName(g); who = crow ? '💬 ' + nm : '💬'; text = crow ? ISLAND_LINES[hash(nm) % ISLAND_LINES.length] : '👋 ♪'; st.talks++; st.lastTalk = { island: nm, who: lines ? lines[0][0] : who, text: lines ? lines[0][1] : text };
-    X.say(lines || [[who, text]], done); return true;
+    X.say(lines || [[who, text]], done, { g: g, name: crow && nm !== 'A villager' ? nm : '', villager: true }); return true;   /* 782 (6) */
   }
 
   /* ---------- 6b. the doors world-quests.js (720 + 724c) reads: who someone is, where they stand NOW, their neighbours in the same place ---------- */

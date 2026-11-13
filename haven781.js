@@ -55,13 +55,17 @@ window.WFR_HAVEN781 = (function () {
   };
   function sm(x) { x = x < 0 ? 0 : x > 1 ? 1 : x; return x * x * (3 - 2 * x); }
   function hash(i) { var x = Math.sin(i * 127.1 + 311.7) * 43758.5453; return x - Math.floor(x); }
-  function board(THREE, text, w, h, opts) {   /* a sign's face: a canvas with words, on a plane */
-    opts = opts || {}; var cv = document.createElement('canvas'), W = 512, H = Math.round(512 * h / w); cv.width = W; cv.height = H; var g = cv.getContext('2d');
+  function board(THREE, text, w, h, opts) {   /* a sign: both faces painted (782 (9): read from behind it said "nevaH kcihC"); an arrow on the back points the other way */
+    opts = opts || {}; var g = new THREE.Group(), f = face(THREE, text, w, h, opts), bt = String(text).replace(/\u2192|\u2190/g, function (c) { return c === '\u2192' ? '\u2190' : '\u2192'; });
+    var b = face(THREE, bt, w, h, opts); b.rotation.y = Math.PI; g.add(f); g.add(b); g.userData.faces = [String(text), bt]; return g;
+  }
+  function face(THREE, text, w, h, opts) {   /* one face: a canvas with words, on a plane */
+    var cv = document.createElement('canvas'), W = 512, H = Math.round(512 * h / w); cv.width = W; cv.height = H; var g = cv.getContext('2d');
     g.fillStyle = opts.bg || '#7a5432'; g.fillRect(0, 0, W, H); g.strokeStyle = 'rgba(40,24,10,.6)'; g.lineWidth = 10; g.strokeRect(5, 5, W - 10, H - 10);
     for (var i = 0; i < 6; i++) { g.fillStyle = 'rgba(40,24,10,' + (0.06 + 0.05 * hash(i + w)) + ')'; g.fillRect(0, (i + 0.5) * H / 6, W, 3); }
     g.fillStyle = opts.ink || '#fff3d6'; g.textAlign = 'center'; g.textBaseline = 'middle'; var lines = String(text).split('\n'), fs = Math.min(H / (lines.length + 0.6), opts.size || 120);
     g.font = '600 ' + fs + 'px Georgia, "Times New Roman", serif'; lines.forEach(function (l, k) { g.fillText(l, W / 2, H / 2 + (k - (lines.length - 1) / 2) * fs * 1.05, W - 30); });
-    var tx = new THREE.CanvasTexture(cv); tx.anisotropy = 4; var m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshLambertMaterial({ map: tx, side: THREE.DoubleSide })); return m;
+    var tx = new THREE.CanvasTexture(cv); tx.anisotropy = 4; var m = new THREE.Mesh(new THREE.PlaneGeometry(w, h), new THREE.MeshLambertMaterial({ map: tx, side: THREE.FrontSide })); return m;
   }
   function create(o) {
     var THREE = o.THREE, scene = o.scene, L = o.late, C = o.center, ok = true;
@@ -344,9 +348,10 @@ window.WFR_HAVEN781 = (function () {
     /* THE MARKET'S PANEL */
     function css() {
       if (document.getElementById('market781css')) return; var s = document.createElement('style'); s.id = 'market781css';
-      s.textContent = '#market781{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);transform:translateX(-50%);width:min(440px,calc(100vw - 24px));max-height:68vh;overflow:auto;z-index:44;background:#fff8ea;color:#3b2a1a;border-radius:20px;box-shadow:0 14px 40px rgba(0,0,0,.35);padding:14px 14px 10px;font-family:var(--body,system-ui)}' +
+      s.textContent = '#market781{position:fixed;left:50%;bottom:calc(env(safe-area-inset-bottom,0px) + 12px);transform:translateX(-50%);width:min(440px,calc(100vw - 24px));height:min(68vh,600px);box-sizing:border-box;display:flex;flex-direction:column;overflow:hidden;z-index:44;background:#fff8ea;color:#3b2a1a;border-radius:20px;box-shadow:0 14px 40px rgba(0,0,0,.35);padding:14px 14px 10px;font-family:var(--body,system-ui)}' +
         '#market781 h3{margin:0 0 2px;font:600 22px Georgia,serif;display:flex;justify-content:space-between;align-items:center}#market781 h3 span{font:800 16px var(--body,system-ui);color:#8a5a12}' +
         '#market781 .who{font:italic 13px Georgia,serif;color:#7a5a3a;margin-bottom:4px}#market781 .earn{font:700 12px var(--body,system-ui);color:#6b4a14;background:#fbeccb;border-radius:10px;padding:5px 8px;margin-bottom:8px}#market781 .tabs{display:flex;gap:6px;margin:0 0 10px}#market781 .tabs button{flex:1;min-height:40px;border-radius:12px;border:2px solid rgba(60,40,20,.18);background:#fff8ea;font:800 13px var(--body,system-ui);color:#3b2a1a}#market781 .tabs button.on{background:#f2b134;border-color:#c98a12}' +
+        '#market781 > *{flex:none}#market781 .rows{flex:1 1 auto;min-height:0;overflow:auto}' +   /* 782 (9): the tabs hold still under the thumb (the panel shrank with fewer rows) */
         '#market781 .row{display:flex;align-items:center;gap:10px;padding:8px 4px;border-top:1px solid rgba(60,40,20,.1)}#market781 .row .e{font-size:30px;width:40px;text-align:center}#market781 .row .t{flex:1;min-width:0}#market781 .row b{display:block;font:700 15px var(--body,system-ui)}#market781 .row small{display:block;font:600 12px var(--body,system-ui);color:#7a5a3a}' +
         '#market781 .row button{min-width:84px;min-height:44px;border-radius:14px;border:0;background:#3f8f5a;color:#fff;font:800 14px var(--body,system-ui)}#market781 .row button[disabled]{background:#cbbfa8;color:#fff8ea}#market781 .close{display:block;width:100%;margin-top:8px;min-height:44px;border-radius:14px;border:2px solid rgba(60,40,20,.2);background:#fff;font:800 14px var(--body,system-ui);color:#3b2a1a}';
       document.head.appendChild(s);
@@ -362,9 +367,10 @@ window.WFR_HAVEN781 = (function () {
     function draw() {
       var el = H.panel; if (!el) return; var S = L().S, n = S.coins || 0, hv = state();
       var h = '<h3>Market<span>\u{1FA99} ' + n + '</span></h3><div class="who">Thimble, keeper of the Market</div><div class="earn">' + LINES.earn + '</div><div class="tabs">' + [['wear', 'Wear'], ['toys', 'Toys'], ['fruit', 'Fruit'], ['eggs', 'Eggs']].map(function (q) { return '<button type="button" data-tab="' + q[0] + '" class="' + (H.tab === q[0] ? 'on' : '') + '">' + q[1] + '</button>'; }).join('') + '</div>';
+      h += '<div class="rows">';   /* 782 (9) */
       wares(H.tab).forEach(function (w) { var can = w.price != null && !w.owned && n >= w.price, lab = w.price == null ? 'Soon' : w.owned ? 'Yours' : '\u{1FA99} ' + w.price;
         h += '<div class="row"><div class="e">' + w.emoji + '</div><div class="t"><b>' + w.name.replace(/^./, function (c) { return c.toUpperCase(); }) + '</b><small>' + w.what + '</small></div><button type="button" data-buy="' + w.kind + ':' + w.id + '"' + (can ? '' : ' disabled') + '>' + lab + '</button></div>'; });
-      h += '<button type="button" class="close" data-close="1">Close</button>'; el.innerHTML = h;
+      h += '</div><button type="button" class="close" data-close="1">Close</button>'; el.innerHTML = h;
     }
     function openMarket() {
       var Lt = L(), S = Lt.S, hv = state(); css(); if (H.panel) return;
@@ -372,7 +378,7 @@ window.WFR_HAVEN781 = (function () {
       el.addEventListener('pointerdown', function (e) { e.stopPropagation(); }, true);
       el.addEventListener('click', function (e) { var b = e.target.closest('button'); if (!b) return; if (b.dataset.close) { closeMarket(); return; } if (b.dataset.tab) { H.tab = b.dataset.tab; draw(); return; } if (b.dataset.buy) buy(b.dataset.buy); });
       draw();
-      if (!hv.met) { hv.met = true; Lt.save(); try { if (o.cine) o.cine.nameCard('Thimble', 'keeper of the Market', 4200); } catch (e) { /* fine */ } Lt.toast(LINES.hello, 6400); }
+      if (!hv.met) { hv.met = true; Lt.save(); var card = false; try { if (o.cine) card = o.cine.nameCard('Thimble', 'keeper of the Market', 4200); } catch (e) { /* fine */ } setTimeout(function () { if (H.panel || H.in) Lt.toast(LINES.hello, 6400); }, card ? 5000 : 0); }   /* 782 (4): his name first, then his long hello (they sat on each other) */
     }
     function closeMarket() { if (!H.panel) return; H.panel.remove(); H.panel = null; var S = L().S; S.talking = false; }
     function buy(key) {

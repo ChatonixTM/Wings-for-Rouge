@@ -47,6 +47,7 @@
   var CARRY = [[0, 1], [4, 2], [6, 4], [12, 5]];   // Strength level -> carry slots (crow 3 is the best starter); + her level's gifts, as every bird
   var TIRED = 0.7, BACK = 0.3, BOOST = 2.5, REST = 30, REST_SLEEP = 10;
   var CARD = [['fly', '\u{1FAB6}', 'Flight'], ['str', '⚔️', 'Fighting'], ['sta', '\u{1F50B}', 'Stamina'], ['run', '\u{1F4A8}', 'Speed'], ['cre', '\u{1F340}', 'Creativity'], ['swim', '🌊', 'Swim']];   // his five, in his order, and Swim (740: the sixth a chick can lean to); DRAFT words
+  var CARD782 = [['fly', '🪶', 'Flight'], ['run', '💨', 'Run'], ['str', '⚔️', 'Strength'], ['sta', '🔋', 'Stamina'], ['swim', '🌊', 'Swim'], ['cre', '🍀', 'Creativity']];   // 782 (9): Standard's card wears the nest card's names and order (one chick, one set of words; DRAFT, his pen); Classic keeps CARD
   var TINT = { fly: 0x7ec8f0, run: 0xf5a623, str: 0xe0533c, sta: 0x6cc26a, swim: 0x3fbfb0, cre: 0xff8fa3 };   // CSTATS' own colours (the page's table, copied: it is declared after this runs)
   var STAGE_NAME = ['Chick', 'Fledgling', 'Young bird'];
   /* 740 THE FORMS (Marth, Nov 6 2026: "The chaos need to have forms that they evolve into, based on what their stats lean to the most out of the 6 stats" then "Chics*").
@@ -167,7 +168,7 @@
     var classic = function () { try { return !!(ctx.classic && ctx.classic()); } catch (e) { return false; } };   // 740: classicLook is declared below this line of the page
     var formOf = function (id) { var c = rec(id); return c && (c.stage || 0) >= 3 && FORMS[c.form] && S.seen && S.seen.evo636 >= 3 && !classic() ? c.form : null; };   // 740: hidden until her moment has played
     var nameOf = function (id) { var c = rec(id); return id === 'c1' ? 'Your chick' : (c && c.name) || ('Chick ' + id.replace(/^c/, '')); };
-    var line = function (id) { var c = rec(id) || {}; return CARD.map(function (r) { return r[1] + Math.floor(level((c.stats || {})[r[0]])); }).join(' '); };
+    var line = function (id) { var c = rec(id) || {}; return (classic() ? CARD : CARD782).map(function (r) { return r[1] + Math.floor(level((c.stats || {})[r[0]])); }).join(' '); };
     function register(id) {
       var k = KEY(id); if (BIRDS[k]) return;
       var row = {};
@@ -231,7 +232,7 @@
       if (typeof document === 'undefined') return;
       var c = rec(id); if (!c) return;
       if (!cardEl) { css(); cardEl = document.createElement('div'); cardEl.id = 'card728'; cardEl.setAttribute('aria-live', 'polite'); cardEl.hidden = true; document.body.appendChild(cardEl); }
-      var rows = CARD.map(function (r) { var L = level((c.stats || {})[r[0]]), lv = Math.floor(L), w = Math.min(100, L / 8 * 100), col = '#' + TINT[r[0]].toString(16).padStart(6, '0');
+      var rows = (classic() ? CARD : CARD782).map(function (r) { var L = level((c.stats || {})[r[0]]), lv = Math.floor(L), w = Math.min(100, L / 8 * 100), col = '#' + TINT[r[0]].toString(16).padStart(6, '0');
         return '<div class="r728" data-k="' + r[0] + '"><span>' + r[1] + ' ' + r[2] + '</span><span class="b728"><i style="width:' + w.toFixed(1) + '%;background:' + col + '"></i><u></u></span><span class="l728">Lv ' + lv + '</span></div>'; }).join('');
       cardEl.innerHTML = '<div class="t728"><b>\u{1F425} ' + nameOf(id) + '</b><span>' + (formOf(id) ? FORMS[formOf(id)].name : STAGE_NAME[Math.min(2, c.stage || 0)] || '') + (why === 'fed' ? ' · fed!' : '') + '</span></div>' + rows +
         '<small>│ = your Cardinal at Lv 45</small>';   // DRAFT words
