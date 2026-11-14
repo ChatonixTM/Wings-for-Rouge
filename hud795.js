@@ -137,6 +137,10 @@
       'max-height:30px;box-sizing:border-box;padding:2px 9px!important;overflow:hidden!important;white-space:normal!important;display:-webkit-box!important;-webkit-line-clamp:2;-webkit-box-orient:vertical;' +
       'text-align:center!important;' + pill + 'font:700 9px/12px var(--h7-mono)!important;letter-spacing:.12em!important;text-transform:uppercase;box-shadow:0 0 10px -3px var(--h7-glow);z-index:4;pointer-events:none}' +
     P + '#ui #wordsTop735:empty,' + P + '#ui #wordsTop735[hidden]{display:none!important}' +
+    /* 816: away from home the pill is two lines: the place (cut with an ellipsis if it must be) and HOME, never cut */
+    P + '#ui #wordsTop735.h816on{display:block!important;-webkit-line-clamp:none}' + P + '#ui #wordsTop735 .s816,' + P + '#ui #wordsTop735 .o816{display:none}' +
+    P + '#ui #wordsTop735 .p816{display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}' +
+    P + '#ui #wordsTop735 .h816{display:block;white-space:nowrap;font-weight:700;letter-spacing:.04em;color:var(--h7-mint)}' +
 
     /* the round buttons under the map: dark glass discs with a glowing rim (the game's own white glyphs) */
     P + '#ui .hud .side{position:fixed!important;right:calc(env(safe-area-inset-right,0px) + 12px)!important;top:calc(var(--h7-top) + 160px)!important;left:auto!important;margin:0!important;' +
@@ -348,16 +352,17 @@
     function frame() {
       requestAnimationFrame(frame); if (!H.on || document.hidden) return; var ui = $('ui'); if (!ui || ui.hidden) return; H.frames++;
       try {
-        var S = api.S, view = api.view(), h = headingDeg(view), w = cmp.clientWidth || 210; H.heading = h;
+        var S = api.S, view = api.view(), h = api.heading ? api.heading() : headingDeg(view), w = cmp.clientWidth || 210; H.heading = h;   /* 816: the game's one heading (the round compass's N reads it too) */
         H.tapeX = -((h + 360) * K) + w / 2; tape.style.transform = 'translateX(' + H.tapeX.toFixed(1) + 'px)';
-        var g = api.goal ? api.goal() : null;
-        if (g && S && S.pos) { var b = Math.atan2(g[0] - S.pos.x, g[1] - S.pos.z), gd = (PI - b) / D2R, rel = ((gd - h) % 360 + 540) % 360 - 180; gEl.hidden = false; place(gEl, rel, w); H.last.goalRel = rel; } else { gEl.hidden = true; H.last.goalRel = null; }
+        var g = api.goal ? api.goal() : null, gr = api.goalRel ? api.goalRel() : undefined;   /* 816: a goal's place on the strip is its turn from her view (no north in it), as the round compass's arrow */
+        if (gr !== undefined) { if (gr != null) { gEl.hidden = false; place(gEl, gr, w); } else gEl.hidden = true; H.last.goalRel = gr; }
+        else if (g && S && S.pos) { var b = Math.atan2(g[0] - S.pos.x, g[1] - S.pos.z), rel = (((view - b) / D2R) % 360 + 540) % 360 - 180; gEl.hidden = false; place(gEl, rel, w); H.last.goalRel = rel; } else { gEl.hidden = true; H.last.goalRel = null; }
         var pb = api.pinBearing ? api.pinBearing() : null;
         if (pb != null && isFinite(pb)) { var pr = ((pb - h) % 360 + 540) % 360 - 180; pEl.hidden = false; place(pEl, pr, w); H.last.pinRel = pr; } else { pEl.hidden = true; H.last.pinRel = null; }
         if (H.way && S && S.pos && !(api.away && api.away())) {   /* the place she chose on the chart: a teal flag, gone when she gets there */
           var wd = Math.hypot(H.way.x - S.pos.x, H.way.z - S.pos.z);
           if (wd < 22) { var nm = H.way.name; H.way = null; wEl.hidden = true; if (window.UI795 && UI795.toast) UI795.toast(nm + '.', { kicker: 'You are here', icon: 'pin', ms: 2600 }); }
-          else { var wb = Math.atan2(H.way.x - S.pos.x, H.way.z - S.pos.z), wr = (((PI - wb) / D2R - h) % 360 + 540) % 360 - 180; wEl.hidden = false; place(wEl, wr, w); H.last.wayRel = wr; }
+          else { var wb = Math.atan2(H.way.x - S.pos.x, H.way.z - S.pos.z), wr = (((view - wb) / D2R) % 360 + 540) % 360 - 180; wEl.hidden = false; place(wEl, wr, w); H.last.wayRel = wr; }
         } else if (!wEl.hidden) wEl.hidden = true;
         var t = performance.now(); if (t - H.mm > 33) { H.mm = t; drawMap(S, view); }
       } catch (e) { if (++H.errors < 4) console.warn('hud795: ' + (e && e.message)); }

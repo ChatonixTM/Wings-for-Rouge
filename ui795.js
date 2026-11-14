@@ -432,6 +432,59 @@
     return c;
   }
 
+  /* ---------- 815: the game's start sheet, dressed (Marth, Nov 14 2026, on #141: "The loading screen and this screen both look better than main menu. Fix.") ---------- */
+  var SH = 'html.ui716.ui726:not(.pz795):not(.t795):not(.c712)';
+  css(SH + ' #start{--g-panel:rgba(12,16,26,.84);--g-line:rgba(120,140,210,.2);--g-ink:#e9edf8;--g-dim:#95a0bd;--g-muted:#5f6a86;--g-red:#ff3b42;--g-mint:#4de8c9;' +
+      '--g-sans:var(--u7-head);--g-mono:var(--u7-mono);--g-glass:linear-gradient(180deg,rgba(255,255,255,.035),rgba(255,255,255,0) 40%),var(--g-panel);' +
+      '--g-glow:0 0 0 1px var(--g-line),0 10px 30px -10px rgba(0,0,0,.7),inset 0 0 22px rgba(110,168,255,.05);--g-glowR:0 0 0 1px rgba(255,59,66,.55),0 0 18px -2px rgba(255,59,66,.45),0 10px 30px -10px rgba(0,0,0,.7)}' +
+    '@keyframes s7glowin{0%{opacity:0;transform:translateY(8px);filter:brightness(1.6)}60%{opacity:1;filter:brightness(1.15)}100%{opacity:1;transform:none;filter:none}}' +
+    /* THE OLD SHEET (the title's main menu: as the page loads, and one tap away from the title as Files & birds and Data & credits), brought up to the title's own look. The same elements, ids and
+       taps (files, birds, Fly, the links, the backup box, the credits); only how they are drawn changes, and whenever the sheet stands as the main menu
+       (Standard only: html.ui716.ui726, set in the page's head before the first paint; never under the pause page, pz795, the title, t795, or Creative, c712). Night glass, Space Grotesk and Mono, the files as numbered cards, Fly as the red card. */
+    SH + ' #start{background:radial-gradient(120% 70% at 50% 0%,rgba(255,59,66,.14),rgba(5,6,12,0) 60%),rgba(5,6,12,.74)!important;-webkit-backdrop-filter:blur(6px)!important;backdrop-filter:blur(6px)!important;' +
+      'place-items:start center!important;padding:calc(62px + var(--u7-safe-t)) calc(8px + var(--u7-safe-r)) calc(24px + var(--u7-safe-b)) calc(8px + var(--u7-safe-l))!important}' +
+    SH + ' #start>.sheet{box-sizing:border-box!important;width:min(440px,calc(100vw - 16px))!important;max-width:none!important;padding:18px 14px 20px!important;gap:12px!important;text-align:left!important;border:0!important;border-radius:18px!important;' +
+      'background:var(--g-glass)!important;box-shadow:var(--g-glow)!important;-webkit-backdrop-filter:blur(12px) saturate(1.1)!important;backdrop-filter:blur(12px) saturate(1.1)!important;color:var(--g-ink)!important;font-family:var(--g-sans)!important;animation:s7glowin .45s cubic-bezier(.2,.7,.2,1) both}' +
+    SH + ' #start>.sheet::before,' + SH + ' #start>.sheet::after{display:none!important}' +
+    SH + ' #start .brand{justify-content:flex-start!important;gap:12px!important}' + SH + ' #start #wfrMini{display:none!important}' +
+    SH + ' #start .brand::before{content:"";flex:none;width:40px;height:40px;border-radius:50%;box-shadow:0 0 0 1.5px rgba(255,59,66,.7),0 0 0 5px rgba(255,59,66,.08),0 0 18px rgba(255,59,66,.45);' +
+      'background:url("data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 32 32\'%3E%3Cpath d=\'M5 19c4-1 7-4 9-8 1 4 4 6 9 6-3 3-7 5-12 5-2 0-4-1-6-3z\' fill=\'%23ff3b42\'/%3E%3Cpath d=\'M14 11l3-5 1 5\' fill=\'%23ff3b42\'/%3E%3Ccircle cx=\'20\' cy=\'13\' r=\'1.3\' fill=\'%2305060c\'/%3E%3Cpath d=\'M23 14l4 1-4 1\' fill=\'%23ffd45c\'/%3E%3C/svg%3E") center/24px no-repeat,radial-gradient(circle,rgba(255,59,66,.18),rgba(5,6,12,.6) 70%)}' +
+    SH + ' #start .brand h1{margin:0!important;font:700 21px/1.05 var(--g-sans)!important;letter-spacing:.2em!important;text-transform:uppercase!important;color:#fff!important;text-shadow:0 0 18px rgba(255,59,66,.5)!important;white-space:normal!important}' +
+    SH + ' #start .brand h1 .who{color:var(--g-red)!important}' +
+    SH + ' #start .kicker{margin:0!important;padding:0!important;background:none!important;border:0!important;font:700 10.5px/1.45 var(--g-mono)!important;letter-spacing:.22em!important;text-transform:uppercase!important;color:var(--g-mint)!important;text-align:left!important;text-shadow:none!important}' +
+    SH + ' #start .sheet>p:not(.how):not(.credit712){margin:0!important;font:400 14px/1.45 var(--g-sans)!important;color:var(--g-dim)!important;text-align:left!important}' +
+    SH + ' #start #files{display:grid!important;grid-template-columns:1fr!important;gap:8px!important}' +
+    SH + ' #start #files .file{position:relative!important;display:block!important;box-sizing:border-box;width:100%!important;min-height:58px!important;margin:0!important;padding:10px 14px 10px 64px!important;text-align:left!important;' +
+      'color:var(--g-ink)!important;background:var(--g-glass)!important;border:0!important;border-radius:16px!important;box-shadow:var(--g-glow)!important;transform:none!important;text-shadow:none!important}' +
+    [1, 2, 3, 4, 5, 6, 7, 8, 9].map(function (n) { return SH + ' #start #files .file:nth-child(' + n + ')::before{content:"0' + n + '"!important}'; }).join('') +   /* the file's own number, as its card says it */
+    SH + ' #start #files .file::before{position:absolute!important;left:14px!important;top:50%!important;width:36px!important;height:36px!important;margin:-18px 0 0!important;display:grid!important;place-items:center;box-sizing:border-box;' +
+      'font:700 12px/1 var(--g-mono)!important;color:var(--g-mint)!important;background:rgba(77,232,201,.06)!important;border:1.5px solid rgba(77,232,201,.55)!important;border-radius:50%!important;box-shadow:0 0 10px -2px rgba(77,232,201,.55)!important;transform:none!important;opacity:1!important}' +
+    SH + ' #start #files .file::after{display:none!important}' +
+    SH + ' #start #files .file b{display:block;font:700 18px/1.1 var(--g-sans)!important;letter-spacing:-.01em!important;color:#fff!important}' +
+    SH + ' #start #files .file small{display:block;margin-top:4px;font:400 11px/1.3 var(--g-mono)!important;letter-spacing:.06em!important;text-transform:uppercase;color:var(--g-dim)!important}' +
+    SH + ' #start #files .file.on{background:linear-gradient(90deg,rgba(255,59,66,.2),rgba(255,59,66,.04) 60%),var(--g-panel)!important;box-shadow:var(--g-glowR)!important}' +
+    SH + ' #start #files .file.on::before{color:#fff!important;background:radial-gradient(circle,rgba(255,59,66,.35),rgba(255,59,66,.05) 70%)!important;border-color:var(--g-red)!important;box-shadow:0 0 12px rgba(255,59,66,.6)!important}' +
+    SH + ' #start #files .file.new{box-shadow:0 0 0 1px rgba(255,212,92,.55),0 0 14px -4px rgba(255,212,92,.5)!important}' +
+    SH + ' #start .birds{gap:8px!important}' + SH + ' #start .bird{background:none!important;border:0!important;box-shadow:none!important}' +
+    SH + ' #start .bird b{font:600 12px/1.2 var(--g-sans)!important;letter-spacing:0!important;color:var(--g-ink)!important;background:rgba(10,14,22,.72)!important;border:0!important;border-radius:999px!important;box-shadow:0 0 0 1px var(--g-line)!important;text-shadow:none!important}' +
+    SH + ' #start .bird[aria-pressed="true"] b{color:#fff!important;background:rgba(255,59,66,.18)!important;box-shadow:var(--g-glowR)!important}' +
+    SH + ' #start .u716back{justify-content:stretch!important}' + SH + ' #start .u716feather{display:none!important}' +
+    SH + ' #start #go{flex:1 1 auto!important;width:100%!important;max-width:none!important;min-height:56px!important;margin:0!important;padding:8px 20px!important;text-align:center!important;font:700 21px/1 var(--g-sans)!important;letter-spacing:.02em!important;text-transform:none!important;' +
+      'color:#fff!important;text-shadow:0 0 18px rgba(255,59,66,.45)!important;background:linear-gradient(90deg,rgba(255,59,66,.26),rgba(255,59,66,.07) 70%),var(--g-panel)!important;border:0!important;border-radius:16px!important;box-shadow:var(--g-glowR)!important;transform:none!important}' +
+    SH + ' #start #go:active{transform:scale(.98)!important}' + SH + ' #start #go::before,' + SH + ' #start #go::after{display:none!important}' +
+    SH + ' #start .how{margin:0!important;font:400 11.5px/1.45 var(--g-mono)!important;letter-spacing:.03em!important;color:var(--g-dim)!important;text-align:left!important}' +
+    SH + ' #start .title-links{justify-content:flex-start!important;gap:8px!important}' +
+    SH + ' #start .title-links .linkish{min-height:40px!important;padding:0 14px!important;font:600 11.5px/1 var(--g-mono)!important;letter-spacing:.08em!important;text-transform:uppercase!important;text-decoration:none!important;color:var(--g-ink)!important;' +
+      'background-color:rgba(10,14,22,.72)!important;border:0!important;border-radius:999px!important;box-shadow:0 0 0 1px var(--g-line)!important;text-shadow:none!important}' +
+    SH + ' #start .title-links #netBtn678t{padding-left:36px!important;--u-plate-e:linear-gradient(rgba(10,14,22,.72),rgba(10,14,22,.72))}' +
+    SH + ' #start .title-links .u716lk{font-size:0!important}' + SH + ' #start .title-links .u716lk::after{font:600 11.5px/1 var(--g-mono)!important;letter-spacing:.08em!important;text-transform:uppercase}' +   /* ui716 draws these words from data-l */
+    SH + ' #start .credit712{margin:0!important;font:400 12px/1.5 var(--g-sans)!important;letter-spacing:0!important;color:var(--g-dim)!important;text-align:left!important}' +
+    SH + ' #start #credit712{margin-top:6px!important;padding-top:14px!important;border-top:1px solid var(--g-line)}' +
+    SH + ' #start #credit712::before{content:"Data & credits";display:block;margin-bottom:8px;font:700 10.5px/1.2 var(--g-mono);letter-spacing:.22em;text-transform:uppercase;color:var(--g-mint)}' +
+    SH + ' #start #saveBox textarea{box-sizing:border-box;width:100%;color:#fff!important;background:rgba(12,16,26,.85)!important;border:0!important;border-radius:12px!important;box-shadow:0 0 0 1px var(--g-line)!important;font:400 12px/1.4 var(--g-mono)!important}' +
+    SH + ' #start #saveBox p{font:400 13px/1.4 var(--g-sans)!important;color:var(--g-dim)!important}' +
+    '');
+
   /* ---------- the game's talk box, dressed (board 795 item 29) ---------- */
   var FACES = [[/eagle/i, 'eagle'], [/crow/i, 'crow'], [/owl/i, 'owl'], [/^\s*rouge\b/i, 'rouge'], [/shirley|grandma/i, 'grandma']];
   css('#talk.u7-talkbox{background:rgba(14,18,30,.9)!important;-webkit-backdrop-filter:blur(12px);backdrop-filter:blur(12px);' +
@@ -481,13 +534,14 @@
 
   /* ---------- the ship log, newest first: a bold title and one plain sentence a player cares about (DRAFTS for Marth's pen) ---------- */
   var SHIPS = [
+    { n: 144, title: 'Find your way', line: 'The main menu wears the same look as the title, the compass strip and the round compass now agree, and the top line tells you the way home, like Home 240 km S.' },
     { n: 143, title: 'Solid streets', line: 'Houses and people are solid when you walk the streets: you slide along a wall, people step aside, and the camera never ends up inside one.' },
     { n: 142, title: 'One sea, one sky', line: 'The sea stays one calm colour from the shore to the deep, the clouds near and far are painted alike, and the world map opens straight away.' },
-    { n: 141, title: 'Down to earth', line: 'Roads lie on the ground, trees have real trunks, the leaves hold you until you land, and Zoom works on foot out in the world.' },
+    { n: 141, title: 'Down to earth', line: 'Roads lie flat on the ground, the leaves of a tree hold you up until you land, and Zoom works on foot out in the world.' },   /* 815: 'trees have real trunks' went (Marth: the trees look the same to her eye) */
     { n: 140, title: 'Craft, missions, places', line: 'Craft gear from what you win, take on missions in every place, and learn true facts about the places you fly past.' },
     { n: 139, title: 'Every door, framed', line: 'Walk up to a door and the camera finds it with you, then follows you in.' },
     { n: 138, title: 'Life everywhere', line: 'People, cars, streetcars, trains, boats and flocks now fill the real world.' },
-    { n: 137, title: 'The city look', line: 'Pitched roofs, lit windows, painted streets and autumn trees in every town.' },
+    { n: 137, title: 'The city look', line: 'Pitched roofs, lit windows and painted streets in every town.' },   /* 815: no tree claim */
     { n: 136, title: 'Speed by place', line: 'You slow down over busy streets and open up over the sea.' },
     { n: 135, title: 'Seas with colour', line: 'Each sea has its own blue now, and new shores wait past the horizon.' },
     { n: 134, title: 'After the Hawk', line: 'Beat the Hawk and the island has more to say, and he races you.' },

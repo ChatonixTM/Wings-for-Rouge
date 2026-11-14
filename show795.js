@@ -134,6 +134,16 @@ window.WFR_SHOW795 = (function () {
     /* 2 the title */
     'html.t795 #start{background:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;pointer-events:none}' +
     'html.t795 #start>.sheet{background:none!important;border:0!important;box-shadow:none!important;-webkit-backdrop-filter:none!important;backdrop-filter:none!important;pointer-events:none!important}' +
+    /* 815 (Marth, Nov 14 2026, on #141: the cards numbered 02 and 04 with 01 and 03 missing, an empty bordered box across the middle): the emptied sheet
+       kept its inner frame (ui716's .sheet::before) as a box in the middle of the screen, and on his iPhone the two game buttons laid over the menu with
+       position:fixed never showed. Now the two buttons are MOVED into the menu itself (moveIn below), drawn in its flow like 02 and 04, and the emptied
+       sheet is gone. If a button cannot move, the old overlay stays as the fallback, with nothing on the sheet that could hold it (no transform, no frame). */
+    'html.t795 #start>.sheet::before,html.t795 #start>.sheet::after{display:none!important}' +
+    'html.t795 #start>.sheet{padding:0!important;gap:0!important;min-height:0!important;transform:none!important;filter:none!important;animation:none!important;will-change:auto!important;contain:none!important}' +
+    'html.t795 #start{overflow:visible!important;transform:none!important;filter:none!important;animation:none!important}' +
+    'html.t795.s7mv #start>.sheet{display:none!important}' +
+    '#s7title .u7-menu>#go,#s7title .u7-menu>#netBtn678t{position:relative!important;left:auto!important;top:auto!important;width:100%!important;max-width:none!important;justify-self:stretch!important;margin:0!important;height:auto!important;min-height:59px!important;z-index:auto!important;animation:s7glowin .5s cubic-bezier(.2,.7,.2,1) both}' +
+    '#s7title .u7-menu>#netBtn678t{animation-delay:.12s}#s7title .u7-item.s7-slot.s7-out{display:none!important}' +
     'html.t795 #start>.sheet>*:not(#go):not(:has(#go)):not(:has(#netBtn678t)),html.t795 #start>.sheet *:has(>#go)>*:not(#go),html.t795 #start>.sheet *:has(>#netBtn678t)>*:not(#netBtn678t){display:none!important}' +
     'html.t795 #start>.sheet *:has(>#go),html.t795 #start>.sheet *:has(>#netBtn678t){background:none!important;border:0!important;box-shadow:none!important;outline:0!important}html.t795 #start>.sheet *:has(>#go)::before,html.t795 #start>.sheet *:has(>#go)::after,html.t795 #start>.sheet *:has(>#netBtn678t)::before,html.t795 #start>.sheet *:has(>#netBtn678t)::after{display:none!important}' +
     /* the game's own Fly together button (#netBtn678t) IS choice 03, drawn as a glass card the same way */
@@ -152,17 +162,20 @@ window.WFR_SHOW795 = (function () {
       'font:700 12px/1 var(--g-mono)!important;color:#fff!important;background:radial-gradient(circle,rgba(255,59,66,.35),rgba(255,59,66,.05) 70%)!important;border:1.5px solid var(--g-red)!important;border-radius:50%!important;box-shadow:0 0 12px rgba(255,59,66,.6)!important;transform:none!important;opacity:1!important;filter:none!important}' +
     'html.t795 #go::after{content:var(--s7sub,"")!important;position:static!important;display:block!important;width:auto!important;height:auto!important;margin:5px 0 0!important;background:none!important;border:0!important;box-shadow:none!important;opacity:1!important;transform:none!important;' +
       'font:400 11px/1.3 var(--g-mono)!important;letter-spacing:.06em!important;text-transform:uppercase!important;color:#ffc9cd!important;white-space:normal;text-shadow:none!important}' +
-    '#s7title{position:absolute;inset:0;pointer-events:none}#s7title>*{pointer-events:auto}#s7title>.s7-shade,#s7title>.s7-rings,#s7title>.s7-brand,#s7title>.s7-where{pointer-events:none!important}' +   /* decoration never takes a tap: #go and #netBtn678t lie under it */
+    '#s7title{position:absolute;inset:0;pointer-events:none}#s7title>*{pointer-events:auto}#s7title>.s7-shade,#s7title>.s7-rings,#s7title>.s7-brand,#s7title>.s7-where,#s7title>.s7-head{pointer-events:none!important}' +   /* decoration never takes a tap */
     '#s7title .s7-shade{position:absolute;inset:0;pointer-events:none;background:linear-gradient(180deg,rgba(5,6,12,.72),rgba(5,6,12,0) 28%)}' +
     '#s7title .s7-rings{left:44px;top:44px;--rw:min(90vw,420px);opacity:.7}' +
-    '#s7title .s7-brand{position:absolute;left:calc(18px + var(--u7-safe-l));top:calc(18px + var(--u7-safe-t));display:flex;align-items:center;gap:12px;pointer-events:none}' +
+    /* 815: the brand and "Rouge is at" stand in ONE column, so however the brand wraps the pill sits under it, never over it (on his phone it sat on the brand's last line) */
+    '#s7title .s7-head{position:absolute;left:calc(18px + var(--u7-safe-l));right:calc(76px + var(--u7-safe-r));top:calc(18px + var(--u7-safe-t));display:flex;flex-direction:column;align-items:flex-start;gap:16px;pointer-events:none}' +
+    '#s7title .s7-brand{position:relative;display:flex;align-items:center;gap:12px;pointer-events:none}' +
     '#s7title .s7-badge{width:52px;height:52px;border-radius:50%;display:grid;place-items:center;font:700 9px/1 var(--g-mono);letter-spacing:.12em;color:var(--g-red);box-shadow:0 0 0 1.5px rgba(255,59,66,.7),0 0 0 6px rgba(255,59,66,.08),0 0 22px rgba(255,59,66,.45);background:radial-gradient(circle,rgba(255,59,66,.18),rgba(5,6,12,.6) 70%)}' +
-    '#s7title .s7-badge svg{width:30px;height:30px}' +
+    '#s7title .s7-badge svg{width:30px;height:30px}#s7title .s7-badge{flex:none}' +
     '#s7title .s7-brand b{display:block;font:700 30px/1 var(--g-sans);letter-spacing:.2em;text-transform:uppercase;color:#fff;text-shadow:0 0 22px rgba(255,59,66,.55)}#s7title .s7-brand b em{font-style:normal;color:var(--g-red)}' +
     '#s7title .s7-brand small{display:block;margin-top:5px;font:400 11px/1.2 var(--g-mono);letter-spacing:.14em;color:var(--g-dim)}' +
-    '#s7title .s7-where{position:absolute;left:calc(18px + var(--u7-safe-l));top:calc(96px + var(--u7-safe-t));max-width:70vw;pointer-events:none}' +
+    '#s7title .s7-where{position:relative;max-width:100%;pointer-events:none}' +
     '#s7title .s7-where b{display:block;margin-top:6px;font:700 26px/1.02 var(--g-sans);letter-spacing:-.01em;color:#fff;text-shadow:0 2px 14px rgba(5,6,12,.9)}' +
-    '#s7title .s7-where span{display:block;margin-top:4px;font:400 italic 13px/1.3 var(--g-sans);color:#d6dcef;text-shadow:0 1px 6px rgba(5,6,12,.95)}' +
+    '#s7title .s7-where>span:not(.s7-pill){display:block;margin-top:4px;font:400 italic 13px/1.3 var(--g-sans);color:#d6dcef;text-shadow:0 1px 6px rgba(5,6,12,.95)}' +   /* 815: was every span, the pill too: it went block-wide with its words in a corner and its dot gone */
+    '#s7title .s7-where>.s7-pill{background:rgba(5,6,12,.62)}' +
     '#s7title .u7-menu{position:absolute;left:calc(14px + var(--u7-safe-l));right:calc(14px + var(--u7-safe-r));bottom:calc(52px + var(--u7-safe-b));width:auto;max-width:430px;gap:9px;pointer-events:none!important}' +
     '#s7title .u7-menu>.u7-item{pointer-events:auto}#s7title .u7-item.s7-slot{visibility:hidden;pointer-events:none!important}' +
     '#s7title .u7-item,#s7news{background:var(--g-glass)!important;background-image:none;border:0!important;border-radius:16px!important;box-shadow:var(--g-glow)!important;color:var(--g-ink)!important;-webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);transform:none!important}' +
@@ -173,6 +186,11 @@ window.WFR_SHOW795 = (function () {
     '#s7title .u7-item.sel{box-shadow:var(--g-glowM)!important}#s7title .u7-item .u7-go{filter:hue-rotate(140deg) saturate(.6)}' +
     '#s7title .s7-foot{position:absolute;left:0;right:0;bottom:calc(12px + var(--u7-safe-b));display:flex;justify-content:space-between;padding:0 calc(16px + var(--u7-safe-r)) 0 calc(16px + var(--u7-safe-l))}' +
     '#s7title .s7-foot button,.s7-chip{cursor:pointer;border:0}.s7-chip{position:fixed;left:calc(12px + var(--u7-safe-l));top:calc(10px + var(--u7-safe-t));z-index:61;pointer-events:auto}' +
+    '.s7-chip.s7-pill{min-height:40px;padding:0 15px;font:600 12px/1 var(--g-mono);letter-spacing:.1em;color:var(--g-ink);background:rgba(10,14,22,.82);box-shadow:var(--g-glowM);-webkit-backdrop-filter:blur(8px);backdrop-filter:blur(8px)}' +
+    /* 815: the old sheet's look (Files & birds, Data & credits, and the sheet as the page loads) lives in ui795.js (the kit), so it is drawn from the first paint */
+    /* 815: the strip under the page on his iPhone's home-screen app (it lays the page out one status bar short; 722c stretches the picture, the strip stays the page's
+       own floor): in Standard it is the menu's own night, never a grey band */
+    'html.s795,html.s795 body{background:#05060c!important}' +
     '#s7news{position:absolute;left:16px;right:16px;top:calc(150px + var(--u7-safe-t));max-width:430px;margin:auto;padding:14px 16px}' +
     '#s7news h5{font:700 10.5px/1.2 var(--g-mono)!important;letter-spacing:.22em;text-transform:uppercase;color:var(--g-mint)!important}#s7news h5:after{background:var(--g-line)!important;opacity:1!important;height:1px!important}' +
     '#s7news li b{font-family:var(--g-sans)!important;color:#fff!important}#s7news li span{color:var(--g-dim)!important}#s7news li em{font:700 10px/1 var(--g-mono)!important;background:rgba(255,59,66,.16)!important;color:#ffc9cd!important;box-shadow:0 0 0 1px rgba(255,59,66,.5);transform:none!important}' +
@@ -310,9 +328,19 @@ window.WFR_SHOW795 = (function () {
         var a = i / 12 * Math.PI * 2, dx = Math.sin(a), dz = Math.cos(a), s = 0, ok = true;
         for (var k = 1; k <= 8; k++) { var d = 12 + k * k * 3, h = g(P.p.x + dx * d, P.p.z + dz * d); s += (h > (o.water || 0) + 0.6 && h < P.p.y - 1.5 ? 1 : 0) + (h < P.p.y ? 0.15 : -1); }   /* the island in the view (land below her, not a wall, not only sea) */
         var cx = P.p.x - dx * 2.6, cz = P.p.z - dz * 2.6; if (g(cx, cz) > P.p.y - 0.3) ok = false;   /* the camera itself never in the ground */
+        s -= clutter(P, a) * 40;   /* 815: a lamp the page names (P.avoid) never stands in the middle of the view (Marth's #141 picture: the green's lantern under her) */
         if (ok && s > bestS) { bestS = s; best = a; }
       }
-      return { id: P.id, name: P.name, area: P.area, p: P.p.clone ? P.p.clone() : new THREE.Vector3(P.p.x, P.p.y, P.p.z), yaw: best == null ? 0 : best, s: P.s || 1, cam: P.cam || null };
+      return { id: P.id, name: P.name, area: P.area, p: P.p.clone ? P.p.clone() : new THREE.Vector3(P.p.x, P.p.y, P.p.z), yaw: best == null ? 0 : best, s: P.s || 1, cam: P.cam || null, avoid: P.avoid || null };
+    }
+    /* 815: how many of the perch's named lamps (P.avoid, points) the title camera would hold in its picture, looking from yaw a. The camera sits behind her
+       and 0.42 rad to the side (titleCam), so it looks along a + 0.42 (+ the small turn that sets her right of centre); a phone's picture is about 0.21 rad
+       either side of that (and the drift turns it 0.09 more), so a lamp within 35 m counts while it is within 0.3 rad (farther, its disc is small). */
+    function clutter(P, a) {
+      var L = P.avoid, n = 0; if (!L || !L.length) return 0; var va = a + 0.48;
+      for (var i = 0; i < L.length; i++) { var dx = L[i].x - P.p.x, dz = L[i].z - P.p.z, d = Math.hypot(dx, dz); if (d < 1 || d > 35) continue;
+        var t = Math.atan2(dx, dz) - va; t = Math.atan2(Math.sin(t), Math.cos(t)); if (Math.abs(t) < 0.3) n++; }
+      return n;
     }
     function subs() {
       var out = {}, lv = o.lv ? o.lv() : { level: S.level }, M = window.WFR_MISSIONS788;
@@ -329,40 +357,59 @@ window.WFR_SHOW795 = (function () {
     function showTitle() {
       if (st.title) return; st.perch = choosePerch(); st.shows++;
       var root = U.el('div'); root.id = 's7title'; var P = st.perch, s = subs();
-      root.innerHTML = "<div class='s7-shade'></div><div class='s7-rings'></div><div class='s7-brand'><span class='s7-badge'><svg viewBox='0 0 32 32'><path d='M5 19c4-1 7-4 9-8 1 4 4 6 9 6-3 3-7 5-12 5-2 0-4-1-6-3z' fill='#ff3b42'/><path d='M14 11l3-5 1 5' fill='#ff3b42'/><circle cx='20' cy='13' r='1.3' fill='#05060c'/><path d='M23 14l4 1-4 1' fill='#ffd45c'/></svg></span><span><b>Wings for <em>Rouge</em></b><small>A BIRTHDAY ISLAND // LV " + esc(S.level || 1) + '</small></span></div>' +
-        (P ? "<div class='s7-where'><span class='s7-pill m'><i></i>" + esc(WORDS.meanwhile) + '</span><b>' + esc(P.name) + '</b><span>' + esc(P.area || '') + '</span></div>' : '') +
+      root.innerHTML = "<div class='s7-shade'></div><div class='s7-rings'></div><div class='s7-head'><div class='s7-brand'><span class='s7-badge'><svg viewBox='0 0 32 32'><path d='M5 19c4-1 7-4 9-8 1 4 4 6 9 6-3 3-7 5-12 5-2 0-4-1-6-3z' fill='#ff3b42'/><path d='M14 11l3-5 1 5' fill='#ff3b42'/><circle cx='20' cy='13' r='1.3' fill='#05060c'/><path d='M23 14l4 1-4 1' fill='#ffd45c'/></svg></span><span><b>Wings for <em>Rouge</em></b><small>A BIRTHDAY ISLAND // LV " + esc(S.level || 1) + '</small></span></div>' +
+        (P ? "<div class='s7-where'><span class='s7-pill m'><i></i>" + esc(WORDS.meanwhile) + '</span><b>' + esc(P.name) + '</b><span>' + esc(P.area || '') + '</span></div>' : '') + '</div>' +
         "<div class='s7-foot'><button type='button' class='s7-pill' data-a='files'>" + esc(WORDS.files) + "</button><button type='button' class='s7-pill' data-a='credits'>" + esc(WORDS.credits) + '</button></div>';
       L().appendChild(root); document.documentElement.classList.add('t795');
       var go = o.goLabel ? o.goLabel() : WORDS.fly;
       st.menu = U.menu({ parent: root, keys: true, items: [
-        { title: go, sub: s.fly },   /* the slot: the game's own #go is laid over it (goPlace) */
+        { title: go, sub: s.fly, onPick: function () { var g = document.getElementById('go'); if (g) g.click(); } },   /* the slot: the game's own #go takes its place (moveIn; a key's Enter on it presses Fly) */
         { title: WORDS.missions, sub: s.mis, onPick: function () { openBoard(); } },
-        { title: WORDS.together, sub: s.together },   /* the slot: the game's own #netBtn678t is laid over it */
+        { title: WORDS.together, sub: s.together, onPick: function () { var g = document.getElementById('netBtn678t'); if (g) g.click(); } },   /* the slot: the game's own #netBtn678t takes its place */
         { title: WORDS.news, sub: s.news, onPick: function () { news(); } }] });
       var its = st.menu.el.querySelectorAll('.u7-item'); [0, 2].forEach(function (i) { var sl = its[i]; if (sl) { sl.classList.add('s7-slot'); sl.tabIndex = -1; sl.setAttribute('aria-hidden', 'true'); } });
       var gb = document.getElementById('go'); if (gb) gb.style.setProperty('--s7sub', '"' + String(s.fly).replace(/"/g, '') + '"');
       var nb = document.getElementById('netBtn678t'); if (nb) { nb.style.setProperty('--s7sub', '"' + String(s.together).replace(/"/g, '') + '"');
         if (!nb.dataset.s795) { nb.dataset.s795 = '1'; nb.addEventListener('click', function () { if (document.documentElement.classList.contains('t795')) classicSheet('shown'); }); } }   /* its own handler opens the sheet's Fly together panel; the title steps aside to show it */
-      st.slots = [[its[0], 'go'], [its[2], 'netBtn678t']]; goPlace();
+      st.slots = [[its[0], 'go'], [its[2], 'netBtn678t']]; moveIn(); goPlace();
       root.querySelector('[data-a=files]').addEventListener('click', function () { classicSheet('files'); });
       root.querySelector('[data-a=credits]').addEventListener('click', function () { classicSheet('credits'); });
       ['.s7-brand', '.s7-where'].forEach(function (q, i) { var e = root.querySelector(q); if (e) { e.style.animationDelay = (0.1 + i * 0.15) + 's'; e.classList.add('s7-in'); } });
       st.title = root;
     }
+    /* 815: the game's own Fly (#go) and Fly together (#netBtn678t) are MOVED into the menu, each just before its slot, while the title is up: drawn in the
+       menu's own flow like cards 02 and 04 (on Marth's iPhone the overlay with position:fixed never showed: 01 and 03 were missing). Same elements, ids
+       and taps; each goes back to its own place in the sheet (moveHome) before the sheet is shown, the title leaves, or a pause opens it. */
+    function moveIn() {
+      var R = document.documentElement, n = 0; st.home = st.home || {};
+      (st.slots || []).forEach(function (q) { var g = document.getElementById(q[1]), sl = q[0]; if (!g || !sl || !sl.parentNode) return;
+        if (g.parentNode !== sl.parentNode) { st.home[q[1]] = { p: g.parentNode, n: g.nextSibling }; sl.parentNode.insertBefore(g, sl); }
+        sl.classList.add('s7-out'); n++; });
+      R.classList.toggle('s7mv', n === 2);
+    }
+    function moveHome() {
+      var H = st.home || {}; document.documentElement.classList.remove('s7mv');
+      Object.keys(H).forEach(function (id) { var g = document.getElementById(id), h = H[id]; if (!g || !h || !h.p) return;
+        if (h.n && h.n.parentNode === h.p) h.p.insertBefore(g, h.n); else h.p.appendChild(g); });
+      st.home = {}; (st.slots || []).forEach(function (q) { if (q[0]) q[0].classList.remove('s7-out'); });
+    }
+    function sheetLook(on) {   /* 815: the old sheet in the title's look while the title has stepped aside for it */
+      var R = document.documentElement, sh = document.querySelector('#start > .sheet'); R.classList.toggle('s7sheet', !!on); if (sh) sh.classList.toggle('u7-card', !!on);
+    }
     function goPlace() {   /* the game's own buttons (#go, #netBtn678t) over their menu slots (size and place each frame while the title is up: the cards glide in) */
-      (st.slots || []).forEach(function (q, i) { var g = document.getElementById(q[1]), sl = q[0]; if (!g || !sl || !sl.isConnected) return; var r = sl.getBoundingClientRect(); if (!r.width) return;
+      (st.slots || []).forEach(function (q, i) { var g = document.getElementById(q[1]), sl = q[0]; if (!g || !sl || !sl.isConnected || (st.home && st.home[q[1]] && g.parentNode === sl.parentNode)) return; var r = sl.getBoundingClientRect(); if (!r.width) return;
         var k = [Math.round(r.left), Math.round(r.top), Math.round(r.width), Math.round(r.height)], key = 'gk' + i; if (st[key] && st[key].join() === k.join()) return; st[key] = k;
         g.style.setProperty('--gx', k[0] + 'px'); g.style.setProperty('--gy', k[1] + 'px'); g.style.setProperty('--gw', k[2] + 'px'); g.style.setProperty('--gh', k[3] + 'px'); });
     }
     function leaveTitle() {
-      var r = st.title; if (!r) return; st.title = null; st.slots = null; st.gk0 = st.gk1 = null; ['go', 'netBtn678t'].forEach(function (id) { var g = document.getElementById(id); if (g) ['--gx', '--gy', '--gw', '--gh', '--s7sub'].forEach(function (v) { g.style.removeProperty(v); }); }); if (st.menu) { try { st.menu.destroy(); } catch (e) { /* gone */ } st.menu = null; }
+      var r = st.title; if (!r) return; moveHome(); sheetLook(false); st.title = null; st.slots = null; st.gk0 = st.gk1 = null; ['go', 'netBtn678t'].forEach(function (id) { var g = document.getElementById(id); if (g) ['--gx', '--gy', '--gw', '--gh', '--s7sub'].forEach(function (v) { g.style.removeProperty(v); }); }); if (st.menu) { try { st.menu.destroy(); } catch (e) { /* gone */ } st.menu = null; }
       document.documentElement.classList.remove('t795'); var ch = document.getElementById('s7back'); if (ch) ch.remove(); var nw = document.getElementById('s7news'); if (nw) nw.remove();
       U.leave(r, { to: 'down', dur: 260 });
     }
     function classicSheet(what) {   /* the old sheet, one tap away: files, birds, backups, credits, flying together */
-      document.documentElement.classList.remove('t795'); if (st.title) st.title.style.visibility = 'hidden';
-      var b = document.getElementById('s7back'); if (!b) { b = U.el('button', 's7-chip', '‹ ' + esc(WORDS.back)); b.type = 'button'; b.id = 's7back'; L().appendChild(b);
-        b.addEventListener('click', function () { b.remove(); if (st.title) { st.title.style.visibility = ''; document.documentElement.classList.add('t795'); } }); }
+      moveHome(); document.documentElement.classList.remove('t795'); sheetLook(true); if (st.title) st.title.style.visibility = 'hidden';
+      var b = document.getElementById('s7back'); if (!b) { b = U.el('button', 's7-chip s7-pill', '‹ ' + esc(WORDS.back)); b.type = 'button'; b.id = 's7back'; L().appendChild(b);
+        b.addEventListener('click', function () { b.remove(); sheetLook(false); if (st.title) { st.title.style.visibility = ''; document.documentElement.classList.add('t795'); moveIn(); } }); }
       try { var t = what === 'together' ? document.getElementById('netBtn678t') : what === 'credits' ? document.getElementById('credit712') : document.getElementById('files');
         if (t && what === 'together') t.click(); if (what === 'shown') t = document.getElementById('net678'); if (t) setTimeout(function () { t.scrollIntoView({ block: 'center' }); }, 60); } catch (e) { /* the sheet is there either way */ }
     }
@@ -721,7 +768,7 @@ window.WFR_SHOW795 = (function () {
     function peek() {
       var tbx = null; if (st.tb) { var wasV = st.tb.visible; st.tb.visible = true; var bx = new THREE.Box3().setFromObject(st.tb); st.tb.visible = wasV; tbx = { size: bx.getSize(new THREE.Vector3()).toArray().map(function (v) { return +v.toFixed(2); }), at: st.tb.position.toArray().map(function (v) { return +v.toFixed(2); }), kids: st.tb.children.length }; }
       return { tb: tbx, camAt: st.camAt || null, stack: API.stack ? String(API.stack).slice(0, 600) : '', title: !!st.title, perch: st.perch ? { id: st.perch.id, name: st.perch.name, p: st.perch.p.toArray().map(function (v) { return +v.toFixed(2); }) } : null, shows: st.shows, n: set.n,
-        titleText: st.title ? st.title.innerText.replace(/\s+/g, ' ') : '', sheetHidden: document.documentElement.classList.contains('t795'),
+        titleText: st.title ? st.title.innerText.replace(/\s+/g, ' ') : '', sheetHidden: document.documentElement.classList.contains('t795'), moved: document.documentElement.classList.contains('s7mv'), yaw: st.perch ? +(+st.perch.yaw).toFixed(3) : null, avoid: st.perch && st.perch.avoid ? st.perch.avoid.map(function (v) { return [+v.x.toFixed(2), +v.y.toFixed(2), +v.z.toFixed(2)]; }) : null,
         drop: st.drop ? { why: st.drop.why, step: st.drop.step, t: +st.drop.t.toFixed(2), place: st.drop.where.place, area: st.drop.where.area, card: st.drop.card ? st.drop.card.el.innerText.replace(/\s+/g, ' ') : '' } : null,
         drops: st.drops, dropSkips: st.dropSkips, eye: st.eyeOn, lanes: st.lanes, laneQ: st.laneQ.length,
         m: st.m ? { view: st.m.view, pid: st.m.pid || null, kid: st.m.kid || null, cards: st.m.root.querySelectorAll('.u7-mission').length, locked: st.m.root.querySelectorAll('.u7-mission.locked').length, text: st.m.root.innerText.replace(/\s+/g, ' ').slice(0, 2400) } : null,
