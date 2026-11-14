@@ -31,7 +31,8 @@ window.WMAP712 = (function () {
   function credit() { var t = document.getElementById('credit712'); return NE_CREDIT + (t ? ' ' + t.textContent.trim() : ''); }
   var OCEANS = [['Pacific Ocean', 0, -150, 0], ['Pacific Ocean', 18, 165, 1], ['Atlantic Ocean', 30, -42, 0], ['Atlantic Ocean', -22, -14, 1], ['Indian Ocean', -20, 78, 0], ['Arctic Ocean', 81, 150, 0], ['Southern Ocean', -60, 60, 1], ['Southern Ocean', -60, -110, 1], ['Caribbean Sea', 14.6, -73.5, 2], ['Gulf of Mexico', 25.3, -90.2, 2], ['Mediterranean Sea', 34.6, 18, 2]];   // ours: the oceans' names (Natural Earth's sea polygons were not downloaded)
   var S = { el: null, src: null, view: 'island', proj: 'pole', k: 1, cX: 0, cY: 0, cw: 0, ch: 0, dpr: 1, loaded: false, loading: false, failed: false, built: {}, sel: null,
-    draws: 0, ms: 0, want: false, made: 0, cvs: [], waits: 0, jobs: [], job: null, next: null, progress: 0, error: null, base: {}, detail: null, rjob: null, dt: 0, renders: [], opens: 0, toggles: 0, needHome: true, gestures: 0 };
+    draws: 0, ms: 0, want: false, made: 0, cvs: [], waits: 0, jobs: [], job: null, next: null, progress: 0, error: null, base: {}, detail: null, rjob: null, dt: 0, renders: [], opens: 0, toggles: 0, needHome: true, gestures: 0,
+    vec: {}, fill: 0, plainDraws: 0, noDetail: false, loadFail: false, sc: null, kicks: 0, plainPic: null, plainDirect: false };   // 813: vec, the plain map's lines per projection (drawn while the pictures are made); fill, the pictures' progress
   var D = null;   // the decoded world: rings and lines as Float64Array [lat, lon, ...], cities, regions, the raster
   var $ = function (id) { return document.getElementById(id); };
 
@@ -72,7 +73,8 @@ window.WMAP712 = (function () {
   /* ---------- the first build, IN SLICES (Su 36, Oct 28: no frozen tap on her phone). Every piece of work (decoding the file, colouring the
      relief, re-projecting it for the pole view, building the paths) is a small step; a pump runs steps for at most BUDGET ms, then hands the
      phone back (a fresh task), so no tap and no frame waits on more than one slice. Meanwhile the map shows "Drawing the world…". ---------- */
-  var BUDGET = 8;
+  var BUDGET = 8, BUDGET_MAX = 40;   // 813: while the map is open, a slice may take half the time the game's own frame took before it (never past 40 ms): on the PC still 8 ms, on a phone drawing its world at ~120 ms a frame, 40
+  function budget(J, t) { var gap = J.end ? t - J.end : 0; J.end = 0; return shown() && gap > 2 * BUDGET ? Math.min(BUDGET_MAX, gap / 2) : BUDGET; }
   function dec(s, q) { var out = [], i = 0, la = 0, lo = 0, n = s.length, b, sh, r;
     while (i < n) { sh = 0; r = 0; do { b = s.charCodeAt(i++) - 63; r |= (b & 31) << sh; sh += 5; } while (b >= 32 && i < n); la += (r & 1) ? ~(r >> 1) : (r >> 1);
       sh = 0; r = 0; do { b = s.charCodeAt(i++) - 63; r |= (b & 31) << sh; sh += 5; } while (b >= 32 && i < n); lo += (r & 1) ? ~(r >> 1) : (r >> 1); out.push(la / q, lo / q); }
@@ -91,7 +93,12 @@ window.WMAP712 = (function () {
   function mk() { S.made++; var c = document.createElement('canvas'); S.cvs.push(c); return c; }   // every canvas the map makes is counted (the bench holds the count bounded)
   var POOL = {};
   function backCanvas(key, front, w, h) { var two = POOL[key] || (POOL[key] = [mk(), mk()]), c = two[0] === front ? two[1] : two[0]; if (c.width !== w) c.width = w; if (c.height !== h) c.height = h; return c; }   // the one not on show; its size set only when it changes
-  function toCanvas(px, w, h) { var c = mk(); c.width = w; c.height = h; var g = c.getContext('2d'), im = g.createImageData(w, h); im.data.set(px); g.putImageData(im, 0, 0); for (var i = (w * h) >> 1, n = 0; n < w * h; n++, i = (i + 1) % (w * h)) if (px[i * 4 + 3] > 127) { c.__p = [i % w, (i / w) | 0]; break; } return c; }   // 735: __p, a pixel the witness can ask for
+  function toCanvas(px, w, h) { var c = mk(); c.width = w; c.height = h; var g = c.getContext('2d', { willReadFrequently: true }), im = g.createImageData(w, h); im.data.set(px); g.putImageData(im, 0, 0); for (var i = (w * h) >> 1, n = 0; n < w * h; n++, i = (i + 1) % (w * h)) if (px[i * 4 + 3] > 127) { c.__p = [i % w, (i / w) | 0]; break; }
+    return c; }   // 735: __p, a pixel the witness can ask for
+  /* 813 (the #142 gate, Nov 14: worldmap712 W9, one 100-180 ms task at the first full look; the same 115-140 ms task measured on #141's own file when the
+     opening is slower than W9's): the relief pictures lived on the graphics card while the base picture is drawn on the processor, so the first base after
+     they had settled there read each of them back from the card in one go. They are made on the processor now (willReadFrequently), like the base, and every
+     render step is finished inside its own slice (rpump), the whole-world lines cut into pieces (chunks in layerSteps): measured, no step over 25 ms. */
   var RIMG = null;
   /* ---------- the vector layers in plane units, once per projection: each ring a Float32Array with its box (so a close look draws only what it
      sees), and the whole layer as one Path2D (for the base picture) ---------- */
@@ -109,13 +116,27 @@ window.WMAP712 = (function () {
     path.moveTo(q[0], q[1]); for (var i = 2; i < q.length; i += 2) path.lineTo(q[i], q[i + 1]);
   }
   function stepsFor(proj) {   // the work list for one projection (the decode and the relief's colours are shared: done by the first)
-    var st = [], W = window.WFR_WORLDMAP712, q = W.q, w = W.raster.w, h = W.raster.h, bin = null, ib = null, B = null, ROWS = 32;
+    /* 813 (Marth, Nov 14: "the map is STILL buggy on boot"): THE LINES FIRST. The coast, the land, the lakes, the rivers and every name are decoded and laid first
+       (st.vec marks the step): from there the map is drawn plain and she can use it, while the relief's pictures are made behind it; the pictures were made
+       first until now, so the whole 278-step build stood behind the "Drawing the world…" card. */
+    var st = [], W = window.WFR_WORLDMAP712, q = W.q, w = W.raster.w, h = W.raster.h, bin = null, ib = null, B = null, ROWS = 32, ICE = !!W.raster.ice, needRas = !D || !D.ras;
     if (!D) {
       st.push(function () { D = { land: [], coast: [], lakes: [], glaciers: [], rivers: [], countries: W.countries, cities: [], regions: [], ras: null }; });
       ['land', 'coast', 'lakes', 'glaciers', 'rivers'].forEach(function (key) { var arr = W[key];
         for (var a = 0; a < arr.length; a += 200) (function (a) { st.push(function () { for (var i = a; i < Math.min(arr.length, a + 200); i++) D[key].push(key === 'rivers' ? { p: dec(arr[i][0], q), rank: arr[i][1] } : dec(arr[i], q)); }); })(a); });
       st.push(function () { D.cities = W.cities.map(function (c) { return { name: c[0], country: W.countries[c[1]] || '', lat: c[2] / q, lon: c[3] / q, rank: c[4], pop: c[5], cap: !!c[6] }; });
         D.regions = W.regions.map(function (r) { return { name: r[0], kind: r[1], lat: r[2] / q, lon: r[3] / q, rank: r[4] }; }); });
+    }
+    st.push(function () { B = { img: null, ov: [], R: null, path: null, city: [], region: [], ocean: [] }; });
+    st.push(function () { B.R = { land: [], coast: [], lakes: [], glaciers: [], icebig: [], riv0: [], riv1: [], riv2: [] }; B.path = { land: new Path2D(), coast: new Path2D(), lakes: new Path2D(), glaciers: new Path2D(), icebig: new Path2D(), riv0: new Path2D(), riv1: new Path2D(), riv2: new Path2D() }; });
+    ['land', 'coast', 'lakes', 'glaciers', 'rivers'].forEach(function (key) { var n = (W[key] || []).length;
+      for (var a = 0; a < n; a += 250) (function (a) { st.push(function () { var arr = D[key];
+        for (var i = a; i < Math.min(arr.length, a + 250); i++) { var to = key === 'rivers' ? 'riv' + (arr[i].rank <= 3 ? 0 : arr[i].rank <= 5 ? 1 : 2) : key, r = ringPlane(key === 'rivers' ? arr[i].p : arr[i]); if (!r) continue; if (to === 'glaciers' && ICE && Math.max(r.b[2] - r.b[0], r.b[3] - r.b[1]) > 6) to = 'icebig'; B.R[to].push(r); addPts(B.path[to], r.p); } }); })(a); });
+    st.push(function () { var o = { x: 0, y: 0 };
+      D.cities.forEach(function (c) { P(c.lat, c.lon, o); B.city.push(o.x, o.y); }); D.regions.forEach(function (c) { P(c.lat, c.lon, o); B.region.push(o.x, o.y); });
+      OCEANS.forEach(function (c) { P(c[1], c[2], o); B.ocean.push(o.x, o.y); }); S.vec[proj] = B; });   // 813: the plain map is ready: lines, names, marks; the pictures follow
+    st.vec = st.length;
+    if (needRas) {
       st.push(function () { bin = atob(W.raster.b64); D.ras = { w: w, h: h, e: new Float32Array(w * h) }; });
       for (var r0 = 0; r0 < h; r0 += ROWS * 2) (function (r0) { st.push(function () { var e = D.ras.e; for (var k = r0 * w; k < Math.min(h, r0 + ROWS * 2) * w; k++) { var b = bin.charCodeAt(k); e[k] = b < 128 ? -11000 * Math.pow((127 - b) / 127, 2) : 9000 * Math.pow((b - 128) / 127, 2); } }); })(r0);
       st.push(function () { bin = null; ib = W.raster.ice ? atob(W.raster.ice) : null; if (ib) D.ras.ice = new Uint8Array(w * h); });   // 725a: the ice mask, one bit a cell (76 review: unpacked in slices of rows, as the heights are)
@@ -127,7 +148,6 @@ window.WMAP712 = (function () {
       for (var j0 = 0; j0 < h; j0 += ROWS / 2) (function (j0) { st.push(function () { colourRows(j0, Math.min(h, j0 + ROWS / 2)); }); })(j0);   // 16 rows a step: the heaviest step of the build (10-20 ms at 32 rows on a busy machine)
       st.push(function () { RIMG.done = true; });
     }
-    st.push(function () { B = { img: null, ov: [], R: null, path: null, city: [], region: [], ocean: [] }; });
     if (proj !== 'pole') {
       st.push(function () { B.img = { sea: toCanvas(RIMG.sea, w, h), land: null, x0: -180, y0: -90, ww: 360, hh: 180 }; });
       st.push(function () { B.img.land = toCanvas(RIMG.land, w, h); });
@@ -138,18 +158,12 @@ window.WMAP712 = (function () {
       st.push(function () { B.img = { sea: toCanvas(pse, N, N), land: null, x0: -180, y0: -180, ww: 360, hh: 360 }; pse = null; });
       st.push(function () { B.img.land = toCanvas(pla, N, N); pla = null; });
     }
-    if (!OVS) OVS = overlaySources();
-    OVS.forEach(function (o) { if (o.coloured) return; for (var r0 = 0; r0 < o.h; r0 += 24) (function (r0) { st.push(function () { shadeInto(o.e, o.w, o.h, r0, Math.min(o.h, r0 + 24), o.sea, o.land, o.cellW, o.cellH, o.contour, false); }); })(r0); st.push(function () { o.coloured = true; }); });
-    var plans = OVS.map(function (o) { return overlayPlan(o, proj); });
-    plans.forEach(function (L) { for (var r0 = 0; r0 < L.H; r0 += 24) (function (r0) { st.push(function () { overlayRows(L, r0, Math.min(L.H, r0 + 24)); }); })(r0);
-      st.push(function () { B.ov.push({ id: L.o.id, sea: toCanvas(L.sea, L.W, L.H), land: toCanvas(L.land, L.W, L.H), x0: L.x0, y0: L.y0, ww: L.W / L.d, hh: L.H / L.d }); L.sea = L.land = null; }); });
-    st.push(function () { B.R = { land: [], coast: [], lakes: [], glaciers: [], icebig: [], riv0: [], riv1: [], riv2: [] }; B.path = { land: new Path2D(), coast: new Path2D(), lakes: new Path2D(), glaciers: new Path2D(), icebig: new Path2D(), riv0: new Path2D(), riv1: new Path2D(), riv2: new Path2D() }; });
-    ['land', 'coast', 'lakes', 'glaciers', 'rivers'].forEach(function (key) { var n = (W[key] || []).length;
-      for (var a = 0; a < n; a += 250) (function (a) { st.push(function () { var arr = D[key];
-        for (var i = a; i < Math.min(arr.length, a + 250); i++) { var to = key === 'rivers' ? 'riv' + (arr[i].rank <= 3 ? 0 : arr[i].rank <= 5 ? 1 : 2) : key, r = ringPlane(key === 'rivers' ? arr[i].p : arr[i]); if (!r) continue; if (to === 'glaciers' && D.ras.ice && Math.max(r.b[2] - r.b[0], r.b[3] - r.b[1]) > 6) to = 'icebig'; B.R[to].push(r); addPts(B.path[to], r.p); } }); })(a); });
-    st.push(function () { var o = { x: 0, y: 0 };
-      D.cities.forEach(function (c) { P(c.lat, c.lon, o); B.city.push(o.x, o.y); }); D.regions.forEach(function (c) { P(c.lat, c.lon, o); B.region.push(o.x, o.y); });
-      OCEANS.forEach(function (c) { P(c[1], c[2], o); B.ocean.push(o.x, o.y); }); S.built[proj] = B; });
+    st.push(function () {   // 813: the overlays' sources decoded inside a step (it was the opening's first long task), their steps added to this same list
+      if (!OVS) OVS = overlaySources(); var more = [];
+      OVS.forEach(function (o) { if (o.coloured) return; for (var r0 = 0; r0 < o.h; r0 += 24) (function (r0) { more.push(function () { shadeInto(o.e, o.w, o.h, r0, Math.min(o.h, r0 + 24), o.sea, o.land, o.cellW, o.cellH, o.contour, false); }); })(r0); more.push(function () { o.coloured = true; }); });
+      OVS.map(function (o) { return overlayPlan(o, proj); }).forEach(function (L) { for (var r0 = 0; r0 < L.H; r0 += 24) (function (r0) { more.push(function () { overlayRows(L, r0, Math.min(L.H, r0 + 24)); }); })(r0);
+        more.push(function () { B.ov.push({ id: L.o.id, sea: toCanvas(L.sea, L.W, L.H), land: toCanvas(L.land, L.W, L.H), x0: L.x0, y0: L.y0, ww: L.W / L.d, hh: L.H / L.d }); L.sea = L.land = null; }); });
+      more.push(function () { S.built[proj] = B; }); Array.prototype.push.apply(st, more); });
     return st;
   }
   function shadeInto(e, w, h, j0, j1, sea, land, cellWf, cellH, contour, wrap, ice) {   // sea by depth, land by height, the light from the north-west, the paper's grain, faint contours if asked; ice (725a) by its own ramp
@@ -206,14 +220,39 @@ window.WMAP712 = (function () {
   function ensure(proj) {   // true when the projection is ready; otherwise its build is started (or queued behind the one running)
     if (S.built[proj]) return true; if (!window.WFR_WORLDMAP712 || S.failed) return false;
     if (S.job) { if (S.job.proj !== proj) S.next = proj; return false; }
-    S.job = { proj: proj, steps: stepsFor(proj), i: 0, t0: performance.now(), slices: 0, longest: 0, worst: 0, worstAt: -1 }; requestAnimationFrame(pump); return false;
+    S.job = { proj: proj, steps: stepsFor(proj), i: 0, t0: performance.now(), tick: performance.now(), slices: 0, longest: 0, worst: 0, worstAt: -1, vecMs: 0 }; next(pump); return false;
+  }
+  /* 813 THE STALL'S ROOT (measured Nov 14 at phone speed, the CPU slowed 6x): a slice of the build ran once an ANIMATION FRAME, and the game keeps drawing its
+     world under the Pause screen, ~120 ms a frame on a slow phone; so the build got 8 ms of every 120 and its 278 steps took 15.3 s, the card's bar crawling
+     through the 80s and 90s. Now, while the map is open, each slice is its own task (a MessageChannel message): the build takes every quiet moment between
+     the game's frames, each slice at most half the game's last frame (budget(): 8 ms on the PC, at most 40 ms on a struggling phone), so a tap still waits no
+     longer than about one of the game's own frames. On the island chart it goes back to a slice a frame; with the map shut, nothing runs (parked). */
+  var MC = null;
+  function shown() { return S.view === 'world' && !!S.el && !S.el.hidden && !document.hidden; }
+  function next(fn) {
+    if (!shown() || typeof MessageChannel === 'undefined') { requestAnimationFrame(fn); return; }
+    if (!MC) { MC = new MessageChannel(); MC.q = []; MC.port1.onmessage = function () { var f = MC.q.shift(); if (f) f(); }; }
+    MC.q.push(fn); MC.port2.postMessage(0);
+  }
+  function parked(J) { if (!(S.el && S.el.hidden)) return false; J.parked = true; return true; }   // 813: the map shut, the work waits (it used to keep building under her flight, a slice every frame)
+  function unpark() { if (S.job && S.job.parked) { S.job.parked = false; S.job.tick = performance.now(); next(pump); } if (S.rjob && S.rjob.parked) { var J = S.rjob; J.parked = false; J.tick = performance.now(); next(function () { rpump(J); }); } }
+  function kick() {   // 813: a chain that has gone quiet for 1.5 s (a frame callback the phone dropped) is started again; a live chain is never doubled
+    var t = performance.now();
+    if (S.job && !S.job.parked && t - S.job.tick > 1500) { S.job.tick = t; S.kicks++; next(pump); }
+    if (S.rjob && !S.rjob.parked && t - S.rjob.tick > 1500) { var J = S.rjob; J.tick = t; S.kicks++; next(function () { rpump(J); }); }
   }
   function pump() {
-    var J = S.job; if (!J) return; var t = performance.now(), was = S.proj; S.proj = J.proj;   // a step projects in ITS projection, whatever the view shows
-    try { do { var t1 = performance.now(); J.steps[J.i++](); var d1 = performance.now() - t1; if (d1 > J.worst) { J.worst = d1; J.worstAt = J.i - 1; } } while (J.i < J.steps.length && performance.now() - t < BUDGET); } catch (e) { S.failed = true; S.error = String(e && e.message || e); J.i = J.steps.length; } finally { S.proj = was; }
-    var sl = performance.now() - t; J.slices++; if (sl > J.longest) J.longest = sl; S.progress = 0.9 * J.i / J.steps.length;
-    if (J.i < J.steps.length) { want(); requestAnimationFrame(pump); return; }   // the next slice in the next frame: the card's bar moves, a tap is answered
-    S.job = null; S.jobs.push({ proj: J.proj, ms: Math.round(performance.now() - J.t0), slices: J.slices, longestSlice: Math.round(J.longest * 10) / 10, worstStep: Math.round(J.worst * 10) / 10, worstAt: J.worstAt, steps: J.steps.length });
+    var J = S.job; if (!J) return; var t = performance.now(), was = S.proj, bud = budget(J, t); S.proj = J.proj; J.tick = t;   // a step projects in ITS projection, whatever the view shows
+    if (parked(J)) { S.proj = was; return; }
+    try { do { var t1 = performance.now(); J.steps[J.i++](); var d1 = performance.now() - t1; if (d1 > J.worst) { J.worst = d1; J.worstAt = J.i - 1; } } while (J.i < J.steps.length && performance.now() - t < bud); }
+    catch (e) { S.error = String(e && e.message || e); J.i = J.steps.length;
+      if (S.vec[J.proj]) { S.built[J.proj] = S.vec[J.proj]; HEAL.direct = true; HEAL.lost++; HEAL.why = 'out of picture memory'; healNote(); }   // 813: the pictures could not be made (a phone out of canvas memory): the plain map stays, and says so
+      else { S.failed = true; D = null; } }   // the lines themselves did not read: the words say so, and the next opening tries again
+    finally { S.proj = was; }
+    var sl = performance.now() - t; J.slices++; if (sl > J.longest) J.longest = sl; J.end = performance.now(); var v = J.steps.vec || 1;
+    S.progress = Math.min(1, J.i / v); S.fill = J.i <= v ? 0 : (J.i - v) / Math.max(1, J.steps.length - v); if (!J.vecMs && J.i >= v) J.vecMs = Math.round(performance.now() - J.t0);   // 813: the card's bar is the lines; the thin bar along the top, the pictures
+    if (J.i < J.steps.length) { if (S.vec[J.proj]) wantSoon(); else want(); next(pump); return; }   // the next slice: a tap is answered between slices (813: under the plain map, a redraw for the thin bar at most every 400 ms)
+    S.job = null; S.fill = 1; S.jobs.push({ proj: J.proj, ms: Math.round(performance.now() - J.t0), vecMs: J.vecMs, slices: J.slices, longestSlice: Math.round(J.longest * 10) / 10, worstStep: Math.round(J.worst * 10) / 10, worstAt: J.worstAt, steps: J.steps.length });
     var nx = S.next; S.next = null; if (nx) ensure(nx); want();
   }
   var CACHE = true;   // the still world drawn once into a picture and slid while her thumb moves (false: every frame draws it all, as before Oct 28)
@@ -237,12 +276,22 @@ window.WMAP712 = (function () {
     st.push(function () { if (!ts.length) return; eachSeen(function () { ts.forEach(function (t) { var q = tilePaths(t); ctx.save(); ctx.clip(q.rect); ctx.drawImage(I.land, I.x0, I.y0, I.ww, I.hh); B.ov.forEach(function (ov) { ctx.drawImage(ov.land, ov.x0, ov.y0, ov.ww, ov.hh); });   // 735: inside a real tile the coast is the tile's own: land's colours first, the sea only inside its water
         ctx.lineJoin = 'round'; ctx.lineWidth = 1.7 * px; ctx.strokeStyle = 'rgba(58,29,12,.78)'; ctx.stroke(q.water); ctx.save(); ctx.clip(q.water); ctx.drawImage(I.sea, I.x0, I.y0, I.ww, I.hh); B.ov.forEach(function (ov) { ctx.drawImage(ov.sea, ov.x0, ov.y0, ov.ww, ov.hh); }); ctx.restore();
         ctx.lineJoin = 'round'; ctx.lineCap = 'round'; [[2, 0.9, 'rgba(250,244,226,.9)'], [1, 1.3, 'rgba(250,236,196,.95)'], [0, 1.8, 'rgba(232,178,92,.95)']].forEach(function (R) { ctx.lineWidth = (R[1] + 0.8) * px; ctx.strokeStyle = 'rgba(58,29,12,.42)'; ctx.stroke(q.roads[R[0]]); ctx.lineWidth = R[1] * px; ctx.strokeStyle = R[2]; ctx.stroke(q.roads[R[0]]); }); ctx.restore(); }); }); });
-    st.push(function () { eachSeen(function (q) { ctx.fillStyle = 'rgba(250,252,255,.88)'; ctx.fill(q.glaciers); ctx.lineWidth = 0.7 * px; ctx.strokeStyle = 'rgba(140,170,196,.55)'; ctx.stroke(q.glaciers); ctx.strokeStyle = 'rgba(112,146,178,.6)'; ctx.stroke(q.icebig);
+    var chunk = function (key, n, j) {   // 813: piece j of a layer's rings cut into n pieces of about equal points, each piece made once, in its own step
+      var ck = B.ck || (B.ck = {}), id = key + n, R = B.R[key];
+      if (!ck[id]) { var tot = 0, cut = [0], acc = 0, r; for (r = 0; r < R.length; r++) tot += R[r].p.length; for (r = 0; r < R.length; r++) { acc += R[r].p.length; if (acc >= tot * cut.length / n && cut.length < n) cut.push(r + 1); } while (cut.length < n) cut.push(R.length); cut.push(R.length); ck[id] = { cut: cut, p: [] }; }
+      var C = ck[id]; if (C.p[j] === undefined) { var a = C.cut[j], b = C.cut[j + 1], pa = null; if (a < b) { pa = new Path2D(); for (var q = a; q < b; q++) addPts(pa, R[q].p); } C.p[j] = pa; } return C.p[j]; };
+    if (cull) st.push(function () { eachSeen(function (q) { ctx.fillStyle = 'rgba(250,252,255,.88)'; ctx.fill(q.glaciers); ctx.lineWidth = 0.7 * px; ctx.strokeStyle = 'rgba(140,170,196,.55)'; ctx.stroke(q.glaciers); ctx.strokeStyle = 'rgba(112,146,178,.6)'; ctx.stroke(q.icebig);
       ctx.fillStyle = 'rgb(150,192,210)'; ctx.fill(q.lakes); ctx.lineWidth = 0.7 * px; ctx.strokeStyle = 'rgba(47,95,134,.7)'; ctx.stroke(q.lakes); }); });
+    else {   // 813: the whole world (the base picture): the same fills and strokes, a piece a step (was one step of 27-30 ms)
+      for (var gj = 0; gj < 4; gj++) (function (j) { st.push(function () { var cp = chunk('glaciers', 4, j); if (!cp) return; eachSeen(function () { ctx.fillStyle = 'rgba(250,252,255,.88)'; ctx.fill(cp); ctx.lineWidth = 0.7 * px; ctx.strokeStyle = 'rgba(140,170,196,.55)'; ctx.stroke(cp); }); }); })(gj);
+      st.push(function () { eachSeen(function (q) { ctx.lineWidth = 0.7 * px; ctx.strokeStyle = 'rgba(112,146,178,.6)'; ctx.stroke(q.icebig); }); });
+      for (var lj = 0; lj < 2; lj++) (function (j) { st.push(function () { var cp = chunk('lakes', 2, j); if (!cp) return; eachSeen(function () { ctx.fillStyle = 'rgb(150,192,210)'; ctx.fill(cp); ctx.lineWidth = 0.7 * px; ctx.strokeStyle = 'rgba(47,95,134,.7)'; ctx.stroke(cp); }); }); })(lj);
+    }
     st.push(function () { eachSeen(function (q) { ctx.lineJoin = 'round'; ctx.lineCap = 'round';
       for (var rv = 0; rv < 3; rv++) { var a = rv === 0 ? 1 : fadeAt(rv === 1 ? 3 : 5, V.k); if (a <= 0) continue; ctx.globalAlpha = a * 0.85; ctx.strokeStyle = 'rgb(62,118,168)'; ctx.lineWidth = (rv === 0 ? 1.2 : rv === 1 ? 0.9 : 0.7) * px; ctx.stroke(q['riv' + rv]); }
       ctx.globalAlpha = 1; }); });
-    st.push(function () { if (!ts.length) eachSeen(function (q) { ctx.strokeStyle = 'rgba(58,29,12,.78)'; ctx.lineWidth = 0.85 * px; ctx.stroke(q.coast); }); });   // 735: a real tile brings its own coast
+    if (cull) st.push(function () { if (!ts.length) eachSeen(function (q) { ctx.strokeStyle = 'rgba(58,29,12,.78)'; ctx.lineWidth = 0.85 * px; ctx.stroke(q.coast); }); });   // 735: a real tile brings its own coast
+    else for (var cj = 0; cj < 8; cj++) (function (j) { st.push(function () { var cp = chunk('coast', 8, j); if (!cp) return; eachSeen(function () { ctx.strokeStyle = 'rgba(58,29,12,.78)'; ctx.lineWidth = 0.85 * px; ctx.stroke(cp); }); }); })(cj);   // 813: the whole coast in eight pieces (was one step of 47-51 ms)
     st.push(function () { if (!fp) return; ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalCompositeOperation = 'destination-over'; ctx.fillStyle = PAPER; ctx.fillRect(0, 0, ctx.canvas.width, ctx.canvas.height); ctx.globalCompositeOperation = 'source-over'; });   // 753a: the fog's paper, under the picture and its soft rim
     st.push(function () { each(function () {
       var step = V.k > 30 ? 5 : V.k > 9 ? 10 : 30, grat = new Path2D(), lat, lon;
@@ -263,15 +312,24 @@ window.WMAP712 = (function () {
   function curV() { return { k: S.k, cX: S.cX, cY: S.cY, w: S.cw, h: S.ch, dpr: S.dpr }; }
   function sameV(a, b) { return !!(a && b && a.k === b.k && a.cX === b.cX && a.cY === b.cY && a.w === b.w && a.h === b.h && a.dpr === b.dpr); }
   function startRender(kind, proj, V) {   // on a canvas the processor draws (willReadFrequently): its cost is the page's own time, cut into steps like the build
-    var front = kind === 'base' ? (S.base[proj] && S.base[proj].c) : (S.detail && S.detail.c), c = backCanvas(kind === 'base' ? 'base-' + proj : 'detail', front, Math.max(1, Math.round(V.w * V.dpr)), Math.max(1, Math.round(V.h * V.dpr)));
-    var J = { kind: kind, proj: proj, V: V, c: c, i: 0, t0: performance.now(), steps: null, fv: FOG.v, tiles: 0, stale: false }; J.steps = layerSteps(S.built[proj], proj, V, c.getContext('2d', { willReadFrequently: true }), kind === 'detail', false, J);   // 735: fv, the fog it was drawn under
-    S.rjob = J; requestAnimationFrame(function () { rpump(J); });
+    var pl = kind === 'plain', front = kind === 'base' ? (S.base[proj] && S.base[proj].c) : pl ? (S.plainPic && S.plainPic.c) : (S.detail && S.detail.c), c = backCanvas(kind === 'base' ? 'base-' + proj : 'detail', front, Math.max(1, Math.round(V.w * V.dpr)), Math.max(1, Math.round(V.h * V.dpr)));
+    if (pl) S.detail = null; else if (kind === 'detail') S.plainPic = null;   // 813: the plain picture and the close picture share one pair of canvases (they are never needed at once): the map holds no more canvases than before
+    var J = { kind: kind, proj: proj, V: V, c: c, i: 0, t0: performance.now(), steps: null, fv: FOG.v, tiles: 0, stale: false }; J.steps = layerSteps(pl ? (S.built[proj] || S.vec[proj]) : S.built[proj], proj, V, c.getContext('2d', { willReadFrequently: true }), kind === 'detail' || pl, pl, J);   // 735: fv, the fog it was drawn under (813: 'plain', the lines alone, while the pictures are made)
+    J.tick = performance.now(); S.rjob = J; next(function () { rpump(J); });
   }
   function rpump(J) {
-    if (S.rjob !== J) return; var t = performance.now(), was = S.proj; S.proj = J.proj;
-    try { do { J.steps[J.i++](); } while (J.i < J.steps.length && performance.now() - t < BUDGET); } catch (e) { J.bad = true; S.error = String(e && e.message || e); J.i = J.steps.length; } finally { S.proj = was; }
+    if (S.rjob !== J) return; var t = performance.now(), was = S.proj, bud = budget(J, t); if (parked(J)) return; S.proj = J.proj; J.tick = t;
+    try { do { J.steps[J.i++](); J.c.getContext('2d').getImageData(0, 0, 1, 1); } while (J.i < J.steps.length && performance.now() - t < bud); } catch (e) { J.bad = true; S.error = String(e && e.message || e); J.i = J.steps.length; } finally { S.proj = was; }
     if (J.kind === 'base') S.progress = 0.9 + 0.1 * J.i / J.steps.length;
-    if (J.i < J.steps.length) { if (J.kind === 'base') want(); requestAnimationFrame(function () { rpump(J); }); return; }
+    if (J.i < J.steps.length) { if (J.kind === 'base') wantSoon(); next(function () { rpump(J); }); return; }
+    J.end = performance.now();
+    if (J.bad && J.kind === 'base') { HEAL.direct = true; HEAL.lost++; HEAL.why = 'out of picture memory'; healNote(); }   // 813: a base picture that cannot be made is never asked for again and again behind the card: the plain map, said in words
+    if (J.bad && J.kind === 'detail') S.noDetail = true;   // the base picture stays; no close picture is asked for again
+    if (J.kind === 'plain') { S.rjob = null; if (J.bad) S.plainDirect = true; else S.plainPic = { c: J.c, V: J.V, proj: J.proj, fv: J.fv }; S.renders.push({ kind: 'plain', proj: J.proj, ms: Math.round(performance.now() - J.t0) }); if (S.renders.length > 40) S.renders.shift(); want(); return; }
+    /* 813 (the #142 gate, Nov 14: worldmap712 W9, one 102 ms task at the first look): the plain map was drawn with its paths straight onto the canvas on show, the
+       graphics card's canvas, and its first fills and strokes there cost ~100 ms in one frame. Now it is drawn like the base: on a processor canvas, a step a
+       slice, each step finished inside its slice (the pixel read above), then laid on screen as one picture; a canvas the phone refuses falls back to the
+       old straight drawing (plainDirect). */
     S.rjob = null; if (!J.bad) { if (J.kind === 'base') { S.base[J.proj] = { c: J.c, V: J.V, fv: J.fv }; healSoon(); } else S.detail = { c: J.c, V: J.V, proj: J.proj, fv: J.fv, tiles: J.tiles, stale: J.stale }; }   // 735: a new base is witnessed before it is trusted
     S.renders.push({ kind: J.kind, proj: J.proj, ms: Math.round(performance.now() - J.t0) }); if (S.renders.length > 40) S.renders.shift(); want();
   }
@@ -281,14 +339,14 @@ window.WMAP712 = (function () {
       if (x > S.cw || x + w < 0 || y > S.ch || y + h < 0) continue; g.drawImage(pic.c, x * S.dpr, y * S.dpr, w * S.dpr, h * S.dpr); }
   }
   function wantDetail() {   // a sharp picture of exactly this view, once her thumb has rested 140 ms
-    clearTimeout(S.dt); S.dt = setTimeout(function () { S.dt = 0; if (S.view !== 'world' || !S.built[S.proj]) return; if (S.rjob && S.rjob.kind === 'base') { wantDetail(); return; }
+    if (S.noDetail) return; clearTimeout(S.dt); S.dt = setTimeout(function () { S.dt = 0; if (S.view !== 'world' || !S.built[S.proj]) return; if (S.rjob && S.rjob.kind === 'base') { wantDetail(); return; }
       tileAsk(curV()); startRender('detail', S.proj, curV()); }, 140);   // 735: the tiles of this view asked for at the same rest
   }
   function drawWaiting(g, prog) {   // the soft state while the world is drawn: a paper card, the words, a filling bar (prog given: the 1892 paper's own bar, 76 review)
     var w = S.cw, h = S.ch, bw = Math.min(220, w - 60), x = (w - bw) / 2, y = h / 2 + 14, own = prog != null;
     g.font = 'italic 700 15px Georgia, serif'; g.textAlign = 'center'; g.textBaseline = 'middle';
-    text(g, S.failed && !own ? 'The world map could not load.' : 'Drawing the world…', w / 2, h / 2 - 10, 1);
-    if (S.failed && !own) return;
+    text(g, S.failed && !own ? (S.loadFail && !CLASSIC ? 'The world map\'s file did not arrive.' : 'The world map could not load.') : 'Drawing the world…', w / 2, h / 2 - 10, 1);
+    if (S.failed && !own) { if (!CLASSIC) { g.font = 'italic 600 12px Georgia, serif'; text(g, 'No connection? The island chart still works.', w / 2, h / 2 + 14, 0.85); text(g, 'Open the map again to try once more.', w / 2, h / 2 + 32, 0.85); } return; }   // 813: said plainly, and the next opening tries again (DRAFT words for Marth)
     g.fillStyle = 'rgba(58,29,12,.14)'; g.fillRect(x, y, bw, 7); g.fillStyle = '#c0821e'; g.fillRect(x, y, Math.max(4, bw * ((own ? prog : S.progress) || 0)), 7); g.strokeStyle = 'rgba(58,29,12,.5)'; g.lineWidth = 1; g.strokeRect(x - 0.5, y - 0.5, bw + 1, 8);
     if (own) PP.waits++; else S.waits++;
   }
@@ -320,11 +378,13 @@ window.WMAP712 = (function () {
     healNote(); return false;
   }
   function rebuildAll() {   // the data (D, RIMG, OVS) is in memory: only the pictures are made again, behind the "Drawing the world…" card
-    S.built = {}; S.base = {}; S.detail = null; S.rjob = null; S.job = null; S.next = null; clearTimeout(S.dt); S.dt = 0; POOL = {}; HEAL.need = true;
+    S.built = {}; S.base = {}; S.detail = null; S.rjob = null; S.job = null; S.next = null; clearTimeout(S.dt); S.dt = 0; POOL = {}; S.plainPic = null; HEAL.need = true;   // 813: S.vec is kept: the lines are paths, nothing a phone can wipe, and the plain map shows while the pictures are made again
     S.cvs = S.cvs.filter(function (c) { if (c === PP.cv || c === PP.build) return true; c.width = 0; c.height = 0; return false; });
   }
   function healSoon() { clearTimeout(HEAL.t); HEAL.t = setTimeout(function () { HEAL.need = true; if (S.view === 'world') want(); }, 300); }   // a new base is read once the browser has finished taking it in: reading at once froze the Globe tap (W9)
-  function healNote() { var n = $('wmap735note'); if (!n) return; n.hidden = !HEAL.lost; n.textContent = HEAL.direct ? 'Plain map: this phone would not keep the full picture (' + HEAL.why + ').' : 'This phone wiped the map\'s picture, so it was drawn again (' + HEAL.lost + ').'; }   // DRAFT for Marth
+  function healNote() { var n = $('wmap735note'); if (!n) return; var t = !HEAL.lost ? '' : HEAL.direct ? 'Plain map: this phone would not keep the full picture (' + HEAL.why + ').' : 'This phone wiped the map\'s picture, so it was drawn again (' + HEAL.lost + ').';
+    if (PP.failed) t += (t ? ' ' : '') + 'The 1892 paper did not load; tap it to try again.';   // 813: a piece that did not load says so, and the rest still shows
+    n.hidden = !t; n.textContent = t; }   // DRAFT for Marth
 
   /* ---------- HER ---------- */
   function ahead(ll, b, d) {   // the point d degrees along bearing b: a heading is only ever turned by projecting two real places, never a raw yaw
@@ -474,20 +534,32 @@ window.WMAP712 = (function () {
     var t0 = performance.now(), dpr = Math.min(2, window.devicePixelRatio || 1);
     S.cw = box.width; S.ch = box.height; S.dpr = dpr; var PW = Math.round(S.cw * dpr), PH = Math.round(S.ch * dpr); if (cv.width !== PW || cv.height !== PH) { cv.width = PW; cv.height = PH; }
     var g = cv.getContext('2d'); g.setTransform(1, 0, 0, 1, 0, 0); g.fillStyle = PAPER; g.fillRect(0, 0, PW, PH);   // cleared in backing pixels, under no transform (trap 51)
-    if (!ensure(S.proj)) { g.setTransform(dpr, 0, 0, dpr, 0, 0); drawWaiting(g); return; }
+    kick();   // 813: a build or picture chain that went quiet is started again
+    var plain = !ensure(S.proj);   // 813: the pictures are still being made
+    if (plain && (CLASSIC || !S.vec[S.proj])) { g.setTransform(dpr, 0, 0, dpr, 0, 0); drawWaiting(g); return; }   // the card only until the lines are in (Classic, frozen: until the whole build, as before)
     if (S.needHome) { S.needHome = false; homeView(); }   // the first look, once the canvas has its size
-    clampView(); var B = S.built[S.proj], px = 1 / S.k, offs = copies(), bs = S.base[S.proj], V = curV();
-    var paperUp = S.proj === 'pole' && PP.on && !!PP.cv && (CLASSIC || (CACHE && !HEAL.direct));   // 76 review: nothing is drawn or sharpened under the laid paper (735b: in Standard it stops at the ground she has seen, and past that is bare paper)
-    if (!CACHE || HEAL.direct) layerSteps(B, S.proj, V, g, HEAL.direct, HEAL.direct).forEach(function (f) { f(); });
+    clampView(); var B = S.built[S.proj] || S.vec[S.proj], px = 1 / S.k, offs = copies(), bs = S.base[S.proj], V = curV(), filling = plain;
+    var flatNow = function () { layerSteps(B, S.proj, V, g, true, true).forEach(function (f) { f(); }); S.plainDraws++; };   // 813: the plain map straight onto the canvas on show: only when the phone refuses a hidden canvas
+    var plainShow = function () {   // 813: the plain map's picture (made in slices, startRender 'plain'), slid to this view; false while none is made yet (the card stays)
+      if (S.plainDirect) { flatNow(); return true; }
+      var pp = S.plainPic && S.plainPic.proj === S.proj && S.plainPic.fv === FOG.v && S.plainPic.c.width > 0 ? S.plainPic : null;
+      if ((!pp || !sameV(pp.V, V)) && !S.rjob) startRender('plain', S.proj, V);
+      if (!pp) return false; g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true; blit(g, pp); S.plainDraws++; return true; };
+    var paperUp = !plain && S.proj === 'pole' && PP.on && !!PP.cv && (CLASSIC || (CACHE && !HEAL.direct));   // 76 review: nothing is drawn or sharpened under the laid paper (735b: in Standard it stops at the ground she has seen, and past that is bare paper)
+    if (plain) { if (!plainShow()) { g.setTransform(dpr, 0, 0, dpr, 0, 0); drawWaiting(g); return; } }
+    else if (!CACHE || HEAL.direct) layerSteps(B, S.proj, V, g, HEAL.direct, HEAL.direct).forEach(function (f) { f(); });
     else {
       var bv = baseV(S.proj);
-      if (!bs || bs.V.k !== bv.k || bs.V.dpr !== bv.dpr || bs.fv !== FOG.v) { if (!S.rjob) startRender('base', S.proj, bv); if (!bs) { g.setTransform(dpr, 0, 0, dpr, 0, 0); drawWaiting(g); return; } }   // the base is the last part of the opening
-      if (HEAL.need && !S.rjob) { HEAL.need = false; if (!witness(g, B, bs)) { g.setTransform(dpr, 0, 0, dpr, 0, 0); drawWaiting(g); want(); return; } }   // 735: never show a kept picture on trust
-      g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true; if (!paperUp) blit(g, bs);
-      var dt = S.detail && S.detail.proj === S.proj && S.detail.fv === FOG.v ? S.detail : null; if (dt && !paperUp) blit(g, dt);
-      if (paperUp) { if (S.dt) { clearTimeout(S.dt); S.dt = 0; } if (S.rjob && S.rjob.kind === 'detail') S.rjob = null; }
-      else if (!(bs.V.k === S.k && bs.V.w > 0) && !(dt && sameV(dt.V, V) && !dt.stale)) wantDetail();
-      else if (S.rjob && S.rjob.kind === 'detail' && !sameV(S.rjob.V, V)) S.rjob = null;
+      if (!bs || bs.V.k !== bv.k || bs.V.dpr !== bv.dpr || bs.fv !== FOG.v) { if (!S.rjob) startRender('base', S.proj, bv); if (!bs && CLASSIC) { g.setTransform(dpr, 0, 0, dpr, 0, 0); drawWaiting(g); return; } }   // the base is the last part of the opening
+      if (!bs) { if (!plainShow()) { g.setTransform(dpr, 0, 0, dpr, 0, 0); drawWaiting(g); return; } filling = true; paperUp = false; }   // 813: Standard shows the plain map while the base picture is made (the card if none was needed)
+      else if (HEAL.need && !S.rjob && (HEAL.need = false, !witness(g, B, bs))) { B = S.vec[S.proj] || B; want(); if (!plainShow()) { g.setTransform(dpr, 0, 0, dpr, 0, 0); drawWaiting(g); return; } filling = true; paperUp = false; }   // 735: never show a kept picture on trust (813: the plain map while it is made again, not the card)
+      else {
+        g.setTransform(1, 0, 0, 1, 0, 0); g.imageSmoothingEnabled = true; if (!paperUp) blit(g, bs);
+        var dt = S.detail && S.detail.proj === S.proj && S.detail.fv === FOG.v ? S.detail : null; if (dt && !paperUp) blit(g, dt);
+        if (paperUp) { if (S.dt) { clearTimeout(S.dt); S.dt = 0; } if (S.rjob && S.rjob.kind === 'detail') S.rjob = null; }
+        else if (!(bs.V.k === S.k && bs.V.w > 0) && !(dt && sameV(dt.V, V) && !dt.stale)) wantDetail();
+        else if (S.rjob && S.rjob.kind === 'detail' && !sameV(S.rjob.V, V)) S.rjob = null;
+      }
     }
     var paper = paperUp && drawPaper(g);   // 725a: the 1892 paper over the relief, under every mark
     if (S.sel && S.home) { var pts = gcPoints(S.home, S.sel);   // her flight: the great circle home -> the place, live over the pictures
@@ -534,11 +606,28 @@ window.WMAP712 = (function () {
       g.restore(); });
     if (S.sel) { var ss = toScreen(S.sel.lat, S.sel.lon); g.beginPath(); g.arc(ss.x, ss.y, 9, 0, 6.2832); g.lineWidth = 2; g.strokeStyle = '#c0821e'; g.stroke(); g.beginPath(); g.arc(ss.x, ss.y, 11, 0, 6.2832); g.lineWidth = 1; g.strokeStyle = 'rgba(255,242,194,.9)'; g.stroke(); }
     if (MK) MK.draw(g, toScreen, S.cw, S.ch); if (!CLASSIC) drawYou(g); tileCredit();   // 735: her, over every mark
+    if (filling) { g.globalAlpha = 1; g.fillStyle = 'rgba(58,29,12,.16)'; g.fillRect(0, 0, S.cw, 3); g.fillStyle = '#c0821e'; g.fillRect(0, 0, Math.max(6, S.cw * (S.job ? S.fill : 1)), 3); }   // 813: the relief filling in: a thin bar along the top, the map usable under it
     g.strokeStyle = INK; g.lineWidth = 1.2; g.strokeRect(0.6, 0.6, S.cw - 1.2, S.ch - 1.2);
+    scaleBar();
     if (S.proj === 'pole' && PP.on && !PP.cv) drawWaiting(g, PP.progress);   // 76 review: the paper is being decoded and laid: the soft card, never a frozen frame
     S.marks = marks; S.draws++; S.ms = Math.round((performance.now() - t0) * 10) / 10;
   }
   function want() { if (S.want) return; S.want = true; requestAnimationFrame(draw); }
+  var lastSoon = 0;
+  function wantSoon() { var t = performance.now(); if (t - lastSoon < 400) return; lastSoon = t; want(); }   // 813: progress alone redraws at most every 400 ms, so the plain map's redraws never eat the build's time
+  /* 813 THE WORLD'S OWN SCALE (Marth's screenshot, Nov 14: the island chart's "0 ... 200 m" sat on the world map, over the Gleason | Globe switch). The world
+     map has its own: the true ground distance across the middle of the view (two points 100 px apart, a great circle between them), a round number, its own
+     place above the switch. Gleason's disc stretches east-west away from the pole, so it is measured where she is looking, never fixed. Standard only. */
+  function scaleBar() {
+    var el = $('wmap813scale'); if (!el) return; var a = fromScreen(S.cw / 2 - 50, S.ch / 2), b = fromScreen(S.cw / 2 + 50, S.ch / 2);
+    if (!a || !b) { if (!el.hidden) el.hidden = true; return; }
+    var f1 = a.lat * D2R, f2 = b.lat * D2R, dl = (b.lon - a.lon) * D2R, km = 2 * 6371 * Math.asin(Math.min(1, Math.sqrt(Math.pow(Math.sin((f2 - f1) / 2), 2) + Math.cos(f1) * Math.cos(f2) * Math.pow(Math.sin(dl / 2), 2)))), per = km / 100;
+    if (!(per > 0)) { if (!el.hidden) el.hidden = true; return; }
+    var want = per * 90, e = Math.pow(10, Math.floor(Math.log(want) / Math.LN10)), nice = [5, 2, 1].map(function (m) { return m * e; }).filter(function (v) { return v <= want; })[0] || e, w = Math.round(nice / per);
+    var label = nice >= 1 ? nice.toLocaleString('en-US') + ' km' : Math.round(nice * 1000) + ' m', key = label + '|' + w;
+    if (el.dataset.k !== key) { el.dataset.k = key; el.querySelector('i').style.width = w + 'px'; el.querySelector('span').textContent = label; }
+    if (el.hidden) el.hidden = false;
+  }
 
   /* ---------- 725a: THE 1892 PAPER under the marks (the Gleason view only). The scan's pole is the PIXEL-measured pin (1009, 1021), never the eye's
      (969, 979); its map edge r = 869 (the two black rings at 860 and 878); its scale and turn are fitted to six of its painted islands (PAPER725.s
@@ -554,16 +643,19 @@ window.WMAP712 = (function () {
   var PAPER_STRIPS = 6;
   function paperImg() {   // start the decode (once at a time); nothing is drawn from the scan until it is decoded and laid
     if (PP.cv || PP.loading) return; PP.loading = true; PP.failed = false; PP.tries++; PP.progress = 0.05; var im = new Image(), t0 = performance.now(), done = false;
-    var fail = function () { if (done) return; done = true; im.onload = im.onerror = null; PP.loading = false; PP.failed = true; PP.fails++; PP.img = null; PP.build = null; paperSwitch(false); };
+    var fail = function () { if (done) return; done = true; im.onload = im.onerror = null; PP.loading = false; PP.failed = true; PP.fails++; PP.img = null; PP.build = null; paperSwitch(false); healNote(); };
     var laid = function (src, how) { if (done) return; done = true; im.onload = im.onerror = null; PP.decodeMs = Math.round(performance.now() - t0); PP.path = how; PP.img = src; PP.progress = 0.3; want(); requestAnimationFrame(function () { paperStrip(0); }); };
+    setTimeout(function () { if (!done) fail(); }, 12000);   // 813: a fetch or decode that never settles turns the switch off and says so, never a card for ever
+    healNote();
     if (window.fetch && window.createImageBitmap && location.protocol !== 'file:') {   // served (her app, the site): the bytes fetched, decoded by the browser's own decoder threads
       fetch(PAPER725.src).then(function (r) { if (!r.ok) throw new Error('http ' + r.status); return r.blob(); }).then(function (bl) { return createImageBitmap(bl); }).then(function (bm) { laid(bm, 'blob'); }, fail); return; }
     var decoded = function () { laid(im, 'img'); };   // a file:// page (a bench's copy): img.decode() decodes off the thread, then the image itself is laid
     im.onerror = fail; im.onload = im.decode ? null : decoded; im.src = PAPER725.src;
     if (im.decode) im.decode().then(decoded, function () { if (im.complete && im.naturalWidth > 0) decoded(); else fail(); });
   }
-  function paperStrip(k) {   // one strip of the laid paper a frame: the scan turned and clipped into PP.build, rows [k, k + 1) / PAPER_STRIPS
-    var P7 = PAPER725, src = PP.img; if (!src) return; var N = 2 * P7.r, t = performance.now();
+  function paperStrip(k) { try { paperStrip0(k); } catch (e) { PP.loading = false; PP.failed = true; PP.fails++; PP.img = null; PP.build = null; S.error = String(e && e.message || e); paperSwitch(false); healNote(); } }   // 813: a strip that throws never leaves the paper's card up
+  function paperStrip0(k) {   // one strip of the laid paper a frame: the scan turned and clipped into PP.build, rows [k, k + 1) / PAPER_STRIPS
+    var P7 = PAPER725, src = PP.img; if (!src) { PP.loading = false; return; } var N = 2 * P7.r, t = performance.now();
     if (!PP.build) { PP.build = mk(); PP.build.width = N; PP.build.height = N; }
     var g = PP.build.getContext('2d'), ca = Math.cos(P7.a), sa = Math.sin(P7.a), y0 = Math.floor(N * k / PAPER_STRIPS), y1 = Math.floor(N * (k + 1) / PAPER_STRIPS);
     g.save(); g.setTransform(1, 0, 0, 1, 0, 0); g.beginPath(); g.rect(0, y0, N, y1 - y0); g.clip();
@@ -634,6 +726,8 @@ window.WMAP712 = (function () {
     '#wmap712cv{display:block;position:static;inset:auto;border-radius:6px;box-shadow:0 0 0 2px rgba(60,40,20,.35);touch-action:none;cursor:grab}' +
     '#wmap712 .wmProj{position:absolute;left:6px;bottom:6px;display:flex;border-radius:19px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,.25)}#wmap712 .wmProj button{height:38px;padding:0 10px;white-space:nowrap;border:0;background:rgba(246,236,214,.94);color:var(--ink);font:700 12px/38px var(--body);touch-action:manipulation}' +
     '#wmap712 .wmProj button[aria-pressed="true"]{background:#c8314a;color:#fff6e2}#wmap712 .wmZoom{position:absolute;right:6px;bottom:6px;display:grid;gap:6px}#wmap712 .wmZoom button{width:40px;height:40px;padding:0;border:0;border-radius:50%;background:rgba(246,236,214,.94);color:var(--ink);font:800 19px/40px var(--body);box-shadow:0 2px 8px rgba(0,0,0,.25);touch-action:manipulation}' +
+    '#wmap712 .wmScale{position:absolute;left:8px;bottom:58px;display:flex;align-items:center;gap:5px;pointer-events:none;font:800 11px/1 system-ui,sans-serif;color:#2b1b17;text-shadow:0 0 3px #f8efdc,0 0 3px #f8efdc,0 0 2px #f8efdc}#wmap712 .wmScale[hidden]{display:none}' +   // 813: the world's own scale, above the switch
+    '#wmap712 .wmScale i{display:block;height:6px;box-sizing:border-box;border:1px solid #2b1b17;background:linear-gradient(90deg,#2b1b17 50%,#f8efdc 50%)}' +
     '#wmap712foot{display:none;margin:2px 0 0;max-width:100%;font:600 13px/1.3 var(--body);text-align:center}#map705.wm712 #wmap712foot{display:grid;gap:1px}#wmap712foot .wmNote{font-size:11.5px;opacity:.8}#wmap712sel{min-height:3.9em}#wmap712foot .wmCredit{font-size:11px;opacity:.72}' +
     '#wmap725paper{position:absolute;right:6px;top:6px;height:44px;min-height:44px;min-width:44px;padding:0 12px;border:0;border-radius:22px;background:rgba(246,236,214,.94);color:var(--ink);font:700 12px/44px var(--body);box-shadow:0 2px 8px rgba(0,0,0,.25);touch-action:manipulation}#wmap725paper[aria-pressed="true"]{background:#c8314a;color:#fff6e2}#wmap712.wmGlobe #wmap725paper{display:none}#wmap725credit[hidden],#wmap735note[hidden],#wmap735tiles[hidden]{display:none}#wmap735you{font-size:12px;font-weight:700}#wmap735note{font-size:12px;font-weight:700;color:#8c1d33}html.ui716 #wmap735note{color:var(--u-gold)}' +   // 76 review: a 44 px thumb target in both looks
     'html.ui716 #wmap725paper{height:44px!important;line-height:44px!important;padding-top:0!important;padding-bottom:0!important;background:linear-gradient(180deg,#26316c,#141a4a)!important;color:var(--u-ivory)!important}html.ui716 #wmap725paper[aria-pressed="true"]{background:linear-gradient(180deg,#e04a62,#c8314a 45%,#8a1a2e)!important;color:#fff8ea!important}' +   // 76 review: in Standard, the projection buttons' own plates, its words centred
@@ -645,13 +739,14 @@ window.WMAP712 = (function () {
   }
   function note() { var n = $('wmap712note'); if (n) n.textContent = S.proj === 'pole' ? 'Gleason\'s New Standard Map of the World (1892): the North Pole at the centre, Antarctica the ring of ice at the rim, painted by its height.' : 'Globe: the round world unrolled flat, latitude and longitude drawn as a square grid.'; }   // DRAFT for Marth (76 review): only the title is his ruling; the pole note's tail and the whole Globe note are ours. The Globe note never calls the globe "true" or "real": in this game the disc IS the world
   function load(cb) {
-    if (window.WFR_WORLDMAP712 || S.failed) return cb(); if (S.loading) return; S.loading = true; var sc = document.createElement('script'); sc.src = S.src || 'world712-map.js';
-    sc.onload = function () { S.loading = false; if (!window.WFR_WORLDMAP712) S.failed = true; cb(); };
-    sc.onerror = function () { S.loading = false; S.failed = true; cb(); }; document.head.appendChild(sc);
+    if (window.WFR_WORLDMAP712 || S.failed) return cb(); if (S.loading) return; S.loading = true; var sc = document.createElement('script'); sc.src = S.src || 'world712-map.js'; S.sc = sc;
+    sc.onload = function () { S.loading = false; if (!window.WFR_WORLDMAP712) { S.failed = true; S.loadFail = true; } cb(); };
+    sc.onerror = function () { S.loading = false; S.failed = true; S.loadFail = true; cb(); }; document.head.appendChild(sc);
   }
   function show(v) {
     var m = S.el; if (!m) return; S.view = v; m.classList.toggle('wm712', v === 'world'); var b = $('wmap712Btn'), h3 = m.querySelector('h3');
     if (v === 'world') { b.textContent = '🏝 Island'; b.setAttribute('aria-label', 'Back to the island chart'); if (h3) h3.textContent = 'The world'; m.setAttribute('aria-label', 'Map of the whole world');
+      if (S.failed && !S.loading) { S.failed = false; S.loadFail = false; if (S.sc && S.sc.parentNode && !window.WFR_WORLDMAP712) S.sc.parentNode.removeChild(S.sc); }   // 813: what failed before is tried again at every opening (it was given up for the whole session)
       if (!CLASSIC) S.needHome = true; HEAL.need = true; S.home = window.WFR_WORLD ? WFR_WORLD.HOME : null; sizeCanvas(); want(); load(want); }
     else { b.textContent = '🌍 World'; b.setAttribute('aria-label', 'Show the whole world'); if (h3) h3.textContent = 'The island'; m.setAttribute('aria-label', 'Map of the island');
       if (S.redraw) S.redraw(); }   // back to the island chart, drawn by 705's own map705Size and map705Draw (the hook hands them over: they are not globals)
@@ -665,7 +760,8 @@ window.WMAP712 = (function () {
     wrap.innerHTML = '<canvas id="wmap712cv" width="8" height="8" aria-label="The whole world: drag to move, pinch to zoom, tap a place"></canvas>' +
       '<div class="wmProj" role="group" aria-label="Projection"><button type="button" data-proj="pole" aria-pressed="true">Gleason (1892)</button><button type="button" data-proj="globe" aria-pressed="false">Globe</button></div>' +   // DRAFT for Marth (76 review): the tab words "Gleason (1892)" and "Globe" (was "Globe-true")
       '<div class="wmZoom"><button type="button" id="wmap712in" aria-label="Zoom in">+</button><button type="button" id="wmap712out" aria-label="Zoom out">−</button><button type="button" id="wmap712home" aria-label="' + (CLASSIC ? 'Back to home' : 'Back to you') + '">⌂</button></div>' +
-      '<button type="button" id="wmap725paper" aria-pressed="false" aria-label="Lay the 1892 paper map under the marks">1892 paper</button>';   // DRAFT for Marth (76 review): the switch's words "1892 paper" and its spoken label
+      '<button type="button" id="wmap725paper" aria-pressed="false" aria-label="Lay the 1892 paper map under the marks">1892 paper</button>' +
+      (CLASSIC ? '' : '<div class="wmScale" id="wmap813scale" hidden aria-hidden="true"><i></i><span></span></div>');   // 813: the world's own scale (Classic, frozen, has none)   // DRAFT for Marth (76 review): the switch's words "1892 paper" and its spoken label
     var foot = document.createElement('p'); foot.id = 'wmap712foot';
     foot.innerHTML = (CLASSIC ? '' : '<span id="wmap735you"></span>') + '<span id="wmap712sel">Tap a place: how far it is from home</span><span id="wmap735note" hidden></span><span class="wmNote" id="wmap712note"></span><span class="wmCredit" id="wmap712credit"></span><span class="wmCredit" id="wmap725credit" hidden></span><span class="wmCredit" id="wmap735tiles" hidden></span>'; foot.querySelector('#wmap712credit').textContent = credit(); foot.querySelector('#wmap725credit').textContent = PAPER_CREDIT;
     var isl = $('map705cv'); win.insertBefore(wrap, isl.nextSibling); win.insertBefore(foot, win.querySelector('.m705foot').nextSibling); note();
@@ -675,7 +771,8 @@ window.WMAP712 = (function () {
     tapButton($('wmap712in'), function () { zoomAt(S.cw / 2, S.ch / 2, 1.6); }); tapButton($('wmap712out'), function () { zoomAt(S.cw / 2, S.ch / 2, 1 / 1.6); });
     tapButton($('wmap712home'), function () { if (!CLASSIC) { homeView(); want(); return; } var H = WFR_WORLD.HOME; S.k = Math.max(S.k, 24); P(H.lat, H.lon, tmp); S.cX = tmp.x; S.cY = tmp.y; clampView(); want(); });   // 735b: back to her
     wireGestures($('wmap712cv'));
-    new MutationObserver(function () { if (m.hidden) { if (S.view !== 'island') show('island'); } else S.opens++; }).observe(m, { attributes: true, attributeFilter: ['hidden'] });   // every opening starts on the island chart
+    new MutationObserver(function () { if (m.hidden) { if (S.view !== 'island') show('island'); } else { S.opens++; unpark(); if (!CLASSIC) load(function () { if (!S.failed && window.WFR_WORLDMAP712) ensure(S.proj); }); } }).observe(m, { attributes: true, attributeFilter: ['hidden'] });   // every opening starts on the island chart (813: and the world's lines start while she reads it; nothing runs with the map shut)
+    if (!m.hidden && !CLASSIC) load(function () { if (!S.failed && window.WFR_WORLDMAP712) ensure(S.proj); });   // 813: the first opening (this file arrives after the chart is up, so the watcher above never saw it)
     addEventListener('resize', function () { if (S.view === 'world' && !m.hidden) { sizeCanvas(); want(); } });
     document.addEventListener('visibilitychange', function () { if (document.hidden) return; HEAL.need = true; if (S.view === 'world' && !m.hidden) want(); });   // 735: back from the lock screen
   }
@@ -687,6 +784,7 @@ window.WMAP712 = (function () {
       citiesShown: D ? D.cities.filter(function (c) { return c.drawnAt === S.draws - 1 && c.shown > 0.3; }).map(function (c) { return c.name; }) : null,
       paper: { on: PP.on, loaded: !!PP.cv, failed: PP.failed, fails: PP.fails, tries: PP.tries, loading: PP.loading, draws: PP.draws, waits: PP.waits, path: PP.path, decodeMs: PP.decodeMs, strips: PP.strips, stripMs: PP.stripMs, holdsFull: !!PP.img, released: PP.released, cacheSide: PP.cv ? PP.cv.width : 0, cx: PAPER725.cx, cy: PAPER725.cy, r: PAPER725.r, s: PAPER725.s, a: PAPER725.a },
       map735: { heal: { checks: HEAL.checks, lost: HEAL.lost, rebuilds: HEAL.rebuilds, direct: HEAL.direct, why: HEAL.why }, you: S.youAt || null, fog: { n: FOG.n, all: FOG.all, v: FOG.v, pts: FOG.pts.length }, tiles: { fetched: TL.fetched, fails: TL.fails, held: TL.map.size, pending: TL.q.length + TL.busy, inPicture: S.detail ? S.detail.tiles : 0, fresh: !!(S.detail && S.detail.fv === FOG.v && !S.detail.stale && sameV(S.detail.V, curV())) }, kMax: K_MAX },
+      plain: { vec: Object.keys(S.vec), draws: S.plainDraws, fill: S.fill, kicks: S.kicks, noDetail: S.noDetail, loadFail: S.loadFail },   // 813
       ready: Object.keys(S.built), building: S.job ? S.job.proj : (S.rjob && S.rjob.kind === 'base' ? S.rjob.proj : null), rendering: !!(S.rjob || S.dt), base: Object.keys(S.base), renders: S.renders.slice(), progress: S.progress, waits: S.waits, jobs: S.jobs.slice(), error: S.error, counts: D ? { land: D.land.length, coast: D.coast.length, lakes: D.lakes.length, glaciers: D.glaciers.length, rivers: D.rivers.length, cities: D.cities.length, regions: D.regions.length } : null }; },
     project: toScreen, unproject: fromScreen, marks: function (o) { MK = o; want(); }, redraw: want, tapButton: tapButton };
 })();

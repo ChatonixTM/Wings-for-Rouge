@@ -28,6 +28,9 @@
 window.WFR_SURF732 = (function () {
   'use strict';
   var C = { GM1: 15, GM2: 61.3, GRAIN: 0.55, RELIEF: 1.0, SH_LO: 0.6, SH_HI: 1.3, FADE0: 450, FADE1: 2600, FLOOR: 3.25, FACADE_L: 0.8, AO: 0.55, REACH: 0.4, REACH_M: 3, TRI_MAX: 3000, SLICE: 2, FLAT: 0.86 };   // DRAFT
+  /* 806 seam b: Standard's water map is round ripples now (textures.js), so the whitecaps and glints read off its top 3% are round flecks, not cracks; and the
+     finest layer is pushed about by the next one (a warp), so its 37 m repeat never lines up into a lattice from above. Classic is frozen (board 645): as it was. */
+  var CL806 = (function () { try { return localStorage.getItem('wfr.look') === 'classic'; } catch (e) { return false; } })();
   var MODE = (function () { try { return localStorage.getItem('wfr.surf732') || 'on'; } catch (e) { return 'on'; } })();
   var ON = MODE !== 'off';
   var st = { mode: MODE, on: ON, wrapped: false, mats: 0, compiled: 0, feats: 0, featCompiled: 0, ground: 'none', facade: 'none', walls: 0, ao: 0, aoSkip: 0, aoMs: [], sliceMax: 0, slices: 0, setupMax: 0, faults: [] };
@@ -41,6 +44,7 @@ window.WFR_SURF732 = (function () {
      the middle layers' crests are the whitecaps, the finest layer's the glints. All of it fades with true distance, and the fade opens with her height, so the far sea stays calm.
      The offsets are kept here in doubles and wrapped per layer, so the shader's numbers stay small and a frame shift never shows. Every number DRAFT (his eye). AMP 0 is the guard's plant. */
   var S754 = { AMP: 1, L: [37, 151, 613, 2450], R: [[0.8, 0.6], [0.28, 0.96], [0.6, -0.8], [-0.96, 0.28]], V: [[0.9, 0.4], [-0.7, 0.8], [0.5, -0.6], [0.3, 0.2]], W: [1.6, 1.6, 1.4, 1.4], MEAN: 0.89, LO: 0.26, HI: 0.26, FADE0: 900, FADE1: 9000, HS: 500, CAP: 0.55, GLINT: 0.45, FOAM: [0.82, 0.9, 0.94] };
+  if (!CL806) S754.W = S754.W.map(function (w, i) { return i < 2 ? w * 2.4 : w; });   // 806 seam b: the round-ripple map is softer than the old crest bands (its spread about 0.4 of theirs), so the two fine layers' pull on the light is raised to match: the sea passes under her as plainly as before (motion754). The two broad layers stay as they were, now calmer: no big light and dark patches far out (seams806 C2)
   var U754 = { uSea754: { value: null }, uA754: { value: [0, 0, 0, 0] }, uB754: { value: [0, 0, 0, 0] }, uK754: { value: 0 } }, o754 = [0, 0], t754 = 0, n754 = { patched: 0, shifts: 0 };
   var HEAD754 = 'uniform sampler2D uSea754; uniform vec4 uA754; uniform vec4 uB754; uniform float uK754;\n';
   function set754() { for (var i = 0; i < 4; i++) { var r = S754.R[i], x = o754[0] + S754.V[i][0] * t754, z = o754[1] + S754.V[i][1] * t754, a = (r[0] * x + r[1] * z) / S754.L[i], b = (r[0] * z - r[1] * x) / S754.L[i], o = i < 2 ? U754.uA754.value : U754.uB754.value, k = (i % 2) * 2; o[k] = a - Math.floor(a); o[k + 1] = b - Math.floor(b); } }
@@ -49,7 +53,7 @@ window.WFR_SURF732 = (function () {
     return ['{ vec2 q754 = ' + q + '; float s754 = max( 1.0, ' + eye + '.y / ' + n(S754.HS) + ' ), d754 = length( vec3( q754.x - ' + eye + '.x, ' + eye + '.y, q754.y - ' + eye + '.z ) );',
       '  float k754 = uK754 * ( ' + mask + ' ) * ( 1.0 - smoothstep( ' + n(S754.FADE0) + ' * s754, ' + n(S754.FADE1) + ' * s754, d754 ) );',
       '  if ( k754 > 0.002 ) {',
-      '    float a754 = ' + read(0, 'uA754.xy') + ', b754 = ' + read(1, 'uA754.zw') + ', c754 = ' + read(2, 'uB754.xy') + ', e754 = ' + read(3, 'uB754.zw') + ';',
+      '    float b754 = ' + read(1, 'uA754.zw') + ', a754 = ' + read(0, CL806 ? 'uA754.xy' : 'uA754.xy + ( b754 - 0.89 ) * vec2( 2.5, -1.9 )') + ', c754 = ' + read(2, 'uB754.xy') + ', e754 = ' + read(3, 'uB754.zw') + ';',
       '    diffuseColor.rgb *= 1.0 + k754 * clamp( ' + w(0, 'a754') + ' + ' + w(1, 'b754') + ' + ' + w(2, 'c754') + ' + ' + w(3, 'e754') + ', ' + n(-S754.LO) + ', ' + n(S754.HI) + ' );',
       '    float f754 = ' + n(S754.CAP) + ' * smoothstep( 0.955, 0.995, b754 ) * smoothstep( 0.93, 0.97, c754 ) + ' + n(S754.GLINT) + ' * smoothstep( 0.975, 1.0, a754 ) * smoothstep( 0.9, 0.97, b754 );',
       '    diffuseColor.rgb = mix( diffuseColor.rgb, vec3( ' + n(c[0]) + ', ' + n(c[1]) + ', ' + n(c[2]) + ' ), k754 * min( f754, 1.0 ) );',

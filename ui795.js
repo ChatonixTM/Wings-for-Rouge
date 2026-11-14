@@ -481,6 +481,7 @@
 
   /* ---------- the ship log, newest first: a bold title and one plain sentence a player cares about (DRAFTS for Marth's pen) ---------- */
   var SHIPS = [
+    { n: 142, title: 'One sea, one sky', line: 'The sea stays one calm colour from the shore to the deep, the clouds near and far are painted alike, and the world map opens straight away.' },
     { n: 141, title: 'Down to earth', line: 'Roads lie on the ground, trees have real trunks, the leaves hold you until you land, and Zoom works on foot out in the world.' },
     { n: 140, title: 'A whole new look', line: 'Craft gear from what you win, take on missions in every place, and learn true facts about the places you fly past.' },
     { n: 139, title: 'Every door, framed', line: 'Walk up to a door and the camera finds it with you, then follows you in.' },

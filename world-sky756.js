@@ -152,9 +152,8 @@ window.WFR_SKY756 = (function () {
   var TMP = new Float32Array(C.CAP * 9), KEY = new Float32Array(C.CAP), ORD = [], byFar = function (a, b) { return KEY[b] - KEY[a]; };
   function clearAll() { if (st.gc) st.gc.instanceCount = 0; if (st.gr) st.gr.instanceCount = 0; }
   function paint(on) {   // the light of the moment: the game's own sun and haze
-    var U = st.U, w = X.wx(), s = Math.max(0, Math.min(1.2, X.sunI())), sc = X.sun.color, dark = (w.kind === 'storm' ? 0.75 : w.kind === 'clear' ? 0 : 0.42) * Math.max(0, Math.min(1, w.k)), fc = X.scene.fog ? X.scene.fog.color : null, k = 0.32 + 0.8 * s;
-    U.lit.value.setRGB(Math.min(1, sc.r * k), Math.min(1, sc.g * k), Math.min(1, sc.b * k)).multiplyScalar(1 - 0.5 * dark);
-    U.shade.value.setRGB(0.60, 0.68, 0.84).multiplyScalar(0.26 + 0.62 * s).multiplyScalar(1 - 0.5 * dark); if (fc) { U.fogC.value.copy(fc); U.shade.value.lerp(fc, 0.22); }
+    var U = st.U, s = Math.max(0, Math.min(1.2, X.sunI())), fc = X.scene.fog ? X.scene.fog.color : null, L = light806();
+    U.lit.value.copy(L.lit.value); U.shade.value.copy(L.shade.value); if (fc) U.fogC.value.copy(fc);   // 806 seam a: the banks take the deck's own lit and shade (one light, domeLight)
     U.sun.value.copy(X.sun.position).sub(X.sun.target.position).normalize(); U.dim.value = 0.55 + 0.45 * Math.min(1, s);
     var T = X.TR; U.eye.value.copy(on ? T.u.uEye.value : X.camera.position); U.invK.value = on ? T.u.uInvK.value : 1; U.R.value = on ? st.REFR : 1e30; U.t.value = st.t;
     st.matC.transparent = !on; st.meshC.renderOrder = on ? C.ORDER_FAR : C.ORDER_HOME;   // past the gate the ground's depth is cleared at -9.3: the clouds go in just before, so a mountain hides them and she is never under them; at home, the plain transparent pass
@@ -208,10 +207,32 @@ window.WFR_SKY756 = (function () {
     '  vec3 col = mix( uShade, uLit, lit );',
     '  float ink = ( 1.0 - smoothstep( 1.1, 2.3, ( v - uThr ) / w ) ) * fine * uInkK; col = mix( col, uInk, ink );',
     '  col = mix( col, uFogC, ( 1.0 - smoothstep( 0.03, 0.22, d.y ) ) * 0.55 ); gl_FragColor = vec4( col, a * uA );', '}'].join(NL);
+  /* 806 seam a (Marth, Nov 14 2026, verbatim: "The clouds in the back ground don't match the foreground"): ONE LIGHT FOR EVERY CLOUD. The deck's lit, shade,
+     ink, haze and sun live here once (L806), written by domeLight each frame; the deck reads them, the banks copy them (paint), and the island's near clouds
+     (the 16 at 70-96 m and the 9 at the ceiling) are painted with them by cloud806(material): two flat tones split by the sun, the same ink at the rim. */
+  var L806 = null;
+  function l806() { if (!L806 && window.THREE) { var T3 = window.THREE; L806 = { lit: { value: new T3.Color(1, 0.95, 0.82) }, shade: { value: new T3.Color(0.62, 0.70, 0.84) }, ink: { value: new T3.Color(0.2, 0.24, 0.34) }, fogC: { value: new T3.Color(0.8, 0.9, 1) }, sun: { value: new T3.Vector3(0, 1, 0) }, inkK: { value: DOME.INK } }; } return L806; }
+  function light806() { var L = l806(); if (L && X && X.sun) domeLight(L); return L; }
+  var CLOUD806_V = function (sh) { var L = l806(); sh.uniforms.uLit806 = L.lit; sh.uniforms.uShd806 = L.shade; sh.uniforms.uInk806 = L.ink; sh.uniforms.uSun806 = L.sun; sh.uniforms.uInkK806 = L.inkK;
+    sh.vertexShader = 'attribute vec3 normal0; varying vec3 vN806; varying vec3 vM806; varying vec3 vV806;\n' + sh.vertexShader.replace('#include <defaultnormal_vertex>', '#include <defaultnormal_vertex>\n  vN806 = normalize( transformedNormal ); vM806 = normalMatrix * normal0;').replace('#include <project_vertex>', '#include <project_vertex>\n  vV806 = - mvPosition.xyz;');
+    sh.fragmentShader = 'uniform vec3 uLit806; uniform vec3 uShd806; uniform vec3 uInk806; uniform vec3 uSun806; uniform float uInkK806; varying vec3 vN806; varying vec3 vM806; varying vec3 vV806;\n' + sh.fragmentShader.replace('#include <encodings_fragment>', ['#include <encodings_fragment>',
+      '  { vec3 n = normalize( vN806 ); if ( !gl_FrontFacing ) n = -n; vec3 sv = normalize( ( viewMatrix * vec4( uSun806, 0.0 ) ).xyz ), up = normalize( ( viewMatrix * vec4( 0.0, 1.0, 0.0, 0.0 ) ).xyz );',
+      '    float w = dot( n, sv ) * 0.5 + 0.5, h = dot( n, up ) * 0.5 + 0.5, l = smoothstep( 0.46, 0.54, w * ( 0.82 + 0.36 * h ) );',
+      '    vec3 col = mix( uShd806, uLit806, l ), m0 = length( vM806 ) > 0.5 ? normalize( vM806 ) : n; float e = abs( dot( m0, normalize( vV806 ) ) );',   // the ink reads the lobe's own normal (textures.js normal0): its silhouette, not the light's bent one
+      '#if __VERSION__ >= 300',
+      '    float fw = fwidth( e ), ink = 1.0 - smoothstep( fw * 0.8, fw * 2.2 + 0.004, e );',   // a line about 1.5 px wide at every size, as the deck draws its own
+      '#else',
+      '    float ink = 1.0 - smoothstep( 0.05, 0.11, e );',
+      '#endif',
+      '    gl_FragColor.rgb = mix( col, uInk806, uInkK806 * ink ); }'].join('\n')); };   // after the encodings, before the fog: exactly as the deck draws (its colours raw, then the haze)
+  function cloud806(m) {   // the page hands each near cloud's material here, once, at load (Standard only: Classic is frozen, board 645)
+    try { if (!m || m.userData.cloud806 || localStorage.getItem('wfr.look') === 'classic' || SW790 === 'nopaint' || !l806()) return false; } catch (e) { return false; }
+    var prev = m.onBeforeCompile; m.onBeforeCompile = typeof prev === 'function' ? function (sh, r) { prev.call(this, sh, r); CLOUD806_V(sh); } : CLOUD806_V; m.userData.cloud806 = true; m.needsUpdate = true; return true;
+  }
   function domeInit(THREE) {
     try {
-      var U = dm.U = { map: { value: domeBake(THREE) }, lit: { value: new THREE.Color(1, 0.95, 0.82) }, shade: { value: new THREE.Color(0.62, 0.70, 0.84) }, ink: { value: new THREE.Color(0.2, 0.24, 0.34) }, fogC: { value: new THREE.Color(0.8, 0.9, 1) }, sun: { value: new THREE.Vector3(0, 1, 0) },
-        off: { value: new THREE.Vector2(0.13, 0.41) }, thr: { value: 0.5 }, scale: { value: DOME.SCALE }, a: { value: 1 }, inkK: { value: DOME.INK } };
+      var L = l806(), U = dm.U = { map: { value: domeBake(THREE) }, lit: L.lit, shade: L.shade, ink: L.ink, fogC: L.fogC, sun: L.sun,
+        off: { value: new THREE.Vector2(0.13, 0.41) }, thr: { value: 0.5 }, scale: { value: DOME.SCALE }, a: { value: 1 }, inkK: L.inkK };   // 806: the light is L806's, shared
       var g = new THREE.SphereGeometry(DOME.R, 40, 12, 0, Math.PI * 2, 0, Math.PI / 2 + 0.02);
       var m = new THREE.ShaderMaterial({ name: 'sky790:deck', vertexShader: VS_DOME, fragmentShader: FS_DOME, side: THREE.BackSide, uniforms: { uMap: U.map, uLit: U.lit, uShade: U.shade, uInk: U.ink, uFogC: U.fogC, uSun: U.sun, uOff: U.off, uThr: U.thr, uScale: U.scale, uA: U.a, uInkK: U.inkK },
         transparent: false, depthTest: false, depthWrite: false, fog: false, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.SrcAlphaFactor, blendDst: THREE.OneMinusSrcAlphaFactor });   // not 'transparent': it goes in the opaque list at -9.8, so all that is solid draws over it (the 756 trick)
@@ -238,7 +259,7 @@ window.WFR_SKY756 = (function () {
   function domeRing(show) {   // the dome's old ring of soft puffs (drawn in the see-through pass, so past the gate it lay OVER the far hills as a grey smear): the deck takes its place while ours shows; back as it was whenever ours does not (the residue law)
     var ring = dm.dome && dm.dome.userData && dm.dome.userData.ring; if (!ring) return; if (dm.ringWas == null) dm.ringWas = ring.visible; var want = show ? dm.ringWas : false; if (ring.visible !== want) ring.visible = want; dm.ringHidden = !want; }
   function domePlace() {
-    if (!dm.made || !dm.on) return; try {
+    if (!dm.made || !dm.on) { light806(); return; } try {   // 806: with the deck hidden the near clouds still take the light
       var L = domeLight(dm.U), night = 1 - smooth(0.28, 0.7, L.s), U = dm.U;
       U.thr.value = dm.thr; U.a.value = 1 - 0.5 * night; U.off.value.set(0.13 + dm.t * DOME.WIND[0], 0.41 + dm.t * DOME.WIND[1]);
     } catch (e) { dm.fault = 'place: ' + (e && e.message || e); dm.made = false; dm.mesh.visible = false; domeRing(true); }
@@ -286,6 +307,6 @@ window.WFR_SKY756 = (function () {
   function banksNear() { var f = X.TR.on ? X.TR.f : WFR_WORLD.HOMEF; return st.banks.map(function (b) { var p = WFR_WORLD.toLocal(f, b.lat, b.lon); return { id: b.id, lat: b.lat, lon: b.lon, x: p.x, z: p.z, y: b.base + b.H * 0.45, base: b.base, W: b.W, H: b.H, a: b.a, d: b.d, want: b.want }; }); }
   function ringsNear() { var f = X.TR.on ? X.TR.f : WFR_WORLD.HOMEF, out = []; st.lines.forEach(function (L) { var F = lineFrame(L, f), o = { x: 0, y: 0, z: 0 }, r = []; for (var n = 0; n < C.RING_N; n++) { ringAt(L, n, F, o); r.push({ x: o.x, y: o.y, z: o.z, alive: !!L.alive[n] }); } out.push({ id: L.id, lat: L.lat, lon: L.lon, alt: L.alt, R: L.R, g: L.g, d: L.d, got: L.got, rings: r }); }); return out; }
   function drawnAt(x, y, z) { var U = st.U; if (!U) return null; var e = U.eye.value, k = U.invK.value; return { x: e.x + (x - e.x) * k, y: e.y + (y - e.y) * k, z: e.z + (z - e.z) * k, k: k }; }   // where a world point is drawn this frame (past the gate the far is shrunk toward the eye): the guard's camera aims there
-  return { C: C, init: init, tick: tick, peek: peek, dome: domePeek, DOME: DOME, drawnAt: drawnAt, banksNear: banksNear, ringsNear: ringsNear, force: st.force, resetMs: function () { st.ms = []; st.msMax = 0; }, coverOfDay: function (w) { return dayCover(w); }, warmth: warmth,
+  return { C: C, init: init, tick: tick, peek: peek, dome: domePeek, cloud806: cloud806, light806: function () { return l806(); }, DOME: DOME, drawnAt: drawnAt, banksNear: banksNear, ringsNear: ringsNear, force: st.force, resetMs: function () { st.ms = []; st.msMax = 0; }, coverOfDay: function (w) { return dayCover(w); }, warmth: warmth,
     set enabled(v) { st.enabled = !!v; if (!v) { clearAll(); st.veil = 0; if (st.veilEl) st.veilEl.style.opacity = '0'; } }, get enabled() { return st.enabled; } };
 })();

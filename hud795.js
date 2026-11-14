@@ -189,7 +189,8 @@
     /* every card that holds her opens under the round map (his order: "tap the map from now on and forever more") */
     '@media (orientation:portrait){' + P + '#ui .missions{top:calc(var(--h7-top) + 166px)!important;bottom:auto!important;max-height:calc(100% - var(--h7-top) - 180px)!important;overflow-y:auto!important}' +
       P + '#new786{top:calc(var(--h7-top) + 166px)!important;max-height:calc(100% - var(--h7-top) - 180px)!important}}' +
-    '.wcap795{position:absolute;left:50%;bottom:10px;translate:-50% 0;z-index:3;pointer-events:none;padding:3px 11px;' + pill + 'font:700 9.5px/1.3 var(--h7-mono);letter-spacing:.12em;text-transform:uppercase;white-space:nowrap}' +
+    '.wcap795{position:absolute;left:8px;top:8px;max-width:calc(100% - 132px);box-sizing:border-box;z-index:3;pointer-events:none;padding:4px 10px;' + pill + 'font:700 10px/1.35 var(--h7-mono);letter-spacing:.1em;text-transform:uppercase;white-space:normal;transition:opacity .8s ease,visibility 0s linear .8s}' +   // 813 (Marth, Nov 14: "Bit of ui overlapping"): out of the bottom-left corner, where it sat on the Gleason | Globe switch and the scale
+    '.wcap795.gone795{opacity:0;visibility:hidden}' +
 
     /* ===== 6 THE PAUSE PAGE: night glass, an eyebrow, the job, rows with a chevron, the Face's pills for every setting, the key ===== */
     'html.pz795 #start{padding:8px!important;place-items:start center!important;background:radial-gradient(120% 70% at 50% 0%,rgba(255,59,66,.16),rgba(5,6,12,0) 60%),rgba(5,6,12,.72)!important;backdrop-filter:blur(4px);overflow-y:auto!important;-webkit-overflow-scrolling:touch}' +
@@ -534,7 +535,11 @@
         var cv = $('map705cv'); if (cv) cv.addEventListener('click', chartTap);
       }
       var wm = $('wmap712'); if (wm && !wm.querySelector('.wcap795')) { var cp = document.createElement('div'); cp.className = 'wcap795'; cp.textContent = 'The paper fills in wherever you fly.'; wm.appendChild(cp); }
-      var g = chartGeo(), sb2 = $('scale795'), m = $('map705'); if (!g || !sb2 || !m || m.hidden || g.r.width < 40) return;
+      var g = chartGeo(), sb2 = $('scale795'), m = $('map705'), wv = !!(m && !m.hidden && m.classList.contains('wm712'));
+      if (sb2 && sb2.hidden !== wv) sb2.hidden = wv;   // 813: the island chart's "0 ... 200 m" sat on the world map's switch: it is the island's scale, so it shows on the island chart only
+      var cap = wm && wm.querySelector('.wcap795');   // 813: the banner shows once, on her first look at the world this session, then fades (4.5 s)
+      if (cap && !cap.classList.contains('gone795')) { if (wv && !H.cap813) H.cap813 = performance.now(); if (H.cap813 && (!wv || performance.now() - H.cap813 > 4500)) cap.classList.add('gone795'); }
+      if (!g || !sb2 || !m || m.hidden || g.r.width < 40) return;
       var wr = win.getBoundingClientRect(), len = 100 * g.sc, k = g.r.left - wr.left + g.ox + 6, t = g.r.top - wr.top + g.oy + (g.r.height - 18) - 22;
       var key = [k, t, len].map(Math.round).join(','); if (sb2.dataset.k === key) return; sb2.dataset.k = key; sb2.style.left = Math.round(k) + 'px'; sb2.style.top = Math.round(t) + 'px';
       sb2.innerHTML = "<svg width='" + Math.round(len * 2 + 40) + "' height='20' xmlns='" + NS + "'><rect x='0.5' y='9' width='" + len.toFixed(1) + "' height='5' fill='#2b1b17'/><rect x='" + len.toFixed(1) + "' y='9' width='" + len.toFixed(1) + "' height='5' fill='#f8efdc' stroke='#2b1b17' stroke-width='1'/>" +

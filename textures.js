@@ -323,6 +323,17 @@ window.WFR_TEX = (function () {
     /* water: interfering ripple bands (tileable integer directions, noise
        warped) with bright caustic crests over soft swells. */
     water: function () {
+      /* 806 seam b (Marth, Nov 14 2026, verbatim: "The water near home island has lines in it"): Standard's water is soft, ROUND ripples with no direction:
+         two scales of tileable value noise, their highest places lifted into round bright flecks (no straight sine, so no crest line and no stripe).
+         Its brightness keeps the old one's mean (0.89, which 754 and 755b read about) and its top 3% from 0.955 up (754's whitecaps and glints), so
+         every reader of it sees the same amounts, now round. Classic is frozen (board 645): it keeps the old bands below. */
+      if (!(function () { try { return localStorage.getItem('wfr.look') === 'classic'; } catch (e) { return false; } })()) {
+        const S = 256, r = rng(806009), a = stretch(fbm(S, r, 4, 4, 3, 0.55)), b = stretch(fbm(S, r, 9, 9, 2, 0.5)), f = new Float32Array(S * S);
+        for (let i = 0; i < f.length; i++) { const v = 0.58 * a[i] + 0.42 * b[i], t = Math.min(1, Math.max(0, (v - 0.66) / 0.2)); f[i] = v * 0.7 + t * t * (3 - 2 * t) * 0.55; }
+        let m = 0; for (let i = 0; i < f.length; i++) m += f[i]; m /= f.length;
+        const srt = Array.from(f).sort(function (p, q) { return p - q; }), p97 = srt[Math.floor(srt.length * 0.97)], k = (0.955 - 0.89) * 255 / Math.max(1e-4, p97 - m);
+        return pixels(S, function (x, y, i) { return 0.89 * 255 + (f[i] - m) * k; }).c;
+      }
       const S = 256, r = rng(524009);
       const warp = fbm(S, r, 3, 3, 2), swell = fbm(S, r, 2, 2, 2);
       const D = [[3, 1], [-2, 3], [1, -4]], ph = [r(), r(), r()];
@@ -735,18 +746,35 @@ window.WFR_TEX = (function () {
      bright turquoise over the shallows, a pale ring of foam where it meets the shore - coloured by the depth H() already
      knows, at the sea's own vertices (no rnd(): every seed stays put). The ripples drift slowly and a fine bump catches
      the sun as glints. One mesh, one draw, no new light: the drift rides onBeforeRender (only while the sea is drawn). */
+  /* 806 seam c (Marth, Nov 14 2026, verbatim: "when you enter the deeper sea and my song starts, the ocean in clearly darker"). ONE SEA, coloured by DEPTH from
+     one ramp: foam, shallows, lagoon, reef, then the style bible's Caribbean Deep #1f7fa6 (it was navy #175f86, reached by DISTANCE at 330-620 m, the very line
+     his beat starts on). Past the island the bed is no longer flat: a shelf falls 0.6 m a metre from 335 m (1,600 m deep by 3 km; the real Caribbean round home
+     is ~1,900 m), and the deep comes in over that fall, 1.5 to 3 km out. The open ring, the far sea (carib712sea: the lesser of this shelf and the real depth),
+     Dunn's sea and the travel sea (world-look755b.js) all end on the same deep, so nothing steps. And the sea is opaque past the shelf's edge (OPQ0-OPQ1, by the
+     larger of |x| and |z|): the island's seabed is a 720 m square, and the 12% of it that showed through drew a ruler-straight line at 360 m.
+     Classic is frozen (board 645): it keeps the old ramp and the old see-through. */
+  const SEA806 = api.sea806 = { on: !CLASSIC_LOOK, DEEP: 0x1f7fa6, SHELF_R: 335, SHELF_D: 5.2, SLOPE: 0.6, D0: 8, D1: 1600, OPQ0: 300, OPQ1: 355, FAR0: 60, FAR1: 320, FAR_K: 0.8, BUMP0: 30, BUMP1: 180 };   // FAR*, BUMP*: 806 seam b
+  SEA806.shelf = function (r) { return r <= SEA806.SHELF_R ? SEA806.SHELF_D : SEA806.SHELF_D + (r - SEA806.SHELF_R) * SEA806.SLOPE; };   // the bed's depth past the island, by distance from home
+  SEA806.ramp = function (d, c) {   // the one ramp: depth in metres -> colour, written into c (a THREE.Color)
+    const sm = function (a, b, x) { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); }, K = SEA806.cols || (SEA806.cols = [0xf2fbf7, 0x55d3cf, 0x38bfd0, 0x2596b8, SEA806.DEEP].map(function (h) { return new THREE.Color(h); }));
+    c.copy(K[0]).lerp(K[1], sm(-0.25, 0.45, d)); c.lerp(K[2], sm(0.3, 1.8, d)); c.lerp(K[3], sm(2.4, 6, d));
+    return c.lerp(K[4], Math.max(sm(SEA806.D0, SEA806.D1, d), 0.55 * sm(6, 10, d)));   // the shelf's fall to the deep, and the lake's deep as before
+  };
   api.dressSea = function (sea, H, water, renderer) {
     try {
       const T = THREE, N = 150, geo = new T.PlaneGeometry(1400, 1400, N, N);
       const p = geo.attributes.position, col = new Float32Array(p.count * 3), c = new T.Color();
-      const FOAM = new T.Color(0xf2fbf7), SHAL = new T.Color(0x55d3cf), TURQ = new T.Color(0x38bfd0), MID = new T.Color(0x2596b8), DEEP = new T.Color(0x175f86);
+      const FOAM = new T.Color(0xf2fbf7), SHAL = new T.Color(0x55d3cf), TURQ = new T.Color(0x38bfd0), MID = new T.Color(0x2596b8), DEEP = new T.Color(SEA806.on ? SEA806.DEEP : 0x175f86);
       const sm = function (a, b, x) { const t = Math.min(1, Math.max(0, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
       for (let i = 0; i < p.count; i++) {
         const x = p.getX(i), z = -p.getY(i), r = Math.hypot(x, z);   // the plane lies rotated -90 deg about x: world z = -local y
+        if (SEA806.on) SEA806.ramp(r > SEA806.SHELF_R ? SEA806.shelf(r) : water - H(x, z), c);   // 806: by depth alone
+        else {
         const d = r > 335 ? 5.2 : water - H(x, z);   // depth below the surface (beyond the island the bed is flat at -4)
         c.copy(FOAM).lerp(SHAL, sm(-0.25, 0.45, d));
         c.lerp(TURQ, sm(0.3, 1.8, d)); c.lerp(MID, sm(2.4, 6, d));
         c.lerp(DEEP, Math.max(sm(330, 620, r), 0.55 * sm(6, 10, d)));   // the open sea and the lake's deep go dark teal
+        }
         c.offsetHSL(0, 0, 0.025 * Math.sin(x * 0.045 + Math.cos(z * 0.031) * 1.7) * Math.cos(z * 0.04));   // soft swells of light
         col[i * 3] = c.r; col[i * 3 + 1] = c.g; col[i * 3 + 2] = c.b;
       }
@@ -757,6 +785,16 @@ window.WFR_TEX = (function () {
       m.color.set(0xffffff); m.vertexColors = true;
       if ('specular' in m) { m.specular.set(0xb4e2f2); m.shininess = 80; }
       if ('bumpMap' in m) { m.bumpMap = get('waterBump', renderer); m.bumpScale = 0.025; }   // read through the map's uv transform (r128): it drifts with it
+      if (SEA806.on) { const prev806 = m.onBeforeCompile;   // 806: opaque past the shelf's edge (before the dithering include, so the climb's own fade still runs after it)
+        m.onBeforeCompile = function (sh, r) { if (typeof prev806 === 'function') prev806.call(this, sh, r);
+          sh.vertexShader = 'varying vec2 vQ806;\n' + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>\n  vQ806 = ( modelMatrix * vec4( transformed, 1.0 ) ).xz;');
+          sh.fragmentShader = 'varying vec2 vQ806;\nvec2 uvw806;\n' + sh.fragmentShader.replace('#include <dithering_fragment>', '  gl_FragColor.a = mix( gl_FragColor.a, 1.0, smoothstep( ' + SEA806.OPQ0.toFixed(1) + ', ' + SEA806.OPQ1.toFixed(1) + ', max( abs( vQ806.x ), abs( vQ806.y ) ) ) );\n#include <dithering_fragment>')
+            /* 806 seam b: the 90x repeat broken: a second read at 0.377 the size, turned 37 degrees, both shades the first and pushes it about (a warp),
+               so no two tiles are alike and none line up, from above or far off; the bump reads through the same warp. The ripples and their bump calm
+               with distance (no bands in the middle distance, no glitter net far off). */
+            .replace('#include <bumpmap_pars_fragment>', function () { return THREE.ShaderChunk.bumpmap_pars_fragment.replace(/vUv/g, 'uvw806'); })
+            .replace('#include <map_fragment>', '#ifdef USE_MAP\n  vec4 t2806 = texture2D( map, mat2( 0.8, -0.6, 0.6, 0.8 ) * vUv * 0.377 + vec2( 0.31, 0.67 ) ); uvw806 = vUv + ( t2806.r - 0.89 ) * vec2( 3.0, -2.3 );\n  vec4 texelColor = texture2D( map, uvw806 ) * ( 0.6 + 0.4 * t2806 / 0.89 );\n  texelColor.rgb = mix( texelColor.rgb, vec3( 0.89 ), ' + SEA806.FAR_K.toFixed(2) + ' * smoothstep( ' + SEA806.FAR0.toFixed(1) + ', ' + SEA806.FAR1.toFixed(1) + ', length( vViewPosition ) ) );\n  texelColor = mapTexelToLinear( texelColor ); diffuseColor *= texelColor;\n#endif')
+            .replace('#include <normal_fragment_maps>', '{ vec3 n806 = normal;\n#include <normal_fragment_maps>\n  normal = normalize( mix( normal, n806, smoothstep( ' + SEA806.BUMP0.toFixed(1) + ', ' + SEA806.BUMP1.toFixed(1) + ', length( vViewPosition ) ) ) ); }'); }; }
       m.needsUpdate = true;
       const t = m.map, t0 = now();
       if (t) sea.onBeforeRender = function () {   // the drift: slow, two-way, never a jump
@@ -773,7 +811,7 @@ window.WFR_TEX = (function () {
         for (let j = 0; j < K; j++) for (let i = 0; i < K; i++) {
           const x0 = -OUT / 2 + i * cell, y0 = -OUT / 2 + j * cell; if (Math.abs(x0 + cell / 2) < IN / 2 && Math.abs(y0 + cell / 2) < IN / 2) continue;   // the inner square is the island's sea
           const D = 4;   // each cell cut 4 x 4 so the haze reads per vertex at a fair spacing
-          for (let b = 0; b <= D; b++) for (let a = 0; a <= D; a++) { const x = x0 + cell * a / D, y = y0 + cell * b / D; oP.push(x, y, 0); oC.push(deep.r, deep.g, deep.b); oU.push(x / IN + 0.5, y / IN + 0.5); }
+          for (let b = 0; b <= D; b++) for (let a = 0; a <= D; a++) { const x = x0 + cell * a / D, y = y0 + cell * b / D; if (SEA806.on) SEA806.ramp(SEA806.shelf(Math.hypot(x, y)), deep); oP.push(x, y, 0); oC.push(deep.r, deep.g, deep.b); oU.push(x / IN + 0.5, y / IN + 0.5); }   // 806: the shelf's fall carries on out here
           for (let b = 0; b < D; b++) for (let a = 0; a < D; a++) { const q = v + b * (D + 1) + a; oI.push(q, q + 1, q + D + 2, q, q + D + 2, q + D + 1); }
           v += (D + 1) * (D + 1);
         }
@@ -1389,7 +1427,7 @@ window.WFR_TEX = (function () {
       gj.translate(Math.cos(a) * R * 0.6, el * R, Math.sin(a) * R * 0.42); parts.push(gj);
     }
     let n = 0; parts.forEach(function (gp) { n += gp.attributes.position.count; });
-    const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), col = new Float32Array(n * 3), base = -0.28 * R, top = 0.95 * R;
+    const pos = new Float32Array(n * 3), nor = new Float32Array(n * 3), n0 = new Float32Array(n * 3), col = new Float32Array(n * 3), base = -0.28 * R, top = 0.95 * R;
     let o = 0;
     parts.forEach(function (gp) {
       const p = gp.attributes.position, q = gp.attributes.normal;
@@ -1398,13 +1436,14 @@ window.WFR_TEX = (function () {
         pos[o * 3] = p.getX(v); pos[o * 3 + 1] = y; pos[o * 3 + 2] = p.getZ(v);
         const bx = q.getX(v) * 0.7, by = q.getY(v) * 0.7 + 0.6, bz = q.getZ(v) * 0.7, bl = Math.hypot(bx, by, bz) || 1;
         nor[o * 3] = bx / bl; nor[o * 3 + 1] = by / bl; nor[o * 3 + 2] = bz / bl;
+        n0[o * 3] = q.getX(v); n0[o * 3 + 1] = q.getY(v); n0[o * 3 + 2] = q.getZ(v);   // 806 seam a: the lobe's own normal, kept for the ink's silhouette (the light reads the bent one)
         const t = smooth(base - 0.1 * R, top, y);
         col[o * 3] = 0.88 + 0.12 * t; col[o * 3 + 1] = 0.91 + 0.09 * t; col[o * 3 + 2] = 0.96 + 0.04 * t;
       }
       gp.dispose();
     });
     const geo = new T.BufferGeometry();
-    geo.setAttribute('position', new T.BufferAttribute(pos, 3)); geo.setAttribute('normal', new T.BufferAttribute(nor, 3)); geo.setAttribute('color', new T.BufferAttribute(col, 3));
+    geo.setAttribute('position', new T.BufferAttribute(pos, 3)); geo.setAttribute('normal', new T.BufferAttribute(nor, 3)); geo.setAttribute('normal0', new T.BufferAttribute(n0, 3)); geo.setAttribute('color', new T.BufferAttribute(col, 3));
     geo.computeBoundingSphere();
     return geo;
   }
