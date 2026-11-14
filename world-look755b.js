@@ -116,3 +116,34 @@ window.WFR_LOOK755B = (function () {
     amp: function (k) { U.uK755.value = st.loaded === 2 ? S755.AMP * k : 0; },
     peek: function () { return { on: st.on, tex: st.tex, loaded: st.loaded, compiled: st.compiled, amp: U.uK755.value, shifts: st.shifts, bytes: IMG.a.length + IMG.b.length, faults: st.faults.slice() }; } };
 })();
+
+/* ========== 790 A2 (Su, Nov 13 2026): THE LENS. Marth, verbatim, on #137's side-by-side with COO: "Even how the buildings appear slanted due to field of
+   vision and perspective". WHY OURS LOOKED FLAT: on a phone held upright a 62 degree view is only about 31 degrees across, a long lens; COO is wide and low
+   among its buildings, so walls lean with perspective and the street runs away to a point. THE LENS, out in the world only, by her height over the ground:
+   low among streets (k = 1 under AGL0) the view widens (+FOV degrees), the camera rises a little behind her (UP: its lift x1.35) and comes a little closer
+   (BACK, so she keeps her size on screen), and looks a touch down the street (LOOK): a wide lens pitched down is what leans COO's walls; high up (k = 0 over AGL1) it is the calm camera it was. k eases
+   (EASE per second), so a climb or a dive never snaps the lens. Never fisheye: the page adds the lens to the speed's own widening (its burst yields the
+   lens), and nothing here passes MAXFOV. Classic is frozen: the lens is neutral there; 'nolens' (localStorage 'wfr.sky790') is the guard's control.
+   THE PAGE'S LINES (travel712Fly, wings-for-rouge.html), written down in board row 790 and landed after the main-file builder ships:
+     const l790 = window.WFR_LENS790 ? WFR_LENS790.travel(agl, dt) : null;   (after 'const ground = ..., agl = ...')
+     the camera offset: v3.copy(tmp).multiplyScalar(-(6 + 8 * B.size + CTRL755.BACK * s755) * (l790 ? l790.back : 1)); v3.y = (2 + 3 * B.size) * (l790 ? l790.up : 1) + (S.camLift || 0);
+     the look point: .add(v3.set(0, 1 + (l790 ? l790.look : 0), 0))
+     the view: cam733Fov(dt, true, S.speed, CTRL755.FOV * s755 + (l790 ? WFR_LENS790.fovAdd(camera.fov, l790.fov * (1 - s755)) : 0))
+   Every number DRAFT (his eye on her phone rules). ========== */
+window.WFR_LENS790 = (function () {
+  'use strict';
+  var L = { AGL0: 45, AGL1: 260, FOV: 13, UP: -0.35, BACK: 0.1, LOOK: -0.2, EASE: 1.4, MAXFOV: 84 };
+  var SW = (function () { try { return localStorage.getItem('wfr.sky790') || ''; } catch (e) { return ''; } })(), CL = (function () { try { return localStorage.getItem('wfr.look') === 'classic'; } catch (e) { return false; } })();
+  var st = { k: 0, n: 0, agl: null, out: { k: 0, fov: 0, back: 1, up: 1, look: 0 } };
+  function sm(a, b, x) { var t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); }
+  function travel(agl, dt) {
+    var o = st.out; st.n++; st.agl = agl;
+    if (CL || SW === 'nolens' || !(agl === agl)) { st.k = 0; o.k = 0; o.fov = 0; o.back = 1; o.up = 1; o.look = 0; return o; }
+    var want = 1 - sm(L.AGL0, L.AGL1, agl); st.k = st.n === 1 ? want : st.k + (want - st.k) * Math.min(1, (dt || 0) * L.EASE);
+    var k = st.k; o.k = k; o.fov = L.FOV * k; o.back = 1 - L.BACK * k; o.up = 1 - L.UP * k; o.look = L.LOOK * k; return o;
+  }
+  function fovAdd(fovNow, add) {   // the lens never takes the view past MAXFOV (fovNow: the camera's view this frame, the speed's widening in it)
+    var C = window.CAM733 || null, base = C && C.fov0 ? C.fov0 : 62; return Math.max(0, Math.min(add, L.MAXFOV - base - 9));
+  }
+  return { L: L, travel: travel, fovAdd: fovAdd, peek: function () { return { k: +st.k.toFixed(3), calls: st.n, agl: st.agl, sw: SW, classic: CL, out: Object.assign({}, st.out) }; } };
+})();

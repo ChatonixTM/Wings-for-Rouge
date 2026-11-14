@@ -48,13 +48,13 @@ window.WFR_CINE = (function () {
     var skipEl = document.createElement('div'); skipEl.className = 'skip'; skipEl.textContent = 'TAP TO GO ON'; root.appendChild(skipEl);
     document.body.appendChild(root);
     var nameEl = document.createElement('div'); nameEl.id = 'name781'; nameEl.setAttribute('aria-live', 'polite'); document.body.appendChild(nameEl);
-    var C = { on: null, t: 0, plays: 0, skips: 0, ends: 0, cam: false, p0: new THREE.Vector3(), q0: new THREE.Quaternion(), f0: 50, P: new THREE.Vector3(), L: new THREE.Vector3(), U: new THREE.Vector3(0, 1, 0), M: new THREE.Matrix4(), Q: new THREE.Quaternion(), tapped: false };
+    var C = { named: {}, on: null, t: 0, plays: 0, skips: 0, ends: 0, cam: false, p0: new THREE.Vector3(), q0: new THREE.Quaternion(), f0: 50, P: new THREE.Vector3(), L: new THREE.Vector3(), U: new THREE.Vector3(0, 1, 0), M: new THREE.Matrix4(), Q: new THREE.Quaternion(), tapped: false };
     root.addEventListener('pointerdown', function (e) { e.stopPropagation(); e.preventDefault(); if (C.on && C.on.onTap) { var r = null; try { r = C.on.onTap(C.t, e); } catch (er) { API.error = 'tap: ' + (er && er.message); } if (r !== 'skip') return; C.tapped = true; return; }   /* 782 #129: a scene that takes its own taps (the Race's cheer) */
       if (C.on && C.on.skip !== false && C.t >= (C.on.skip != null ? C.on.skip : 1.5)) { C.tapped = true; } }, true);   /* 782 #129: skip: false is never skipped (a tap during the Haven's door used to cut it) */
     function showCard(over, name, line) { cOver.textContent = over || ''; cName.textContent = name || ''; cLine.textContent = line || ''; card.classList.remove('on'); void card.offsetWidth; card.classList.add('on'); }
     function play(sc) {
       try { if (o.classic && o.classic()) return false; if (C.on) end('replaced'); } catch (e) { return false; }
-      C.on = sc; C.t = 0; C.tapped = false; C.wasTap = false; C.plays++; API.last = sc.name || 'scene';
+      C.on = sc; C.t = 0; C.tapped = false; C.wasTap = false; C.plays++; API.last = sc.name || 'scene'; C.named[API.last] = (C.named[API.last] || 0) + 1;   /* #140: each scene's own count (the show's drop-in plays one too) */
       root.classList.add('on'); if (sc.bars !== false) root.classList.add('bars'); nameEl.classList.remove('on');   /* a name card never sits under a scene's card */ document.documentElement.classList.add('cine781'); skipEl.classList.remove('on');
       try { if (sc.start) sc.start(); } catch (e) { API.error = 'start: ' + (e && e.message); }
       return true;
@@ -150,7 +150,7 @@ window.WFR_CINE = (function () {
     function fade(v) { fadeEl.style.opacity = String(Math.max(0, Math.min(1, v))); C.fadeV = v; }
     var inst = { play: play, end: end, tick: tick, pre: pre, post: post, itemGet: itemGet, nameCard: nameCard, arrival: arrival, card: showCard, fade: fade, bars: bars, root: root, current: function () { return C.on; },
       on: function () { return !!C.on; }, frozen: function () { return !!(C.on && C.on.freeze); }, t: function () { return C.t; },
-      peek: function () { return { on: C.on ? C.on.name : null, t: +C.t.toFixed(2), plays: C.plays, skips: C.skips, ends: C.ends, bars: root.classList.contains('bars'), fade: +(+fadeEl.style.opacity || 0).toFixed(2), card: card.classList.contains('on') ? { over: cOver.textContent, name: cName.textContent, line: cLine.textContent } : null, nameCard: nameEl.classList.contains('on') ? nameEl.textContent : null, glow: glow.visible, error: API.error, last: API.last }; } };
+      peek: function () { return { on: C.on ? C.on.name : null, t: +C.t.toFixed(2), plays: C.plays, named: Object.assign({}, C.named), skips: C.skips, ends: C.ends, bars: root.classList.contains('bars'), fade: +(+fadeEl.style.opacity || 0).toFixed(2), card: card.classList.contains('on') ? { over: cOver.textContent, name: cName.textContent, line: cLine.textContent } : null, nameCard: nameEl.classList.contains('on') ? nameEl.textContent : null, glow: glow.visible, error: API.error, last: API.last }; } };
     return inst;
   }
   API.create = create;

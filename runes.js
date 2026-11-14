@@ -176,9 +176,9 @@ window.WFR_RUNES = (function () {
       runes.visible = true; feather.visible = false; st.gift = 0;
       if (roll() < RARE) { var j = 20 + Math.floor(Math.random() * 160); feather.position.copy(RLINE[j]).lerp(RLINE[j + 1], 0.5); st.rare = true; feather.visible = true; }
       if (kind === 'race') { var pace = (o.pace && o.pace()) || 1; st.vf = Math.max(4, ((o.cruise && o.cruise()) || 15) * falconK() * pace); st.tf = L / st.vf; st.fs = 0; st.fdone = false; st.fback = 1; }
-      say(kind === 'race' ? 'Go! Fly the eight arches before the Falcon does.' : '200 runes, 50 seconds. Go!', 2200);   /* DRAFT */
+      say(kind === 'race' ? 'Go! Eight arches. The Peregrine is already moving.' : '200 runes, 50 seconds. Go!', 2200);   /* DRAFT */
       tone(988, 0.12, 0.06); tone(1319, 0.18, 0.05);
-      if (S.mode === 'fly' && railStart(S.pos) && !(S.seen && S.seen.rail632)) { S.seen = S.seen || {}; S.seen.rail632 = true; try { o.save(); } catch (e) { /* fine */ } say((kind === 'race' ? 'Go! Fly the eight arches before the Falcon does.' : '200 runes, 50 seconds. Go!') + ' Stick up: faster. Flap: a burst.', 2600); }   /* 632 U4b: a run started on foot (the bench's door) stays unrailed. Obito R4: on her first railed run the tip rides in the Go line (one toast; DRAFT words) */
+      if (S.mode === 'fly' && railStart(S.pos) && !(S.seen && S.seen.rail632)) { S.seen = S.seen || {}; S.seen.rail632 = true; try { o.save(); } catch (e) { /* fine */ } say((kind === 'race' ? 'Go! Eight arches. The Peregrine is already moving.' : '200 runes, 50 seconds. Go!') + ' Stick up: faster. Flap: a burst.', 2600); }   /* 632 U4b: a run started on foot (the bench's door) stays unrailed. Obito R4: on her first railed run the tip rides in the Go line (one toast; DRAFT words) */
       if (o.hud) o.hud();
       return true;
     }
@@ -194,9 +194,9 @@ window.WFR_RUNES = (function () {
       else if (!st.rareGot) feather.visible = false;
       st.mode = 'idle'; st.cool = (S.played || 0) + COOL; runes.visible = false; st.rare = false; st.last = R;
       var w;   /* DRAFT, every one */
-      if (k === 'runes') w = why === 'all' ? 'Every rune! 200 in ' + el.toFixed(1) + ' seconds.' : why === 'time' ? got + ' runes in 50 seconds.' : why === 'rain' ? 'The rain closes the sky. You keep ' + got + ' runes.' : 'You left the course. You keep ' + got + ' runes.';
-      else w = why === 'finish' ? (R.win ? 'You beat the Falcon! ' + el.toFixed(1) + ' s to his ' + st.tf.toFixed(1) + ' s.' : 'The Falcon wins this time: ' + st.tf.toFixed(1) + ' s to your ' + el.toFixed(1) + ' s.')
-        : why === 'down' ? 'You touched down. The race is off.' : why === 'rain' ? 'The rain closes the sky. The race is off.' : why === 'time' ? 'Too long in the air. The Falcon wins this time.' : 'You left the course. The race is off.';
+      if (k === 'runes') w = why === 'all' ? 'Every rune! 200 in ' + el.toFixed(1) + ' seconds.' : why === 'time' ? got + ' runes in 50 seconds. The clouds keep the rest.' : why === 'rain' ? 'The rain closes the sky. You keep ' + got + ' runes.' : 'You left the course. You keep ' + got + ' runes.';
+      else w = why === 'finish' ? (R.win ? 'You beat the Peregrine! ' + el.toFixed(1) + ' s to his ' + st.tf.toFixed(1) + ' s.' : 'The Peregrine wins this time: ' + st.tf.toFixed(1) + ' s to your ' + el.toFixed(1) + ' s.')
+        : why === 'down' ? 'You touched down. The race is off.' : why === 'rain' ? 'The rain closes the sky. The race is off.' : why === 'time' ? 'Too long in the air. The Peregrine got bored and finished.' : 'You left the course. The race is off.';
       if (k === 'race' && got) w += ' +' + got + ' runes.';
       if (R.newBest && k === 'runes') w += ' A new best!';
       if (R.bonus) w += ' A white feather drifts down to you!';
@@ -236,7 +236,7 @@ window.WFR_RUNES = (function () {
         }
         if (up && !st.said && st.alpha > 0.9 && !closed && (S.mode === 'walk' || S.mode === 'fly') && (!o.calm || o.calm())) {
           S.seen = S.seen || {}; st.said = true;
-          if (!S.seen.runes632) { S.seen.runes632 = true; try { o.save(); } catch (e) { /* fine */ } say('Old stone floats on the clouds below the temple. The gold arch: 200 runes in 50 seconds. The blue arch: race the Falcon.', 5200); }   /* DRAFT */
+          if (!S.seen.runes632) { S.seen.runes632 = true; try { o.save(); } catch (e) { /* fine */ } say('Old stone floats on the clouds below the temple. The gold arch: 200 runes in 50 seconds. The blue arch: race the Peregrine.', 5200); }   /* DRAFT */
         }
       } else {
         st.el += dp;

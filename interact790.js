@@ -32,12 +32,12 @@ window.WFR_INTERACT790 = (function () {
   var C = { BTN_R: 2.2, BTN_HIDE: 3.2, RIDE_R: 6, PEOPLE_R: 10, LOW: 7, SCAN: 0.25, LINE_T: 2.8, LINE_GAP: 3.5, PER_CD: 60, CRUMB_P: 0.35, FLINCH_V: 17,
     FLOCK_N: 7, FLOCK_R: 6.5, FOLLOW_R: 16, FOLLOW_T: 2.2, FOLLOW_DUR: 22, SETTLE: 14, FEED_W: 176, FEED_H: 120, FEED_EVERY: 0.2, XP_NEW: 4, RESET: 14 };
   var WORDS = {   /* DRAFT lines for his pen */
-    look: ['Look, up there!', 'Hello, little bird!', 'There she goes!', 'Is that a cardinal?', 'Morning, Rouge!'],
+    look: ['Mind the washing, bird!','Hello, little bird!', 'There she goes!', 'Is that a cardinal?', 'Morning, Rouge!'],
     crumb: ['Here, have a crumb.', 'For you, little one.', 'Go on, take it.'],
     flinch: ['Whoa!', 'Easy there!', 'Ha, you scared me!'],
-    world: ['Look, a bird!', 'Pretty bird!', 'Over there, look!', 'Where did she come from?'],
+    world: ['That bird is a long way from home.','Pretty bird!', 'Over there, look!', 'Where did she come from?'],
     worldCrumb: ['Here, birdie.', 'Want some bread?'],
-    flock: 'The pigeons take you as one of their own.', flockWorld: 'You fly with the flock.',
+    flock: 'The pigeons take you as one of their own.', flockWorld: 'The flock lets you in. Nobody asks your name.',
     feed: '📷 Live', rest: 'You catch your breath up here. Your chick feels it too.', firstPerch: 'A new perch',
     ride: 'Hold on tight. Flap to hop off.', off: 'Off you hop.', crumbGot: 'A crumb!',
     facts: ['Cardinals do not migrate: they keep the same patch all year round.', 'A bird\'s bones are hollow, braced inside like a bridge: light and strong.',
@@ -69,7 +69,7 @@ window.WFR_INTERACT790 = (function () {
     s = spot(18, 12); g = pole(s.x, s.z, 6.2, 0xd9d4c8); y = g.userData.y0;
     var ball = new T.Mesh(new T.SphereGeometry(0.16, 8, 6), lam(0xe8c25a)); ball.position.y = 6.3; g.add(ball);
     var flag = new T.Mesh(new T.PlaneGeometry(1.3, 0.8, 4, 1), new T.MeshLambertMaterial({ color: 0xc8314a, side: T.DoubleSide })); flag.position.set(0.68, 2.2, 0); g.add(flag);
-    perch({ id: 'flagpole', kind: 'flagpole', x: s.x, y: y + 6.42, z: s.z, r: 0.4, does: 'view', text: 'The village from the flagpole' });
+    perch({ id: 'flagpole', kind: 'flagpole', x: s.x, y: y + 6.42, z: s.z, r: 0.4, does: 'view', text: 'The whole village, and nobody looking up' });
     thing({ id: 'flag', kind: 'flag', x: s.x, y: y, z: s.z, r: 1.7, verb: '🚩 Tug', g: g, flag: flag, k: 0, up: 0,
       react: function (o) { o.up = 1; o.t = 0; st.tugs++; X.sound('ding'); } , step: function (o, dt) { o.t = (o.t || 0) + dt; var want = o.up ? 5.2 : 2.2; o.k += (want - o.k) * Math.min(1, dt * 1.6); o.flag.position.y = o.k; var pos = o.flag.geometry.attributes.position, i; for (i = 0; i < pos.count; i++) { var u = pos.getX(i) + 0.65; pos.setZ(i, Math.sin(st.t * 6 + u * 4) * 0.12 * u); } pos.needsUpdate = true; if (o.up && o.t > C.RESET) o.up = 0; } });
     /* the bell post: a REST perch (its cap), and Ring swings the bell */

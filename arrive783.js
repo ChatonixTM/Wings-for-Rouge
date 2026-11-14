@@ -31,7 +31,7 @@ window.WFR_ARRIVE783 = (function () {
          slow move in toward the beach with the look rising from the shore to the Blue Mountains; then the look turns west along the range toward the call.
          [lat, lon, metres]. A row without a shot gets one made from the nearest coast (camAt's fallback) */
       shot: { cam0: [17.835, -76.596, 260], cam1: [17.852, -76.590, 330], look0: [17.893, -76.585, 30], look1: [18.0467, -76.5792, 1900], fov: [36, 30] },
-      call: { lm: 'dunns', e: '💦', lat: 18.4116, lon: -77.1406, h: 120, over: 'A rumour on the wind', name: 'Dunn\'s River Falls', line: 'A river that comes down to the sea in steps. North, over the hills.' } },
+      call: { lm: 'dunns', e: '💦', lat: 18.4116, lon: -77.1406, h: 120, over: 'A rumour on the wind', name: 'Dunn\'s River Falls', line: 'A river that comes down to the sea in steps. North-west, over the hills.' } },
     /* 779 #135 · THE NEXT SHORES (board 779 (5) and 783's pattern; Marth, Nov 11 2026: "Make sure when landing into a new country there's an ocarina of time
        inspired country introduction. Also see to it that the world building takes from Skyrim or fable"). Jamaica's neighbours, one row each, each its own
        chosen view (the coast she would first meet coming from Jamaica), its own name and line, and a real landmark that calls her on (its quest in
@@ -59,7 +59,7 @@ window.WFR_ARRIVE783 = (function () {
       sight: 40,
       peak: { lat: 19.33, lon: -81.25, h: 20, name: 'the island' },   /* flat: the look ends low, across the island to its sound */
       shot: { cam0: [19.300, -81.480, 650], cam1: [19.310, -81.455, 760], look0: [19.335, -81.392, 0], look1: [19.355, -81.270, 0], fov: [40, 34] },   /* off Seven Mile Beach, high: a flat island is seen from above */
-      call: { lm: 'stingray', e: '🌊', lat: 19.3743, lon: -81.3049, h: 0, over: 'A rumour on the wind', name: 'Stingray City', line: 'A sandbar in the sound where the rays glide up to meet you, in water no deeper than your knees.' } },
+      call: { lm: 'stingray', e: '🌊', lat: 19.3743, lon: -81.3049, h: 0, over: 'A rumour on the wind', name: 'Stingray City', line: 'A sandbar in the sound where the rays glide up to meet you, in water no deeper than your waist.' } },
     { id: 'puertorico', name: 'PUERTO RICO', under: 'The island of enchantment',
       coast: [[18.51, -67.16], [18.49, -66.60], [18.47, -66.10], [18.38, -65.62], [18.25, -65.60], [18.05, -65.83], [17.97, -66.25], [17.97, -66.65], [17.95, -67.20], [18.20, -67.18], [18.38, -67.27]],
       sight: 40,

@@ -1462,6 +1462,7 @@ window.WFR_TEX = (function () {
   api.skyStops = function (gr, col) {
     if (!SKY_A) { SKY_A = new THREE.Color(); SKY_B = new THREE.Color(); }
     const mix = (i, j, f) => '#' + SKY_A.set(col[i]).lerp(SKY_B.set(col[j]), f).getHexString();
+    if (!CLASSIC_LOOK) { const c1 = mix(1, 0, 0.32), c2 = mix(2, 1, 0.22); col = [col[0], c1, c2, col[3], col[4]]; }   // 790 A2 (COO's sky): the blue held lower down the dome, the pale kept to a band over the horizon (the fog's own colour, col[4], untouched); Classic frozen
     gr.addColorStop(0, col[0]); gr.addColorStop(0.2, mix(0, 1, 0.3)); gr.addColorStop(0.32, col[1]); gr.addColorStop(0.42, mix(1, 2, 0.42)); gr.addColorStop(0.47, col[2]);
     gr.addColorStop(0.49, mix(2, 3, 0.5)); gr.addColorStop(0.5, col[3]); gr.addColorStop(0.51, mix(3, 4, 0.55)); gr.addColorStop(0.53, col[4]); gr.addColorStop(1, col[4]);
   };

@@ -19,7 +19,7 @@ window.WFR_OCARINA781 = (function () {
      view stands from the focal point, as a share of the place's size (where() gives size) */
   var PLACES = [
     { id: 'village', kind: 'shot', over: 'Home island', name: 'The Village', under: 'Six homes round a green, and a well', r: 60, up: 28, look: 3, wide: 1.2, rise: 0.38 },
-    { id: 'lighthouse', kind: 'shot', over: 'The east shore', name: 'The Lighthouse', under: 'Someone keeps watch at the top', r: 48, up: 40, look: 9, wide: 2.4, rise: 0.12, lookUp: 0.22 },
+    { id: 'lighthouse', kind: 'shot', over: 'The east shore', name: 'The Lighthouse', under: 'Someone very fast keeps watch at the top', r: 48, up: 40, look: 9, wide: 2.4, rise: 0.12, lookUp: 0.22 },
     { id: 'lake', kind: 'shot', over: 'The middle of the island', name: 'The Lake', under: 'Still water, and fish for a patient beak', r: 55, up: 28, look: 1, wide: 1.1, rise: 0.6, lookUp: 0.05 },
     { id: 'peak', kind: 'shot', over: 'The roof of the island', name: 'The Highest Peak', under: 'Only the strongest wings rest up here', r: 40, up: 40, look: 2, wide: 1.4 },
     { id: 'dunes', kind: 'shot', over: 'The south shore', name: 'The Dunes', under: 'Sand, rocks, and someone small and prickly', r: 46, up: 24, look: 1.5, wide: 1.0, rise: 0.4 },
@@ -28,7 +28,7 @@ window.WFR_OCARINA781 = (function () {
     { id: 'race', kind: 'shot', over: 'The west meadow', name: 'The Race Track', under: 'Run, swim, climb, glide: the chicks race here', r: 40, up: 20, look: 1, wide: 1.4, rise: 0.55, lookUp: 0.05 },
     { id: 'woods', kind: 'name', over: 'Past the old signpost', name: 'The West Woods', under: 'The Owl’s tree. He wakes at dusk.', r: 14, up: 3 },
     { id: 'cabin:shore', kind: 'name', over: 'An old cabin', name: 'The Shore Cabin', under: 'Nobody lives here now', r: 12, up: 3 },
-    { id: 'cabin:lake', kind: 'name', over: 'An old cabin', name: 'The Lake Cabin', under: 'Hal’s, by the water', r: 12, up: 3 },
+    { id: 'cabin:lake', kind: 'name', over: 'An old cabin', name: 'The Lake Cabin', under: 'Hal’s. It smells of fish, proudly.', r: 12, up: 3 },
     { id: 'cabin:forest', kind: 'name', over: 'An old cabin', name: 'The Forest Cabin', under: 'Rook’s, among the trees', r: 12, up: 3 },
     { id: 'cabin:foothill', kind: 'name', over: 'An old hut', name: 'The Foothill Hut', under: 'June’s, under the mountain', r: 12, up: 3 }
   ];

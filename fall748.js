@@ -115,6 +115,16 @@ window.WFR_FALL748 = (function () {
     stingray: { p: -0.6, l: 0.55, r: -0.6, f: 2 },   /* it flips up, the wings over */
     tortoise: { l: -0.12, b: { head: [0.8, 0, 0, 0], legFL: [0.6, 0, 0.5, 0], legFR: [0.6, 0, -0.5, 0], tail: [0.4, 0, 0, 0] } }   /* it pulls in and sits down in its shell */
   });
+  /* 787: the world's snakes (world-animals.js), each its hit points by size and its own motion (no bones: the whole body answers) */
+  Object.assign(ROW, { yellowboa: [2.95, 'serpent', 0.30, 1], rattlesnake: [1.6, 'serpent', 0.20, 1.2], grasssnake: [0.9, 'serpent', 0.10, 1.5], carpetpython: [3.2, 'serpent', 0.30, 0.9], python: [5, 'serpent', 0.38, 0.5], anaconda: [7, 'serpent', 0.45, 0.3] });
+  Object.assign(FLAV, {
+    yellowboa: { r: 0.6, f: 3, l: 0.1 },   /* it writhes */
+    rattlesnake: { p: -0.5, r: 0.3, f: 6, l: 0.15 },   /* it rears and rattles */
+    grasssnake: { r: 1.3, f: 1, l: -0.1 },   /* it rolls over and plays dead, as grass snakes do */
+    carpetpython: { r: 0.5, f: 4, l: 0.2, p: -0.3 },   /* it coils and lifts */
+    python: { r: 0.75, f: 2, p: -0.2 },   /* a heavy thrash */
+    anaconda: { r: 0.95, f: 1.5, y: TAU }   /* the great body rolls right round */
+  });
   function row(k) { return ROW[k] || [3, 'small', 0.2, 0.7]; }
   function clamp(x, a, b) { return x < a ? a : x > b ? b : x; }
   function damage(how, lv, gear) {   /* the 744 scale: her level and her weapon, the same numbers as the throw */

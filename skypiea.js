@@ -72,7 +72,7 @@ window.WFR_SKY = (function () {
     woke: 'You wake up in your nest. The sun is just coming up.',   // OURS (closing, allowed by Marth ~16:20)
     gateAsk: 'Enter the sky island?',   // 610 (Marth: the game asks you if you want to 'enter the sky island'); OURS
     gateYes: 'Yes', gateNo: 'Not now',   // 610, OURS
-    gateCrow: 'The Crow can\'t fly this high yet. The Falcon could teach it.',
+    gateCrow: 'The Crow can\'t fly this high yet. The Peregrine could teach it.',
     gateRain: 'Heavy rain clouds hide the sky island today. Come back when the sky clears.',   // 632 U2 (Marth, Oct 15: "When it rains it blocks the temple. Or the sky area due to its clouds"); DRAFT   // 610 (Marth: "all but crow, needs to learn from falcon"); OURS
     gateIn: 'The sky island. A bare stone for now; more is coming.',   // 610, OURS (what stands up here is 625/621)
     gateEdge: 'The edge. Fly to leave the sky island.',   // 610, OURS

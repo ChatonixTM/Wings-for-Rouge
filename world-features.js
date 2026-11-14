@@ -475,7 +475,9 @@ window.WFR_CITY790 = (function () {
     LIFT_S: 0.32, LIFT_A: 0.38, SUB: 22, PERIOD: 8, TREE_STEP: 11, LAMP_STEP: 32, TREE_R: 600, LAMP_R: 420, BENCH_R: 300, MOVE: 40, AGL_MAX: 650,
     CAP: { tree: 2400, lamp: 900, bench: 160, sign: 220 }, NIGHT_K: 0.8, DETAIL_D: 1500, DETAIL_UP: 1100 };
   var MODE = (function () { try { return localStorage.getItem('wfr.city790') || 'on'; } catch (e) { return 'on'; } })();
-  function on() { return MODE !== 'off' && (MODE === 'force' || !(window.WFR_DOOR && window.WFR_DOOR.classic)); }
+  function HAS(m) { return (',' + MODE + ',').indexOf(',' + m + ',') >= 0; }   /* 790 A2: the switch may carry two words ('nofacade,noink': the ink guard's plain walls) */
+  var INK = !HAS('noink'); C.INK = 0.7;   /* 790 A2: the ink on the walls' corners and tops ('noink' is the guard's control, sky790.js) */
+  function on() { return !HAS('off') && (HAS('force') || !(window.WFR_DOOR && window.WFR_DOOR.classic)); }
   /* the guard's controls (localStorage 'wfr.city790'): 'off' the game before this unit; 'noroof' no pitched roofs; 'nofacade' plain walls (no windows, no
      night glow); 'nostreet' the old road ribbons (no paint, sidewalks, crossings or furniture); 'nofurn' no trees, lamps or benches; 'force' even in Classic */
   var st = { mode: MODE, built: 0, houses: 0, gables: 0, hips: 0, chimneys: 0, parapets: 0, boxes: 0, shops: 0, flat: 0, tagged: 0, seeded: 0, styles: [0, 0, 0, 0, 0, 0, 0],
@@ -516,7 +518,7 @@ window.WFR_CITY790 = (function () {
   var FACADE_MAIN = [
     '{ float cd = floor( vF790.x + 0.5 ); float shp = step( 7.5, cd ); float sy = cd - 8.0 * shp;',
     '  if ( sy > 0.5 && sy < 5.5 ) {',
-    '    vec3 wc = diffuseColor.rgb; float sd = vF790.y; float fl = sy < 1.5 ? 2.9 : ( sy < 2.5 ? 3.2 : ( sy < 3.5 ? 3.4 : ( sy < 4.5 ? 3.7 : 4.5 ) ) );',
+    '    vec3 wc = diffuseColor.rgb; float sd = floor( vF790.y ) / 256.0; float fl = sy < 1.5 ? 2.9 : ( sy < 2.5 ? 3.2 : ( sy < 3.5 ? 3.4 : ( sy < 4.5 ? 3.7 : 4.5 ) ) );',
     '    float bw = sy < 1.5 ? 3.3 : ( sy < 2.5 ? 2.7 : ( sy < 3.5 ? 3.1 : ( sy < 4.5 ? 1.7 : 4.6 ) ) );',
     '    vec2 q = vM790 / vec2( bw, fl ); vec2 ce = floor( q ); vec2 f = fract( q ); vec2 dq = fwidth( q );',
     '    float fa = clamp( ( max( dq.x, dq.y ) - 0.16 ) / 0.30, 0.0, 1.0 ); vec2 aw = dq * 0.7 + 0.004;',
@@ -545,7 +547,13 @@ window.WFR_CITY790 = (function () {
     '    float cov = ( R.z - R.x ) * ( R.w - R.y );',
     '    diffuseColor.rgb = mix( cl, mix( wc, gl, cov * 0.8 ), fa );',
     '    lit790 = mix( lw, cov * 0.22, fa );',
-    '  } }'].join(NL);
+    '  } }',
+    /* 790 A2 (Nov 13): THE INK (COO's look): a soft dark line, about two pixels, down every corner of a wall and along its top; each face carries its
+       own 0..1 across (in vF790.x's fraction, 0.3 wide) and up (in vF790.y's fraction, 0.45 wide), so the line keeps its width at any distance; it fades
+       out where a face is under ~20 px (far off a building is not drawn as a scribble), and a face with no flags (a gable, a flat roof) gets none */
+    INK ? '{ float iu = ( vF790.x - floor( vF790.x + 0.5 ) ) / 0.3, iv = fract( vF790.y ) / 0.45; vec2 fw = vec2( fwidth( iu ), fwidth( iv ) ), sz = 1.0 / max( fw, vec2( 1e-5 ) );' +
+    '  float ex = min( iu, 1.0 - iu ) * sz.x, ey = ( 1.0 - iv ) * sz.y; float ik = max( ( 1.0 - smoothstep( 1.5, 2.7, ex ) ) * step( 1e-5, fw.x ) * smoothstep( 14.0, 30.0, sz.x ),' +
+    '  ( 1.0 - smoothstep( 1.5, 2.7, ey ) ) * step( 1e-5, fw.y ) * smoothstep( 14.0, 30.0, sz.y ) ); diffuseColor.rgb *= 1.0 - ' + C.INK.toFixed(2) + ' * ik; }' : ''].join(NL);
   function wallMaterial(three, TR, u) {   // the city walls: the travel ground's own program (tag 'feat790') plus the facade; ONE new program
     THREE = three; var m = TR.makeMaterial(THREE, u, 'feat790'), base = m.onBeforeCompile;
     m.extensions = { derivatives: true }; m.name = 'city790:walls';
@@ -609,13 +617,13 @@ window.WFR_CITY790 = (function () {
     return o;
   }
   function inPoly(R, x, z) { var c = false, n = R.length / 2; for (var i = 0, j = n - 1; i < n; j = i++) { var xi = R[2 * i], zi = R[2 * i + 1], xj = R[2 * j], zj = R[2 * j + 1]; if (((zi > z) !== (zj > z)) && (x < (xj - xi) * (z - zi) / (zj - zi) + xi)) c = !c; } return c; }
-  function V(o, x, y, z, nx, ny, nz, c, u, v, F, mu, mv) { var k = o.v(x, y, z, nx, ny, nz, c[0], c[1], c[2], u, v); if (o.f) { o.f.push(F[0] + 8 * F[2], F[1]); o.m.push(mu, mv); } return k; }
+  function V(o, x, y, z, nx, ny, nz, c, u, v, F, mu, mv, eu, ev) { var k = o.v(x, y, z, nx, ny, nz, c[0], c[1], c[2], u, v); if (o.f) { o.f.push(F[0] + 8 * F[2] + 0.3 * (eu || 0), Math.floor(F[1] * 256) + 0.45 * (ev || 0)); o.m.push(mu, mv); } return k; }   // 790 A2: eu, ev = the corner's place on its face (0 or 1), for the ink
   var PLAIN = [6, 0, 0, 3], FLATF = [0, 0, 0, 3];
   function nrm(a, b, c) { var ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2], vx = c[0] - a[0], vy = c[1] - a[1], vz = c[2] - a[2], nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, nl = Math.hypot(nx, ny, nz) || 1; return [nx / nl, ny / nl, nz / nl]; }
   function quad(o, a, b, c, d, col, F, want) {   // a planar quad a-b-c-d, turned to face 'want'; flat normal; uv and facade metres along a->b and up
     var n = nrm(a, b, d); if (want && n[0] * want[0] + n[1] * want[1] + n[2] * want[2] < 0) { var t = b; b = d; d = t; n = [-n[0], -n[1], -n[2]]; }
     var lu = Math.hypot(b[0] - a[0], b[1] - a[1], b[2] - a[2]), lv = Math.hypot(d[0] - a[0], d[1] - a[1], d[2] - a[2]);
-    var k0 = V(o, a[0], a[1], a[2], n[0], n[1], n[2], col, 0, 0, F, 0, 0), k1 = V(o, b[0], b[1], b[2], n[0], n[1], n[2], col, lu / 2.5, 0, F, lu, 0), k2 = V(o, c[0], c[1], c[2], n[0], n[1], n[2], col, lu / 2.5, lv / 2.5, F, lu, lv), k3 = V(o, d[0], d[1], d[2], n[0], n[1], n[2], col, 0, lv / 2.5, F, 0, lv);
+    var k0 = V(o, a[0], a[1], a[2], n[0], n[1], n[2], col, 0, 0, F, 0, 0, 0, 0), k1 = V(o, b[0], b[1], b[2], n[0], n[1], n[2], col, lu / 2.5, 0, F, lu, 0, 1, 0), k2 = V(o, c[0], c[1], c[2], n[0], n[1], n[2], col, lu / 2.5, lv / 2.5, F, lu, lv, 1, 1), k3 = V(o, d[0], d[1], d[2], n[0], n[1], n[2], col, 0, lv / 2.5, F, 0, lv, 0, 1);
     o.i.push(k0, k1, k2, k0, k2, k3);
   }
   function tri3(o, a, b, c, col, F, want) { var n = nrm(a, b, c); if (want && n[0] * want[0] + n[1] * want[1] + n[2] * want[2] < 0) { var t = b; b = c; c = t; n = [-n[0], -n[1], -n[2]]; }
@@ -639,13 +647,13 @@ window.WFR_CITY790 = (function () {
       else if (tall) { if (tc ? isBlue(tc) || r1 < 0.45 : r1 < 0.6) { style = 4; fl = 3.7; col = tc && isBlue(tc) ? tc : pick(PAL_GLASS, r2); } else { style = 3; fl = 3.5; col = tc || pick(PAL_STONE, r2); } }
       else if (big) { style = 5; fl = 4.5; col = tc || pick(PAL_STONE, r2); }
       else { if (tc ? isRedBrown(tc) : nb < 0.55 + (r1 - 0.5) * 0.4) { style = 2; fl = 3.2; col = tc || pick(PAL_BRICK, r2); } else { style = 3; fl = 3.3; col = tc || pick(PAL_STONE, r2); } }
-      if (MODE === 'nofacade') style = 0; if (tc) st.tagged++; else st.seeded++; st.styles[style]++;
+      if (HAS('nofacade')) style = 0; if (tc) st.tagged++; else st.seeded++; st.styles[style]++;
       var shop = 0; if (!tall && !house && J.city && J.city.near(cx, cz, C.SHOP_D + Math.sqrt(area) / 2)) { shop = 1; st.shops++; }
       else if (house && J.city && h >= 7 && J.city.near(cx, cz, C.SHOP_D * 0.8)) { shop = r3 < 0.5 ? 1 : 0; if (shop) st.shops++; }
       col = toLin(col); var F = [style, r2, shop, fl];
       if (J.city) { J.city.addB(cx, cz, area, shop); J.city.occupy(outer); }
       /* the flat parts first decided: a parapet raises the outer walls */
-      var pitched = null; if (house && !mh && rings.length === 1 && MODE !== 'noroof') { var o = obb(outer); if (o && area / o.area >= C.FILL && o.W * 2 <= C.SHORT_MAX && o.L * 2 <= C.LONG_MAX && o.W >= 2.2) pitched = o; }
+      var pitched = null; if (house && !mh && rings.length === 1 && !HAS('noroof')) { var o = obb(outer); if (o && area / o.area >= C.FILL && o.W * 2 <= C.SHORT_MAX && o.L * 2 <= C.LONG_MAX && o.W >= 2.2) pitched = o; }
       var par = J.detail && !pitched && !mh && h >= C.PAR_H && n <= 48 ? C.PAR : 0, wtop = top + par;
       var W2 = mh > 0 ? outOf(J, 'wallUp', Out) : J.wall;
       for (var r = 0; r < rings.length; r++) { var Rr = rings[r], m = Rr.length / 2, A = 0, j; for (i = 0; i < m; i++) { j = (i + 1) % m; A += Rr[2 * i] * Rr[2 * j + 1] - Rr[2 * j] * Rr[2 * i + 1]; }
@@ -653,8 +661,8 @@ window.WFR_CITY790 = (function () {
         for (i = 0; i < m; i++) { j = (i + 1) % m; var ax = Rr[2 * i], az = Rr[2 * i + 1], bx = Rr[2 * j], bz = Rr[2 * j + 1], dx = bx - ax, dz = bz - az, len = Math.hypot(dx, dz); if (len < 0.05) continue;
           var nx = (s > 0 ? -dz : dz) / len, nz = (s > 0 ? dx : -dx) / len, u0 = run / 6, u1 = (run + len) / 6, vt = (wtop - bot) / 6, c0 = [col[0] * 0.78, col[1] * 0.78, col[2] * 0.78];
           var m0 = run, m1 = run + len; run += len + 1.3;
-          var k0 = V(W2, ax, bot, az, nx, 0, nz, c0, u0, 0, F, m0, bot - gC), k1 = V(W2, bx, bot, bz, nx, 0, nz, c0, u1, 0, F, m1, bot - gC);
-          var k2 = V(W2, ax, wtop, az, nx, 0, nz, col, u0, vt, F, m0, wtop - gC), k3 = V(W2, bx, wtop, bz, nx, 0, nz, col, u1, vt, F, m1, wtop - gC);
+          var k0 = V(W2, ax, bot, az, nx, 0, nz, c0, u0, 0, F, m0, bot - gC, 0, 0), k1 = V(W2, bx, bot, bz, nx, 0, nz, c0, u1, 0, F, m1, bot - gC, 1, 0);
+          var k2 = V(W2, ax, wtop, az, nx, 0, nz, col, u0, vt, F, m0, wtop - gC, 0, 1), k3 = V(W2, bx, wtop, bz, nx, 0, nz, col, u1, vt, F, m1, wtop - gC, 1, 1);
           if (s > 0) W2.i.push(k0, k1, k3, k0, k3, k2); else W2.i.push(k0, k3, k1, k0, k2, k3); } }
       var X = outOf(J, 'wallX', Out);
       if (pitched) { roofPitched(J, X, pitched, top, col, r1, r2, r3); st.houses++; }
@@ -724,7 +732,7 @@ window.WFR_CITY790 = (function () {
     return S;
   }
   function begin(J, t) { if (!on() || !mats) return null; J.city = cityState(); J.tk = [t.x, t.y]; J.detail = !(t.d > C.DETAIL_D); t.detail790 = J.detail; J.wall.f = []; J.wall.m = []; return J.city; }
-  function road(J, cls, pts) { if (!J.city || !DRAWN[cls] || MODE === 'nostreet') return false; J.city.addLine(cls, pts); return true; }
+  function road(J, cls, pts) { if (!J.city || !DRAWN[cls] || HAS('nostreet')) return false; J.city.addLine(cls, pts); return true; }
 
   /* ---------- the roads, after the buildings (a slice at a time): junctions, paint that stops short of them, zebras, sidewalks, the furniture ---------- */
   function junctions(S) {
@@ -834,7 +842,7 @@ window.WFR_CITY790 = (function () {
       lastAt = [cam.x, cam.z, T.f]; lastVer = ver;
       var cnt = [0, 0, 0, 0], RR = [C.TREE_R, C.LAMP_R, C.BENCH_R, C.BENCH_R], low = agl < C.AGL_MAX, W = window.WFR_WORLD, ll = W.toLatLon(T.f, cam.x, cam.z), pal = SEASON_PAL[seasonAt(ll.lat)] || SEASON_PAL.summer;
       st.season = seasonAt(ll.lat);
-      if (low && MODE !== 'nofurn') tiles.forEach(function (t) { if (!t.city || t.state !== 'built' || !t.meshes.length || t.used !== frameNo) return; var m0 = t.meshes[0], px = m0.position.x, pz = m0.position.z, k = m0.scale.x, A = t.city;
+      if (low && !HAS('nofurn')) tiles.forEach(function (t) { if (!t.city || t.state !== 'built' || !t.meshes.length || t.used !== frameNo) return; var m0 = t.meshes[0], px = m0.position.x, pz = m0.position.z, k = m0.scale.x, A = t.city;
         if (t.d > C.TREE_R + 200) return;
         for (var i = 0; i < A.length; i += 7) { var kind = A[i], x = px + A[i + 1] * k, z = pz + A[i + 3] * k, dx = x - cam.x, dz = z - cam.z; if (dx * dx + dz * dz > RR[kind] * RR[kind] || cnt[kind] >= pool.caps[kind]) continue;
           pool.v.set(x, A[i + 2], z); pool.q.setFromAxisAngle(pool.up, A[i + 4]); var sc = A[i + 5]; pool.s.set(sc, sc * (kind === 0 ? 0.9 + A[i + 6] * 0.25 : 1), sc); pool.m4.compose(pool.v, pool.q, pool.s);
@@ -848,6 +856,6 @@ window.WFR_CITY790 = (function () {
   }
   function changed() { ver++; }
   function restale(t) { return !!(mats && on() && t.z === 14 && t.detail790 === false && t.d < C.DETAIL_UP); }   /* world-features asks: a far-built tile she now nears is rebuilt with its detail */
-  function peek() { var o = JSON.parse(JSON.stringify(st)); o.on = on(); o.mats = !!mats; o.pool = pool ? { tris: pool.tris, counts: pool.meshes.map(function (m) { return m.count; }) } : null; return o; }
+  function peek() { var o = JSON.parse(JSON.stringify(st)); o.on = on(); o.ink = INK; o.mats = !!mats; o.pool = pool ? { tris: pool.tris, counts: pool.meshes.map(function (m) { return m.count; }) } : null; return o; }
   return { C: C, on: on, materials: materials, begin: begin, building: building, road: road, stepRoads: stepRoads, finishTile: finishTile, tick: tick, changed: changed, restale: restale, peek: peek, tagColour: tagColour, obb: obb, U: U, version: 1 };
 })();

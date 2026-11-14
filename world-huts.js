@@ -494,13 +494,13 @@ window.WFR_HUTS = (function () {
   var SKIN = [0x3b2219, 0x5a3624, 0x7d4e33, 0x9a6a48, 0xb5835e, 0xcf9f7a, 0xe2b996, 0xf0cfb2];   // world-people.js's own palette, by index
   var FOLK = {
     safrica: { skin: [0, 3], names: ['Thandiwe', 'Sipho', 'Nomsa', 'Lwazi', 'Zanele', 'Themba'], lines: ['Molo! The hills are green after the rain.', 'Sawubona, little bird. Rest on the thatch if you like.'] },
-    maasai: { skin: [0, 2], names: ['Naserian', 'Lemayian', 'Nashipae', 'Saitoti', 'Nalangu', 'Kakuta'], lines: ['Supa! The cattle came home early today.', 'Sopa, little one. The kraal is quiet at noon.'] },
+    maasai: { skin: [0, 2], names: ['Naserian', 'Lemayian', 'Nashipae', 'Saitoti', 'Nalangu', 'Kakuta'], lines: ['Supa! The cattle came home early today.', 'Sopa, little one. The enkang is quiet at noon.'] },
     ethiopia: { skin: [1, 3], names: ['Selam', 'Dawit', 'Hanna', 'Bekele', 'Meron', 'Tesfaye'], lines: ['Selam! The coffee is on the fire.', 'Selam, little bird. The tukul keeps cool all day.'] },
     wafrica: { skin: [0, 2], names: ['Abena', 'Kwame', 'Aminata', 'Ibrahim', 'Fatou', 'Moussa'], lines: ['Akwaaba! You found our compound.', 'I ni ce! The millet is nearly ready.'] },
     nafrica: { skin: [3, 6], names: ['Itto', 'Idir', 'Tafsut', 'Amastan', 'Yasmina', 'Youssef'], lines: ['Azul! The roof is the coolest place at dusk.', 'Marhaba, little traveller. There is shade by the wall.'] },
     sahara: { skin: [2, 5], names: ['Itto', 'Idir', 'Tafsut', 'Amastan', 'Yasmina', 'Youssef'], lines: ['Azul! The wind brings sand from the south.', 'Rest a while; there is shade by the tent.'] },
     arabia: { skin: [3, 5], names: ['Layla', 'Omar', 'Noor', 'Karim', 'Huda', 'Khalid'], lines: ['Marhaba! Stay for coffee.', 'Ahlan, little bird. The camels know you are here.'] },
-    persia: { skin: [3, 6], names: ['Darya', 'Reza', 'Laleh', 'Kian', 'Shirin', 'Arash'], lines: ['Salaam! The well is cool today.', 'Salaam, little bird. The roof is warm in the sun.'] },
+    persia: { skin: [3, 6], names: ['Darya', 'Reza', 'Laleh', 'Kian', 'Shirin', 'Arash'], lines: ['Salaam! The windcatcher keeps the rooms cool.', 'Salaam, little bird. The roof is warm in the sun.'] },
     tibet: { skin: [3, 5], names: ['Tenzin', 'Dolma', 'Norbu', 'Pema', 'Lhakpa', 'Yangchen'], lines: ['Tashi delek! The yaks know the way better than I do.'] },
     steppe: { skin: [4, 6], names: ['Altantsetseg', 'Bat-Erdene', 'Oyunaa', 'Temuulen', 'Saraa', 'Ganbold'], lines: ['Sain baina uu! Come in out of the wind.', 'Our ger faces south, to catch the sun.'] },
     japan: { skin: [5, 7], names: ['Haruto', 'Yui', 'Sora', 'Aoi', 'Ren', 'Hana'], lines: ['Konnichiwa! The rice is tall this year.', 'Mind the thatch, little bird. The whole village laid it together.'] },
@@ -515,16 +515,16 @@ window.WFR_HUTS = (function () {
     polynesia: { skin: [2, 4], names: ['Moana', 'Teva', 'Hina', 'Manu', 'Vaitiare', 'Tane'], lines: ['Ia ora na! The reef is calm today.'] },
     hawaii: { skin: [2, 5], names: ['Kai', 'Leilani', 'Keoni', 'Malia', 'Nalu', 'Kalani'], lines: ['Aloha! The trade winds are kind today.'] },
     arctic: { skin: [3, 5], names: ['Aputi', 'Siku', 'Nuka', 'Tapeesa', 'Kallik', 'Anernerk'], lines: ['Ai! The ice is good for travelling now.', 'Come in by the lamp, little bird. It is warm inside.'] },
-    iceland: { skin: [6, 7], names: ['Gudrun', 'Jon', 'Sigridur', 'Olafur', 'Helga', 'Einar'], lines: ['Hallo! The turf keeps the house warm all winter.'] },
+    iceland: { skin: [6, 7], names: ['Gudrun', 'Jon', 'Sigridur', 'Olafur', 'Helga', 'Einar'], lines: ['Halló! The turf keeps the house warm all winter.'] },
     sapmi: { skin: [5, 7], names: ['Aile', 'Niillas', 'Biret', 'Ande', 'Elle', 'Mahtte'], lines: ['Buorre beaivi! The reindeer are moving north.'] },
-    andes: { skin: [2, 4], names: ['Rosa', 'Juan', 'Killa', 'Mateo', 'Sisa', 'Luis'], lines: ['Allillanchu! The terraces are ready for planting.', 'Buenos dias, pajarito.'] },
-    meso: { skin: [2, 5], names: ['Maria', 'Jose', 'Ana', 'Miguel', 'Lucia', 'Carlos'], lines: ['Buenos dias! Mind the tiles, pajarito.'] },
+    andes: { skin: [2, 4], names: ['Rosa', 'Juan', 'Killa', 'Mateo', 'Sisa', 'Luis'], lines: ['Allillanchu! The terraces are ready for planting.', 'Buenos días, pajarito. The llamas saw you first.'] },
+    meso: { skin: [2, 5], names: ['Maria', 'Jose', 'Ana', 'Miguel', 'Lucia', 'Carlos'], lines: ['Buenos días! Mind the tiles, pajarito.'] },
     westeur: { skin: [5, 7], names: ['Eleanor', 'Thomas', 'Aoife', 'Pieter', 'Claire', 'Owen'], lines: ['Hello! The thatch was laid new this spring.'] },
     centeur: { skin: [5, 7], names: ['Anna', 'Lukas', 'Marie', 'Jonas', 'Lena', 'Felix'], lines: ['Guten Tag! The beams are older than the village church.'] },
-    alps: { skin: [5, 7], names: ['Anna', 'Urs', 'Heidi', 'Reto', 'Vreni', 'Beat'], lines: ['Gruezi! The cows come down from the high meadow soon.'] },
+    alps: { skin: [5, 7], names: ['Anna', 'Urs', 'Heidi', 'Reto', 'Vreni', 'Beat'], lines: ['Grüezi! The cows come down from the high meadow soon.'] },
     med: { skin: [4, 7], names: ['Maria', 'Giorgos', 'Lucia', 'Marco', 'Elena', 'Pablo'], lines: ['Buongiorno! The figs are ripe.', 'Hola! The stone keeps the house cool.'] },
     nordic: { skin: [5, 7], names: ['Ingrid', 'Erik', 'Astrid', 'Lars', 'Sigrid', 'Nils'], lines: ['Hei! The stove is lit, come and get warm.'] },
-    russia: { skin: [5, 7], names: ['Olga', 'Ivan', 'Anya', 'Pavel', 'Katya', 'Mikhail'], lines: ['Privet! The stove is lit, come and get warm.'] },
+    russia: { skin: [5, 7], names: ['Olga', 'Ivan', 'Anya', 'Pavel', 'Katya', 'Mikhail'], lines: ['Privet! The stove is half the house. The warm half.'] },
     outback: { skin: [0, 7], names: ['Matilda', 'Jack', 'Ruby', 'Ned', 'Isla', 'Banjo'], lines: ["G'day! The tank's full after the storm."] }
   };
   function folkOf(reg, lat, lon) {   // the folk key for a hamlet (null: no people put there); 'jm' and 'us' are world-people.js's own folk (its own names and lines)

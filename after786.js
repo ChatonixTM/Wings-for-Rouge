@@ -53,13 +53,13 @@ window.WFR_AFTER786 = (function () {
     ask1: [['Hawk', '...When I was small, the old one raced me up to his peak. I never won. Not once.'], ['Hawk', 'Race me there. Now. He will judge.']],
     ask: [['Hawk', 'The old one\'s peak. Again?']],
     yes: 'Race him', no: 'Not today', q: function (n) { return 'Race the Hawk to the Eagle\'s peak? (race ' + n + ' of 5)'; }, noSay: 'Tomorrow, then.',
-    count: ['3', '2', '1', 'Go!'], hud: function (m) { return 'Race the Hawk to the peak! · ' + m + ' m'; },
+    count: ['3', '2', '1', 'Go!'], hud: function (m) { return 'Beat the Hawk to the peak · ' + m + ' m'; },
     win: [['Eagle', 'Hm. She was here first.'], ['Hawk', '...She was. Tomorrow, little one. I will be faster.']],
     winTop: [['Eagle', 'Hm. She was here first again.'], ['Hawk', '...There is no shame in losing to her. I am learning that.']],
     gift: [['Hawk', 'Your chick watched the whole way. Here: tuck the wings, ride the wind, let it carry you. Like that.']],
     giftToast: 'The Hawk showed your chick how to ride the wind · Flight +16',
     lose: [['Hawk', 'I won this one. Do not let me win the next.'], ['Eagle', 'Again tomorrow, both of you.']],
-    loseToast: 'The Hawk reached the peak first.', first: 'You reached the peak first!', farToast: 'The Hawk waited on the peak, then settled down by the Eagle. Again tomorrow.',
+    loseToast: 'The Hawk got there first. He will mention it.', first: 'First to the peak! The Hawk is still coming.', farToast: 'The Hawk waited on the peak, then settled down by the Eagle. Again tomorrow.',
     tierUp: function (t) { return 'The Hawk will fly harder now (race ' + t + ' of 5).'; }
   };
   /* THE RULES (pure) */

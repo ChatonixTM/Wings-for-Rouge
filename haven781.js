@@ -47,7 +47,7 @@ window.WFR_HAVEN781 = (function () {
   var TOYS = [{ id: 'ball', emoji: '\u{26BD}', name: 'a bouncy ball', at: [-1.6, -8.4] }, { id: 'pinwheel', emoji: '\u{1F390}', name: 'a pinwheel', at: [-5.6, -8.2] }, { id: 'drum', emoji: '\u{1FA98}', name: 'a little drum', at: [-1.2, -4.6] }];
   var LINES = {
     shut: 'A little round door, shut tight. Something small will live here one day.',
-    hello: 'Oh! A customer with wings. I keep the Market here. Coins for nice things, that is the deal. You earn them by helping: a twig, a tool brought, a lesson, every new level. Animals drop a few too.',   /* 782 (2): she says plainly how coins are earned */
+    hello: 'Oh! A customer with wings. I\'m Thimble; this is the Market. Coins come from helping: twigs, tools, lessons, new levels. Animals drop a few.',   /* 782 (2): she says plainly how coins are earned */
     poor: function (p, n) { return 'That one is ' + p + ' coins and you have ' + n + '. Bring a villager their tool, learn a lesson, or grow a level: each pays a coin or two.'; },
     earn: 'Earn coins: a twig 1 · a tool brought 2 · a lesson 2 · a new level 1 · animals now and then',   /* 782 (2): the panel says it too (DRAFT) */
     full: 'Your beak is full. Give that to your chick first.',
@@ -317,7 +317,7 @@ window.WFR_HAVEN781 = (function () {
           if (cine.fade) cine.fade(1 - sm((t - 0.05) / 0.8));
           if (!said && t >= (first ? 1.1 : 0.5)) { said = true; try { o.title(first ? 'Welcome to' : '', 'Chick Haven', first ? 'Market · School · Ring' : '', 'haven'); } catch (e) { /* fine */ } }
           if (chick && c0) { var u = Math.min(1, Math.max(0, (t - runAt) / Math.max(0.01, runT))); chick.position.lerpVectors(c0, stop, u); hopY = u > 0 && u < 1 ? Math.abs(Math.sin((t - runAt) * 11)) * 0.18 : (t > arriveT && t < arriveT + 0.6 ? Math.abs(Math.sin((t - arriveT) * 10)) * 0.22 : 0);
-            if (!met && u >= 1) { met = true; try { Lt.chirp(); Lt.burstHearts(chick.position); var b = Lt.bond('haven781'); if (b) Lt.toast('Your chick is so happy to see you! Bond +' + b, 2600); } catch (e) { /* fine */ } } }
+            if (!met && u >= 1) { met = true; try { Lt.chirp(); Lt.burstHearts(chick.position); var b = Lt.bond('haven781'); if (b) Lt.toast('Your chick runs to you, wings out. Bond +' + b, 2600); } catch (e) { /* fine */ } } }
         },
         pose: function (on) { if (!chick) return; if (on) { H.cy = chick.position.y; H.cr = chick.rotation.y; chick.position.y += hopY; chick.rotation.y = cyaw; } else { chick.position.y = H.cy; chick.rotation.y = H.cr; } },
         shot: function (t, u, Pp, Lk) {   /* three shots, cut (the newer game's grammar): the garden from over the far wall, the run toward her, the two of them */
@@ -330,7 +330,7 @@ window.WFR_HAVEN781 = (function () {
         end: function (how) {
           if (how === 'tap' && o.titleHide) try { o.titleHide(); } catch (e) { /* fine */ }   /* a skipped arrival takes its name card with it */
           if (chick) { chick.position.copy(stop); var U = chick.userData; U.home = stop.clone(); U.life = null; S.chickHop = 1; }
-          if (chick && !met) { met = true; try { Lt.chirp(); Lt.burstHearts(chick.position); var b2 = Lt.bond('haven781'); if (b2) Lt.toast('Your chick is so happy to see you! Bond +' + b2, 2600); } catch (e) { /* fine */ } }
+          if (chick && !met) { met = true; try { Lt.chirp(); Lt.burstHearts(chick.position); var b2 = Lt.bond('haven781'); if (b2) Lt.toast('Your chick runs to you, wings out. Bond +' + b2, 2600); } catch (e) { /* fine */ } }
           if (!state().met && o.cine) { /* the first meeting with Thimble is at the Market */ }
           Lt.save();
         }
@@ -398,7 +398,7 @@ window.WFR_HAVEN781 = (function () {
       S.coins = n - p; hv.spent = (hv.spent || 0) + p; H.bought = (H.bought || 0) + 1; Lt.save(); Lt.hud(); draw();
       try { if (Lt.sound) Lt.sound('buy'); } catch (e) { /* fine */ }
       var it = wares(kind === 'toy' ? 'toys' : kind).find(function (w) { return w.id === id; });
-      if (it) { closeMarket(); if (o.cine) o.cine.itemGet({ back: true, emoji: it.emoji, name: it.name, over: 'You bought', line: kind === 'wear' ? 'Dress your chick in it from its card.' : kind === 'toy' ? 'It is in the Haven now. Your chick loves it.' : 'Give it to your chick: ' + it.what + '.', hide: kind === 'fruit' && S.fruit ? [S.fruit.g] : [] }); }
+      if (it) { closeMarket(); if (o.cine) o.cine.itemGet({ back: true, emoji: it.emoji, name: it.name, over: 'You bought', line: kind === 'wear' ? 'Dress your chick in it from its card.' : kind === 'toy' ? 'It is in the Haven now. Your chick has already claimed it.' : 'Give it to your chick: ' + it.what + '.', hide: kind === 'fruit' && S.fruit ? [S.fruit.g] : [] }); }
       return true;
     }
     function fruitType(f) { return { id: f.id, emoji: f.emoji, name: f.name, stat: f.stat, gives: (function () { var g = {}; g[f.stat] = 16; return g; })(), happy: 4, food: 30, market781: true }; }

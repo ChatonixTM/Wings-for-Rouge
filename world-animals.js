@@ -141,6 +141,15 @@ window.WFR_WORLDANIMALS = (function () {
     stingray: { name: 'Southern stingray', make: 'stingray', sp: 'dolphin', realm: 'sea', temper: 'passive', y: -1.6, depth: 4, v: 0.6, loop: [12, 30], lag: 0.5, side: 4 },
     tortoise: { name: 'Giant tortoise', make: 'tortoise', sp: 'mongoose', realm: 'land', temper: 'passive', v: 0.15, stride: 0.5, spread: 5, rest: 0.8 }
   });
+  /* 787: THE SNAKES OF THE REGIONS (Marth, Nov 13 2026: "the snake types should be available in other regions too"): their bodies and homes are snake787 and snakes787, by sea750 */
+  Object.assign(K, {
+    yellowboa: { name: 'Caribbean boa (a cousin of the home island\'s yellow boa)', make: 'yellowboa', sp: 'dolphin', realm: 'land', temper: 'sometimes', v: 0.25, stride: 0.3, spread: 6, rest: 0.7 },
+    python: { name: 'Rock python', make: 'python', sp: 'dolphin', realm: 'land', temper: 'malicious', v: 0.3, stride: 0.4, spread: 12, rest: 0.75 },
+    anaconda: { name: 'Green anaconda', make: 'anaconda', sp: 'dolphin', realm: 'land', temper: 'malicious', v: 0.25, stride: 0.4, spread: 14, rest: 0.8 },
+    rattlesnake: { name: 'Rattlesnake', make: 'rattlesnake', sp: 'dolphin', realm: 'land', temper: 'sometimes', v: 0.35, stride: 0.3, spread: 8, rest: 0.6 },
+    grasssnake: { name: 'Grass snake', make: 'grasssnake', sp: 'dolphin', realm: 'land', temper: 'passive', v: 0.4, stride: 0.25, spread: 6, rest: 0.5 },
+    carpetpython: { name: 'Carpet python', make: 'carpetpython', sp: 'dolphin', realm: 'land', temper: 'sometimes', v: 0.3, stride: 0.3, spread: 9, rest: 0.7 }
+  });
   var TMP = { passive: 0, curious: 1, sometimes: 2, malicious: 3 };
   function temper(k) { var T = window.WFR_ANIMALS && WFR_ANIMALS.T ? WFR_ANIMALS.T : TMP; return T[K[k].temper]; }
 
@@ -647,11 +656,37 @@ window.WFR_WORLDANIMALS = (function () {
       case 'northsea': R.sea = [['seal', 2, [2, 6]], ['walrus', 1, [3, 8]], ['whale', 1, [1, 2]], ['orca', 1, [3, 7]]]; break;
       case 'tahoelake': R.sea = [['trout', 1, [6, 12]]]; R.air = [['eagle', 1, [1, 3]]]; break;
     }
-    sea750(R, b, lat, lon);
+    sea750(R, b, lat, lon); snakes787(R, b, lat, lon);   /* 787 */
     return R;
   }
   /* 750: the new kinds by real water: added after the switch above, each where it really lives. The boxes are rough, DRAFT for Izumi's atlas check */
   var B750 = { natl: [40, 72, -75, 30], npacW: [38, 72, 135, 180], npacE: [38, 72, -180, -118], bass: [30, 60, -12, 36], trout: [45, 71, -25, 42], narwhal: [65, 82, -100, 60], hudson: [51, 66, -96, -64], gala: [-1.5, 0.7, -92, -89], aldabra: [-9.6, -9.3, 46, 46.6] };
+  /* 787: the snakes' bodies: one lofted body each (length L m, girth r m, its own pattern), posed by the kit's swimmer (the body bends side to side: it slithers); belly on the ground */
+  var SNAKE787 = {
+    yellowboa: { L: 2.0, r: 0.045, top: 0xc4ae3c, dark: 0x1e1a12, belly: 0xd8c88a, pat: 'bands', n: 46 },
+    python: { L: 3.6, r: 0.08, top: 0x9a7a4a, dark: 0x4a3220, belly: 0xd8ccaa, pat: 'blotch', n: 38 },
+    anaconda: { L: 4.6, r: 0.11, top: 0x56662a, dark: 0x16160e, belly: 0xc8c070, pat: 'ovals', n: 52 },
+    rattlesnake: { L: 1.4, r: 0.045, top: 0xb09a70, dark: 0x5a4630, belly: 0xd8ccb0, pat: 'diamonds', n: 40, rattle: true },
+    grasssnake: { L: 1.0, r: 0.026, top: 0x5c6a4a, dark: 0x2a2f22, belly: 0xb8b8a0, pat: 'collar', n: 30 },
+    carpetpython: { L: 2.4, r: 0.055, top: 0x6a5a30, dark: 0xd8c890, belly: 0xd8ccaa, pat: 'blotch', n: 64 }
+  };
+  function snake787(id) { var s = SNAKE787[id], hx = PR.hex, top = hx(s.top), dk = hx(s.dark), bel = hx(s.belly), yel = hx(0xe8d040), z0 = s.L * 0.5;
+    return swimmer(id, { L: s.L, z0: z0, rings: 18, sides: 6,
+      prof: function (u) { var e = Math.min(1, u * 9), t = Math.max(0, (u - 0.72) / 0.28), w = s.r * (0.55 + 0.45 * e) * (1 - 0.9 * t) + 0.004; return [w, w * 0.85, w * 0.85]; },
+      col: function (u, up, sd) { if (up < -0.35) return bel; if (s.pat === 'collar' && u > 0.035 && u <= 0.05) return yel; var q;
+        if (s.pat === 'bands') q = Math.sin(u * s.n) > 0.55 - u * 0.9; else if (s.pat === 'diamonds') q = Math.abs(Math.sin(u * s.n)) + Math.abs(sd) * 0.7 < 0.55 || (s.rattle && u > 0.93 && Math.sin(u * 200) > 0);
+        else if (s.pat === 'collar') q = u > 0.05 && u < 0.08; else if (s.pat === 'ovals') q = Math.sin(u * s.n) * Math.cos(sd * 2.6) > 0.45; else q = Math.sin(u * s.n + sd * 3) > 0.45;
+        return q ? dk : top; },
+      extra: function (G, P) { [1, -1].forEach(function (sd) { P.eye(G, [s.r * 0.5 * sd, s.r * 1.1, z0 - s.r * 1.2], s.r * 0.18, 0, [0.6 * sd, 0, 0.8]); }); },
+      sw: { L: s.L, z0: z0, vert: false, amp: 0.09 * s.L, kw: 6, f0: 0.7, f1: 0.7, vRef: 0.3, finX: 0, finY: 0, jawMax: 0 }, radius: s.L * 0.6 }); }
+  Object.keys(SNAKE787).forEach(function (k) { S3[k] = function () { return snake787(k); }; });
+  function snakes787(R, b, lat, lon) {   /* 787: where each lives (rough boxes, DRAFT for Izumi's atlas check); never on the giant tortoises' islands */
+    if (!R.land.length || (R.land.length === 1 && R.land[0][0] === 'tortoise')) return; var rg = regionOf(lat, lon), am = rg === 'americas', add = function (k, n) { R.land.push([k, 1, n]); };
+    if (b === 'caribbean') add('yellowboa', [1, 2]);
+    else if ((b === 'savanna' || b === 'rainforest') && rg === 'africa') add('python', [1, 1]);
+    else if (b === 'tropical') { if (am && inBox(lat, lon, RG.amazon)) add('anaconda', [1, 1]); else if (rg === 'asia' || rg === 'africa') add('python', [1, 1]); else if (rg === 'australia') add('carpetpython', [1, 2]); }
+    else if (b === 'temperate') { if (am && lon < -95 && lat < 50) add('rattlesnake', [1, 2]); else if (rg === 'europe') add('grasssnake', [1, 2]); else if (rg === 'australia') add('carpetpython', [1, 2]); }
+  }
   function sea750(R, b, lat, lon) {
     var al = Math.abs(lat), S = R.sea, at = function (Bx) { return inBox(lat, lon, Bx); }, north = at(B750.natl), pac = at(B750.npacW) || at(B750.npacE);
     if (R.land.length && (at(B750.gala) || at(B750.aldabra))) R.land = [['tortoise', 4, [3, 8]]];   // the two homes of the giant tortoises: on these islands they are the land's own

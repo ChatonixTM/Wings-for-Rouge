@@ -29,11 +29,11 @@
   const SLOTS = 4, HP0 = 100, STORY_T = 1.0, FIGHT_T = 0.25, HOST_GONE = 12, NEAR = 150, RATE_FAR = 1 / 3;   /* the plan: farther than 150 m from every other bird, 3 packets a second */
   const POLICY = 'split';   /* the Hawk's attention (his ruling: every boss fight is 2 players): 'split' = each phone its own attacker and its own 3-in-5 s budget. 'shared' (Itachi's other reading: one budget for the room) is kept below only so the guard can tell the two apart */
   const NOAUTH = /operation-not-allowed|admin-restricted|configuration-not-found|auth\/.*disabled/i;
-  const WORDS = { off: 'Play the story together: make a world and tell its code to your friend, or enter theirs. Their bird flies in YOUR story (or you in theirs), and you each keep your own levels.',
-    host: (c, n) => 'Your world is open: code ' + c + '. ' + (n > 1 ? (n - 1) + ' friend' + (n > 2 ? 's' : '') + ' with you.' : 'Tell your friend the code.'),
+  const WORDS = { off: 'Fly the story with a friend: open your world and read them its code, or type theirs. Each of you keeps your own levels.',
+    host: (c, n) => 'Your world is open: code ' + c + '. ' + (n > 1 ? (n - 1) + ' friend' + (n > 2 ? 's' : '') + ' with you.' : 'Read it out to your friend.'),
     guest: (h) => 'You are in ' + (h || 'your friend') + "'s world. Their story, your own bird: your levels and your pouch come home with you.",
-    noauth: 'Ask the host to turn on group play.', full: 'This world is full (4 birds).', closed: 'That world is closed for now: ask your friend to open it again.', nosave: 'Fly a little in your own world first (your game needs a save to come home to).', nocode: 'No world has that code.', bad: 'A world code is 5 letters and numbers (no I, L, O, 0 or 1).',
-    off2: "Multiplayer isn't set up yet.", left: (h) => (h || 'Your friend') + ' went home. You wake in your own nest, in your own world.', wait: (h) => (h || 'Your friend') + ' chooses what happens to the Hawk.' };
+    noauth: 'Ask the host to turn on group play.', full: 'This world is full: four birds already. Try again when one goes home.', closed: 'That world is closed for now: ask your friend to open it again.', nosave: 'Fly a little in your own world first (your game needs a save to come home to).', nocode: 'No world has that code. Check it letter by letter.', bad: 'A world code is 5 letters and numbers (no I, L, O, 0 or 1).',
+    off2: "Flying together isn't set up yet.", left: (h) => (h || 'Your friend') + ' went home. You wake in your own nest, in your own world.', wait: (h) => (h || 'Your friend') + ' chooses what happens to the Hawk.' };
 
   const W = { G: null, T: null, status: 'off', role: null, uid: null, w: null, code: null, slot: 0, name: '', why: '', t: 0, rnow: 0, lastSend: -1, sent: 0, recv: 0, dropped: 0, refused: 0, lastWhy: '',
     ghosts: new Map(), slots: {}, story: { m: null, world: null, choices: null }, applied: { world: null, choices: null }, own: null, ownText: null, xpFrac: 0, hostLv: 0, hostName: '', hostSeen: 0,
@@ -176,7 +176,7 @@
   function config() { const c = window.WFR_NET_CONFIG; return c && typeof c === 'object' && typeof c.databaseURL === 'string' && typeof c.apiKey === 'string' ? c : null; }
   function transport() { if (W.T) return W.T; if (window.WFR_NET721_FAKE) W.T = fakeTransport(); else { const c = config(); if (!c) return null; W.T = firebaseTransport(c); } return W.T; }
   function say(why) { W.why = why || ''; try { if (W.G && W.G.sheet) W.G.sheet(); } catch (e) { /* the sheet is optional */ } }
-  function fail(e) { const m = String(e && (e.code || e.message) || e); W.lastWhy = m; if (NOAUTH.test(m)) { W.status = 'noauth'; say(WORDS.noauth); } else { W.status = 'error'; say('Could not reach the world (' + m.slice(0, 60) + ').'); } return { ok: false, why: W.why }; }
+  function fail(e) { const m = String(e && (e.code || e.message) || e); W.lastWhy = m; if (NOAUTH.test(m)) { W.status = 'noauth'; say(WORDS.noauth); } else { W.status = 'error'; say('Could not reach the world (' + m.slice(0, 60) + '). Your own game is safe.'); } return { ok: false, why: W.why }; }
   async function signIn() { const T = transport(); if (!T) throw new Error(WORDS.off2); if (!W.uid) W.uid = await T.signIn(); return W.uid; }
   const wp = (s) => 'worlds/' + W.w + (s ? '/' + s : '');
   async function make(name) {

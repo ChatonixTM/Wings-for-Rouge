@@ -20,7 +20,7 @@ window.WFR_FAST725D = (function () {
   var C = { TOP: 60000, VMAX: 18000, T_ARR: 20, ARRIVE_KM: 1, LOW: 300, BREAK: 0.35, SY: 0.6,
     DROP_AGL: 350, DROP_HOLD: 2000, GLIDE_TO: 60, GLIDE_END: 80, GLIDE_MAX: 40, FADE_IN: 260, FADE_OUT: 650, WAIT_MAX: 5000 };
   var WORDS = { fly: '✈ Fly there', drop: '⬇ Drop here', set: 'Flying to {p}. Steer any time to take the wind back.', took: 'You take the wind yourself.',
-    here: 'You are over {p}.', dropped: '{p}', shut: 'The whole world opens after the climb.' };   // DRAFT words for Marth ("You take the wind yourself." is Fly home's own)
+    here: 'There it is: {p}, right below you.', dropped: '{p}', shut: 'The whole world opens after the climb.' };   // DRAFT words for Marth ("You take the wind yourself." is Fly home's own)
   var R = { on: false, to: null, name: '', enters: -1, sets: 0, arrivals: 0, breaks: 0, ends: {}, km: null, yaw: null, wantAgl: null, kmMin: null, maxY: 0, frames: 0 };
   var DR = { phase: null, to: null, name: '', t0: 0, tw: 0, drops: 0, reveals: 0, aborts: 0, last: null, glide: false, glideT: 0, waits: 0, err: null };
   var D = null;   // the page's door (fast725dPlace and its friends), handed over by door() at load

@@ -109,6 +109,7 @@
   /* ---------- the ghost: a second WFR_BIRDS rig of their kind, smoothed between packets ---------- */
   function ghostMake(k, name) {
     const G = N.G, THREE = G.THREE; const r = G.build(k); const g = r.g; g.name = 'ghost678'; g.traverse((o) => { if (o.isMesh) { o.castShadow = false; o.receiveShadow = false; } });
+    { const off = []; g.traverse((o) => { if (o.isMesh && o.name === 'crest' && !o.visible) off.push(o); }); off.forEach((o) => o.parent.remove(o)); }   /* #140: the borrowed body hides the box bird's own crest for good (birds758: its crest is on card_head); a part never drawn has no program, and its first draw would make one (trap 188): the ghost carries only what is drawn */
     const cv = document.createElement('canvas'); cv.width = 256; cv.height = 64; const c = cv.getContext('2d'); const body = (typeof getComputedStyle === 'function' ? getComputedStyle(document.documentElement).getPropertyValue('--body') : '').trim() || 'system-ui, sans-serif';   /* his law (Oct 22): the game's own label look, the savebox/toast family: a cream card, its border, its body font, its ink; not a dark UI chip */
     c.font = '800 30px ' + body; c.textAlign = 'center'; c.textBaseline = 'middle'; const tw = c.measureText(name || 'friend'), w = Math.min(244, ((tw && tw.width) || 120) + 36), x0 = 128 - w / 2;
     c.beginPath(); c.moveTo(x0 + 16, 8); c.arcTo(x0 + w, 8, x0 + w, 58, 16); c.arcTo(x0 + w, 58, x0, 58, 16); c.arcTo(x0, 58, x0, 8, 16); c.arcTo(x0, 8, x0 + w, 8, 16); c.closePath(); c.fillStyle = '#fffdf8'; c.fill(); c.lineWidth = 3; c.strokeStyle = '#e8dcc8'; c.stroke();
@@ -170,10 +171,10 @@
     ready() { return !!config() || !!window.WFR_NET678_FAKE; },
     join(code, name, transport) {
       code = String(code || '').toUpperCase().replace(/[^A-Z0-9]/g, ''); if (!CODE_RE.test(code)) return { ok: false, why: 'A code is 4 to 6 letters and numbers (no I, L, O, 0 or 1).' };
-      if (!N.G) return { ok: false, why: 'The island is not ready.' };
+      if (!N.G) return { ok: false, why: 'The island is still loading. Try again in a moment.' };
       API.leave();
       name = cleanName(name) || N.name || 'friend'; N.name = name;
-      if (transport) N.T = transport; else if (window.WFR_NET678_FAKE) N.T = fakeTransport(); else { const c = config(); if (!c) return { ok: false, why: "Multiplayer isn't set up yet." }; N.T = firebaseTransport(c, code, N.player); }
+      if (transport) N.T = transport; else if (window.WFR_NET678_FAKE) N.T = fakeTransport(); else { const c = config(); if (!c) return { ok: false, why: "Flying together isn't set up yet." }; N.T = firebaseTransport(c, code, N.player); }
       N.code = code; N.status = 'on'; N.err = null; N.send = 0; N.lastSend = -1; N.refused = 0; N.lastWhy = ''; N.T.on(onPacket); roomSave({ code, name });
       return { ok: true, code };
     },

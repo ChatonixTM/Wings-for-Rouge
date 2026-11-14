@@ -139,7 +139,7 @@ window.WFR_INTERIORS729 = (function () {
       rooms: [
         { name: '1st floor, 57 m', y: 57, at: [0, 0], yh: 4, walk: [[-28.6, -28.6, 28.6, 28.6]], block: [[-12.8, -12.8, 12.8, 12.8], [23.6, 23.6, 29.5, 29.5], [-29.5, 23.6, -23.6, 29.5], [23.6, -29.5, 29.5, -23.6], [-29.5, -29.5, -23.6, -23.6], [18.6, -22.9, 22.9, -18.6], [-12.4, 19.6, 12.4, 27.4], [19.6, -12.4, 27.4, 12.4]],
           spawn: [16.6, -16.6, -Math.PI * 0.75], cam: [-28.2, -28.2, 28.2, 28.2, 22], links: [{ at: [17.7, -20.9], to: 1, label: '🛗 To the summit' }, { at: [20.9, -17.7], to: 'out', label: '🚪 Down and out' }],
-          lines: ['Look down through the glass floor, if you dare!', 'Gustave Eiffel kept a little office at the very top.', 'On a clear day you can see for 70 km.'],
+          lines: ['Look down through the glass floor, if you dare!', 'Gustave Eiffel kept a little apartment at the very top.', 'On a clear day you can see for 70 km.'],
           people: [pp('local', 'visiting the tower', 26, 4, -Math.PI / 2), pp('local', 'visiting the tower', 25.6, 7, -Math.PI / 2, 'stand', 'wave'), pp('local', 'visiting the tower', -4, 26.5, 0), pp('local', 'visiting the tower', 14.6, 2, -Math.PI / 2, 'stand', 'interact'), pp('local', 'a tower guide', 15.5, -9, -Math.PI / 2, 'stand', 'wave', 'Welcome to the 1st floor! The summit lift is just behind you.')],
           build: function (G) {
             var BOARD = hx(0x9a8a74), GLASS = hx(0x9fc6d9), PAV = hx(0xcfd6da), s, k;
@@ -174,7 +174,7 @@ window.WFR_INTERIORS729 = (function () {
       rooms: [
         { name: 'the lobby', y: 0, at: [0, 0], yh: 8, walk: [[-13.6, -4.6, 13.6, 4.6]], block: [[6.8, -1.2, 10.2, 0.6], [-13.7, -3.2, -13.0, 3.2]],
           spawn: [0, -2.0, 0], cam: [-12.9, -3.9, 12.9, 3.9, 7.9], links: [{ at: [2, 3.6], to: 1, label: '🛗 Up to the 86th floor' }, { at: [0, -3.7], to: 'out', label: '🚪 Out to 34th Street' }],
-          lines: ['The lobby ceiling is real gold and aluminium leaf.', 'It took just 410 days to build. Can you believe it?', 'The observatory lifts are on your left.'],
+          lines: ['The lobby ceiling is real gold and aluminium leaf.', 'It went up in 410 days. Some kitchens take longer.', 'The observatory lifts are on your left.'],
           people: [pp('local', 'at the security desk', 8.5, 1.4, Math.PI), pp('local', 'visiting', -6, 1.5, -Math.PI / 2, 'stand', 'interact'), pp('local', 'visiting', -9.5, -2.5, -Math.PI / 2), pp('local', 'visiting', 4.5, 3.0, 0, 'stand', 'wave')],
           build: function (G) {
             var MARB = hx(0xa07850), PIL = hx(0x6e4f33), GOLD = hx(0xc8a050), TERR = hx(0xc9bba3), BRONZE = hx(0x8a6235), k;
@@ -259,7 +259,7 @@ window.WFR_INTERIORS729 = (function () {
             G.flat(-5.0, -5.0, -3.6, -3.6, 0.01, DARK); G.bars(-3.55, -5.0, -3.55, -3.55, 0, 0.9, 0.35, 0.04, IR); G.box(4.6, 6.8, -0.4, 5.3, 7.1, 0.4, GLOWW, { glow: true }); } },
         { name: 'the belfry, 61 m', y: 61, at: [0, 0], yh: 9, walk: [[-5.1, -5.1, 5.1, 5.1]], block: [{ c: [0, 0], r: 1.7 }, [-2.7, -0.3, -2.1, 0.3], [2.1, -0.3, 2.7, 0.3], { c: [3.6, 3.6], r: 1.0 }, { c: [-3.6, 3.6], r: 1.0 }, { c: [3.6, -3.6], r: 1.0 }, { c: [-3.6, -3.6], r: 1.0 }],
           spawn: [-3.4, 0, Math.PI / 2], cam: [-4.4, -4.4, 4.4, 4.4, 7.9], links: [{ at: [-4.5, 1.5], to: 0, label: '🪜 Down to the clock room' }], view: { at: [4.4, 0], name: 'the Thames and the London Eye' },
-          lines: ['That is Big Ben himself: thirteen and a half tonnes.'], people: [],
+          lines: ['That is Big Ben himself: nearly fourteen tonnes of bell.'], people: [],
           build: function (G) {
             var STONE = hx(0x9a907e), BR = hx(0x5b4a33), OAK = hx(0x6b4a2c), k;
             G.flat(-5.5, -5.5, 5.5, 5.5, 0, hx(0x7a7264)); G.flat(-5.5, -5.5, 5.5, 5.5, 9, hx(0x6a6256), true);
@@ -435,7 +435,7 @@ window.WFR_INTERIORS729 = (function () {
   var RED = hx(0xa8282a), GOLDR = hx(0xd9a531);
   var DEFS_ASIA = {
     shtower: { name: 'the Shanghai Tower', e: '🏙️', lat: 31.23350, lon: 121.50550, yaw: 0, door: [0, -42], quest: ['Up the Shanghai Tower', 'The 118th-floor deck, 546 m over Shanghai.'],
-      rooms: [deckRoom({ name: 'the 118th floor, 546 m', y: 546, R: 21, core: 8.5, h: 4.6, spawn: [0, -11.2, Math.PI], lift: [0, -9.2], view: { at: [0, 19.6], name: 'the Huangpu and the Bund' }, people: vp(6, 17), lines: ['The world\'s second-tallest building. It twists 120 degrees as it climbs!', 'That pink ball down there is the Pearl Tower.'] })] },
+      rooms: [deckRoom({ name: 'the 118th floor, 546 m', y: 546, R: 21, core: 8.5, h: 4.6, spawn: [0, -11.2, Math.PI], lift: [0, -9.2], view: { at: [0, 19.6], name: 'the Huangpu and the Bund' }, people: vp(6, 17), lines: ['The world\'s third-tallest building. It twists 120 degrees as it climbs!', 'That pink ball down there is the Pearl Tower.'] })] },
     pearl: { name: 'the Oriental Pearl Tower', e: '🔮', lat: 31.23972, lon: 121.49972, yaw: 0, door: [26, 0], quest: ['Walk the Pearl\'s glass floor', 'The sightseeing floor in the upper pearl, 263 m up.'],
       rooms: [deckRoom({ name: 'the upper pearl, 263 m', y: 263, R: 17, core: 6, h: 4.2, glassRing: 3.2, mull: 0xd06aa0, coreCol: 0xe7cfe0, spawn: [9.8, 0, Math.PI / 2], lift: [7.4, 0], view: { at: [-15.4, 0], name: 'the Bund across the river' }, people: vp(5, 13), lines: ['Look down! The glass floor is right under you.', 'At night the whole tower lights up pink.'] })] },
     forbidden: { name: 'the Forbidden City', e: '🏯', lat: 39.91560, lon: 116.39040, yaw: 0, door: [0, 48], quest: ['Look into the Hall of Supreme Harmony', 'From its threshold: the Dragon Throne under a golden ceiling.'],
@@ -462,7 +462,7 @@ window.WFR_INTERIORS729 = (function () {
     skytree: { name: 'Tokyo Skytree', e: '📡', lat: 35.71006, lon: 139.81070, yaw: 0, door: [0, 42], quest: ['The Skytree\'s Tembo Deck', '350 m: all of Tokyo in one window.'],
       rooms: [deckRoom({ name: 'the Tembo Deck, 350 m', y: 350, R: 16, core: 6, h: 5, spawn: [0, 9.0, 0], lift: [0, 7.0], view: { at: [0, -14.6], name: 'Mount Fuji, far to the west' }, people: vp(6, 13), lines: ['On a clear day you can see Mount Fuji.', 'The tower sways a little in the wind. Do not worry!'] })] },
     tokyotower: { name: 'Tokyo Tower', e: '🗼', lat: 35.65858, lon: 139.74543, yaw: 0, door: [0, 46], quest: ['Up to Tokyo Tower\'s Main Deck', '150 m, and a glass window in the floor.'],
-      rooms: [deckRoom({ name: 'the Main Deck, 150 m', y: 150, R: 12, core: 4, shape: 'square', h: 4.4, glassRing: 1.6, mull: 0xc8382c, spawn: [0, 6.8, 0], lift: [0, 4.9], view: { at: [0, -10.6], name: 'the city towards Shinjuku' }, people: vp(5, 9), lines: ['Look down through the floor window!', 'Tokyo Tower is a bit taller than the Eiffel Tower, you know.'] })] },
+      rooms: [deckRoom({ name: 'the Main Deck, 150 m', y: 150, R: 12, core: 4, shape: 'square', h: 4.4, glassRing: 1.6, mull: 0xc8382c, spawn: [0, 6.8, 0], lift: [0, 4.9], view: { at: [0, -10.6], name: 'the city towards Shinjuku' }, people: vp(5, 9), lines: ['Look down through the floor window!', 'Tokyo Tower is 333 m. The Eiffel Tower is 330. We mention it often.'] })] },
     shibuyasky: { name: 'Shibuya Sky', e: '🌆', lat: 35.65840, lon: 139.70240, yaw: 20 * Math.PI / 180, door: [0, -34], quest: ['Up to Shibuya Sky', 'The open rooftop over the Scramble.'],
       rooms: [deckRoom({ name: 'the rooftop, 229 m', y: 229, R: 15, core: 4, shape: 'square', h: 3.2, open: true, floor: 0x5a5c60, spawn: [0, -7.6, Math.PI], lift: [0, -5.6], view: { at: [-13.6, -13.6], r: 1.6, name: 'the Sky Edge, over the crossing' }, people: vp(7, 12),
         lines: ['Look down at the crossing. Everyone crosses at once!', 'This corner is called the Sky Edge.'],
@@ -478,9 +478,9 @@ window.WFR_INTERIORS729 = (function () {
   /* ---------- the everyday kit (seeded by the building's own id: the same room every visit) ---------- */
   var KIND = { office: 'office', cafe: 'cafe', shop: 'shop', clothing_store: 'shop', grocery: 'shop', bakery: 'cafe', ice_cream: 'cafe' };
   var KIT = {
-    office: { e: '🏢', word: 'an office', line: 'Reception is on the ground floor.', lines: ['Good morning! Do you have an appointment?', 'The lifts are just behind me.', 'Busy day upstairs. Everyone is in meetings.'] },
-    shop: { e: '🛍️', word: 'a shop', line: 'Have a look around.', lines: ['Take your time, look around!', 'Everything on these shelves is local.', 'Can I help you find something?'] },
-    cafe: { e: '☕', word: 'a café', line: 'Something warm to drink?', lines: ['One small coffee for the little bird?', 'The croissants are fresh this morning.', 'Sit anywhere you like.'] }
+    office: { e: '🏢', word: 'an office', line: 'Reception is on the ground floor.', lines: ['Good morning! Do you have an appointment?', 'The lifts are just behind me.', 'Busy day upstairs. Everyone is in a meeting about the last meeting.'] },
+    shop: { e: '🛍️', word: 'a shop', line: 'Have a look around.', lines: ['Take your time. Mind the glass things with your wings.', 'Everything on these shelves is local.', 'Can I help you find something? Something bird-sized?'] },
+    cafe: { e: '☕', word: 'a café', line: 'Something warm to drink?', lines: ['One small coffee for the little bird?', 'The croissants are fresh this morning.', 'Sit anywhere. Birds always pick the windowsill.'] }
   };
   function genRoom(g) {   // g: { id, gk, w, d, h, seed, name }
     var r = rng(hash('729:' + g.id)), k, w = g.w, d = g.d, hw = w / 2, hd = d / 2, H = g.gk === 'office' ? Math.min(6, Math.max(4.2, g.h * 0.7)) : Math.min(3.8, Math.max(3.2, g.h * 0.5)), block = [], people = [];
@@ -519,7 +519,7 @@ window.WFR_INTERIORS729 = (function () {
         var nt = Math.min(5, Math.max(3, Math.floor((w - 2) * (d - 4) / 9))), tables = []; for (k = 0; k < nt; k++) { var tx = -hw + 1.6 + (k % 3) * Math.max(2.2, (w - 3.2) / 2), tz = -hd + 2.6 + Math.floor(k / 3) * 2.6; if (tx > hw - 1.2 || tz > hd - 2.4 || Math.hypot(tx, tz - (-hd + 2.4)) < 2.0 || Math.hypot(tx, tz - (-hd + 0.6)) < 2.4) continue; tables.push([tx, tz]); }
         tables.forEach(function (t, i) { G.cyl(t[0], t[1], 0.42, 0.72, 0.76, 12, hx(0xe9e4da), { cap: true }); G.cyl(t[0], t[1], 0.05, 0, 0.72, 6, hx(0x2a2a2c)); [-1, 1].forEach(function (sd) { var cx = t[0] + sd * 0.75; G.box(cx - 0.2, 0, t[1] - 0.2, cx + 0.2, 0.45, t[1] + 0.2, hx(0x8a5a3a)); G.box(cx + sd * 0.16 - 0.03, 0.45, t[1] - 0.2, cx + sd * 0.16 + 0.03, 0.95, t[1] + 0.2, hx(0x8a5a3a)); });
           block.push({ c: t, r: 1.0 }); if (i < 3 && r() < 0.8) people.push(pp('local', 'having a coffee', t[0] + 0.75, t[1], -Math.PI / 2, 'sit', 'sit')); });
-        people.push(pp('local', 'behind the counter', 0.2, hd - 0.2, Math.PI, 'stand', 'interact', 'Hello! What can I get you?'));
+        people.push(pp('local', 'behind the counter', 0.2, hd - 0.2, Math.PI, 'stand', 'interact', 'Hello! What can I get you? Crumbs are free.'));
         sig.push('tables' + tables.length);
       }
     };
@@ -768,7 +768,7 @@ window.WFR_INTERIORS729 = (function () {
         if (u < 0.35) { var a2 = r() * Math.PI * 2, L2 = 12 + r() * 25; make(r, { role: 'walker', title: 'out walking', name: nm, line: pick(r, line), path: new Float32Array([px, pz, px + Math.cos(a2) * L2, pz + Math.sin(a2) * L2]) }); }
         else make(r, { role: 'local', title: s.title || 'out and about', name: nm, line: pick(r, line), x: px, z: pz, kind: u < 0.5 ? 'sit' : 'stand', clip: u < 0.5 ? 'sit' : u < 0.75 ? 'idle' : u < 0.9 ? 'interact' : 'wave', yaw: r() * Math.PI * 2 }); } } }); }
   var CROWDS = [
-    { id: 'scramble729', name: 'the Shibuya Crossing', lat: XC.lat, lon: XC.lon, r: 400, names: NAMES_JP, lines: ['Wait for the green, then everybody goes!', 'Over two thousand people cross here at once.', 'Hachiko the faithful dog has a statue just over there.'],
+    { id: 'scramble729', name: 'the Shibuya Crossing', lat: XC.lat, lon: XC.lon, r: 400, names: NAMES_JP, lines: ['Wait for the green, then everybody goes!', 'Over two thousand people cross here at once.', 'Hachiko waited here for his owner for nine years. His statue is just there.'],
       build: function (p, r, make, C2) { var H = XC.HALF, cs = [[-H, -H], [H, -H], [H, H], [-H, H]].map(function (q) { return rot(q[0], q[1], XC.ROT); }), paths = [[0, 1], [1, 2], [2, 3], [3, 0], [0, 2], [1, 3]];
         paths.forEach(function (pq, pi) { for (var k = 0; k < XC.PER; k++) { var A = cs[pq[0]], B = cs[pq[1]], dx = B[0] - A[0], dz = B[1] - A[1], l = Math.hypot(dx, dz), ux = dx / l, uz = dz / l, j = (r() * 2 - 1) * 2.5, a0 = r() * 1.6 + 0.4, b0 = r() * 1.6 + 0.4;
           var p0 = [A[0] - ux * a0 - uz * j, A[1] - uz * a0 + ux * j], p1 = [B[0] + ux * b0 - uz * j, B[1] + uz * b0 + ux * j], L = Math.hypot(p1[0] - p0[0], p1[1] - p0[1]), delay = r() * 3, v = Math.max(1.2 + r() * 0.5, L / (XC.G - delay - 2));
@@ -777,9 +777,9 @@ window.WFR_INTERIORS729 = (function () {
         crowdSpots(make, r, NAMES_JP, [{ x: rot(-34, 26, XC.ROT)[0], z: rot(-34, 26, XC.ROT)[1], r: 14, n: 14, title: 'by Hachiko' }], C2.lines); } },
     { id: 'bund729', name: 'the Bund', lat: 31.24030, lon: 121.49060, r: 900, names: NAMES_CN, lines: ['The old banks on this side, the towers of Pudong across the river.', 'Everyone comes here to see the lights at night.', 'That pink tower is the Oriental Pearl.'],
       build: function (p, r, make, C2) { crowdSpots(make, r, NAMES_CN, [{ x: 30, z: -500, to: [70, 520], n: 46, title: 'on the promenade' }, { x: 55, z: 0, r: 30, n: 22, title: 'taking photos' }, { x: 40, z: -300, r: 22, n: 12, title: 'taking photos' }], C2.lines); } },
-    { id: 'shinjuku729', name: 'Shinjuku Station', lat: 35.69000, lon: 139.70060, r: 600, names: NAMES_JP, lines: ['The busiest station in the world! Millions a day.', 'Which exit? There are over two hundred.', 'Kabukicho is just north of here.'],
+    { id: 'shinjuku729', name: 'Shinjuku Station', lat: 35.69000, lon: 139.70060, r: 600, names: NAMES_JP, lines: ['The busiest station in the world. Three and a half million people a day.', 'Which exit? There are over two hundred.', 'Kabukicho is just north-east, out of the East Exit.'],
       build: function (p, r, make, C2) { crowdSpots(make, r, NAMES_JP, [{ x: 0, z: 0, r: 45, n: 40, title: 'at the station' }, { x: -60, z: -80, to: [80, -80], n: 18 }, { x: 90, z: -120, to: [90, 120], n: 14 }], C2.lines); } },
-    { id: 'kabukicho729', name: 'Kabukicho', lat: 35.69440, lon: 139.70280, r: 500, names: NAMES_JP, lines: ['Look up: there is a Godzilla on that roof!', 'This street never sleeps.', 'Ramen? The best is down that alley.'],
+    { id: 'kabukicho729', name: 'Kabukicho', lat: 35.69440, lon: 139.70280, r: 500, names: NAMES_JP, lines: ['Look up: there is a Godzilla on that roof!', 'Nobody here goes home before the first train.', 'Ramen? The best is down that alley.'],
       build: function (p, r, make, C2) { crowdSpots(make, r, NAMES_JP, [{ x: -120, z: 40, to: [120, 40], n: 22 }, { x: 0, z: -120, to: [0, 140], n: 18 }, { x: 10, z: 30, r: 25, n: 12, title: 'under the neon' }], C2.lines); } }
   ];
   function registerCrowds() {

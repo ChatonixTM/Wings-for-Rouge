@@ -59,17 +59,17 @@ window.WFR_PEOPLE724 = (function () {
   var NAMES_GT = ['Ana', 'José', 'María', 'Luis', 'Carmen', 'Diego', 'Rosa', 'Miguel', 'Lucía', 'Pedro'];
   var NAMES_US = ['Jake', 'Megan', 'Tyler', 'Ashley', 'Ryan', 'Lauren', 'Kevin', 'Brooke'];
   var ROLE = {   // title, emoji (before the Crow's lesson the line is music, as the island's bubbles are), lines (DRAFT)
-    guide: ['a guide', '🧗', ['Hold the hand in front of you. We climb together.', 'Slow is fast on these rocks. Step where the water is white.', 'A cardinal at the falls! You must have flown a long way.']],
+    guide: ['a guide', '🧗', ['Hold the hand in front of you. We climb together.', 'Slow is fast on these rocks. Put your feet where mine were.', 'A cardinal at the falls! You must have flown a long way.']],
     climber: ['a climber', '💦', ['Don\'t let go! Well... you can let go. You have wings.', 'It\'s colder than it looks!', 'Halfway up, I think. Maybe a third.']],
-    bather: ['a bather', '💦', ['The water comes down from the hills, cool and clear.', 'Sit on the warm rocks with me a while.', 'Oh! Did I splash you? Sorry, little one.']],
-    vendor: ['a vendor', '🥥', ['Coconut water, fresh today! You would need a very small straw.', 'Everything on this table was made by hand.', 'Morning, little bird. You are my first customer.']],
-    beach: ['on the beach', '☀️', ['Listen. You can hear the falls from the sand.', 'I watched you fly in from the sea.', 'Best spot on the whole beach, right here.']],
-    swimmer: ['a swimmer', '🌊', ['The sea is warm today!', 'Mind the waves, they come in threes.', 'I can see fish down there. Can you?']],
-    walker: ['out walking', '👋', ['Good day! Lovely day for flying.', 'I walk this way every morning. I have never met a bird who talks back.', 'Mind the cars on the main road.']],
-    local: ['who lives here', '👋', ['Welcome! First time here?', 'You look like you are looking for someone.', 'The falls are just down the road.']]
+    bather: ['a bather', '💦', ['Cold river on top, warm sea at the bottom. I sit in the middle.', 'Sit on the warm rocks with me a while.', 'Oh! Did I splash you? Sorry, little one.']],
+    vendor: ['a vendor', '🥥', ['Coconut water, fresh today! You would need a very small straw.', 'Everything on this table is carved by hand. Mostly by my cousin.', 'Morning, little bird. You are my first customer.']],
+    beach: ['on the beach', '☀️', ['Sea in front, mountains behind. That is Jamaica, really.', 'I watched you fly in from the sea.', 'Best spot on the whole beach, right here.']],
+    swimmer: ['a swimmer', '🌊', ['The sea is warm. The falls are not. Ask me how I know.', 'Mind the waves, they come in threes.', 'I can see fish down there. Can you?']],
+    walker: ['out walking', '👋', ['Sea breeze is up today. Good day for wings.', 'I walk this way every morning. I have never met a bird who talks back.', 'Mind the cars on the main road.']],
+    local: ['who lives here', '👋', ['Welcome! First time here?', 'You look like you are looking for someone.', 'Ackee and saltfish at the corner shop. Best on the island. Every shop says so.']]
   };
-  var LINES_GT = ['¡Buenos días, pajarito! Welcome to Antigua.', 'The volcano is quiet today. It is watching the market.', 'Come back when the bells ring.'];
-  var LINES_US = ['The lake is so clear you can see the bottom.', 'Careful, the air is thin up here.', 'Are you lost? Tahoe is a long way from the sea.'];
+  var LINES_GT = ['¡Buenos días, pajarito! Welcome to Antigua.', 'Agua is quiet today. Fuego is smoking, but Fuego always smokes.', 'The yellow arch was built so the nuns could cross the street unseen.'];
+  var LINES_US = ['So clear you could spot a dinner plate twenty metres down. Scientists check.', 'Careful, the air is thin up here.', 'Are you lost? Tahoe is a long way from the sea.'];
 
   /* ---------- 1. the bake: a model's clips into a vertex-animation texture ---------- */
   var HF = (function () { var f = new Float32Array(1), u = new Int32Array(f.buffer); return function (v) {   // three's DataUtils.toHalfFloat (MIT), line for line

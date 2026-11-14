@@ -53,12 +53,12 @@
   /* 740 THE FORMS (Marth, Nov 6 2026: "The chaos need to have forms that they evolve into, based on what their stats lean to the most out of the 6 stats" then "Chics*").
      One form per stat, locked at evolve (S.chick.form). Names, card lines, shapes and perks are ORIGINAL and DRAFT for his pen. A perk sits on top of the curve; TABLE stays. */
   var FORMS = {
-    fly:  { name: 'Swiftwing', line: 'Long, pointed wings for the high air!', perk: 'glide sink x0.9' },
-    run:  { name: 'Strider',   line: 'Long legs that eat up the ground!', perk: 'cruise +5%' },
-    str:  { name: 'Bulwark',   line: 'A broad chest and a hooked beak!', perk: 'carry +1' },
-    sta:  { name: 'Wayfarer',  line: 'Round wings and a wide fan, built to go all day!', perk: 'rests to full in 20 s' },
-    swim: { name: 'Tidebird',  line: 'Long and low, made for the water!', perk: 'breath +3 s' },
-    cre:  { name: 'Songplume', line: 'A tall crest and three long streamers!', perk: null },   // held: luck is his (728)
+    fly:  { name: 'Swiftwing', line: 'Long, pointed wings for the high air. It has started looking at clouds.', perk: 'glide sink x0.9' },
+    run:  { name: 'Strider',   line: 'Long legs that eat up the ground. It walks everywhere now. Quickly.', perk: 'cruise +5%' },
+    str:  { name: 'Bulwark',   line: 'A broad chest and a hooked beak. It carries things nobody asked it to.', perk: 'carry +1' },
+    sta:  { name: 'Wayfarer',  line: 'Round wings and a wide fan. It could fly all day, and would like to.', perk: 'rests to full in 20 s' },
+    swim: { name: 'Tidebird',  line: 'Long and low, made for the water. No puddle is safe now.', perk: 'breath +3 s' },
+    cre:  { name: 'Songplume', line: 'A tall crest and three long streamers. It knows it looks good.', perk: null },   // held: luck is his (728)
   };
   var PERK = { sink: 0.9, cruise: 1.05, carry: 1, rest: 20, breath: 3 };
   var LEGS = { fly: 0.3, run: 0.95, str: 0.34, sta: 0.26, swim: 0, cre: 0.3 };   // the playable bird's legLen by form (the chick's own is 0.3)

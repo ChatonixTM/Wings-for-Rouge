@@ -39,7 +39,7 @@ window.WFR_QUESTS720 = (function () {
     title: 'Quests', active: 'Active', avail: 'Available', done: 'Done', none: 'Nothing yet. Look for a ❗ over someone\'s head.',
     follow: 'Follow', start: 'Start', pinned: 'Following', near: '{n} near you {have} a favour to ask. Look for the ❗.',
     far: 'Far away: the whole world opens after the climb.', mapGo: 'Open the map (tap the radar) and choose Fly there.',
-    got: '📜 New quest: {t}', fin: '✓ {t}', found: 'You found {g}\'s {i}!', busy: 'You have lots to do already. Finish a quest first.',
+    got: '📜 New quest: {t}', fin: '✓ {t}', found: 'You found {g}\'s {i}!', busy: 'Your beak is full of favours. Finish one first.',
     reward: '+{xp} XP · ✦ {r}', helped: 'helps {g}'
   };
   var ITEMS = {
@@ -54,9 +54,9 @@ window.WFR_QUESTS720 = (function () {
     lm: ['Have you ever seen {lm}? Fly there one day, and see it for me.', 'They say {lm} is a wonder. Go and see it, then you can tell me.']
   };
   var SAY = {
-    give: ['From {g}? Oh, thank you! Tell {g} I said hello.', 'A {i}, from {g}! You are a kind little bird.'],
+    give: ['From {g}? Oh, thank you! Tell {g} I said hello.', 'A {i}, from {g}! And delivered by air, no less.'],
     get: ['{g}\'s {i}? Here you are. Mind how you go.', 'Ah, {g} sent you! Here is the {i}.'],
-    back: ['My {i}! Thank you. You are a good friend.', 'You found it! I knew you would.'],
+    back: ['My {i}! Where was it? No, don\'t tell me. Thank you.', 'You found it! I knew you would.'],
     wait: ['Did you manage it? {to} is not far.', 'Take your time. I will be right here.'],
     warm: ['You came back! I still smile about that {i}.', 'There she is! Thank you again for the {i}.']
   };
@@ -69,15 +69,15 @@ window.WFR_QUESTS720 = (function () {
      top: within r and at the top's height (above: [lo, hi] metres over the ground at the landmark's point). DRAFT ---------- */
   var LANDMARKS = [
     { id: 'eiffel', e: '🗼', name: 'the Eiffel Tower', title: 'Fly to the Eiffel Tower', where: 'Paris, France', lat: 48.85837, lon: 2.29448, kind: 'fly', r: 250, aglMax: 600, xp: 120, runes: 15, line: '330 m of iron lace. Fly close, under 600 m.' },
-    { id: 'dunns', e: '💦', name: 'Dunn\'s River Falls', title: 'See Dunn\'s River Falls', where: 'Ocho Rios, Jamaica', lat: 18.4116, lon: -77.1406, kind: 'see', r: 300, rPatch: 90, xp: 100, runes: 12, host: 'dunns', line: 'Terraces of cool water, all the way down to the sea.' },
+    { id: 'dunns', e: '💦', name: 'Dunn\'s River Falls', title: 'See Dunn\'s River Falls', where: 'Ocho Rios, Jamaica', lat: 18.4116, lon: -77.1406, kind: 'see', r: 300, rPatch: 90, xp: 100, runes: 12, host: 'dunns', line: '55 m of stone terraces, the river running cold all the way into the sea.' },
     { id: 'empire', e: '🏙️', name: 'the Empire State Building', title: 'Land on the Empire State\'s top', where: 'New York, USA', lat: 40.74844, lon: -73.98566, kind: 'top', r: 60, above: [330, 470], xp: 150, runes: 20, line: 'Hover at its roof, 381 m up.' },
     { id: 'liberty', e: '🗽', name: 'the Statue of Liberty', title: 'Fly round the Statue of Liberty', where: 'New York, USA', lat: 40.68925, lon: -74.0445, kind: 'fly', r: 200, aglMax: 400, xp: 110, runes: 14, line: 'Wave to her torch.' },
-    { id: 'bigben', e: '🕰️', name: 'Big Ben', title: 'Hear Big Ben', where: 'London, England', lat: 51.50073, lon: -0.12463, kind: 'fly', r: 200, aglMax: 500, xp: 110, runes: 14, line: 'The great bell in the Elizabeth Tower.' },
-    { id: 'giza', e: '🔺', name: 'the Great Pyramid', title: 'See the Great Pyramid', where: 'Giza, Egypt', lat: 29.97917, lon: 31.13417, kind: 'fly', r: 300, aglMax: 800, xp: 130, runes: 16, line: 'Over four thousand years of stone.' },
-    { id: 'taj', e: '🕌', name: 'the Taj Mahal', title: 'See the Taj Mahal', where: 'Agra, India', lat: 27.17502, lon: 78.04216, kind: 'fly', r: 300, aglMax: 600, xp: 130, runes: 16, line: 'White marble beside the river.' },
-    { id: 'everest', e: '🏔️', name: 'Mount Everest', title: 'Top of the world: Everest', where: 'Nepal and China', lat: 27.98806, lon: 86.92528, kind: 'top', r: 800, above: [-80, 700], xp: 200, runes: 30, line: 'The highest mountain on Earth. Reach its summit.' },
-    { id: 'opera', e: '🎭', name: 'the Sydney Opera House', title: 'See the Sydney Opera House', where: 'Sydney, Australia', lat: -33.85678, lon: 151.2153, kind: 'fly', r: 250, aglMax: 500, xp: 140, runes: 18, line: 'Sails of white tile on the harbour.' },
-    { id: 'tahoe', e: '🏞️', name: 'Lake Tahoe', title: 'Fly over Lake Tahoe', where: 'California and Nevada, USA', lat: 39.0968, lon: -120.0324, kind: 'see', r: 9000, aglMax: 2000, xp: 100, runes: 12, line: 'A mountain lake so clear you can see the bottom.' },
+    { id: 'bigben', e: '🕰️', name: 'Big Ben', title: 'Hear Big Ben', where: 'London, England', lat: 51.50073, lon: -0.12463, kind: 'fly', r: 200, aglMax: 500, xp: 110, runes: 14, line: 'The great bell in the Elizabeth Tower. It strikes the hour in E.' },
+    { id: 'giza', e: '🔺', name: 'the Great Pyramid', title: 'See the Great Pyramid', where: 'Giza, Egypt', lat: 29.97917, lon: 31.13417, kind: 'fly', r: 300, aglMax: 800, xp: 130, runes: 16, line: '4,500 years old, and the tallest thing people built for most of them.' },
+    { id: 'taj', e: '🕌', name: 'the Taj Mahal', title: 'See the Taj Mahal', where: 'Agra, India', lat: 27.17502, lon: 78.04216, kind: 'fly', r: 300, aglMax: 600, xp: 130, runes: 16, line: 'White marble on the bank of the Yamuna. It changes colour with the light.' },
+    { id: 'everest', e: '🏔️', name: 'Mount Everest', title: 'Top of the world: Everest', where: 'Nepal and China', lat: 27.98806, lon: 86.92528, kind: 'top', r: 800, above: [-80, 700], xp: 200, runes: 30, line: 'The highest mountain on Earth: 8,849 m, and a third of the air. Reach the summit.' },
+    { id: 'opera', e: '🎭', name: 'the Sydney Opera House', title: 'See the Sydney Opera House', where: 'Sydney, Australia', lat: -33.85678, lon: 151.2153, kind: 'fly', r: 250, aglMax: 500, xp: 140, runes: 18, line: 'A million white tiles in the shape of sails, out on the harbour.' },
+    { id: 'tahoe', e: '🏞️', name: 'Lake Tahoe', title: 'Fly over Lake Tahoe', where: 'California and Nevada, USA', lat: 39.0968, lon: -120.0324, kind: 'see', r: 9000, aglMax: 2000, xp: 100, runes: 12, line: 'A mountain lake 500 m deep, clear enough to see twenty metres down.' },
     /* 779 #135: the places the next shores call her to (arrive783.js PLACES: a country's arrival pins its landmark; reaching it pays XP and runes). 'see': within r, under aglMax. DRAFT */
     { id: 'havana', e: '🏛️', name: 'Old Havana', title: 'See Old Havana', where: 'Havana, Cuba', lat: 23.1352, lon: -82.3596, kind: 'see', r: 1500, aglMax: 1500, xp: 110, runes: 13, line: 'A great white dome over painted streets, and the long sea wall.' },
     { id: 'citadelle', e: '🏰', name: 'the Citadelle', title: 'See the Citadelle', where: 'Milot, Haiti', lat: 19.5733, lon: -72.2436, kind: 'see', r: 1200, aglMax: 1500, xp: 120, runes: 14, line: 'A fortress on a mountain top, built by free people to keep their freedom.' },
@@ -318,7 +318,7 @@ window.WFR_QUESTS720 = (function () {
     $('quests720Body').addEventListener('click', function (e) { var t = e.target && e.target.closest ? e.target.closest('button[data-q]') : null; if (!t) return; act(t.getAttribute('data-q'), t.getAttribute('data-a')); });
     var m = document.createElement('div'); m.id = 'q720marks'; ui.appendChild(m); st.el = m;
     for (var i = 0; i < C.POOL; i++) { var k = document.createElement('div'); k.className = 'q720m'; k.hidden = true; k.setAttribute('aria-hidden', 'true'); m.appendChild(k); st.marks.push(k); }
-    place(); addEventListener('resize', place); if (window.visualViewport) visualViewport.addEventListener('resize', place); if ($('care')) new MutationObserver(place).observe($('care'), { attributes: true, attributeFilter: ['hidden', 'class'] });
+    place(); addEventListener('resize', place); if (window.visualViewport) visualViewport.addEventListener('resize', place); if ($('care') && typeof MutationObserver === 'function') new MutationObserver(place).observe($('care'), { attributes: true, attributeFilter: ['hidden', 'class'] });
     return true;
   }
   function place() {   // under the level card, its left edge (both looks, any safe area); measured, never assumed
@@ -352,7 +352,10 @@ window.WFR_QUESTS720 = (function () {
     h += '<h3>' + WORDS.avail + '</h3>';
     var n = 0; if (X.S.lessons && X.S.lessons.crow && !(X.TR && X.TR.on)) { (X.npcs || []).forEach(function (v) { if (Math.hypot(v.g.position.x - X.S.pos.x, v.g.position.z - X.S.pos.z) < 120 && offers('v:' + v.name)) n++; }); if (X.P && X.P.each) X.P.each(function (id) { if (offers(id)) n++; }); }
     st.near = n; if (Q.active.length >= C.MAX_ACTIVE) h += '<div class="q720hint">' + esc(WORDS.busy) + '</div>'; else if (n) h += '<div class="q720hint">' + esc(fill(WORDS.near, { n: n === 1 ? 'One person' : n + ' people', have: n === 1 ? 'has' : 'have' })) + '</div>';
-    for (i = 0; i < LANDMARKS.length; i++) { var L = LANDMARKS[i]; if (Q.lm[L.id] || activeLm(L.id)) continue; if (L.near790 && !(st.lm[L.id] && st.lm[L.id].d <= L.near790)) continue;   /* 790 D: a named place waits on the board until she is near it */
+    var lmOpen = !X.canWorld || X.canWorld(), here = X.TR && X.TR.on && X.TR.ll ? X.TR.ll : null, LMS = LANDMARKS.slice();   /* 795 (30): the wide world after the climb, the nearest first */
+    if (!lmOpen) h += '<div class="q720hint">' + esc(WORDS.later || 'The wide world waits past the climb: Paris, New York, the falls.') + '</div>';
+    else if (here && isFinite(here.lat)) LMS.sort(function (a, b) { var da = Math.hypot(a.lat - here.lat, (a.lon - here.lon) * Math.cos(here.lat * Math.PI / 180)), db = Math.hypot(b.lat - here.lat, (b.lon - here.lon) * Math.cos(here.lat * Math.PI / 180)); return da - db; });
+    for (i = 0; lmOpen && i < LMS.length; i++) { var L = LMS[i]; if (Q.lm[L.id] || activeLm(L.id)) continue; if (L.near790 && !(st.lm[L.id] && st.lm[L.id].d <= L.near790)) continue;   /* 790 D: a named place waits on the board until she is near it */
       h += row({ e: L.e, title: L.title, line: L.where + '. ' + L.line, xp: L.xp, runes: L.runes }, '', '<button type="button" data-q="' + L.id + '" data-a="start">' + WORDS.start + '</button>'); }
     if (Q.done.length) { h += '<h3>' + WORDS.done + ' (' + Q.done.length + ')</h3>'; for (i = Q.done.length - 1; i >= Math.max(0, Q.done.length - 8); i--) { var d = Q.done[i]; h += row({ e: d.e, title: d.title, line: d.giver ? 'For ' + d.giver + '.' : 'Seen with your own eyes.', xp: d.xp, runes: d.runes }, 'done', ''); } }
     return h; }
