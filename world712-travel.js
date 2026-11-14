@@ -162,6 +162,7 @@ window.WFR_TRAVEL712 = (function () {
       geo.setIndex(idx);
       var mesh = new THREE.Mesh(geo, o.materialFor ? o.materialFor(rec) : material); mesh.name = 'travel712:' + rec.key; mesh.frustumCulled = false; mesh.matrixAutoUpdate = false; mesh.visible = false; mesh.renderOrder = -9.4;
       mesh.castShadow = false; mesh.receiveShadow = false; mesh.layers.set(o.layer == null ? C.LAYER : o.layer);
+      rec.gen = ++gen798;   /* 798: each built sheet's own number (what a road draped on it remembers) */
       rec.mesh = mesh; rec.hv = hv; rec.skirt = skirt; rec.minH = minH; rec.maxH = maxH; rec.tris = idx.length / 3; place(rec); group.add(mesh); stats.built++; if (!rec.real) stats.virt++;
       for (var L = 0; L < layers.length; L++) try { if (layers[L].onTile) layers[L].onTile(rec, api); } catch (err) { stats.fault = 'layer ' + layers[L].id + ': ' + (err && err.message || err); }
     }
@@ -236,9 +237,11 @@ window.WFR_TRAVEL712 = (function () {
     }
     function setFrame(f2) { f = f2; tiles.forEach(function (r) { if (r.mesh) place(r); }); stats.recentres++; }   // re-centred: every tile's corner and scale from the new frame (no rebuild)
 
+    var last798 = null, gen798 = 0;   /* 798: the last drawn sheet a lookup found (a road's points come in runs on one sheet); drawn sheets never overlap */
     function recAt(x, z, onlyDrawn) {   // the drawn tile under a point (else the finest built one)
+      var l = last798; if (l && drawnSet.has(l.key) && tiles.get(l.key) === l) { var lb = l.b; if (x >= lb.x0 && x < lb.x0 + lb.size && z >= lb.z0 && z < lb.z0 + lb.size) return l; }
       var best = null; for (var i = 0; i < drawn.length; i++) { var r = drawn[i], b = r.b; if (x >= b.x0 && x < b.x0 + b.size && z >= b.z0 && z < b.z0 + b.size) { best = r; break; } }
-      if (best || onlyDrawn) return best;
+      if (best) { last798 = best; return best; } if (onlyDrawn) return best;
       for (var zz = MAXZ + C.VDEPTH; zz >= 0; zz--) { var ti = W.tileIndexAtWrapped(f, zz, x, z), r2 = tiles.get(keyOf(zz, ti.x, ti.y)); if (r2 && r2.mesh) return r2; }
       return null;
     }
@@ -262,7 +265,8 @@ window.WFR_TRAVEL712 = (function () {
       return { drawn: D.length, pairs: pairs, maxRatio: +maxRatio.toFixed(3), worst: worst, ok: pairs > 0 && maxRatio < 1 };
     }
     var api = { update: update, setFrame: setFrame, H: groundUnder, probe: probe, loadingUnder: loadingUnder, seams: seams, stats: stats, group: group, material: material, u: u, tiles: tiles,
-      frame: function () { return f; }, drawnKeys: function () { return drawn.map(function (r) { return r.key; }); }, liveKeys: function () { return Array.from(tiles.keys()); }, inflightKeys: function () { return Array.from(inflight.keys()); },
+      frame: function () { return f; },
+      drawnSig: function (x0, z0, x1, z1) { var s = 0, n = 0; for (var i = 0; i < drawn.length; i++) { var b = drawn[i].b; if (b.x0 > x1 || b.x0 + b.size < x0 || b.z0 > z1 || b.z0 + b.size < z0) continue; s = (s + Math.imul(drawn[i].gen | 0, 2654435761)) | 0; n++; } return s + ':' + n; },   /* 798: which sheets are drawn over a box (a road draped on them knows when the ground under it changed) */ drawnKeys: function () { return drawn.map(function (r) { return r.key; }); }, liveKeys: function () { return Array.from(tiles.keys()); }, inflightKeys: function () { return Array.from(inflight.keys()); },
       missingKeys: function () { return Array.from(missing); }, maxZ: MAXZ, sets: sets.map(function (s) { return s.id; }), have: have.size,
       remote: R, real: real, errOf: errOf };   // W-TERRAIN: the remote set (its health and credits) and the tree's own answers, for the bench
     return api;

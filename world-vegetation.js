@@ -59,7 +59,7 @@ window.WFR_VEG = (function () {
     if (cls === MANG) return OAK;
     if (cls === WET) return al > 45 ? (u < 0.5 ? BIRCH : FIR) : (u < 0.7 ? OAK : BIRCH);
     if (cls !== FOREST) return al < 23.5 ? OAK : u < 0.6 ? OAK : u < 0.85 ? BIRCH : PINE;   // parks, orchards, the lone field tree
-    if (al < 23.5) return u < 0.78 ? OAK : u < 0.97 ? BIRCH : SNAG;   // tropical broadleaf (no pines in Jamaica's hills)
+    if (al < 23.5) return u < 0.8 ? OAK : BIRCH;   // tropical broadleaf (no pines in Jamaica's hills). 798: no dead snag here: its bare pale-grey trunk and limbs, hung among the crowns, read on her phone (at night above all) as a grey road band floating tilted in the trees
     if (al < 35) return u < 0.45 ? OAK : u < 0.8 ? PINE : u < 0.92 ? BIRCH : u < 0.98 ? FIR : SNAG;
     if (al < 50) return u < 0.38 ? OAK : u < 0.62 ? PINE : u < 0.78 ? FIR : u < 0.95 ? BIRCH : SNAG;
     return u < 0.5 ? FIR : u < 0.8 ? PINE : u < 0.96 ? BIRCH : SNAG;   // boreal
@@ -228,19 +228,26 @@ window.WFR_VEG = (function () {
     var g0 = merge(THREE, [[stem, srgb(THREE, 0x7a5638, lin)], [cone, srgb(THREE, CROWN[PINE], lin)]]), g1 = merge(THREE, [[trunk, srgb(THREE, 0x6f4c32, lin)], [blob, srgb(THREE, CROWN[OAK], lin)]]);
     return { geos: [g0, g1], tops: [g0.boundingBox.max.y, g1.boundingBox.max.y] };
   }
+  var U798 = { her: { value: null }, near: { value: null } };   /* 798: her place (w 1: low among the trees) and the lens's dissolve (from, to metres); filled at attach */
   function makeMaterial(THREE, u) {   // the travel zone's far pass for INSTANCES: its shrink toward the eye, the Earth's curve, the Dunn's hole, the haze at true distance
     var REFR = (window.WFR_TRAVEL712 && WFR_TRAVEL712.C && WFR_TRAVEL712.C.REFR) || 7432843, NL = String.fromCharCode(10);
     var m = new THREE.MeshLambertMaterial({ vertexColors: true }); m.name = 'veg:trees';
     m.onBeforeCompile = function (sh) {
       sh.uniforms.uEyeVeg = u.uEye; sh.uniforms.uInvKVeg = u.uInvK; sh.uniforms.uHoleVeg = u.uHole;
-      sh.vertexShader = 'uniform vec3 uEyeVeg; uniform float uInvKVeg; varying vec2 vWVeg;' + NL + sh.vertexShader.replace('#include <project_vertex>', [
-        'vec4 wpVeg = vec4( transformed, 1.0 );', '#ifdef USE_INSTANCING', '  wpVeg = instanceMatrix * wpVeg;', '#endif', 'wpVeg = modelMatrix * wpVeg;', 'vWVeg = wpVeg.xz;',
+      sh.uniforms.uHer798 = U798.her; sh.uniforms.uNear798 = U798.near;
+      sh.vertexShader = 'uniform vec3 uEyeVeg; uniform float uInvKVeg; varying vec2 vWVeg; varying vec3 vWP798;' + NL + sh.vertexShader.replace('#include <project_vertex>', [
+        'vec4 wpVeg = vec4( transformed, 1.0 );', '#ifdef USE_INSTANCING', '  wpVeg = instanceMatrix * wpVeg;', '#endif', 'wpVeg = modelMatrix * wpVeg;', 'vWVeg = wpVeg.xz; vWP798 = wpVeg.xyz;',
         'vec3 rVeg = wpVeg.xyz - uEyeVeg; float dVeg = length( rVeg.xz );', 'rVeg.y -= dVeg * dVeg / ( 2.0 * ' + REFR.toFixed(1) + ' );', 'wpVeg.xyz = uEyeVeg + rVeg * uInvKVeg;',
         'vec4 mvPosition = viewMatrix * wpVeg;', 'gl_Position = projectionMatrix * mvPosition;'].join(NL))
         .replace('#include <fog_vertex>', '#include <fog_vertex>' + NL + '#ifdef USE_FOG' + NL + '  fogDepth /= uInvKVeg;' + NL + '#endif');
-      if (BAR761) sh.vertexShader = sh.vertexShader.replace('#include <lights_lambert_vertex>', '#include <lights_lambert_vertex>' + NL + '  vLightFront += lightProbe[ 0 ] * vec3( 0.82, 1.13, 0.75 );'); sh.fragmentShader = 'uniform vec4 uHoleVeg; varying vec2 vWVeg;' + NL + sh.fragmentShader.replace('void main() {', 'void main() {' + NL + '  if ( vWVeg.x > uHoleVeg.x && vWVeg.x < uHoleVeg.z && vWVeg.y > uHoleVeg.y && vWVeg.y < uHoleVeg.w ) discard;');
+      if (BAR761) sh.vertexShader = sh.vertexShader.replace('#include <lights_lambert_vertex>', '#include <lights_lambert_vertex>' + NL + '  vLightFront += lightProbe[ 0 ] * vec3( 0.82, 1.13, 0.75 );'); sh.fragmentShader = 'uniform vec4 uHoleVeg; varying vec2 vWVeg; uniform vec3 uEyeVeg; uniform vec4 uHer798; uniform vec2 uNear798; varying vec3 vWP798;' + NL + sh.fragmentShader.replace('void main() {', ['void main() {', '  if ( vWVeg.x > uHoleVeg.x && vWVeg.x < uHoleVeg.z && vWVeg.y > uHoleVeg.y && vWVeg.y < uHoleVeg.w ) discard;',
+        /* 798: the lens never in leaves or bark (everything within ~3 m of it dissolves); low down, the leaves on the line from the lens to HER and round her thin out, so she is always seen */
+        '  if ( uNear798.y > 0.0 ) { vec3 e798 = vWP798 - uEyeVeg; float a798 = smoothstep( uNear798.x, uNear798.y, length( e798 ) );',
+        '    if ( uHer798.w > 0.5 ) { vec3 h798 = uHer798.xyz - uEyeVeg; float t798 = clamp( dot( e798, h798 ) / max( dot( h798, h798 ), 1e-3 ), 0.0, 1.0 ); float p798 = length( e798 - h798 * t798 );',
+        '      a798 = min( a798, 1.0 - 0.8 * ( 1.0 - smoothstep( 1.3, 2.8, p798 ) ) * step( 0.02, t798 ) ); a798 = min( a798, mix( 0.12, 1.0, smoothstep( 1.2, 2.6, length( vWP798 - uHer798.xyz ) ) ) ); }',
+        '    if ( a798 < 0.999 && a798 <= fract( 52.9829189 * fract( dot( gl_FragCoord.xy, vec2( 0.06711056, 0.00583715 ) ) ) ) ) discard; }'].join(NL));
     };
-    m.customProgramCacheKey = function () { return 'wfrveg1'; };
+    m.customProgramCacheKey = function () { return 'wfrveg1'; };   // 798: its lens dissolve rides in the same one program (one material wears this key)
     return m;
   }
 
@@ -306,6 +313,7 @@ window.WFR_VEG = (function () {
     if (S) return S.api; if (!window.WFR_TREES || !window.WFR_WORLD || !TR || !TR.u) return null; opts = opts || {};
     var lin = !!(renderer && renderer.outputEncoding === THREE.sRGBEncoding), W = window.WFR_WORLD, core = makeCore(W), u = TR.u;
     if (!u.uHole) u.uHole = { value: new THREE.Vector4(1, 1, -1, -1) };   // world712-travel's makeMaterial makes the same (the Dunn's hole); whichever runs first, one object
+    U798.her.value = new THREE.Vector4(0, 0, 0, 0); U798.near.value = new THREE.Vector2(0.6, 2.8);   /* 798 */
     var sp = speciesGeos(THREE, renderer, lin), md = midGeos(THREE, lin), mat = makeMaterial(THREE, u), group = new THREE.Group(); group.name = 'veg712';
     function mk(geo, cap, name) { var im = new THREE.InstancedMesh(geo, mat, cap); im.instanceMatrix.setUsage(THREE.DynamicDrawUsage); im.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(cap * 3), 3); im.instanceColor.setUsage(THREE.DynamicDrawUsage);
       im.count = 0; im.frustumCulled = false; im.renderOrder = C.ORDER; im.layers.set(C.LAYER); im.name = name; im.castShadow = false; im.receiveShadow = false; group.add(im); return im; }
@@ -467,7 +475,8 @@ window.WFR_VEG = (function () {
       for (var i = 0; i < h.length; i++) if (Math.abs(h[i] - old[i]) > 0.05) out |= i < 5 ? 3 : 2;
       return out;
     }
-    function tick(cam, dt) {   // each travel frame, after the streamer's update (the frame and the ground are this frame's)
+    function tick(cam, dt, her, body) {   // each travel frame, after the streamer's update (the frame and the ground are this frame's)
+      if (her) { if (her.y - (TR.st ? Math.max(0, TR.st.H(her.x, her.z)) : 0) < F798.K.LOW) { pushOut798(her, body); solid808(her, body); lensOut798(cam, her); lens808(cam, her); } her798(her); }   /* 798: she out of any trunk, then the lens; where she is, every travel frame and every mode (flying, landing, on foot): the leaves between the lens and her thin out */
       var t0 = performance.now();
       try {
         subscribe(); var stt = TR.st; if (!stt || !TR.on) return; st.clock += dt || 0; grassClock(dt);
@@ -537,11 +546,71 @@ window.WFR_VEG = (function () {
     subscribe();   // at load when the features unit is already there: it reads landcover / landuse only for a listener, so the first tiles carry them too
     function cover761(cb) { var F = TR.on ? GT : GI, full = Math.max(1, Math.pow(GC.CH / GC.SP / 4, 2) * 0.55); for (var i = 0; i < F.want.length; i++) { var c = F.want[i]; if (c.cv) cb(c, 16, Math.max(1, full * (c.cut == null ? 1 : c.cut))); } }   // 761b: where the grass stands (a chunk built part-deep is counted against that depth)
     function nearTrees761(cb) { var RK = [0.24, 0.24, 0.3, 0.46, 0.3, 0.1]; for (var i = 0; i < near.length; i++) { var a = near[i].instanceMatrix.array, top = sp.tops[i]; for (var k = 0; k < st.n[i]; k++) { var ht = a[k * 16 + 5] * top; cb(a[k * 16 + 12], a[k * 16 + 14], ht, ht * RK[i]); } } }   // 761b: every full tree: x, z, height, crown radius
+    /* 798 DOWN THROUGH THE TREES (Marth, Nov 13 2026, verbatim: "you can't descend past the tree line"). The near trees as she meets them: each species'
+       crown from its own built shape (the lowest green vertex over its height; the radius 761b's), a crown an upright cylinder from there to the top.
+       canopy798: round a point, the highest top of the trees whose crowns reach within r, whether the point is inside a crown, the nearest trunk.
+       fly798 (the travel flight asks it each frame): under the canopy the camera's arm comes in (arm, up: factors on it), in a crown she slows (slow:
+       a factor on her cruise) and the leaves rustle as she goes in (sounds.js rustle); her place goes to the trees' shader, which thins the leaves
+       between the lens and her. Every number a DRAFT for his thumb. */
+    var RK798 = [0.24, 0.24, 0.3, 0.46, 0.3, 0.1], CB798 = sp.geos.map(function (g) { var P = g.attributes.position, Cc = g.attributes.color, lo = 1e9, top = g.boundingBox ? g.boundingBox.max.y : 1;
+      if (!Cc) return 0.35; for (var i = 0; i < P.count; i++) if (Cc.getY(i) > Cc.getX(i) * 1.08) lo = Math.min(lo, P.getY(i)); return lo < 1e9 && top > 0 ? Math.max(0.05, Math.min(0.9, lo / top)) : 0.35; });
+    var RT798 = sp.geos.map(function (g) { var P = g.attributes.position, Cc = g.attributes.color, top = g.boundingBox ? g.boundingBox.max.y : 1, r = 0;   // each species' trunk: its widest bark at its foot (the lowest 8%), a radius
+      for (var i = 0; i < P.count; i++) if (P.getY(i) <= top * 0.08 && !(Cc && Cc.getY(i) > Cc.getX(i) * 1.08)) r = Math.max(r, Math.hypot(P.getX(i), P.getZ(i))); return r || top * 0.02; });
+    function trunkAt798(x, y, z, pad) {   // the trunk (below its crown) the point stands in, grown by pad: [x, z of its axis, its radius there] or null
+      for (var i = 0; i < near.length; i++) { var a = near[i].instanceMatrix.array, tp = sp.tops[i], cb = CB798[i], rt = RT798[i];
+        for (var k = 0; k < st.n[i]; k++) { var o = k * 16, dx = x - a[o + 12], dz = z - a[o + 14]; if (dx > 9 || dx < -9 || dz > 9 || dz < -9) continue;   // the box: the widest trunk (a 26 m tropical oak, ~4.2 m) and its pad
+          var sx = Math.sqrt(a[o] * a[o] + a[o + 2] * a[o + 2]), ht = a[o + 5] * tp, y0 = a[o + 13]; if (y < y0 - 0.5 || y > y0 + ht * cb + 0.5) continue;
+          if (dx * dx + dz * dz < Math.pow(rt * sx + pad, 2)) return [a[o + 12], a[o + 14], rt * sx]; } }
+      return null;
+    }
+    /* the trunks are SOLID (Marth, Nov 13 2026, verbatim: "the tree trunks themselves don't exist? 🤣😭"): each travel frame, flying, landing or on foot,
+       a bird standing in a trunk (its radius + PAD798, her body) is set back on its edge, straight out from its axis: walked or flown at it, she stops
+       there and slides round it. Her drawn body moves with her (the page set it from her place earlier this frame). */
+    var PAD798 = 0.45;
+    function pushOut798(p, body) {
+      for (var n = 0, mv = 0; n < 3 && mv < 0.35; n++) { var tk = trunkAt798(p.x, p.y, p.z, PAD798); if (!tk) return n > 0; var ex = p.x - tk[0], ez = p.z - tk[1], el = Math.hypot(ex, ez);
+        if (el < 1e-3) { ex = 1; ez = 0; el = 1; } var R = tk[2] + PAD798 + 0.01, nx = tk[0] + ex / el * R, nz = tk[1] + ez / el * R, dx = nx - p.x, dz = nz - p.z;
+        var dl = Math.hypot(dx, dz), cap = 0.35 - mv; if (dl > cap) { dx *= cap / dl; dz *= cap / dl; nx = p.x + dx; nz = p.z + dz; dl = cap; } mv += dl;   // set down deep in a trunk (a landing on its spot): she slides out over a few frames, never a jump
+        p.x = nx; p.z = nz; if (body && body.position) { body.position.x += dx; body.position.z += dz; } F798.trunks++; }
+      return true;
+    }
+    /* 808 (rides on this hook, every travel frame while she is low): houses (world-features.js) and people (world-life790.js) are solid for her, and the lens is stepped out of them */
+    function solid808(her, body) { var F = window.WFR_FEATURES, L = window.WFR_LIFE790; if (F && F.solid808) F.solid808(her, PAD798, body); if (L && L.solid808) L.solid808(her, PAD798, body); }
+    function lens808(cam, her) { var F = window.WFR_FEATURES, L = window.WFR_LIFE790; if (F && F.lensOut808) F.lensOut808(cam, her); if (L && L.lensOut808) L.lensOut808(cam, her); }
+    var ARM798 = { arm: -1, hx: 0, hz: 0 };
+    function lensOut798(cam, her) {   /* the lens never in bark: a spring arm from her eyes out to the lens. The first trunk on that line (0.3 m round it) sets
+         how far out the lens may be; the arm comes in to it at up to 1.2 m a frame (never a jump) and goes back out at 0.3 m a frame, and only a lens that
+         would be INSIDE bark is set straight to the clear point. landall751 L7 (the lens never jumps) and ground798 T2 (never in bark) both hold */
+      if (!her) return false; var hx = her.x, hy = her.y + 0.5, hz = her.z, dx = cam.x - hx, dy = cam.y - hy, dz = cam.z - hz, L = Math.sqrt(dx * dx + dy * dy + dz * dz), A = ARM798; if (L < 0.7) { A.arm = -1; return false; }
+      if (A.arm < 0 || Math.abs(hx - A.hx) + Math.abs(hz - A.hz) > 6) A.arm = L; A.hx = hx; A.hz = hz;
+      var want = L; for (var s2 = 0.3; s2 <= L + 1e-6; s2 += 0.2) { var f = Math.min(1, s2 / L); if (trunkAt798(hx + dx * f, hy + dy * f, hz + dz * f, 0.3)) { want = Math.max(0.6, s2 - 0.25); break; } }
+      var arm = want < A.arm ? Math.max(want, A.arm - 1.2) : Math.min(want, A.arm + 0.3); arm = Math.min(arm, L);
+      var k = arm / L; if (trunkAt798(hx + dx * k, hy + dy * k, hz + dz * k, 0.35)) { arm = want; k = arm / L; }   /* a lens at or near bark: straight to the clear point (0.35 m of margin) */
+      A.arm = arm; if (arm >= L - 1e-3) return false; var x = hx + dx * k, y = hy + dy * k, z = hz + dz * k; cam.set(x, y, z); if (TR.u && TR.u.uEye) TR.u.uEye.value.set(x, y, z); F798.outs++; return true;
+    }
+    var F798 = { outs: 0, trunks: 0, f: 0, cd: 0, inC: false, rustles: 0, entries: 0, under: 0, q: null, K: { ARM: 0.45, UP: 0.5, SLOW: 0.62, AGL: 50, CD: 0.45, LOW: 25 } };
+    function canopy798(x, y, z, r) {
+      var top = -1e9, inC = false, trunk = 1e9, n = 0;
+      for (var i = 0; i < near.length; i++) { var a = near[i].instanceMatrix.array, tp = sp.tops[i], rk = RK798[i], cb = CB798[i];
+        for (var k = 0; k < st.n[i]; k++) { var o = k * 16, dx = a[o + 12] - x, dz = a[o + 14] - z; if (dx > r + 14 || dx < -r - 14 || dz > r + 14 || dz < -r - 14) continue;
+          var ht = a[o + 5] * tp, cr = ht * rk, d = Math.sqrt(dx * dx + dz * dz), y0 = a[o + 13]; if (d < trunk) trunk = d; if (d > cr + r) continue;
+          n++; if (y0 + ht > top) top = y0 + ht; if (d < cr && y > y0 + ht * cb && y < y0 + ht) inC = true; } }
+      return { top: top, inCrown: inC, trunk: trunk, n: n };
+    }
+    function her798(p) { var g = TR.st ? Math.max(0, TR.st.H(p.x, p.z)) : 0; U798.her.value.set(p.x, p.y + 0.3, p.z, p.y - g < F798.K.AGL ? 1 : 0); }
+    function fly798(p, dt, o) {
+      var K = F798.K, g = TR.st ? Math.max(0, TR.st.H(p.x, p.z)) : 0, agl = p.y - g, q = agl < K.AGL ? canopy798(p.x, p.y, p.z, 6) : null, under = !!(q && q.n && p.y < q.top - 0.5), inC = !!(q && q.inCrown);
+      F798.f += ((under || inC ? 1 : 0) - F798.f) * Math.min(1, (dt || 0.016) * 2.5); F798.cd = Math.max(0, F798.cd - (dt || 0.016)); if (under) F798.under++;
+      if (inC && !F798.inC) F798.entries++;
+      if (inC && F798.cd <= 0 && (!o || !(o.speed < 1))) { F798.cd = K.CD; if (window.WFR_SOUND && WFR_SOUND.rustle && WFR_SOUND.rustle({ weight: o && o.weight || 0, vol: 0.55 })) F798.rustles++; }
+      F798.inC = inC; F798.q = q;
+      var f = F798.f; return { arm: 1 - (1 - K.ARM) * f, up: 1 - (1 - K.UP) * f, slow: inC ? K.SLOW : 1, f: f, under: under, inCrown: inC, agl: agl };
+    }
     function key761() { var F = TR.on ? GT : GI; return st.sels[0] + '/' + (F.built >> 4); }   // 761b: changes when the near list or the chunks do
-    S = { core: core, st: st, api: { tick: tick, island: island, peek: peek, core: core, group: group, material: mat, nearTrees: nearTrees761, vegKey: key761, grass: { travel: GT.mesh, island: GI.mesh, U: GU, BU: GU, cover: cover761, LAYER_ONLY: GC.LAYER_ONLY, H: GH } } };
+    S = { core: core, st: st, api: { tick: tick, island: island, peek: peek, core: core, group: group, material: mat, nearTrees: nearTrees761, vegKey: key761, canopy798: canopy798, fly798: fly798, trunkAt798: trunkAt798, pad798: PAD798, f798: F798, u798: U798, grass: { travel: GT.mesh, island: GI.mesh, U: GU, BU: GU, cover: cover761, LAYER_ONLY: GC.LAYER_ONLY, H: GH } } };
     return S.api;
   }
 
   return { C: C, GC: GC, CLS: CLS, CLS_NAME: CLS_NAME, DENS: DENS, GD: GD, KINDS: KINDS, makeCore: makeCore, kindFor: kindFor, heightFor: heightFor, treeline: treeline, hash3: hash3, tileY: tileY, attach: attach,
-    tick: function (cam, dt) { if (S) S.api.tick(cam, dt); }, island: function (cam, dt) { if (S) S.api.island(cam, dt); }, peek: function (o) { return S ? S.api.peek(o) : null; }, api: function () { return S ? S.api : null; }, version: 3 };
+    tick: function (cam, dt, her, body) { if (S) S.api.tick(cam, dt, her, body); }, island: function (cam, dt) { if (S) S.api.island(cam, dt); }, peek: function (o) { return S ? S.api.peek(o) : null; }, api: function () { return S ? S.api : null; }, fly798: function (p, dt, o) { return S ? S.api.fly798(p, dt, o) : null; }, version: 3 };
 })();

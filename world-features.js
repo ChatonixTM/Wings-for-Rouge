@@ -20,7 +20,7 @@ window.WFR_FEATURES = (function () {
     /* three rings of tiles round her: z14 (buildings and every road) near and low, z12 (the main roads, water, towns) mid, z9 (motorways, big water, cities) far */
     RINGS: [{ z: 14, r: 2600, show: 3200, agl: 2600 }, { z: 12, r: 15000, show: 18000, agl: 16000 }, { z: 9, r: 120000, show: 150000, agl: 1e9 }],
     LOADS: 4, KEPT: 56, SLICE_MS: 4, TRI_MAX: 1500000, LABELS: 8, AREA_MIN: 20, H_DEF: 6, H_MAX: 900, SINK: 1.5, WAIT_MS: 2500, LAYER: 7,
-    LIFT: { 14: 0.3, 12: 1.0, 9: 4.0 }, SUB: { 14: 30, 12: 120, 9: 800 }, WIDEN: { 14: 1, 12: 1.5, 9: 4 },
+    LIFT: { 14: 0.3, 12: 1.0, 9: 4.0 }, SUB: { 14: 20, 12: 50, 9: 250 }, DRAPE_MS: 0.4,   /* 798: SUB was 30, 120, 800: a straight cut that long bridged the valleys and cut through the ridges of the ground she sees */ WIDEN: { 14: 1, 12: 1.5, 9: 4 },
     CREDIT: 'OpenFreeMap · © OpenMapTiles (openmaptiles.org) · © OpenStreetMap contributors (openstreetmap.org/copyright)'
   };
   /* what each ring reads (the OpenMapTiles layers by name) */
@@ -95,7 +95,7 @@ window.WFR_FEATURES = (function () {
   /* ---------- state ---------- */
   var THREE = null, scene = null, camera = null, T = null, group = null, mats = null, tex = {}, labelsEl = null, creditEl = null, pool = [];
   var tiles = new Map(), template = null, tjState = 'none', tjTries = 0, tjNext = 0, inflight = 0, fetchFn = null, frameNo = 0, F = null, listeners = [], droppers = [], warm = null, lakeLv = new Map(), lakeVotes = new Map();   // lakeLv: OSM id -> { z: the finest ground zoom its level was read on, h }
-  var stats = { lakeReads: [], fetched: 0, bytes: 0, errors: 0, empty: 0, built: 0, evicted: 0, restale: 0, jobs: 0, sliceMax: 0, updMax: 0, upd: [], buildings: 0, roads: 0, waters: 0, tris: 0, visible: 0, kept: 0, inflight: 0, labels: 0, places: 0, fault: null, lastError: null, recentres: 0, tilejson: null, waits: 0 };
+  var stats = { lakeReads: [], fetched: 0, bytes: 0, errors: 0, empty: 0, built: 0, evicted: 0, restale: 0, jobs: 0, sliceMax: 0, updMax: 0, upd: [], buildings: 0, roads: 0, waters: 0, tris: 0, visible: 0, kept: 0, inflight: 0, labels: 0, places: 0, fault: null, lastError: null, recentres: 0, tilejson: null, waits: 0, drape: { jobs: 0, verts: 0, furn: 0, msMax: 0 } };
   function now() { return (typeof performance !== 'undefined' ? performance : Date).now(); }
   function keyOf(z, x, y) { return z + '/' + x + '/' + y; }
   function llOf(z, x, y, px, py, E) { var n = Math.pow(2, z), X = (x + px / E) / n, Y = (y + py / E) / n; return { lat: Math.atan(Math.sinh(Math.PI * (1 - 2 * Y))) * R2D, lon: X * 360 - 180 }; }
@@ -140,6 +140,12 @@ window.WFR_FEATURES = (function () {
   /* ---------- building one tile, a slice at a time ---------- */
   function Out() { this.p = []; this.n = []; this.c = []; this.uv = []; this.i = []; }
   Out.prototype.v = function (x, y, z, nx, ny, nz, r, g, b, u, v) { this.p.push(x, y, z); this.n.push(nx, ny, nz); this.c.push(r, g, b); if (this.uv) this.uv.push(u || 0, v || 0); return this.p.length / 3 - 1; };
+  /* 798 THE DRAPE (Marth, Nov 13 2026: "The road is floating"): a line on the ground keeps, per vertex, how far over the ground it was laid (dl; NaN for
+     what is not laid on the ground: a lake's level surface, a wall). The ground under a built tile changes as she flies (a finer sheet, a coarser one, a
+     stand-in replaced by the real one): every frame each showing tile asks the streamer which sheets are drawn over it (drawnSig); when that changed,
+     its lines are laid again on the ground she now sees, a few milliseconds a frame, nearest first. Was: sampled once, re-laid only when a FINER sheet
+     came under the tile's centre, so roads kept the heights of a sheet no longer drawn (floating over valleys, buried in hills, out to 100 m far off). */
+  function drp(o, k, lift) { var d = o.dl || (o.dl = []); while (d.length < k) d.push(NaN); d[k] = lift; }
   var poiWant = null;   /* 729: world-interiors.js asks for shops, cafes and offices near the quests */
   function want(z, t) { var w = { transportation: 1, water: 1, waterway: 1, place: z <= 12 ? 1 : 0, building: z >= 14 ? 1 : 0 }; if (listeners.length) { w.landcover = 1; w.landuse = 1; if (window.WFR_LANDCLASS && window.WFR_LANDCLASS.live && window.WFR_LANDCLASS.live()) w.aeroway = 1; } if (poiWant && z >= 14 && t && poiWant(t)) w.poi = 1; return w; }
   function startJob(t) {
@@ -147,8 +153,8 @@ window.WFR_FEATURES = (function () {
     for (var i = 0; i < order.length; i++) if (L[order[i]]) lays.push(L[order[i]]);
     var a = W.toLocal(f, t.nw.lat, t.nw.lon), b = W.toLocal(f, t.se.lat, t.se.lon), cx = (a.x + b.x) / 2, cz = (a.z + b.z) / 2, pr = st.probe(cx, cz);
     t.job = { lakeK: 0, f: f, ax: a.x, az: a.z, lays: lays, li: 0, fi: 0, wall: new Out(), roof: new Out(), gnd: new Out(), wallN: 0, nB: 0, nR: 0, nW: 0, places: [], feed: listeners.length ? { landcover: [], landuse: [], aeroway: [], water: [], buildings: [], roads: [], pois: [] } : null, terrZ: pr ? pr.zoom : -1 };
-    t.job.gnd.uv = null; t.job.terrA = { x0: Math.min(a.x, b.x), x1: Math.max(a.x, b.x), z0: Math.min(a.z, b.z), z1: Math.max(a.z, b.z) }; stats.jobs++;
-    if (t.z === 14 && mats.city && window.WFR_CITY790) { var J7 = t.job; J7.Out = Out; J7.tri = tri; J7.Hf = function (lx, lz) { return H(J7, lx, lz); }; WFR_CITY790.begin(J7, t); }   /* 790 A */
+    t.job.gnd.uv = null; t.job.sig798 = null; t.job.terrA = { x0: Math.min(a.x, b.x), x1: Math.max(a.x, b.x), z0: Math.min(a.z, b.z), z1: Math.max(a.z, b.z) }; t.job.sig798 = sigOf(t.job.terrA); stats.jobs++;
+    if (t.z === 14 && mats.city && window.WFR_CITY790) { var J7 = t.job; J7.Out = Out; J7.tri = tri; J7.drp = drp; J7.Hf = function (lx, lz) { return H(J7, lx, lz); }; WFR_CITY790.begin(J7, t); }   /* 790 A */
   }
   function stepJob(t, deadline) {   // true when done
     var J = t.job; if (J.f !== T.f) { startJob(t); J = t.job; }   // re-centred mid-build: start again in the new frame (rare: every 10 km)
@@ -281,13 +287,14 @@ window.WFR_FEATURES = (function () {
     var n = P.length / 2; if (n < 2) return; var G = J.gnd, prev = -1, hw = w / 2;
     for (i = 0; i < n; i++) { var a = Math.max(0, i - 1), b = Math.min(n - 1, i + 1), tx = P[2 * b] - P[2 * a], tz = P[2 * b + 1] - P[2 * a + 1], tl = Math.hypot(tx, tz) || 1, px = -tz / tl * hw, pz = tx / tl * hw;
       var lx = P[2 * i] + px, lz = P[2 * i + 1] + pz, rx = P[2 * i] - px, rz = P[2 * i + 1] - pz, kl = G.v(lx, Math.max(0, H(J, lx, lz)) + lift, lz, 0, 1, 0, col[0], col[1], col[2]), kr = G.v(rx, Math.max(0, H(J, rx, rz)) + lift, rz, 0, 1, 0, col[0], col[1], col[2]);
-      if (prev >= 0) { tri(G, prev, prev + 1, kl); tri(G, prev + 1, kr, kl); } prev = kl; }
+      drp(G, kl, lift); drp(G, kr, lift); if (prev >= 0) { tri(G, prev, prev + 1, kl); tri(G, prev + 1, kr, kl); } prev = kl; }
   }
   function meshOf(o, mat, name, order) {
     if (!o || !o.i.length) return null; var g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.Float32BufferAttribute(o.p, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(o.n, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(o.c, 3));
     if (o.uv) g.setAttribute('uv', new THREE.Float32BufferAttribute(o.uv, 2)); if (o.f && o.f.length) { g.setAttribute('aF790', new THREE.Float32BufferAttribute(o.f, 2)); g.setAttribute('aM790', new THREE.Float32BufferAttribute(o.m, 2)); } g.setIndex(o.p.length / 3 > 65535 ? new THREE.Uint32BufferAttribute(o.i, 1) : new THREE.Uint16BufferAttribute(o.i, 1));
-    var m = new THREE.Mesh(g, mat); m.name = name; m.frustumCulled = false; m.matrixAutoUpdate = false; m.renderOrder = order; m.layers.set(C.LAYER); m.castShadow = m.receiveShadow = false; m.userData.tris = o.i.length / 3; return m;
+    var m = new THREE.Mesh(g, mat); if (o.dl && o.dl.length) { var nv = o.p.length / 3, dl = new Float32Array(nv), q; for (q = 0; q < nv; q++) dl[q] = q < o.dl.length ? o.dl[q] : NaN; m.userData.dl = dl; }   /* 798 */
+    m.name = name; m.frustumCulled = false; m.matrixAutoUpdate = false; m.renderOrder = order; m.layers.set(C.LAYER); m.castShadow = m.receiveShadow = false; m.userData.tris = o.i.length / 3; return m;
   }
   function finish(t) {
     var J = t.job, f0 = now(); disposeMeshes(t); J.wallN = J.wall.p.length / 3;   // the walls that stand on the ground are the first wallN vertices of their mesh, four a wall (two feet, two tops): the guard reads the feet there
@@ -296,7 +303,7 @@ window.WFR_FEATURES = (function () {
     if (J.road && mats.road) ms.push(meshOf(J.road, mats.road, 'features:roads:' + t.key, -9.388)); if (window.WFR_CITY790) { WFR_CITY790.finishTile(t, J); WFR_CITY790.changed(); }   /* 790 A */
     var w = ms[1]; if (w) w.userData.wallN = J.wallN;
     if (cells && ms[0]) { ms[0].material = [mats.ground]; ms[0].userData.cells = cells; ms[0].geometry.addGroup(0, J.gnd.i.length, 0); ms[0].userData.sig = ''; }   // the same material object (the same program), drawn by groups: a coarse cell steps aside where a finer tile stands
-    t.meshes = ms.filter(Boolean); t.f = J.f; t.ax = J.ax; t.az = J.az; t.terrZ = J.terrZ; t.places = J.places; t.box = J.terrA; t.nB = J.nB; t.nR = J.nR; t.nW = J.nW; t.lakes = J.lakes || null;
+    t.meshes = ms.filter(Boolean); t.f = J.f; t.ax = J.ax; t.az = J.az; t.terrZ = J.terrZ; t.places = J.places; t.box = J.terrA; t.gsig = J.sig798; t.drape = null; t.nB = J.nB; t.nR = J.nR; t.nW = J.nW; t.lakes = J.lakes || null;
     t.tris = 0; for (var i = 0; i < t.meshes.length; i++) { var m = t.meshes[i]; m.position.set(J.ax, 0, J.az); m.updateMatrix(); m.visible = false; group.add(m); t.tris += m.userData.tris; }
     stats.finMax = Math.max(stats.finMax || 0, now() - f0);   /* 790: the one step a slice cannot cut (the meshes made at once) */
     t.job = null; t.state = 'built'; t.stale = false; stats.built++; stats.buildings += J.nB; stats.roads += J.nR; stats.waters += J.nW;
@@ -368,6 +375,43 @@ window.WFR_FEATURES = (function () {
           if (d <= R.r) out.push({ z: z, x: x, y: y, d: d, nw: nw, se: se, show: R.show }); } } }
     return out;
   }
+  function sigOf(b) { var st = T && T.st; if (!st || !st.drawnSig || !b) return null; var g = (b.x1 - b.x0) * 0.03; return st.drawnSig(b.x0 - g, b.z0 - g, b.x1 + g, b.z1 + g); }   /* 798: the tile's box and the tiles' own buffer (its lines run a little past its edge) */
+  function drapeStep(vis, deadline) {   /* 798: which showing tiles stand on changed ground; then lay their lines again, nearest first, until the deadline */
+    var D = stats.drape, i, t; for (i = 0; i < vis.length; i++) { t = vis[i]; var sg = sigOf(t.box); if (sg == null || sg === t.gsig) continue;   /* a stale tile's old lines (they stand until its rebuild ends) are laid again too */
+      if (!t.drape) t.drape = { sig: sg, mi: 0, i: 0 }; }   // a job under way runs on (each point reads the ground as it is when laid); a change since is laid again after it
+    var H0 = T.st.H, t0 = now();
+    for (i = 0; i < vis.length && now() < deadline; i++) { t = vis[i]; var dj = t.drape; if (!dj) continue;
+      while (dj.mi < t.meshes.length) { var m = t.meshes[dj.mi], dl = m.userData.dl; if (!dl) { dj.mi++; dj.i = 0; continue; }
+        var pa = m.geometry.attributes.position, P = pa.array, px = m.position.x, pz = m.position.z, k = m.scale.x, n = dl.length, q = dj.i;
+        for (; q < n; q++) { var L = dl[q]; if (L !== L) continue; var ny = Math.max(0, H0(px + P[3 * q] * k, pz + P[3 * q + 2] * k)) + L; if (Math.abs(ny - P[3 * q + 1]) > 0.01) { P[3 * q + 1] = ny; dj.mv = 1; } D.verts++; if ((q & 255) === 255 && now() > deadline) { q++; break; } }
+        dj.i = q; if (q < n) break; if (dj.mv) { pa.needsUpdate = true; m.geometry.boundingSphere = null; m.geometry.boundingBox = null; D.uploads = (D.uploads || 0) + 1; }   /* its bounds made again when asked (a ray onto a re-laid street) */ dj.mv = 0; dj.mi++; dj.i = 0; }   // sent to the card once a mesh is laid, and only when a point moved
+      if (dj.mi < t.meshes.length) break;
+      if (t.city && t.meshes[0]) { var A = t.city, m0 = t.meshes[0], fx = m0.position.x, fz = m0.position.z, fk = m0.scale.x, a = dj.fi || 0;   // the street's lamps, trees and benches stand on it too
+        for (; a < A.length; a += 7) { var fy = Math.max(0, H0(fx + A[a + 1] * fk, fz + A[a + 3] * fk)); if (Math.abs(fy - A[a + 2]) > 0.05) { A[a + 2] = fy; dj.fm = 1; } D.furn++; if ((a & 1023) === 1022 && now() > deadline) { a += 7; break; } }
+        dj.fi = a; if (a < A.length) break; if (dj.fm && window.WFR_CITY790) WFR_CITY790.changed(); }   // gathered again only when one moved
+      t.gsig = dj.sig; t.drape = null; D.jobs++; }
+    D.msMax = Math.max(D.msMax, now() - t0);
+  }
+  /* 798 HER FEET ON THE PAVEMENT (Marth, Nov 13 2026, verbatim: "You can also see in the vid clips how I'm walking through the pavement"): the streets,
+     sidewalks and paths stand a few decimetres over the ground (their lift, so the ground never shows through them), and her walk read the ground under
+     them. surface798(x, z): the top of what is laid on the ground at a point (a road, a sidewalk, a zebra, a path, a river's ribbon), from the z14 tiles'
+     own triangles as they are drawn (draped), or null where none. Each mesh gets a coarse grid of its laid triangles the first time she walks on it. */
+  var SG798 = 8;
+  function grid798(m) {
+    var g = m.geometry, I = g.index, P = g.attributes.position.array, dl = m.userData.dl, cells = new Map(), n = I.count;
+    for (var t = 0; t < n; t += 3) { var a = I.getX(t), b = I.getX(t + 1), c = I.getX(t + 2); if (dl[a] !== dl[a] || dl[b] !== dl[b] || dl[c] !== dl[c]) continue;
+      var x0 = Math.min(P[3 * a], P[3 * b], P[3 * c]), x1 = Math.max(P[3 * a], P[3 * b], P[3 * c]), z0 = Math.min(P[3 * a + 2], P[3 * b + 2], P[3 * c + 2]), z1 = Math.max(P[3 * a + 2], P[3 * b + 2], P[3 * c + 2]);
+      for (var cz = Math.floor(z0 / SG798); cz <= Math.floor(z1 / SG798); cz++) for (var cx = Math.floor(x0 / SG798); cx <= Math.floor(x1 / SG798); cx++) { var k = cx + ',' + cz, L = cells.get(k); if (!L) cells.set(k, L = []); L.push(a, b, c); } }
+    return cells;
+  }
+  function surface798(x, z) {
+    var best = null; tiles.forEach(function (t) { if (t.z !== 14 || t.state !== 'built' || !t.box || x < t.box.x0 - 5 || x > t.box.x1 + 5 || z < t.box.z0 - 5 || z > t.box.z1 + 5) return;
+      for (var i = 0; i < t.meshes.length; i++) { var m = t.meshes[i], dl = m.userData.dl; if (!dl || !m.visible) continue; if (!m.userData.sg798) m.userData.sg798 = grid798(m);
+        var k = m.scale.x, lx = (x - m.position.x) / k, lz = (z - m.position.z) / k, L = m.userData.sg798.get(Math.floor(lx / SG798) + ',' + Math.floor(lz / SG798)); if (!L) continue; var P = m.geometry.attributes.position.array;
+        for (var q = 0; q < L.length; q += 3) { var a = 3 * L[q], b = 3 * L[q + 1], c = 3 * L[q + 2], v0x = P[b] - P[a], v0z = P[b + 2] - P[a + 2], v1x = P[c] - P[a], v1z = P[c + 2] - P[a + 2], v2x = lx - P[a], v2z = lz - P[a + 2], den = v0x * v1z - v1x * v0z; if (Math.abs(den) < 1e-9) continue;
+          var u = (v2x * v1z - v1x * v2z) / den, v = (v0x * v2z - v2x * v0z) / den; if (u < -1e-6 || v < -1e-6 || u + v > 1 + 1e-6) continue; var y = P[a + 1] + (P[b + 1] - P[a + 1]) * u + (P[c + 1] - P[a + 1]) * v; if (best == null || y > best) best = y; } } });
+    return best;
+  }
   function update(cam, travel) {   // every travel frame, before the render; off the travel zone it hides what it shows (labels, credit)
     if (!mats) return; var t0 = now(); frameNo++;
     try {
@@ -392,7 +436,7 @@ window.WFR_FEATURES = (function () {
       var vis = [], tris = 0; tiles.forEach(function (t) { if (t.state !== 'built' || !t.meshes.length) return; var on = t.used === frameNo && t.d <= t.show; if (on) vis.push(t); else setVis(t, false); });
       vis.sort(function (a, b) { return a.d - b.d; }); var shown = 0;
       for (i = 0; i < vis.length; i++) { var ok = tris + vis[i].tris <= C.TRI_MAX; setVis(vis[i], ok); if (ok) { tris += vis[i].tris; shown++; } }
-      stats.tris = tris; stats.visible = shown; cover();
+      stats.tris = tris; stats.visible = shown; cover(); drapeStep(vis, Math.max(now() + C.DRAPE_MS, t0 + C.SLICE_MS));   /* 798: what the tile's build left of its slice, and never less than DRAPE_MS */
       if (mats.city && window.WFR_CITY790) WFR_CITY790.tick(cam, tiles, frameNo, T, group, agl);   /* 790 A: the street trees, lamps and benches near her; the night windows */
       /* the LRU: never what this frame wants */
       if (tiles.size > C.KEPT) { var old = []; tiles.forEach(function (t) { if (t.used !== frameNo && t.state !== 'fetch') old.push(t); }); old.sort(function (a, b) { return a.used - b.used; });
@@ -437,7 +481,7 @@ window.WFR_FEATURES = (function () {
     var raw = 0; tiles.forEach(function (t) { if (t.raw) raw += t.raw.byteLength; }); s.rawMB = +(raw / 1048576).toFixed(2); s.template = template; s.photos = Object.assign({}, tex); s.lakeLv = []; lakeLv.forEach(function (v, k) { if (s.lakeLv.length < 12) s.lakeLv.push([k, v.z, +v.h.toFixed(2)]); }); s.lakeReads = stats.lakeReads.slice(); s.lakeOf = function (id) { var b = lakeLv.get(id), pcs = []; tiles.forEach(function (t) { if (t.lakes) t.lakes.forEach(function (L) { if (L.id === id) pcs.push([t.key, t.state, !!t.stale, L.z, L.lv, L.rd, L.lo, L.ns]); }); }); return { best: b ? [b.z, +b.h.toFixed(2)] : null, pieces: pcs }; }; return s; }
   function meshes() { var out = []; tiles.forEach(function (t) { for (var i = 0; i < t.meshes.length; i++) out.push({ key: t.key, z: t.z, mesh: t.meshes[i] }); }); return out; }
   var api = { C: C, attach: attach, update: update, peek: peek, meshes: meshes, decodeTile: decodeTile, feature: feature, polygons: polygons, llOf: llOf,
-    onTile: function (cb) { listeners.push(cb); }, wantPoi: function (fn) { poiWant = fn; }, onDrop: function (cb) { droppers.push(cb); }, setFetch: function (fn) { fetchFn = fn; }, group: function () { return group; }, materials: function () { return mats; }, attached: function () { return { T: T, scene: scene, warm: warm }; }, version: 1 };   // attached(): what the page handed attach() (the game's script is scoped; the guard reads it here)
+    surface798: surface798, onTile: function (cb) { listeners.push(cb); }, wantPoi: function (fn) { poiWant = fn; }, onDrop: function (cb) { droppers.push(cb); }, setFetch: function (fn) { fetchFn = fn; }, group: function () { return group; }, materials: function () { return mats; }, attached: function () { return { T: T, scene: scene, warm: warm }; }, version: 1 };   // attached(): what the page handed attach() (the game's script is scoped; the guard reads it here)
   return api;
 })();
 
@@ -472,7 +516,7 @@ window.WFR_CITY790 = (function () {
   'use strict';
   var C = { EAVE: 0.4, FILL: 0.72, SHORT_MAX: 18, LONG_MAX: 40, PAR: 0.9, PAR_H: 8, BOX_A: 250, BOX_H: 10, SHOP_D: 16, URB_R: 40, URB_N: 2,
     W: { minor: 7, service: 4.2, tertiary: 9, secondary: 12, primary: 14, trunk: 16, motorway: 18, busway: 8, raceway: 10 }, SIDE: { minor: 1.9, tertiary: 2.4, secondary: 2.8, primary: 3.2, busway: 2 },
-    LIFT_S: 0.32, LIFT_A: 0.38, SUB: 22, PERIOD: 8, TREE_STEP: 11, LAMP_STEP: 32, TREE_R: 600, LAMP_R: 420, BENCH_R: 300, MOVE: 40, AGL_MAX: 650,
+    LIFT_S: 0.53, LIFT_A: 0.38,   /* 798: the sidewalk a 15 cm curb OVER the street (was 0.32: under it) */ SUB: 22, PERIOD: 8, TREE_STEP: 11, LAMP_STEP: 32, TREE_R: 600, LAMP_R: 420, BENCH_R: 300, MOVE: 40, AGL_MAX: 650,
     CAP: { tree: 2400, lamp: 900, bench: 160, sign: 220 }, NIGHT_K: 0.8, DETAIL_D: 1500, DETAIL_UP: 1100 };
   var MODE = (function () { try { return localStorage.getItem('wfr.city790') || 'on'; } catch (e) { return 'on'; } })();
   function HAS(m) { return (',' + MODE + ',').indexOf(',' + m + ',') >= 0; }   /* 790 A2: the switch may carry two words ('nofacade,noink': the ink guard's plain walls) */
@@ -760,19 +804,22 @@ window.WFR_CITY790 = (function () {
     ts.sort(function (a, b) { return a - b; }); var T2 = []; for (i = 0; i < ts.length; i++) if (!T2.length || ts[i] - T2[T2.length - 1] > 0.05) T2.push(ts[i]);
     cuts.sort(function (a, b) { return a[0] - b[0]; }); var cmax = []; for (i = 0; i < cuts.length; i++) cmax.push(Math.max(cuts[i][1], i ? cmax[i - 1] : -1e9));
     var inCut = function (tt) { return nearCut(cuts, tt, -0.01, cmax); };
-    var side = town ? (C.SIDE[cls] || 0) : 0, Ro = J.road || (J.road = new J.Out()), G = J.gnd, ac = cls === 'service' ? [0.9, 0.9, 0.9] : [1, 1, 1], scol = toLin([0.74, 0.73, 0.70]);
+    var side = town ? (C.SIDE[cls] || 0) : 0, Ro = J.road || (J.road = new J.Out()), G = J.gnd, ac = cls === 'service' ? [0.9, 0.9, 0.9] : [1, 1, 1], scol = toLin([0.74, 0.73, 0.70]), ccol = toLin([0.58, 0.57, 0.55]);
     var prev = null, prevS = null;
     for (i = 0; i < T2.length; i++) { var tt = T2[i], q0 = at(p, s, tt), cut = inCut(tt - 0.02) || inCut(tt + 0.02), dir = q0[2];
       var nx = -dir[1], nz = dir[0], lx = q0[0] + nx * hw, lz = q0[1] + nz * hw, rx = q0[0] - nx * hw, rz = q0[1] - nz * hw;
       var yl = Math.max(0, H(lx, lz)) + C.LIFT_A, yr = Math.max(0, H(rx, rz)) + C.LIFT_A, v = tt / C.PERIOD;
       var segPlain = i > 0 && inCut((T2[i - 1] + tt) / 2), u0 = segPlain ? 64 / 512 : (sec[0] + 8) / 512, u1 = segPlain ? 64 / 512 : (sec[1] - 8) / 512;
-      var kl = Ro.v(lx, yl, lz, 0, 1, 0, ac[0], ac[1], ac[2], u0, v), kr = Ro.v(rx, yr, rz, 0, 1, 0, ac[0], ac[1], ac[2], u1, v);
-      if (prev) { var pl = prev[0], pr = prev[1]; if (prev[2] !== segPlain) { var a0 = Ro.p.length / 3; Ro.v(Ro.p[3 * pl], Ro.p[3 * pl + 1], Ro.p[3 * pl + 2], 0, 1, 0, ac[0], ac[1], ac[2], u0, Ro.uv[2 * pl + 1]); Ro.v(Ro.p[3 * pr], Ro.p[3 * pr + 1], Ro.p[3 * pr + 2], 0, 1, 0, ac[0], ac[1], ac[2], u1, Ro.uv[2 * pr + 1]); pl = a0; pr = a0 + 1; }
+      var kl = Ro.v(lx, yl, lz, 0, 1, 0, ac[0], ac[1], ac[2], u0, v), kr = Ro.v(rx, yr, rz, 0, 1, 0, ac[0], ac[1], ac[2], u1, v); if (J.drp) { J.drp(Ro, kl, C.LIFT_A); J.drp(Ro, kr, C.LIFT_A); }   /* 798 */
+      if (prev) { var pl = prev[0], pr = prev[1]; if (prev[2] !== segPlain) { var a0 = Ro.p.length / 3; Ro.v(Ro.p[3 * pl], Ro.p[3 * pl + 1], Ro.p[3 * pl + 2], 0, 1, 0, ac[0], ac[1], ac[2], u0, Ro.uv[2 * pl + 1]); Ro.v(Ro.p[3 * pr], Ro.p[3 * pr + 1], Ro.p[3 * pr + 2], 0, 1, 0, ac[0], ac[1], ac[2], u1, Ro.uv[2 * pr + 1]); pl = a0; pr = a0 + 1; if (J.drp) { J.drp(Ro, a0, C.LIFT_A); J.drp(Ro, a0 + 1, C.LIFT_A); } }
         J.tri(Ro, pl, pr, kl); J.tri(Ro, pr, kr, kl); }
       prev = [kl, kr, segPlain];
-      if (side > 0) { var ow = hw + side, sx = q0[0] + nx * ow, sz = q0[1] + nz * ow, ex = q0[0] - nx * ow, ez = q0[1] - nz * ow;
-        var sl = G.v(sx, Math.max(0, H(sx, sz)) + C.LIFT_S, sz, 0, 1, 0, scol[0], scol[1], scol[2]), sr = G.v(ex, Math.max(0, H(ex, ez)) + C.LIFT_S, ez, 0, 1, 0, scol[0], scol[1], scol[2]);
-        if (prevS != null) { J.tri(G, prevS, prevS + 1, sl); J.tri(G, prevS + 1, sr, sl); } prevS = sl; } }
+      if (side > 0) {   /* 798: the two sidewalks stand a curb (C.CURB) over the street, each its own strip from the kerb out, with the kerb's face as a steep bevel
+           down to the road; inside a junction they stop (was: one strip under the whole street, 6 cm UNDER the road). Marth: "how I'm walking through the pavement" */
+        var ow = hw + side, kc = hw - 0.12, SW = [[ow, C.LIFT_S, 0], [hw, C.LIFT_S, 0], [kc, C.LIFT_A + 0.01, 1], [-kc, C.LIFT_A + 0.01, 1], [-hw, C.LIFT_S, 0], [-ow, C.LIFT_S, 0]], s0 = -1;
+        for (var si = 0; si < 6; si++) { var o6 = SW[si][0], wx = q0[0] + nx * o6, wz = q0[1] + nz * o6, cc = SW[si][2] ? ccol : scol, kv = G.v(wx, Math.max(0, H(wx, wz)) + SW[si][1], wz, 0, 1, 0, cc[0], cc[1], cc[2]); if (J.drp) J.drp(G, kv, SW[si][1]); if (si === 0) s0 = kv; }
+        if (prevS != null && !segPlain) for (var sp2 = 0; sp2 < 5; sp2++) { if (sp2 === 2) continue; J.tri(G, prevS + sp2, prevS + sp2 + 1, s0 + sp2); J.tri(G, prevS + sp2 + 1, s0 + sp2 + 1, s0 + sp2); }
+        prevS = s0; } }
     st.roads++; if (side > 0) st.sidewalks++;
     /* zebras: each arm of a junction of three arms or more, in town */
     if (town && cls !== 'service') for (i = 0; i < jvs.length; i++) { var jv = jvs[i]; if (jv[1].arms < 3) continue;
@@ -798,7 +845,7 @@ window.WFR_CITY790 = (function () {
   }
   function zebra(J, Ro, c, hw, H) { var dx = c[2][0], dz = c[2][1], nx = -dz, nz = dx, d = 1.5, y = function (x, z) { return Math.max(0, H(x, z)) + C.LIFT_A + 0.03; };
     var pts = [[c[0] - dx * d + nx * hw, c[1] - dz * d + nz * hw], [c[0] - dx * d - nx * hw, c[1] - dz * d - nz * hw], [c[0] + dx * d - nx * hw, c[1] + dz * d - nz * hw], [c[0] + dx * d + nx * hw, c[1] + dz * d + nz * hw]];
-    var u0 = (SEC.zebra[0] + 8) / 512, u1 = (SEC.zebra[1] - 8) / 512, k = [[u0, 0], [u1, 0], [u1, 0.4], [u0, 0.4]].map(function (uv, i) { return Ro.v(pts[i][0], y(pts[i][0], pts[i][1]), pts[i][1], 0, 1, 0, 1, 1, 1, uv[0], uv[1]); });
+    var u0 = (SEC.zebra[0] + 8) / 512, u1 = (SEC.zebra[1] - 8) / 512, k = [[u0, 0], [u1, 0], [u1, 0.4], [u0, 0.4]].map(function (uv, i) { var kz = Ro.v(pts[i][0], y(pts[i][0], pts[i][1]), pts[i][1], 0, 1, 0, 1, 1, 1, uv[0], uv[1]); if (J.drp) J.drp(Ro, kz, C.LIFT_A + 0.03); return kz; });
     J.tri(Ro, k[0], k[1], k[2]); J.tri(Ro, k[0], k[2], k[3]); }
   function finishTile(t, J) { if (!J.city) return; t.city = J.city.furn.length ? new Float32Array(J.city.furn) : null; t.cityN = J.city.furn.length / 7; J.city = null; }
 

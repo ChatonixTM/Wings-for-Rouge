@@ -518,12 +518,14 @@
 
     function travel(dt) {   // 737: past the gate pre() and tick() do not run (they are the island's), so a press out there never ended and the button never rested (sea737 P4: it stays at 1): the timer and the button only
       if (Z.t > 0) { Z.t -= dt; if (Z.t <= 0 || !zoomable()) endZoom(); } else if (Z.cd > 0) Z.cd = Math.max(0, Z.cd - dt);
+      const inp = api.input, walk = !!(api.foot751 && api.foot751());   /* 798 add. 3 (Marth, Nov 14: "I can't zoom on the ground, even on the highway / road area"): foot751 is the html's word that land751Walk walks her; the stick's hold as pre() reads it, the stride is walkK() */
+      if (walk && S.lessons.zoom && zoomable() && Z.t <= 0 && Z.cd <= 0 && inp && inp.sy >= ZOOM.full && Math.abs(inp.sx) < 0.3) { Z.hold += dt; if (Z.hold >= ZOOM.hold) startZoom('stick'); } else Z.hold = 0;
       zoomLook(dt, S.flutT > 0);   // 755: the streaks and their ease, for Zoom and for Flutter
-      const zOn = !!S.lessons.zoom && S.mode === 'fly' && zoomable() && !(ui && ui.hidden);
+      const zOn = !!S.lessons.zoom && (S.mode === 'fly' || walk) && zoomable() && !(ui && ui.hidden);
       if (zoomBtn.hidden === zOn) zoomBtn.hidden = !zOn;
       if (zOn) { const o = (Z.t > 0 && !fast()) || Z.cd > 0 ? '0.5' : '1'; if (zoomBtn.style.opacity !== o) zoomBtn.style.opacity = o; }
     }
-    const API = { family: () => fam.map((h) => ({ name: h.name, g: h.g })), /* 781 #133: who they are, for the talk's frame and name card */ poke748: (reach, r, fresh) => { let n = 0; if (!site.visible) return 0; for (const h of fam) { const p = h.g.position; if (reach(p.x, p.y + 0.2, p.z, r + 0.25) && fresh(h)) { h.curlTo = 1; h.curlT = 0; n++; } } return n; }, air: () => (Z.t > 0 && S.mode === 'fly' ? 1 : 0), streaks, pre, tick, travel, deliver, openBook, state: () => ({ met: !!S.seen.hogsMet, returned: !!S.seen.hogsBook, bookSeen: !!S.seen.bookSeen, zoom: !!S.lessons.zoom }) };
+    const API = { family: () => fam.map((h) => ({ name: h.name, g: h.g })), /* 781 #133: who they are, for the talk's frame and name card */ poke748: (reach, r, fresh) => { let n = 0; if (!site.visible) return 0; for (const h of fam) { const p = h.g.position; if (reach(p.x, p.y + 0.2, p.z, r + 0.25) && fresh(h)) { h.curlTo = 1; h.curlT = 0; n++; } } return n; }, air: () => (Z.t > 0 && S.mode === 'fly' ? 1 : 0), walkK: () => (Z.t > 0 && S.mode === 'walk' ? ZOOM.mult : 1), /* 798 add. 3: the travel zone's walk (land751Walk) takes home's stride */ streaks, pre, tick, travel, deliver, openBook, state: () => ({ met: !!S.seen.hogsMet, returned: !!S.seen.hogsBook, bookSeen: !!S.seen.bookSeen, zoom: !!S.lessons.zoom }) };
     if (debugOn) root.WFR_HOGS.dbg = {
       state: () => ({ met: !!S.seen.hogsMet, returned: !!S.seen.hogsBook, bookSeen: !!S.seen.bookSeen, lesson: !!S.lessons.zoom, mode: S.mode, talking: !!S.talking, talkingHogs,
         zoom: { t: Z.t, cd: Z.cd, k: Z.k, hold: Z.hold, by: Z.by, starts: Z.starts, fov: api.camera.fov }, bookOpen, story: !story.hidden, at: api.panels.at(), count: api.panels.count(),

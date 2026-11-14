@@ -23,7 +23,7 @@
 (function () {
   'use strict';
   var ctx = null, bus = null, busLp = null, noise = null, isMuted = null, voices = 0;
-  var MAX_VOICES = 6, ambT = 8, rnd = Math.random, noBreath = false, last = null, stepsOn = 0, stepN = 0;   // SU39: steps ringing now, steps played
+  var MAX_VOICES = 6, ambT = 8, rnd = Math.random, noBreath = false, last = null, stepsOn = 0, stepN = 0, rustleOn = 0, rustleN = 0;   // SU39: steps ringing now, steps played
 
   /* per-kind loudness, measured offline over many renders so the loudest variant peaks ~0.22 at vol 1, distance 0 */
   var CAL = { cardinal: 0.2, 'cardinal:chip': 0.22, bluejay: 0.14, 'bluejay:pump': 0.2, crow: 0.17, falcon: 0.19, owl: 0.21, eagle: 0.2, hawk: 0.165, gull: 0.16, pelican: 0.2, mongoose: 0.12, crab: 0.14, dolphin: 0.12 };   // SU39: the animals' levels DRAFT (unmeasured)
@@ -51,7 +51,7 @@
   function run(v, s, t0, t1) { v.srcs++; s.onended = function () { if (--v.srcs === 0) finish(v); }; s.start(t0); s.stop(t1); }
   function finish(v) {
     for (var i = 0; i < v.nodes.length; i++) { try { v.nodes[i].disconnect(); } catch (e) { /* already gone */ } }
-    v.nodes.length = 0; if (v.step) stepsOn = Math.max(0, stepsOn - 1); else voices = Math.max(0, voices - 1);   // SU39: a step is counted apart from the calls
+    v.nodes.length = 0; if (v.rustle) rustleOn = 0; else if (v.step) stepsOn = Math.max(0, stepsOn - 1); else voices = Math.max(0, voices - 1);   // SU39: a step is counted apart from the calls
   }
   function envGain(v, t, dur, vol, atk, rel) {
     if (atk + rel > dur) { var k = dur / (atk + rel); atk *= k; rel *= k; }
@@ -367,7 +367,20 @@
       if (n[3]) tone(v, vg, t0 + n[0] + 0.05, { pts: [[0, hz(n[3])], [n[2], hz(n[3])]], dur: n[2], vol: 0.06, atk: 0.2, rel: n[2] * 0.7, lp: 2000 }); }
     return true;
   }
+  /* 798 · LEAVES ON HER WINGS (Marth, Nov 13 2026: "you can't descend past the tree line"): as she passes through a crown, a soft dry rustle: four to six
+     short puffs of high filtered noise, scattered over ~0.3 s, a little lower and fuller for a big bird (weight 0..1). One at a time; muted with the bus. */
+  function rustle(o) {
+    o = o || {};
+    if (!ctx || !bus || !noise || (isMuted && isMuted()) || rustleOn) return false;
+    var w = Math.max(0, Math.min(1, o.weight || 0)), vol = (o.vol != null ? o.vol : 0.5), v = { nodes: [], srcs: 0, rustle: true }, vg = keep(v, ctx.createGain()); vg.gain.value = 1; vg.connect(bus); rustleOn = 1; rustleN++;
+    var t0 = ctx.currentTime + 0.005, n = ri(4, 6);
+    for (var i = 0; i < n; i++) { var t = t0 + rnd() * 0.3, d = (0.035 + 0.05 * rnd()) * (1 + 0.5 * w), g = envGain(v, t, d, 0.05 * vol * j(0.3), d * 0.15, d * 0.85);
+      var bp = keep(v, ctx.createBiquadFilter()); bp.type = 'bandpass'; bp.frequency.value = (4200 - 1600 * w) * j(0.25); bp.Q.value = 1.1;
+      var ns = keep(v, ctx.createBufferSource()); ns.buffer = noise; ns.connect(bp); bp.connect(g); g.connect(vg); run(v, ns, t, t + d + 0.01); }
+    return true;
+  }
   window.WFR_SOUND = {
+    rustle: rustle, get rustles() { return rustleN; },
     step: step, get steps() { return stepN; }, phrase: phrase,
     init: init, setMuted: setMuted, call: call, wind: wind, windState: windState, near: near, ambient: ambient, KINDS: KINDS, VARIANTS: VARIANTS, MOODS: MOODS, CAL: CAL,
     get voices() { return voices; },

@@ -19,7 +19,7 @@
    Every number DRAFT. */
 window.WFR_IMAGERY = (function () {
   'use strict';
-  var C = { MAXZ: 8, PIN: 2, KEEP: 40, LOADS: 4, PX: 256, SEA: 0.5, GAIN: 1.0, RETRY: 20000, DRAPE: true,
+  var C = { COAST798: 12, MAXZ: 8, PIN: 2, KEEP: 40, LOADS: 4, PX: 256, SEA: 0.5, GAIN: 1.0, RETRY: 20000, DRAPE: true,
     URL: 'https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/BlueMarble_NextGeneration/default/GoogleMapsCompatible_Level8/{z}/{y}/{x}.jpeg' };   // WMTS RESTful: {TileMatrix}/{TileRow}/{TileCol} = z/y/x
   var CREDIT = 'Earth imagery: Blue Marble, NASA Earth Observatory (MODIS). We acknowledge the use of imagery provided by services from NASA\'s Global Imagery Browse Services (GIBS), part of NASA\'s Earth Science Data and Information System (ESDIS). Land cover: MODIS MCD12Q1 v061 (Terra + Aqua), NASA LP DAAC.';
   var stats = { asked: 0, loaded: 0, errors: 0, painted: 0, repainted: 0, cached: 0, cacheBytes: 0, cacheMax: 0, pinned: 0, inflight: 0, paintMsMax: 0, lastError: null };
@@ -81,7 +81,8 @@ window.WFR_IMAGERY = (function () {
   function paint(rec, src) {   // the sheet's vertices from the photo (land: the photo; sea: half the photo, half the atlas's depth blue), the skirt at 0.8 of its edge
     var t0 = now(), g = rec.mesh.geometry, col = g.getAttribute('color'), arr = col.array, im = rec.im712, N = Math.round(Math.sqrt(rec.hv.length)) - 1, V = (N + 1) * (N + 1), hv = rec.hv, base = im.base;
     for (var j = 0; j <= N; j++) for (var i = 0; i <= N; i++) { var q2 = j * (N + 1) + i, k = q2 * 3; sample(src.e.px, src.u0 + i / N * src.s, src.v0 + j / N * src.s, rgb);
-      if (hv[q2] > 0) { arr[k] = Math.min(1, rgb[0] * C.GAIN); arr[k + 1] = Math.min(1, rgb[1] * C.GAIN); arr[k + 2] = Math.min(1, rgb[2] * C.GAIN); }
+      if (hv[q2] > 0 && !(hv[q2] < C.COAST798 && rgb[2] >= rgb[1] && rgb[2] >= rgb[0])) { arr[k] = Math.min(1, rgb[0] * C.GAIN); arr[k + 1] = Math.min(1, rgb[1] * C.GAIN); arr[k + 2] = Math.min(1, rgb[2] * C.GAIN); }
+      else if (hv[q2] > 0) { arr[k] = base[k]; arr[k + 1] = base[k + 1]; arr[k + 2] = base[k + 2]; }   /* 798: low land (a cay, a reef flat, a mangrove fringe) under a photo pixel that is SEA (the photo's pixels are ~600 m: at the shore they are the water) keeps the atlas's own coast colour; it wore the photo's dark sea and lay as dark slabs on the turquoise shallows */
       else { var sk737 = rgb[2] >= rgb[1] && Math.max(rgb[0], rgb[1]) < 0.07 ? 0 : C.SEA; arr[k] = base[k] + (rgb[0] - base[k]) * sk737; arr[k + 1] = base[k + 1] + (rgb[1] - base[k + 1]) * sk737; arr[k + 2] = base[k + 2] + (rgb[2] - base[k + 2]) * sk737; } }   // 737: the flat ocean fill says nothing of the sea, so the atlas's depth blue stands whole there (half of a near-black fill drew a dark sea, a step at the gate)
     var vs = V;   // the skirt, in the streamer's order: north (j 0), south (j N), west (i 0), east (i N)
     for (var e = 0; e < 4; e++) for (var gg = 0; gg <= N; gg++) { var ii = e === 0 || e === 1 ? gg : (e === 2 ? 0 : N), jj = e === 0 ? 0 : e === 1 ? N : gg, qq = (jj * (N + 1) + ii) * 3, kk = vs * 3;
