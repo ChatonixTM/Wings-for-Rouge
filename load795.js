@@ -32,7 +32,7 @@
     { id: 'village', chip: 'Village', name: 'Raising the village', say: 'Waking the village. Most of them were already up.',
       files: ['trees.js', 'treehouses.js', 'cabins.js', 'cave.js', 'hermits.js', 'homes784.js'] },
     { id: 'stories', chip: 'Stories', name: 'Setting the scenes', say: 'Telling the Hawk he is not invited. He is coming anyway.',
-      files: ['sounds.js', 'cine.js', 'haven781.js', 'race782.js', 'school782.js', 'arrive783.js', 'ocarina781.js', 'after786.js', 'interact790.js', 'craft787.js', 'hud795.js', 'missions788.js', 'show795.js',
+      files: ['sounds.js', 'cine.js', 'haven781.js', 'race782.js', 'school782.js', 'arrive783.js', 'ocarina781.js', 'after786.js', 'interact790.js', 'craft787.js', 'bread818.js', 'strike819.js', 'hud795.js', 'missions788.js', 'show795.js',
         'music.js', 'battle703-song.js', 'music-orchestra.js', 'rhythm.js', 'pictograms.js', 'chick-wear.js', 'hedgehogs.js', 'opening.js'] },
     { id: 'weather', chip: 'Weather', name: 'Mixing the weather', say: 'Hanging the clouds. Some of them are soft and wet.',
       files: ['skypiea.js', 'pirate.js', 'atmo.js', 'world-realism.js', 'boat.js', 'weather.js', 'seasons.js', 'village-build.js', 'runes.js', 'fall748.js', 'fx760.js', 'hearts714.js'] },

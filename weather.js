@@ -61,9 +61,12 @@ window.WFR_WX = (function () {
        dice at each storm flash, 140-220 m out, ahead of her within about 30 degrees. Warmed with the rain at load. */
     var BN = 16, BB = 8;
     function ribbon(n) { var gg = new T.BufferGeometry(), ix = []; gg.setAttribute('position', new T.BufferAttribute(new Float32Array(n * 6), 3)); for (var q = 0; q < n - 1; q++) { var a = q * 2; ix.push(a, a + 1, a + 2, a + 1, a + 3, a + 2); } gg.setIndex(ix); return gg; }
-    var BOLT = { mat: new T.MeshBasicMaterial({ color: 0xf4f7ff, transparent: true, opacity: 0, depthWrite: false, fog: false, side: T.DoubleSide }), on: 0, strikes: 0 };
-    BOLT.mesh = new T.Mesh(ribbon(BN), BOLT.mat); BOLT.branch = new T.Mesh(ribbon(BB), BOLT.mat);
-    [BOLT.mesh, BOLT.branch].forEach(function (m) { m.frustumCulled = false; m.renderOrder = 6; m.name = 'wx:bolt'; m.visible = false; scene.add(m); });
+    var BOLT = { mat: new T.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0, depthWrite: false, fog: false, toneMapped: false, side: T.DoubleSide }), on: 0, strikes: 0, T: 0.26, gk: 0.32 };   /* 819: white-hot (no tone mapping greys it) */
+    BOLT.gmat = new T.MeshBasicMaterial({ color: 0x9cc2ff, transparent: true, opacity: 0, depthWrite: false, fog: false, toneMapped: false, side: T.DoubleSide });   /* 819: the blue-white glow (the same kind of material: the same program) */
+    BOLT.mesh = new T.Mesh(ribbon(BN), BOLT.mat); BOLT.branch = new T.Mesh(ribbon(BB), BOLT.mat); BOLT.br2 = new T.Mesh(ribbon(BB), BOLT.mat); BOLT.br3 = new T.Mesh(ribbon(BB), BOLT.mat); BOLT.glow = new T.Mesh(ribbon(BN), BOLT.gmat);
+    BOLT.all = [BOLT.glow, BOLT.mesh, BOLT.branch, BOLT.br2, BOLT.br3];   /* 819: built here once, at load: the white-hot core, up to three branches, the glow behind it */
+    BOLT.all.forEach(function (m, i) { m.frustumCulled = false; m.renderOrder = i ? 6 : 5; m.name = 'wx:bolt'; m.visible = false; scene.add(m); });
+    function boltShow(on) { for (var i = 0; i < BOLT.all.length; i++) BOLT.all[i].visible = on && (BOLT.all[i] !== BOLT.br3 || BOLT.nb > 2); }
     var _v = new T.Vector3(), _s = new T.Vector3(), _d = new T.Vector3(), _f = new T.Vector3();
     function lay(m, pts, w) {   /* a flat ribbon through pts, its width across the line of sight, thinning to the tip */
       var a = m.geometry.attributes.position, cam = o.camera.position;
@@ -75,16 +78,31 @@ window.WFR_WX = (function () {
     function boltStrike(cam, at) {   /* 703: at = a chosen spot { x, y, z } (the Call); without it, the storm's own dice */
       o.camera.getWorldDirection(_v);
       var yaw = Math.atan2(_v.x, _v.z) + (R() - 0.5) * 1.1, dist = 140 + R() * 80, top = cam.y + 75 + R() * 25, drop = 70 + R() * 30;
-      var x = cam.x + Math.sin(yaw) * dist, z = cam.z + Math.cos(yaw) * dist, pts = [], br = [], q;
-      if (at) { x = at.x; z = at.z; top = (at.y || 0) + 85 + R() * 15; drop = top - (at.y || 0); }   /* 703: from the cloud down to the sea */
-      for (q = 0; q < BN; q++) { pts.push(new T.Vector3(x, top - drop * q / (BN - 1), z)); x += (R() - 0.5) * 9; z += (R() - 0.5) * 9; }
-      var j = 4 + Math.floor(R() * 5), bx = pts[j].x, bz = pts[j].z, sx = (R() < 0.5 ? -1 : 1) * (3 + R() * 3);
-      for (q = 0; q < BB; q++) { br.push(new T.Vector3(bx, pts[j].y - drop * 0.45 * q / (BB - 1), bz)); bx += sx + (R() - 0.5) * 4; bz += (R() - 0.5) * 4; }
-      lay(BOLT.mesh, pts, 2.2); lay(BOLT.branch, br, 1.2); BOLT.on = 0.22; BOLT.strikes++; BOLT.mesh.visible = BOLT.branch.visible = true; BOLT.mat.opacity = 1;
+      var x = cam.x + Math.sin(yaw) * dist, z = cam.z + Math.cos(yaw) * dist, ex = x + (R() - 0.5) * 24, ez = z + (R() - 0.5) * 24, ey, q, near = !!(at && at.hit);
+      if (at) { x = at.x + (near ? (R() - 0.5) * 30 : 0); z = at.z + (near ? (R() - 0.5) * 30 : 0); top = (at.y || 0) + 85 + R() * 15; drop = top - (at.y || 0); ex = at.x; ez = at.z; }   /* 703: from the cloud down to the sea (819: down to her) */
+      ey = top - drop;
+      /* 819: a real bolt: jagged (kinks across the line of sight, alternating sides), its branches short and forked off it */
+      var mx = (x + ex) / 2 - cam.x, mz = (z + ez) / 2 - cam.z, mL = Math.hypot(mx, mz) || 1, px = -mz / mL, pz = mx / mL;
+      var jag = function (x0, y0, z0, x1, y1, z1, n, kz, tip, ease) {   /* kinks of about kz x the segment's own length; ease: the joints crowd toward the end, so the part the lens sees (the last few metres, at her) is jagged too */
+        var out = [], s0 = R() < 0.5 ? 1 : -1, LL = Math.hypot(x1 - x0, y1 - y0, z1 - z0), U = function (i) { var v = i / (n - 1); return ease ? 1 - (1 - v) * (1 - v) : v; };
+        for (var i = 0; i < n; i++) { var u = U(i), X = x0 + (x1 - x0) * u, Y = y0 + (y1 - y0) * u, Z = z0 + (z1 - z0) * u, seg = LL * (u - U(Math.max(0, i - 1)));
+          if (i > 0 && (i < n - 1 || !tip)) { var a = (R() - 0.5) * 0.9, s = (i % 2 ? s0 : -s0) * (0.55 + R() * 0.45) * kz * seg, cx = px * Math.cos(a) - pz * Math.sin(a), cz = px * Math.sin(a) + pz * Math.cos(a); X += cx * s; Z += cz * s; Y += (R() - 0.5) * seg * 0.2; }
+          out.push(new T.Vector3(X, Y, Z)); } return out; };
+      var pts = jag(x, top, z, ex, ey, ez, BN, 0.7, true, near);
+      if (near) BOLT.hits = (BOLT.hits || 0) + 1;
+      BOLT.end = [pts[BN - 1].x, pts[BN - 1].y, pts[BN - 1].z];
+      BOLT.nb = 2 + (R() < 0.5 ? 1 : 0); var used = {}, BR = [BOLT.branch, BOLT.br2, BOLT.br3], j0 = near ? BN - 7 : 3, jn = near ? 5 : BN - 8;   /* 819: her bolt forks low, where the lens sees it */
+      for (var b = 0; b < 3; b++) { var j = j0 + Math.floor(R() * jn); while (used[j]) j = j0 + ((j - j0 + 1) % jn); used[j] = 1;
+        var L = near ? 1.5 + R() * 3 : drop * (0.12 + R() * 0.14), sd = (R() < 0.5 ? -1 : 1), P0 = pts[j];
+        lay(BR[b], jag(P0.x, P0.y, P0.z, P0.x + px * sd * L * 0.8, P0.y - L * 0.9, P0.z + pz * sd * L * 0.8, BB, 0.6, false, false), near ? 0.1 : 1.0); }
+      lay(BOLT.mesh, pts, near ? 0.22 : 2.2); lay(BOLT.glow, pts, near ? 1.0 : 7); BOLT.gk = near ? 0.45 : 0.32;   /* 819: her bolt is beside the lens: a thin white-hot core in a soft blue-white glow */
+      var A = BOLT.mesh.geometry.attributes.position; BOLT.line = pts.map(function (p) { return [p.x, p.y, p.z]; }); BOLT.edge = [[A.getX(2 * (BN - 2)), A.getY(2 * (BN - 2)), A.getZ(2 * (BN - 2))], [A.getX(2 * (BN - 2) + 1), A.getY(2 * (BN - 2) + 1), A.getZ(2 * (BN - 2) + 1)]];
+      BOLT.on = BOLT.T; BOLT.strikes++; boltShow(true); BOLT.mat.opacity = 1; BOLT.gmat.opacity = BOLT.gk;
     }
-    function boltTick(real) {
-      if (BOLT.on > 0) { BOLT.on -= real; BOLT.mat.opacity = Math.max(0, Math.min(1, BOLT.on / 0.08)); if (BOLT.on <= 0) { BOLT.mesh.visible = BOLT.branch.visible = false; BOLT.mat.opacity = 0; } }
-      else if (BOLT.mesh.visible) { BOLT.mesh.visible = BOLT.branch.visible = false; BOLT.mat.opacity = 0; }
+    function boltTick(real) {   /* 819: one flicker: on, a breath dark, on again, then out (about 0.26 s) */
+      if (BOLT.on > 0) { BOLT.on -= real; var t = BOLT.T - BOLT.on, f = t < 0.07 ? 1 : t < 0.11 ? 0.12 : t < 0.17 ? 1 : Math.max(0, 1 - (t - 0.17) / 0.09);
+        BOLT.mat.opacity = f; BOLT.gmat.opacity = BOLT.gk * f; if (BOLT.on <= 0) { boltShow(false); BOLT.mat.opacity = 0; BOLT.gmat.opacity = 0; } }
+      else if (BOLT.mesh.visible) { boltShow(false); BOLT.mat.opacity = 0; BOLT.gmat.opacity = 0; }
     }   /* brighter than the overcast horizon (Obito: #b8c4d0 at 0.35 over #aab2ba was ~5 levels apart) */
 
     /* thunder: a soft white wash over the picture, never closer than 15 s of play (photosensitive-safe, far under 3 a second) */
@@ -127,7 +145,7 @@ window.WFR_WX = (function () {
         U.uT.value += Math.min(dt, 0.1);   /* the game's dt: the pouch's slow motion slows the rain too */ U.uCam.value.copy(cam);
         U.uColor.value.copy(DAY).lerp(NIGHT, o.night ? o.night() : 0);
         var show = k > 0.01 && !inside && cam.y < 160;
-        if (warm > 0) { warm--; rain.visible = true; U.uA.value = 0; BOLT.mesh.visible = BOLT.branch.visible = true; BOLT.mat.opacity = 0; }   /* 699: the bolt's program compiles at load too */
+        if (warm > 0) { warm--; rain.visible = true; U.uA.value = 0; BOLT.nb = 3; boltShow(true); BOLT.mat.opacity = 0; BOLT.gmat.opacity = 0; }   /* 699: the bolt's program compiles at load too */
         else { rain.visible = show; U.uA.value = show ? L.a * k : 0; boltTick(real); }
         soundTick(inside ? k : k);
         /* thunder, storm days only, timed in seconds of PLAY */
@@ -138,9 +156,10 @@ window.WFR_WX = (function () {
           if (played >= TH.next && TH.on <= 0) {
             if (TH.last != null) { var gap = played - TH.last; TH.minGap = TH.minGap == null ? gap : Math.min(TH.minGap, gap); }
             TH.last = played; TH.flashes++; TH.on = 0.12; TH.frames = 0; TH.len = 0;
-            if (veil && !inside) veil.style.opacity = far ? '0.12' : '0.35'; o.flash(inside ? (far ? 0.04 : 0.1) : far ? 0.14 : 0.4);
-            if (far) TH.far = (TH.far || 0) + 1; else if (!inside) boltStrike(cam);   /* 699: a real bolt in the storm's sky */
-            setTimeout(function () { rumble(far); }, far ? 2200 + R() * 2400 : 600 + R() * 1900);
+            var me819 = !far && !inside && o.strike ? o.strike() : null;   /* 819: the page rolls her 1 in 15; a hit is { x, y, z, hit } */
+            if (veil && !inside) veil.style.opacity = me819 ? '0.5' : far ? '0.12' : '0.35'; o.flash(inside ? (far ? 0.04 : 0.1) : me819 ? 0.55 : far ? 0.14 : 0.4);
+            if (far) TH.far = (TH.far || 0) + 1; else if (!inside) boltStrike(cam, me819 || undefined);   /* 699: a real bolt in the storm's sky (819: down to her) */
+            TH.delay = me819 ? 0 : far ? 2200 + R() * 2400 : 600 + R() * 1900; setTimeout(function () { rumble(far); }, TH.delay);   /* 819: when it is hers, the thunder at once */
             TH.next = played + Math.max(15, far ? 40 + R() * 40 : 18 + R() * 27);
           }
         } else TH.next = null;
@@ -150,9 +169,9 @@ window.WFR_WX = (function () {
     }
     function peek() {
       return { dead: dead, rainVis: rain.visible && U.uA.value > 0.001, rainA: U.uA.value, rainVerts: N * 2, flashes: TH.flashes, minGap: TH.minGap, maxFlashFrames: TH.maxFrames, maxFlashLen: +TH.maxLen.toFixed(3), flashing: TH.on > 0, rumbles: TH.rumbles, sound: !!SND.bed,
-        level: LVNOW, drawn: g.drawRange.count / 2, uLen: U.uLen.value, bolts: BOLT.strikes, boltShown: BOLT.mesh.visible && BOLT.mat.opacity > 0.01, farFlashes: TH.far || 0 };   /* 699 */
+        level: LVNOW, drawn: g.drawRange.count / 2, uLen: U.uLen.value, bolts: BOLT.strikes, boltShown: BOLT.mesh.visible && BOLT.mat.opacity > 0.01, farFlashes: TH.far || 0, hits819: BOLT.hits || 0, end819: BOLT.end || null, delay819: TH.delay == null ? null : TH.delay, line819: BOLT.line || null, edge819: BOLT.edge || null, branches819: BOLT.nb || 0, parts819: BOLT.all.length };   /* 699; 819 */
     }
-    return { tick: tick, peek: peek, rain: rain, strikeAt: strikeAt, th: function () { return { flashes: TH.flashes, last: TH.last, minGap: TH.minGap, called: TH.called || 0 }; } };   /* 703 */
+    return { tick: tick, peek: peek, rain: rain, strikeAt: strikeAt, soon819: function () { if (TH.next != null) TH.next = 0; }, th: function () { return { flashes: TH.flashes, last: TH.last, minGap: TH.minGap, called: TH.called || 0 }; } };   /* 703 */
   }
 
   API = { roll: roll, level: level, seasons: SEASONS, create: create, last: null, error: null };

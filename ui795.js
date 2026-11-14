@@ -534,6 +534,7 @@
 
   /* ---------- the ship log, newest first: a bold title and one plain sentence a player cares about (DRAFTS for Marth's pen) ---------- */
   var SHIPS = [
+    { n: 145, title: 'Bread and thunder', line: 'The people who offer bread now give you a piece, in a storm the lightning can strike you and costs a heart and a half, and town names no longer sit over your cards.' },
     { n: 144, title: 'Find your way', line: 'The main menu wears the same look as the title, the compass strip and the round compass now agree, and the top line tells you the way home, like Home 240 km S.' },
     { n: 143, title: 'Solid streets', line: 'Houses and people are solid when you walk the streets: you slide along a wall, people step aside, and the camera never ends up inside one.' },
     { n: 142, title: 'One sea, one sky', line: 'The sea stays one calm colour from the shore to the deep, the clouds near and far are painted alike, and the world map opens straight away.' },

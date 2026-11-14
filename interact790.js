@@ -217,11 +217,14 @@ window.WFR_INTERACT790 = (function () {
   /* ---------- people: they notice her ---------- */
   function bubbleEl() { var i; for (i = 0; i < st.bubbles.length; i++) if (!st.bubbles[i].on) return st.bubbles[i]; if (st.bubbles.length >= 3) return null; var el = document.createElement('div'); el.className = 'bub790'; el.hidden = true; document.body.appendChild(el); var o = { el: el, on: false }; st.bubbles.push(o); return o; }
   function say(key, text, where, head, startle) {   /* where(): the person's feet now (frame metres); one bubble per person, never the same person within PER_CD (a startle: a flinch is a reflex, 1.5 s apart) */
-    var s = S(); if (st.t - st.lastLine < (startle ? 1.5 : C.LINE_GAP) || (!startle && st.saidBy[key] && st.t - st.saidBy[key] < C.PER_CD) || s.talking) return false;
+    var s = S(); if (st.t - st.lastLine < (startle ? 1.5 : C.LINE_GAP) || (!startle && st.saidBy[key] && st.t - st.saidBy[key] < C.PER_CD) || s.talking || covered()) return false;
     var b = bubbleEl(); if (!b) return false; b.on = true; b.t = 0; b.where = where; b.head = head || 1.9; b.el.textContent = text; b.el.hidden = false; st.saidBy[key] = st.t; st.lastLine = st.t; st.lines++; ev('line ' + key + ': ' + text); return true;
   }
   var PV = null;
+  function covered() { try { return !!(X.covered && X.covered()); } catch (e) { return false; } }   /* 818: any sheet or card of the page's open (the Pouch, a talk, the map, a scene) */
+  function hush() { for (var i = 0; i < st.bubbles.length; i++) { var b = st.bubbles[i]; if (b.on || !b.el.hidden) { b.on = false; b.el.hidden = true; } } }
   function bubbleTick(dt) {
+    if (covered()) { hush(); return; }
     if (!PV) PV = new T.Vector3(); var w = innerWidth, h = innerHeight;
     for (var i = 0; i < st.bubbles.length; i++) { var b = st.bubbles[i]; if (!b.on) continue; b.t += dt; var p = null; try { p = b.where(); } catch (e) { p = null; }
       if (!p || b.t > C.LINE_T) { b.on = false; b.el.hidden = true; continue; }
@@ -249,7 +252,7 @@ window.WFR_INTERACT790 = (function () {
     if (!bx || bdd > C.PEOPLE_R) return; var H0 = hp, fixed = bx, where2 = H0 ? function () { return H0.where(); } : function () { return W && W.locate ? (W.locate(bid, {}) || fixed) : fixed; };
     if (fast && bdd < 6) { if (say(bid, '😮 ' + pick(WORDS.flinch, k), where2, null, true)) { st.flinches++; if (H0 && H0.startle) try { H0.startle(P.x, P.z); } catch (e) { /* theirs */ } } }
     else if (air && agl < C.LOW && bdd < 7) { if (say(bid, '👀 ' + pick(WORDS.world, k), where2)) st.looks++; }
-    else if (!air && bdd < 3.5 && Math.random() < C.CRUMB_P) { if (say(bid, '🍞 ' + pick(WORDS.worldCrumb, k), where2)) st.crumbsTossed++; }
+    else if (!air && bdd < 3.5 && Math.random() < C.CRUMB_P) { if (say(bid, '🍞 ' + pick(WORDS.worldCrumb, k), where2)) { st.crumbsTossed++; if (X.bread) try { X.bread(bid, where2); } catch (e) { /* the line stands without its piece */ } } }   /* 818: and they give her a lil piece (bread818.js) */
   }
 
   /* ---------- the providers (the builders' agents) ---------- */
@@ -309,7 +312,7 @@ window.WFR_INTERACT790 = (function () {
   function tick(dt, real) {
     if (!st.inited) return; var t0 = performance.now();
     try {
-      var s = S(); if (s.mode === 'paused' || s.mode === 'menu') { if (st.btn && !st.btn.hidden) st.btn.hidden = true; return; }
+      var s = S(); if (s.mode === 'paused' || s.mode === 'menu') { if (st.btn && !st.btn.hidden) st.btn.hidden = true; hush(); return; }   /* 818: a held card or a menu: no line floats over it */
       st.t += dt; for (var i = 0; i < st.things.length; i++) if (st.things[i].step) st.things[i].step(st.things[i], dt);
       if (travel()) { if (st.onPerch) { leavePerch(st.onPerch); st.onPerch = null; } worldTick(dt); }
       else { if (st.riding) hopOff(); perchTick(real || dt); islandBtn(); flockTick(dt); crumbTick(dt); }
