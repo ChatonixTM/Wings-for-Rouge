@@ -153,7 +153,7 @@ window.WFR_FEATURES = (function () {
     for (var i = 0; i < order.length; i++) if (L[order[i]]) lays.push(L[order[i]]);
     var a = W.toLocal(f, t.nw.lat, t.nw.lon), b = W.toLocal(f, t.se.lat, t.se.lon), cx = (a.x + b.x) / 2, cz = (a.z + b.z) / 2, pr = st.probe(cx, cz);
     t.job = { lakeK: 0, f: f, ax: a.x, az: a.z, lays: lays, li: 0, fi: 0, wall: new Out(), roof: new Out(), gnd: new Out(), wallN: 0, nB: 0, nR: 0, nW: 0, places: [], feed: listeners.length ? { landcover: [], landuse: [], aeroway: [], water: [], buildings: [], roads: [], pois: [] } : null, terrZ: pr ? pr.zoom : -1 };
-    t.job.gnd.uv = null; t.job.sig798 = null; t.job.terrA = { x0: Math.min(a.x, b.x), x1: Math.max(a.x, b.x), z0: Math.min(a.z, b.z), z1: Math.max(a.z, b.z) }; t.job.sig798 = sigOf(t.job.terrA); stats.jobs++;
+    t.job.gnd.uv = null; t.job.sig798 = null; t.job.terrA = { x0: Math.min(a.x, b.x), x1: Math.max(a.x, b.x), z0: Math.min(a.z, b.z), z1: Math.max(a.z, b.z) }; t.job.sig798 = sigOf(t.job.terrA); t.job.fp = t.z === 14 ? [] : null; stats.jobs++;
     if (t.z === 14 && mats.city && window.WFR_CITY790) { var J7 = t.job; J7.Out = Out; J7.tri = tri; J7.drp = drp; J7.Hf = function (lx, lz) { return H(J7, lx, lz); }; WFR_CITY790.begin(J7, t); }   /* 790 A */
   }
   function stepJob(t, deadline) {   // true when done
@@ -201,6 +201,8 @@ window.WFR_FEATURES = (function () {
     var gMin = 1e9, gMax = -1e9, gSum = 0; for (i = 0; i < n; i++) { var g = H(J, outer[2 * i], outer[2 * i + 1]); if (g < gMin) gMin = g; if (g > gMax) gMax = g; gSum += g; }
     var gC = gSum / n, h = Math.min(C.H_MAX, +P.render_height > 0 ? +P.render_height : C.H_DEF), mh = +P.render_min_height > 0 ? +P.render_min_height : 0;
     var bot = mh > 0 ? gC + mh : gMin - C.SINK, top = Math.max(gC + h, (mh > 0 ? bot : gMax) + 1.5);
+    if (t.z === 14 && J.fp) { var fx0 = 1e9, fx1 = -1e9, fz0 = 1e9, fz1 = -1e9; for (i = 0; i < n; i++) { fx0 = Math.min(fx0, outer[2 * i]); fx1 = Math.max(fx1, outer[2 * i]); fz0 = Math.min(fz0, outer[2 * i + 1]); fz1 = Math.max(fz1, outer[2 * i + 1]); } var po = poly.outer, pn = po.length / 2, clip = new Uint8Array(pn); for (i = 0; i < pn; i++) { var j8 = (i + pn - 1) % pn, xa = po[2 * j8], ya = po[2 * j8 + 1], xb = po[2 * i], yb = po[2 * i + 1]; clip[i] = (xa <= 0 && xb <= 0) || (xa >= E && xb >= E) || (ya <= 0 && yb <= 0) || (ya >= E && yb >= E) ? 1 : 0; }   /* an edge the tile's own cut made (both ends on or past its border): not a wall; the next tile's piece carries the house on */
+      J.fp.push({ r: outer, clip: clip, x0: fx0, x1: fx1, z0: fz0, z1: fz1, bot: bot, top: top, gC: gC, cx: (fx0 + fx1) / 2, cz: (fz0 + fz1) / 2 }); }   /* 808: its footprint, for her feet and the lens */
     var rnd = hash((id | 0) ^ (Math.floor(gC * 7) | 0)), tall = h >= 60, col = tall ? GLASS[Math.floor(rnd * GLASS.length)] : WALLS[Math.floor(rnd * WALLS.length)], house = h <= 14 && Math.abs(area / 2) <= 600 && !mh;
     if (J.city) { WFR_CITY790.building(J, { rings: rings, area: area / 2, h: h, mh: mh, top: top, bot: bot, gC: gC, P: P, house: house, id: pi ? (id | 0) ^ Math.imul(pi, 0x9E3779B1) : id, faces: triangulate(rings), tri: tri }, Out);   /* 790 A */
       J.nB++; if (J.feed) J.feed.buildings.push({ h: h, minH: mh, id: id, rings: [poly.outer].concat(poly.holes).map(function (q) { var ll = new Float64Array(q.length); locRing(t, J, q, E, ll); return ll; }) }); return; }
@@ -303,7 +305,7 @@ window.WFR_FEATURES = (function () {
     if (J.road && mats.road) ms.push(meshOf(J.road, mats.road, 'features:roads:' + t.key, -9.388)); if (window.WFR_CITY790) { WFR_CITY790.finishTile(t, J); WFR_CITY790.changed(); }   /* 790 A */
     var w = ms[1]; if (w) w.userData.wallN = J.wallN;
     if (cells && ms[0]) { ms[0].material = [mats.ground]; ms[0].userData.cells = cells; ms[0].geometry.addGroup(0, J.gnd.i.length, 0); ms[0].userData.sig = ''; }   // the same material object (the same program), drawn by groups: a coarse cell steps aside where a finer tile stands
-    t.meshes = ms.filter(Boolean); t.f = J.f; t.ax = J.ax; t.az = J.az; t.terrZ = J.terrZ; t.places = J.places; t.box = J.terrA; t.gsig = J.sig798; t.drape = null; t.nB = J.nB; t.nR = J.nR; t.nW = J.nW; t.lakes = J.lakes || null;
+    t.meshes = ms.filter(Boolean); t.f = J.f; t.ax = J.ax; t.az = J.az; t.terrZ = J.terrZ; t.places = J.places; t.box = J.terrA; t.gsig = J.sig798; t.drape = null; t.fp = J.fp && J.fp.length ? J.fp : null; t.fpg = null; t.nB = J.nB; t.nR = J.nR; t.nW = J.nW; t.lakes = J.lakes || null;
     t.tris = 0; for (var i = 0; i < t.meshes.length; i++) { var m = t.meshes[i]; m.position.set(J.ax, 0, J.az); m.updateMatrix(); m.visible = false; group.add(m); t.tris += m.userData.tris; }
     stats.finMax = Math.max(stats.finMax || 0, now() - f0);   /* 790: the one step a slice cannot cut (the meshes made at once) */
     t.job = null; t.state = 'built'; t.stale = false; stats.built++; stats.buildings += J.nB; stats.roads += J.nR; stats.waters += J.nW;
@@ -375,10 +377,16 @@ window.WFR_FEATURES = (function () {
           if (d <= R.r) out.push({ z: z, x: x, y: y, d: d, nw: nw, se: se, show: R.show }); } } }
     return out;
   }
+  /* 808: a building stands where the ground was when its tile was built; the ground under it changed (finer OR coarser, anywhere in the tile: the
+     re-lay above follows the streets, a house needs its tile built again): when the ground under its houses moved by more than 1.5 m the tile is
+     rebuilt from its kept bytes (Bethel Town, Nov 14: a whole tile of houses 60 m under the street, their walls drawn by the next tile's sliver) */
+  function restand808(t) { var F = t.fp, m = t.meshes[0]; if (!F || !m || !t.raw) return; var k = m.scale.x, st2 = T.st, step = Math.max(1, Math.floor(F.length / 24)), worst = 0;
+    for (var i = 0; i < F.length; i += step) { var f = F[i]; if (f.gC == null) continue; var g = st2.H(m.position.x + f.cx * k, m.position.z + f.cz * k); var d = Math.abs(g - f.gC); if (d > worst) worst = d; }
+    if (worst > 1.5) { t.stale = true; stats.restand808 = (stats.restand808 || 0) + 1; } }
   function sigOf(b) { var st = T && T.st; if (!st || !st.drawnSig || !b) return null; var g = (b.x1 - b.x0) * 0.03; return st.drawnSig(b.x0 - g, b.z0 - g, b.x1 + g, b.z1 + g); }   /* 798: the tile's box and the tiles' own buffer (its lines run a little past its edge) */
   function drapeStep(vis, deadline) {   /* 798: which showing tiles stand on changed ground; then lay their lines again, nearest first, until the deadline */
     var D = stats.drape, i, t; for (i = 0; i < vis.length; i++) { t = vis[i]; var sg = sigOf(t.box); if (sg == null || sg === t.gsig) continue;   /* a stale tile's old lines (they stand until its rebuild ends) are laid again too */
-      if (!t.drape) t.drape = { sig: sg, mi: 0, i: 0 }; }   // a job under way runs on (each point reads the ground as it is when laid); a change since is laid again after it
+      if (!t.drape) { t.drape = { sig: sg, mi: 0, i: 0 }; if (t.fp && !t.stale && !t.job) restand808(t); } }   // a job under way runs on (each point reads the ground as it is when laid); a change since is laid again after it
     var H0 = T.st.H, t0 = now();
     for (i = 0; i < vis.length && now() < deadline; i++) { t = vis[i]; var dj = t.drape; if (!dj) continue;
       while (dj.mi < t.meshes.length) { var m = t.meshes[dj.mi], dl = m.userData.dl; if (!dl) { dj.mi++; dj.i = 0; continue; }
@@ -411,6 +419,36 @@ window.WFR_FEATURES = (function () {
         for (var q = 0; q < L.length; q += 3) { var a = 3 * L[q], b = 3 * L[q + 1], c = 3 * L[q + 2], v0x = P[b] - P[a], v0z = P[b + 2] - P[a + 2], v1x = P[c] - P[a], v1z = P[c + 2] - P[a + 2], v2x = lx - P[a], v2z = lz - P[a + 2], den = v0x * v1z - v1x * v0z; if (Math.abs(den) < 1e-9) continue;
           var u = (v2x * v1z - v1x * v2z) / den, v = (v0x * v2z - v2x * v0z) / den; if (u < -1e-6 || v < -1e-6 || u + v > 1 + 1e-6) continue; var y = P[a + 1] + (P[b + 1] - P[a + 1]) * u + (P[c + 1] - P[a + 1]) * v; if (best == null || y > best) best = y; } } });
     return best;
+  }
+  /* 808 STREET LEVEL IS SOLID (Marth's Nov 14 recording: she walks into a house and the camera ends inside its walls). Every z14 building keeps its
+     footprint, foot and top. solid808(p, pad): a point inside a footprint (or within pad of its wall), between its foot and its top, is set back out on
+     the wall's far side of pad, along the nearest wall (so she slides along it); returns true when it moved her. lensOut808(cam, her): a lens inside a
+     building steps toward her until it is out. Never while she is inside a building's own room (world-interiors.js). */
+  function fpGrid(t) { if (t.fpg) return t.fpg; var g = new Map(), F = t.fp; for (var i = 0; i < F.length; i++) { var f = F[i]; for (var cz = Math.floor(f.z0 / 16); cz <= Math.floor(f.z1 / 16); cz++) for (var cx = Math.floor(f.x0 / 16); cx <= Math.floor(f.x1 / 16); cx++) { var k = cx + ',' + cz, L = g.get(k); if (!L) g.set(k, L = []); L.push(f); } } return (t.fpg = g); }
+  function inPoly(r, x, z) { var c = false, n = r.length / 2; for (var i = 0, j = n - 1; i < n; j = i++) { var xi = r[2 * i], zi = r[2 * i + 1], xj = r[2 * j], zj = r[2 * j + 1]; if ((zi > z) !== (zj > z) && x < (xj - xi) * (z - zi) / (zj - zi) + xi) c = !c; } return c; }
+  function nearEdge(r, x, z, clip) { var n = r.length / 2, best = null; for (var i = 0, j = n - 1; i < n; j = i++) { if (clip && clip[i]) continue; var ax = r[2 * j], az = r[2 * j + 1], ex = r[2 * i] - ax, ez = r[2 * i + 1] - az, L2 = ex * ex + ez * ez; if (L2 < 1e-6) continue;
+      var u = Math.max(0, Math.min(1, ((x - ax) * ex + (z - az) * ez) / L2)), qx = ax + ex * u, qz = az + ez * u, d = Math.hypot(x - qx, z - qz); if (!best || d < best.d) best = { d: d, qx: qx, qz: qz, ex: ex, ez: ez }; } return best; }
+  function fpAt(x, y, z, pad, fn) {   // fn(tile, footprint, local x, local z, k, mesh) for each footprint whose wall (grown by pad) holds the point; true stops
+    var hit = false; tiles.forEach(function (t) { if (hit || t.z !== 14 || !t.fp || !t.meshes.length || !t.box || x < t.box.x0 - 30 || x > t.box.x1 + 30 || z < t.box.z0 - 30 || z > t.box.z1 + 30) return;
+      var m = t.meshes[0], k = m.scale.x, lx = (x - m.position.x) / k, lz = (z - m.position.z) / k, L = fpGrid(t).get(Math.floor(lx / 16) + ',' + Math.floor(lz / 16)); if (!L) return;
+      for (var i = 0; i < L.length; i++) { var f = L[i]; if (lx < f.x0 - pad || lx > f.x1 + pad || lz < f.z0 - pad || lz > f.z1 + pad || y < f.bot - 0.5 || y > f.top) continue; if (fn(t, f, lx, lz, k, m)) { hit = true; return; } } });
+    return hit;
+  }
+  function inside808() { return !!(window.WFR_INTERIORS729 && WFR_INTERIORS729.k1 && WFR_INTERIORS729.k1()); }
+  function solid808(p, pad, body) {
+    if (inside808()) return false; var moved = false;
+    for (var it = 0; it < 3; it++) { var done = true;
+      fpAt(p.x, p.y + 0.2, p.z, pad, function (t, f, lx, lz, k, m) { var e = nearEdge(f.r, lx, lz, f.clip); if (!e) return false; var inn = inPoly(f.r, lx, lz); if (!inn && e.d >= pad) return false;
+        var dx = lx - e.qx, dz = lz - e.qz, dl = Math.hypot(dx, dz); if (dl < 1e-4) { dx = -e.ez; dz = e.ex; dl = Math.hypot(dx, dz) || 1; if (!inPoly(f.r, lx + dx / dl * 0.01, lz + dz / dl * 0.01)) { dx = -dx; dz = -dz; } inn = true; }   /* on the wall: d points into the house, so the push (-d) leaves it */ var sg = inn ? -1 : 1, nx = e.qx + dx / dl * sg * pad * 1.001, nz = e.qz + dz / dl * sg * pad * 1.001;
+        var wx = m.position.x + nx * k, wz = m.position.z + nz * k, mx = wx - p.x, mz = wz - p.z; p.x = wx; p.z = wz; if (body && body.position) { body.position.x += mx; body.position.z += mz; } moved = true; done = false; stats.solid808 = (stats.solid808 || 0) + 1; return true; });
+      if (done) break; }
+    return moved;
+  }
+  function lensOut808(cam, her) {   // a spring arm from her eyes out to the lens: the first wall on that line brings the lens in to just short of it
+    if (inside808() || !her) return false; var hx = her.x, hy = her.y + 0.5, hz = her.z, dx = cam.x - hx, dy = cam.y - hy, dz = cam.z - hz, L = Math.sqrt(dx * dx + dy * dy + dz * dz); if (L < 0.7) return false;
+    for (var s2 = 0.3; s2 <= L + 1e-6; s2 += 0.2) { var f2 = Math.min(1, s2 / L), x = hx + dx * f2, y = hy + dy * f2, z = hz + dz * f2;
+      if (fpAt(x, y, z, 0.25, function (t, f, lx, lz) { var e5 = nearEdge(f.r, lx, lz, f.clip); return inPoly(f.r, lx, lz) || (e5 && e5.d < 0.25); })) { var k = Math.max(0.6, s2 - 0.25) / L; x = hx + dx * k; y = hy + dy * k; z = hz + dz * k; cam.set(x, y, z); if (T && T.u && T.u.uEye) T.u.uEye.value.set(x, y, z); stats.lens808 = (stats.lens808 || 0) + 1; return true; } }
+    return false;
   }
   function update(cam, travel) {   // every travel frame, before the render; off the travel zone it hides what it shows (labels, credit)
     if (!mats) return; var t0 = now(); frameNo++;
@@ -481,7 +519,7 @@ window.WFR_FEATURES = (function () {
     var raw = 0; tiles.forEach(function (t) { if (t.raw) raw += t.raw.byteLength; }); s.rawMB = +(raw / 1048576).toFixed(2); s.template = template; s.photos = Object.assign({}, tex); s.lakeLv = []; lakeLv.forEach(function (v, k) { if (s.lakeLv.length < 12) s.lakeLv.push([k, v.z, +v.h.toFixed(2)]); }); s.lakeReads = stats.lakeReads.slice(); s.lakeOf = function (id) { var b = lakeLv.get(id), pcs = []; tiles.forEach(function (t) { if (t.lakes) t.lakes.forEach(function (L) { if (L.id === id) pcs.push([t.key, t.state, !!t.stale, L.z, L.lv, L.rd, L.lo, L.ns]); }); }); return { best: b ? [b.z, +b.h.toFixed(2)] : null, pieces: pcs }; }; return s; }
   function meshes() { var out = []; tiles.forEach(function (t) { for (var i = 0; i < t.meshes.length; i++) out.push({ key: t.key, z: t.z, mesh: t.meshes[i] }); }); return out; }
   var api = { C: C, attach: attach, update: update, peek: peek, meshes: meshes, decodeTile: decodeTile, feature: feature, polygons: polygons, llOf: llOf,
-    surface798: surface798, onTile: function (cb) { listeners.push(cb); }, wantPoi: function (fn) { poiWant = fn; }, onDrop: function (cb) { droppers.push(cb); }, setFetch: function (fn) { fetchFn = fn; }, group: function () { return group; }, materials: function () { return mats; }, attached: function () { return { T: T, scene: scene, warm: warm }; }, version: 1 };   // attached(): what the page handed attach() (the game's script is scoped; the guard reads it here)
+    surface798: surface798, solid808: solid808, lensOut808: lensOut808, fp808: function (x, y, z) { var out = []; tiles.forEach(function (t) { if (t.z !== 14) return; var m = t.meshes[0]; out.push({ key: t.key, st: t.state, fp: t.fp ? t.fp.length : null, box: t.box ? [Math.round(t.box.x0), Math.round(t.box.z0), Math.round(t.box.x1), Math.round(t.box.z1)] : null, m: m ? [Math.round(m.position.x), Math.round(m.position.z)] : null }); }); var hits = []; tiles.forEach(function (t) { if (t.z !== 14 || !t.fp || !t.meshes.length) return; var m = t.meshes[0], k = m.scale.x, lx = (x - m.position.x) / k, lz = (z - m.position.z) / k; t.fp.forEach(function (f) { if (lx < f.x0 - 8 || lx > f.x1 + 8 || lz < f.z0 - 8 || lz > f.z1 + 8) return; var e = nearEdge(f.r, lx, lz, f.clip); hits.push({ key: t.key, in: inPoly(f.r, lx, lz), d: e ? +e.d.toFixed(2) : null, bot: +f.bot.toFixed(1), top: +f.top.toFixed(1), y: +y.toFixed(1), n: f.r.length / 2, clip: f.clip ? Array.prototype.reduce.call(f.clip, function (a, b) { return a + b; }, 0) : null }); }); }); return { tiles: out, hits: hits }; },   /* 808 bench read */ onTile: function (cb) { listeners.push(cb); }, wantPoi: function (fn) { poiWant = fn; }, onDrop: function (cb) { droppers.push(cb); }, setFetch: function (fn) { fetchFn = fn; }, group: function () { return group; }, materials: function () { return mats; }, attached: function () { return { T: T, scene: scene, warm: warm }; }, version: 1 };   // attached(): what the page handed attach() (the game's script is scoped; the guard reads it here)
   return api;
 })();
 

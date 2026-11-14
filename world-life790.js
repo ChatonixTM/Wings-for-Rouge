@@ -505,6 +505,27 @@ window.WFR_LIFE790 = (function () {
     var P = a.P, p = pathAt(P, s, a), hx = p.tx * a.d, hz = p.tz * a.d, rx = -p.tz, rz = p.tx, mx = p.x + rx * lat, mz = p.z + rz * lat, y = p.y;
     if (y == null) y = groundAtM(P.T, mx, mz); a.mx = mx; a.mz = mz; a.htx = hx; a.htz = hz; toLocal(P.T, mx, mz, Q2); return { x: Q2[0], y: y + lift, z: Q2[1], yaw: yawOf(P.T, hx, hz) };
   }
+  /* 808 PEOPLE STEP ROUND HER (Marth's Nov 14 recording: "a man walks straight through her and the camera"). When she is on foot (or within 2 m of the
+     ground) a walker whose way passes within 1 m of her steps sideways on the sidewalk to pass her at 1 m (eased, ~0.3 s), and back afterwards; and she
+     herself is set back out of any person she walks into (solid808, asked each travel frame by the trees' tick, world-vegetation.js). */
+  function foot808Now() { var S = X.S, T = X.TR; if (!S || !S.pos || !T || !T.st) return false; return S.pos.y - Math.max(0, T.st.H(S.pos.x, S.pos.z)) < 2.5; }
+  function step808(b, on, dt) {
+    var want = 0; if (on && b.k === 'walker' || on && b.k === 'jogger') { var h = b.T.her(), dx = h[0] - (b.mx || 0), dz = h[1] - (b.mz || 0), d = Math.sqrt(dx * dx + dz * dz);
+      if (d < 3.5) { var tx = (b.htx || 0) * b.d, tz = (b.htz || 0) * b.d, ahead = dx * (b.htx || 0) + dz * (b.htz || 0), lr = dx * -tz + dz * tx;
+        if (ahead > -0.8 && Math.abs(lr) < 1.0) { var cur = b.off + (b.av808 || 0), herLat = cur + lr; want = herLat - (lr > 0 ? 1.0 : -1.0) - b.off; } else if (Math.abs(lr) < 1.0 && ahead <= -0.8) want = b.av808 || 0; } }
+    b.av808 = (b.av808 || 0) + (want - (b.av808 || 0)) * Math.min(1, dt * 6);
+  }
+  function solid808(pos, pad, body) {   // she is set back out of a person (a walker's or a jogger's middle within pad + 0.25 m)
+    var moved = false, R = (pad || 0.45) + 0.25; for (var i = 0; i < st.agents.length; i++) { var a = st.agents[i]; if (a.dead || (a.k !== 'walker' && a.k !== 'jogger') || a.lx == null) continue; var dx = pos.x - a.lx, dz = pos.z - a.lz; if (dx > R || dx < -R || dz > R || dz < -R) continue;
+      if (pos.y > a.ly + 1.9 || pos.y < a.ly - 0.5) continue; var d = Math.sqrt(dx * dx + dz * dz); if (d >= R) continue; if (d < 1e-3) { dx = 1; dz = 0; d = 1; } var nx = a.lx + dx / d * R, nz = a.lz + dz / d * R;
+      if (body && body.position) { body.position.x += nx - pos.x; body.position.z += nz - pos.z; } pos.x = nx; pos.z = nz; moved = true; st.solid808 = (st.solid808 || 0) + 1; }
+    return moved;
+  }
+  function lensOut808(cam, her) {   // the lens never inside a person: it steps toward her (above their heads is fine)
+    for (var i = 0; i < st.agents.length; i++) { var a = st.agents[i]; if (a.dead || a.lx == null || (a.k !== 'walker' && a.k !== 'jogger')) continue; var dx = cam.x - a.lx, dz = cam.z - a.lz; if (dx * dx + dz * dz > 0.16 || cam.y > a.ly + 1.9) continue;
+      var L = Math.hypot(her.x - cam.x, her.y + 0.5 - cam.y, her.z - cam.z); for (var s2 = 0.2; s2 <= L; s2 += 0.2) { var f = Math.min(1, s2 / L), x = cam.x + (her.x - cam.x) * f, z = cam.z + (her.z - cam.z) * f; if ((x - a.lx) * (x - a.lx) + (z - a.lz) * (z - a.lz) > 0.2) { cam.set(x, cam.y + (her.y + 0.5 - cam.y) * f, z); st.lens808 = (st.lens808 || 0) + 1; return true; } } }
+    return false;
+  }
   function place() {
     if (!st.inited || !st.enabled) return; var t0 = performance.now();
     try {
@@ -512,8 +533,9 @@ window.WFR_LIFE790 = (function () {
       U.eye.value.copy(T.u.uEye.value); U.invK.value = T.u.uInvK.value; U.t.value = st.t; U.glow.value = st.night;
       var n = {}, i, a, w, im; for (k in M) n[k] = 0;
       /* people */
+      var tn808 = performance.now(), dt808 = Math.min(0.1, (tn808 - (st.pl808 || tn808)) / 1000), foot808 = foot808Now(); st.pl808 = tn808;
       ['personN', 'personF'].forEach(function (mk) { var L = Ls[mk], im2 = M[mk]; for (var q = 0; q < L.length; q++) { var b = L[q], p;
-        if (b.P) { p = placeOn(b, b.s, b.off, 0.04); b.yaw = p.yaw; } else { toLocal(b.T, b.mx, b.mz, Q2); p = { x: Q2[0], y: (b.gy || 0) + 0.02, z: Q2[1] }; b.yaw = yawOf(b.T, Math.sin(b.yaw0), Math.cos(b.yaw0)); if (b.mode === 1 && b.scared) b.yaw += Math.PI; }
+        if (b.P) { if (mk === 'personN') step808(b, foot808, dt808); p = placeOn(b, b.s, b.off + (b.av808 || 0), 0.04); b.yaw = p.yaw; } else { toLocal(b.T, b.mx, b.mz, Q2); p = { x: Q2[0], y: (b.gy || 0) + 0.02, z: Q2[1] }; b.yaw = yawOf(b.T, Math.sin(b.yaw0), Math.cos(b.yaw0)); if (b.mode === 1 && b.scared) b.yaw += Math.PI; }
         b.lx = p.x; b.ly = p.y; b.lz = p.z; if (b.fade <= 0.001 && b.fadeTo === 1) b.fade = 0.001; var sc = Math.min(1, b.fade * 3) * (b.size || 1) * (mk === 'personN' ? C.SCALE.person : C.SCALE.personFar);
         put(im2, n[mk], p.x, p.y, p.z, b.yaw, sc); attr(im2, n[mk], b.ph, b.gait, b.rate, b.mode, b.c1, b.c2, b.c3); n[mk]++;
         if (b.dog && !b.dog.dead && n.dog < M.dog.userData.cap && b.dist < C.P_NEAR * 1.6) { var g = b.dog, gp = placeOn(b, b.s - b.d * 1.4, b.off + (b.off > 0 ? -0.55 : 0.55), 0.02); g.lx = gp.x; g.ly = gp.y; g.lz = gp.z; g.yaw = gp.yaw; g.mx = b.mx; g.mz = b.mz;
@@ -622,6 +644,6 @@ window.WFR_LIFE790 = (function () {
         if (!best || d < best.d) best = { d: +d.toFixed(2), kind: P.kind, cls: P.cls, sub: P.sub || null, w: P.w }; } }); });
     return best; }
   function tramLines() { var n = 0, sub = 0, len = 0; st.tiles.forEach(function (T) { T.paths.forEach(function (P) { if (P.kind === 'tram') { n++; len += P.len; if (P.sub === 'tram' || P.sub === 'light_rail') sub++; } }); }); return { n: n, fromMap: sub, km: +(len / 1000).toFixed(2) }; }
-  return { C: C, init: init, tick: tick, peek: peek, drawn: drawn, near: near, get: get, flocksNear: flocksNear, pathsNear: pathsNear, onLine: onLine, tramLines: tramLines, hourOf: hourOf, resetMs: function () { st.ms = []; st.msMax = 0; st.ingestMax = 0; st.refMax = 0; st.placeMax = 0; },
+  return { C: C, init: init, tick: tick, peek: peek, drawn: drawn, near: near, solid808: solid808, lensOut808: lensOut808, get: get, flocksNear: flocksNear, pathsNear: pathsNear, onLine: onLine, tramLines: tramLines, hourOf: hourOf, resetMs: function () { st.ms = []; st.msMax = 0; st.ingestMax = 0; st.refMax = 0; st.placeMax = 0; },
     set enabled(v) { st.enabled = !!v; if (!v) for (var k in st.mesh) { st.mesh[k].count = 0; st.mesh[k].visible = false; } }, get enabled() { return st.enabled; } };
 })();
