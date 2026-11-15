@@ -103,7 +103,7 @@ window.WFR_ARRIVE783 = (function () {
       var cp = local(n.lat, n.lon, 0, new THREE.Vector3()), out = new THREE.Vector3(B.x - cp.x, 0, B.z - cp.z); if (out.lengthSq() < 1) out.set(0, 0, 1); out.normalize();
       if (n.km === 0) { var c0 = local(P.peak.lat, P.peak.lon, 0, new THREE.Vector3()); out.set(cp.x - c0.x, 0, cp.z - c0.z).normalize(); }   /* already over the land: the camera stands off the shore on the far side from the mountains */
       R = { P: P, k: 0, n: n, cp: cp, out: out, skipped: false, dip: 0, cut: false, said: false, called: false, pinned: false, y0: B.y, yaw0: S.yaw, wait: 0, held: 0, lastShot: 0 };
-      R.coastYaw = W.yawToward ? W.yawToward(ll, { lat: n.lat, lon: n.lon }) : S.yaw;
+      R.coastYaw = P.yaw != null ? P.yaw : W.yawToward ? W.yawToward(ll, { lat: n.lat, lon: n.lon }) : S.yaw;   /* 821: a made row (she is already over its land) keeps her own heading */
       st.beats = []; st.wait = 0;
       var ok = cine.play({ name: 'arrive783', dur: K.DUR, skip: K.SKIP, freeze: false, bars: true,
         onTap: function (t) { if (t < K.SKIP || R.skipped) return null; R.skipped = true; beat('skip'); return 'skip'; },
@@ -112,7 +112,7 @@ window.WFR_ARRIVE783 = (function () {
         shot: function (t, u, Pp, L) { return shot(Pp, L); },
         end: function (how) { endScene(how); } });
       if (!ok) { R = null; st.refused++; return false; }
-      seen()[P.id] = 1; try { o.save(); } catch (e) { /* the flag is in S; the next save keeps it */ }
+      if (P.onSeen) P.onSeen(); else seen()[P.id] = 1; try { o.save(); }   /* 821: a made row keeps its own flag (S.seen.arrive821); S.seen.arrive783 keeps its meaning */ catch (e) { /* the flag is in S; the next save keeps it */ }
       st.plays++; st.on = P.id; st.last = { id: P.id, km: +n.km.toFixed(1), y: Math.round(B.y), at: [+ll.lat.toFixed(4), +ll.lon.toFixed(4)] };
       return true;
     }
@@ -214,7 +214,9 @@ window.WFR_ARRIVE783 = (function () {
     function probe(lat, lon) {   /* the bench's question: from here, would a country's arrival be due (and if not, why)? It plays nothing */
       if (o.classic()) return 'classic'; var sn = seen();
       for (var i = 0; i < PLACES.length; i++) { var P = PLACES[i], n = nearest(P, lat, lon); if (n.km <= P.sight) return sn[P.id] ? 'seen ' + P.id : 'due ' + P.id; } return 'none'; }
+    function why() { if (o.classic()) return 'classic'; if (R) return 'scene'; if (st.ends && st.since < K.GAP) return 'gap'; var b = busyWhy(); if (b) return b; return cine.on() ? 'scene' : ''; }   /* 821: may a country's arrival start now? */
     return { tick: tick, steer: steer, cap: cap, on: function () { return !!R; }, peek: peek, probe: probe, PLACES: PLACES, K: K,
+      playRow: function (P, ll) { return R ? false : play(P, ll); }, why: why, row: function () { return R ? R.P.id : null; },   /* 821: every other country's arrival, a row made from its data (arrive821.js) */
       reset: function (id) { var sn = seen(); if (id) delete sn[id]; else for (var k in sn) delete sn[k]; } };
   }
   return { create: create, PLACES: PLACES, K: K, nearest: nearest };

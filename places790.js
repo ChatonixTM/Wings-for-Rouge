@@ -185,7 +185,9 @@ window.WFR_PLACES790 = (function () {
     if (R.t === 1) { if (cardSeen()) cardHide(true); var ok = false; try { ok = X.title(K[0], R.n, R.u || null); } catch (e) { ok = false; } if (!ok) return false; lane = 'title'; }
     else { cardShow(R); lane = 'card'; }
     st.cool[key] = t; st.lastAt = t; st.last = { n: R.n, k: R.k, t: R.t, u: R.u, src: R.src, lane: lane, d: Math.round(c.d), at: +t.toFixed(2) };
-    st.shown.push(st.last); if (st.shown.length > 60) st.shown.shift(); return true;
+    st.shown.push(st.last); if (st.shown.length > 60) st.shown.shift();
+    if (X.said) try { X.said(R.n, K[0], R.la, R.lo); } catch (e) { /* 817: the ledger notes it; never into the lane */ }
+    return true;
   }
 
   /* ---------- the tick (4 a second, while she is out in the world) ---------- */

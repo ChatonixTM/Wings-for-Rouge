@@ -78,16 +78,29 @@ window.WFR_TRAVEL712 = (function () {
   /* 725b: latOfV moved into the door (W.tileRowLats) */
 
   /* ---------- the far pass's material: carib712's shrink toward the eye and the Earth's curve, at true-distance fog (ONE program for every tile) ---------- */
+  var GREY821 = [720, 360], G821 = { tex: null, frame: null };   /* 821 U2: the discovered mask's size (half a degree a byte, the whole world) and the one mask */
   function makeMaterial(THREE, u, tag) {
+    if (!G821.tex) { var g821 = new THREE.DataTexture(new Uint8Array(GREY821[0] * GREY821[1]), GREY821[0], GREY821[1], THREE.LuminanceFormat, THREE.UnsignedByteType); g821.magFilter = g821.minFilter = THREE.LinearFilter; g821.generateMipmaps = false; g821.needsUpdate = true; G821.tex = { value: g821 }; G821.frame = { value: new THREE.Vector4(0, 0, 1, 0) }; }
+    u.uGrey821 = G821.tex; u.uFrame821 = G821.frame;   /* 821 U2: undiscovered land is grey (0 colour, 255 grey; painted by arrive821.js, all colour until then); the frame (ox, oy or oz, k, disc) lets a ground point find its latitude and longitude */
     var m = new THREE.MeshLambertMaterial({ vertexColors: true }); if (!u.uHole) u.uHole = { value: new THREE.Vector4(1, 1, -1, -1) }; if (!u.uPhoto) u.uPhoto = { value: null };   /* 723d: one rectangle of world metres (x0, z0, x1, z1) cut out of the far ground: the Dunn's patch draws there */
     m.onBeforeCompile = function (sh) {
       sh.uniforms.uEye712t = u.uEye; sh.uniforms.uInvK712t = u.uInvK; sh.uniforms.uHole712t = u.uHole; var NL723 = String.fromCharCode(10);
-      sh.vertexShader = 'varying vec2 vW712t;' + NL723 + sh.vertexShader;
+      sh.uniforms.uGrey821 = u.uGrey821; sh.uniforms.uFrame821 = u.uFrame821; var W821 = window.WFR_WORLD || { R_EARTH: 6378137, R_MEAN: 6371008.8, ROT_LON: -77 };   /* 821 U2 */
+      sh.fragmentShader = 'uniform sampler2D uGrey821; uniform vec4 uFrame821; varying float vH821;' + NL723 + sh.fragmentShader.replace('#include <emissivemap_fragment>', [
+        '  if ( vH821 > -1.0 ) {',   /* the sea floor is never grey; land from the waterline up is (a beach tile whose heights are all under half a metre stayed in colour, a hard square: 821 follow-up 2); the water itself keeps its blue below */
+        '    float la821, lo821;',
+        '    if ( uFrame821.w > 0.5 ) { vec2 d821 = vW712t + uFrame821.xy; lo821 = degrees( atan( d821.x, d821.y ) ) + ' + W821.ROT_LON.toFixed(4) + '; la821 = 90.0 - degrees( length( d821 ) / ' + W821.R_MEAN.toFixed(1) + ' ); }',   /* his disc */
+        '    else { float mx821 = vW712t.x / uFrame821.z + uFrame821.x, my821 = uFrame821.y - vW712t.y / uFrame821.z; lo821 = degrees( mx821 / ' + W821.R_EARTH.toFixed(1) + ' ); la821 = degrees( 2.0 * atan( exp( my821 / ' + W821.R_EARTH.toFixed(1) + ' ) ) - 1.5707963 ); }',   /* the globe's Mercator */
+        '    float g821 = texture2D( uGrey821, vec2( mod( lo821 + 180.0, 360.0 ) / 360.0, ( la821 + 90.0 ) / 180.0 ) ).r;',
+        '    float w821 = smoothstep( 0.0, 0.03, diffuseColor.b - diffuseColor.g ) * smoothstep( 0.05, 0.12, diffuseColor.b - diffuseColor.r );',   /* water by its colour (754's own test: blue over green and over red): a bay, a lake, a river stay blue */
+        '    diffuseColor.rgb = mix( diffuseColor.rgb, vec3( dot( diffuseColor.rgb, vec3( 0.299, 0.587, 0.114 ) ) ), g821 * 0.92 * ( 1.0 - w821 ) );',
+        '  }', '#include <emissivemap_fragment>'].join(NL723));
+      sh.vertexShader = 'varying vec2 vW712t; varying float vH821;' + NL723 + sh.vertexShader;   /* 821 U2: vH821, the ground's height */
       sh.fragmentShader = 'uniform vec4 uHole712t; varying vec2 vW712t;' + NL723 + sh.fragmentShader.replace('void main() {', 'void main() {' + NL723 + '  if ( vW712t.x > uHole712t.x && vW712t.x < uHole712t.z && vW712t.y > uHole712t.y && vW712t.y < uHole712t.w ) discard;');
       sh.uniforms.uPhoto712t = u.uPhoto; sh.vertexShader = 'attribute vec3 aPh712t; varying vec3 vPh712t;' + NL723 + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>' + NL723 + 'vPh712t = aPh712t;');   /* 723e: the photo layer (world712-photo.js) */
       sh.fragmentShader = 'uniform sampler2D uPhoto712t; varying vec3 vPh712t;' + NL723 + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>' + NL723 + '  if ( vPh712t.z > 0.5 ) { vec3 ph712t = texture2D( uPhoto712t, vPh712t.xy ).rgb; if ( ph712t.r + ph712t.g + ph712t.b > 0.03 ) { float sea737 = step( ph712t.g, ph712t.b ) * ( 1.0 - smoothstep( 0.07, 0.14, max( ph712t.r, ph712t.g ) ) ); diffuseColor.rgb = mix( ph712t, diffuseColor.rgb, sea737 ); } }');   /* 723e: the atlas where aPh712t.z is 1; pure black is the tiler's no-data, the vertex colour stays. 737: so is Blue Marble's flat ocean fill (RGB 2,5,20: measured 100% of open-sea tiles, under 0.5% of dark land), or the sea draws black past 20 km */
       sh.vertexShader = 'uniform vec3 uEye712t; uniform float uInvK712t;\n' + sh.vertexShader.replace('#include <project_vertex>', [
-        'vec4 wp712t = modelMatrix * vec4( transformed, 1.0 );', 'vW712t = wp712t.xz;',
+        'vec4 wp712t = modelMatrix * vec4( transformed, 1.0 );', 'vW712t = wp712t.xz; vH821 = wp712t.y;',
         'vec3 r712t = wp712t.xyz - uEye712t; float d712t = length( r712t.xz );',
         'r712t.y -= d712t * d712t / ( 2.0 * ' + C.REFR.toFixed(1) + ' );',   // the Earth's curve (carib712's refraction radius)
         'wp712t.xyz = uEye712t + r712t * uInvK712t;',   // shrunk toward the eye: the same picture, inside the near and far planes
@@ -280,5 +293,5 @@ window.WFR_TRAVEL712 = (function () {
   }
 
   return { C: C, speedAt: speedAt, horizon: horizon, farOf: farOf, keyOf: keyOf, childrenOf: childrenOf, sampleField: sampleField, fieldOf: fieldOf, boundsOf: boundsOf, tint: tint,
-    makeMaterial: makeMaterial, makeStreamer: makeStreamer, makeClearer: makeClearer, version: 1 };
+    makeMaterial: makeMaterial, makeStreamer: makeStreamer, makeClearer: makeClearer, version: 1, grey821: function () { return G821; } };
 })();
