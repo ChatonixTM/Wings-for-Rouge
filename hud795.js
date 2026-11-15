@@ -1,7 +1,8 @@
 /* hud795.js - 795 THE PLAY SCREEN, REBUILT (board 795; with 793's buttons and 792's hold). Standard only: Classic is frozen (board 645).
    Marth, Nov 13 2026, verbatim: "Everything is higher standard. Writing. Fonts animations, effects, transitions. Loading screens, game play" /
    "Whole UI needs improvement ... add everything that's missing and do it better than him, if needed." / "You should be able to tap the map from now on and forever more".
-   793, his drawing (refs-1111/buttons-moved-793.jpg): Zoom to the LEFT edge, Land to the LEFT, Attack UP beside Flap, Flutter up and RIGHT, Flap stays bottom right.
+   793, his drawing (refs-1111/buttons-moved-793.jpg): Zoom to the LEFT edge, Land to the LEFT, Attack UP beside Flap, Flutter up and RIGHT, Flap stays bottom right
+   (since Nov 15 each where his arrow ends: LAY below).
    Study, never copy (COO, coo.mx; refs-1111/coo-site/COO_STUDY_795.md): we take the craft (a compass strip, a job card, a framed round map with its place
    tab, buttons that say their cost, a pause page that teaches every mark, settings as tiles); never its art, words or fonts. THE LOOK is the house's
    (Marth, Nov 13: 'Take from bait and nuke or The face as inspiration'; refs-1111/coo-site/OUR_LOOK_THE_STORYBOOK_795.md): night glass, a 1 px glow, Rouge red, signal mint, gold, Space Grotesk + Mono.
@@ -38,19 +39,22 @@
   function store(o) { try { localStorage.setItem(KEY, JSON.stringify(o)); } catch (e) { /* private mode: this visit only */ } }
 
   /* ---------------- 4: where each button sits, portrait (793). b = px from the bottom, capped at a share of the height (k, in vh) so a short phone
-     keeps them clear of the top row; s = the button's side. 'r' sits from the right edge, 'l' from the left; the left hand mirrors them all. ---------------- */
+     keeps them clear of the top row; s = the button's side. 'r' sits from the right edge, 'l' from the left; the left hand mirrors them all.
+     over: sits that button's height + gap above another (Attack rides on Flap's top at every size); floor: never lower than 18 px over that one's top
+     (its tag clear), so a short phone or the large size never stacks them. Where his arrows end (390x844, Flap's centre 775): Attack (307, 685),
+     Flutter (370, 580), Land (65, 620), Zoom (the left edge, 491); tests/hud795.js H1b holds each within 28 px. ---------------- */
   var LAY = {
     flap:     { side: 'r', x: 14, b: 24,  k: 2.8,  s: 90 },
-    atkBtn:   { side: 'r', x: 74, b: 146, k: 17.3, s: 56 },
-    flutter:  { side: 'r', x: 14, b: 254, k: 30,   s: 56 },
-    jump:     { side: 'r', x: 14, b: 254, k: 30,   s: 56 },
-    nightBtn: { side: 'r', x: 14, b: 352, k: 41.7, s: 52 },
-    land:     { side: 'l', x: 14, b: 254, k: 30,   s: 56 },
-    read:     { side: 'l', x: 14, b: 254, k: 30,   s: 56 },
-    home:     { side: 'l', x: 14, b: 330, k: 39,   s: 54 },
-    thBtn:    { side: 'l', x: 14, b: 330, k: 39,   s: 54 },
-    sing:     { side: 'l', x: 14, b: 330, k: 39,   s: 54 },
-    zoom:     { side: 'l', x: 14, b: 404, k: 47.4, s: 52 }
+    atkBtn:   { side: 'r', x: 55, over: 'flap', gap: 17, s: 56 },
+    flutter:  { side: 'r', x: 8,  b: 236, k: 28,   s: 56, floor: 'atkBtn' },
+    jump:     { side: 'r', x: 8,  b: 236, k: 28,   s: 56, floor: 'atkBtn' },
+    nightBtn: { side: 'r', x: 14, b: 352, k: 41.7, s: 52, floor: 'flutter' },
+    land:     { side: 'l', x: 37, b: 196, k: 23.2, s: 56 },
+    read:     { side: 'l', x: 37, b: 196, k: 23.2, s: 56 },
+    zoom:     { side: 'l', x: 14, b: 327, k: 38.7, s: 52, floor: 'land' },
+    home:     { side: 'l', x: 14, b: 404, k: 49,   s: 54, floor: 'zoom' },
+    thBtn:    { side: 'l', x: 14, b: 404, k: 49,   s: 54, floor: 'zoom' },
+    sing:     { side: 'l', x: 14, b: 404, k: 49,   s: 54, floor: 'zoom' }
   };
   var SIZE = { s: 0.86, m: 1, l: 1.14 };
   /* the disc's paint per button: [lit, mid, deep] */
@@ -63,11 +67,17 @@
   var COST = { flap: '', flutter: '4 s', jump: '', atkBtn: '', land: '', read: '', zoom: 'burst', nightBtn: '', home: '', thBtn: '', sing: '' };
 
   function layoutCss(hand, size) {
-    var sc = SIZE[size] || 1, out = '', sel = 'html.ui716.hud795:not(.c712b) body:not(:has(#hit703:not([hidden]))) #ui ';
+    var sc = SIZE[size] || 1, out = '', sel = 'html.ui716.hud795:not(.c712b) body:not(:has(#hit703:not([hidden]))) #ui ', B = {};
+    function bot(id) {   /* the button's bottom, past the safe area, as a CSS sum */
+      if (B[id]) return B[id];
+      var L = LAY[id], e = L.over ? bot(L.over) + ' + ' + Math.round(LAY[L.over].s * sc) + 'px + ' + L.gap + 'px' : 'min(' + L.b + 'px,' + L.k + 'vh)';
+      if (L.floor) e = 'max(' + e + ',' + bot(L.floor) + ' + ' + Math.round(LAY[L.floor].s * sc) + 'px + 18px)';
+      return (B[id] = e);
+    }
     Object.keys(LAY).forEach(function (id) {
       var L = LAY[id], side = hand === 'l' ? (L.side === 'r' ? 'left' : 'right') : (L.side === 'r' ? 'right' : 'left'), other = side === 'right' ? 'left' : 'right', s = Math.round(L.s * sc);
       out += sel + '#' + id + '{' + side + ':calc(env(safe-area-inset-' + side + ',0px) + ' + L.x + 'px)!important;' + other + ':auto!important;top:auto!important;' +
-        'bottom:calc(env(safe-area-inset-bottom,0px) + min(' + L.b + 'px,' + L.k + 'vh))!important;width:' + s + 'px!important;height:' + s + 'px!important}';
+        'bottom:calc(env(safe-area-inset-bottom,0px) + ' + bot(id) + ')!important;width:' + s + 'px!important;height:' + s + 'px!important}';
     });
     return '@media (orientation:portrait){' + out + '}';
   }
@@ -198,9 +208,12 @@
     P + '#ui #breathFill{background:linear-gradient(90deg,var(--h7-blue),var(--h7-mint))!important;border-radius:0!important;box-shadow:0 0 8px var(--h7-glow)}' +
 
     /* ===== 5 TOASTS, THE HINT, THE XP POP, THE REASON, THE LEVEL-UP ===== */
-    P + '#ui #toast{top:calc(var(--h7-top) + 122px)!important;max-width:min(262px,calc(100% - 128px))!important;font:500 13.5px/1.35 var(--h7-body)!important;text-align:left;border-radius:14px!important;padding:10px 14px!important;' + glass +
+    /* 793 follow-up: a message never lies on the job card or the round map: it sits 8 px under the lower of the two (--toast795, set by the tick from
+       where they really end, the map's distance tag counted), and the hint steps under the message while both are up (portrait; --hint795) */
+    P + '#ui #toast{top:var(--toast795,calc(var(--h7-top) + 122px))!important;max-width:min(262px,calc(100% - 128px))!important;font:500 13.5px/1.35 var(--h7-body)!important;text-align:left;border-radius:14px!important;padding:10px 14px!important;' + glass +
       'background:rgba(36,10,18,.84)!important;border-color:rgba(255,59,66,.4)!important;box-shadow:0 0 22px -8px rgba(255,59,66,.6),inset 0 0 18px rgba(255,59,66,.08),0 10px 24px rgba(0,0,0,.38)!important;animation:up795 .45s ease-out both}' +
     'html.hud795 body:has(#ui .missions:not([hidden]),#new786:not([hidden])) #toast{opacity:0!important;pointer-events:none}' +
+    '@media (orientation:portrait){' + P + '#ui #hint{top:max(calc(env(safe-area-inset-top,0px) + 250px),var(--hint795,0px))!important}}' +
     P + '#ui #hint{font:italic 500 13.5px/1.3 var(--h7-body)!important;color:var(--h7-ink)!important;text-shadow:none!important;' + glass + 'border-radius:12px!important;padding:6px 12px!important}' +
     P + '#ui #hint:empty{display:none!important}' +
     P + '#ui #xpPop:not([hidden]){font:700 12px/1.2 var(--h7-mono)!important;color:var(--h7-gold)!important;text-shadow:0 0 8px rgba(255,212,92,.6)!important;' + pill + 'padding:3px 10px!important;border-color:rgba(255,212,92,.5)!important;animation:up795 .4s ease-out both}' +
@@ -438,9 +451,19 @@
     requestAnimationFrame(frame);
 
     /* ---------------- 10 Hz: the rests, the costs, the pause page, late elements ---------------- */
+    function msgPlace() {   /* 793 follow-up: the message's top under the job card and the round map; the hint under the message */
+      var y = 0, lv = $('lvPill'), mp = $('mapBtn705'), t = $('toast');
+      if (vis(lv)) y = Math.max(y, lv.getBoundingClientRect().bottom);
+      if (vis(mp)) y = Math.max(y, mp.getBoundingClientRect().bottom + 11);   /* its distance tag hangs 11 px under the frame */
+      var v = y ? Math.round(y + 8) + 'px' : '';
+      if (H.msgTop !== v) { H.msgTop = v; if (v) root.style.setProperty('--toast795', v); else root.style.removeProperty('--toast795'); }
+      var hv = vis(t) && t.textContent ? Math.round(t.getBoundingClientRect().bottom + 8) + 'px' : '0px';
+      if (H.hintTop !== hv) { H.hintTop = hv; root.style.setProperty('--hint795', hv); }
+    }
     function tick() {
       if (!H.on) return; var ui = $('ui'); paintLate(); pauseSync(); mapLegend();
       if (!ui || ui.hidden) return;
+      msgPlace();
       var lv = $('lvPill'), nw = nowWords(), tab = JSON.stringify(nw || 'Up next'); if (lv && H.tab !== tab) { H.tab = tab; lv.style.setProperty('--tab795', tab); }
       var cd = {}; try { cd = api.cd ? api.cd() : {}; } catch (e) { cd = {}; }
       ['flap', 'flutter', 'jump', 'land', 'atkBtn', 'zoom'].forEach(function (id) {

@@ -29,7 +29,7 @@
    patch), so it lives only while the patch is drawn. Classic is frozen (board 645): init refuses there and nothing is made. */
 window.WFR_DUNNS797 = (function () {
   'use strict';
-  var C = { LAYER: 7, SLICE_MS: 6, R_NEAR: 380, R_FAR: 1250, SP_NEAR: 15, SP_FAR: 28, HOUSE_SP: 15, HOUSES: 2600, PALMS: 700, FLAMES: 160,
+  var C = { LAYER: 7, SLICE_MS: 6, SLICE2: 8, R_NEAR: 380, R_FAR: 1250, SP_NEAR: 15, SP_FAR: 28, HOUSE_SP: 15, HOUSES: 2600, PALMS: 700, FLAMES: 160,
     BEACH_R: 300, UMB: 72, BEACH_PEOPLE: 260, SEA_SWIM: 90, POOL_SWIM: 22, CHAIN: [12, 10], CARS: 18, DOLPHINS: 6, REEF_CELL: 24, RASTER: 5, SOUND_R: [25, 360] };
   /* the real places, lat/lon (OSM, read Nov 13 2026); the guard checks each against its source point */
   var PLACES = {
@@ -220,12 +220,12 @@ window.WFR_DUNNS797 = (function () {
       c.cells.forEach(function (q) { H[q] = -1.2; sunk++; if (P) P.setY(q, W0 - 1.2); if (Cc) Cc.setXYZ(q, 0.55, 0.62, 0.50); }); });
     if (P) { P.needsUpdate = true; ground.geometry.computeBoundingSphere(); } if (Cc) Cc.needsUpdate = true; st.edits.sunk = sunk; st.edits.flats = flats;
   }
-  function patchEdits() {
+  function* patchEdits() {
     var D = X.D, byName = function (n) { for (var i = 0; i < D.meshes.length; i++) if (D.meshes[i].name === 'dunns712:' + n) return D.meshes[i]; return null; };
     var ground = byName('ground'), over = byName('overlay'), water = byName('water'), sea = byName('sea'), col = new T3.Color(), tmp = new T3.Color();
     st.edits.names = D.meshes.map(function (m) { return m.name; }); sinkFlats(ground);
     if (ground) { var g = ground.geometry, P = g.attributes.position, Cc = g.attributes.color, Nn = g.attributes.normal, J = new Float32Array(P.count);
-      for (var k = 0; k < P.count; k++) { var x = P.getX(k), z = P.getZ(k), h = d.H[k], c = d.cls[k]; if (c === 9 || h <= 0.25) continue;
+      for (var k = 0; k < P.count; k++) { if ((k & 1023) === 0 && slow797()) yield; var x = P.getX(k), z = P.getZ(k), h = d.H[k], c = d.cls[k]; if (c === 9 || h <= 0.25) continue;
         var ny = Nn.getY(k), sand = h < 2.6 && c !== 1 ? sm(2.6, 1.0, h) : (c === 1 ? 1 : 0), big = vnoise(x / 260, z / 260), mid = vnoise(x / 70 + 9, z / 70);
         col.setRGB(0.20, 0.38, 0.15).lerp(tmp.setRGB(0.30, 0.47, 0.19), big).lerp(tmp.setRGB(0.16, 0.31, 0.15), 0.45 * mid).lerp(tmp.setRGB(0.19, 0.33, 0.20), sm(150, 450, h) * 0.5);
         col.lerp(tmp.setRGB(0.56, 0.55, 0.47), 0.45 * sm(0.80, 0.55, ny));   // limestone shows on the steepest ground
@@ -250,11 +250,11 @@ window.WFR_DUNNS797 = (function () {
   }
 
   /* ---------- 3 · THE CASCADE: travertine, water, spray ---------- */
-  function cascade() {
+  function* cascade() {
     var TS = [-2.1, -1.75, -1.42, -1.12, -1.0].concat(Array.from({ length: 19 }, function (_, i) { return -0.9 + i * 0.1; })).concat([1.0, 1.12, 1.42, 1.75, 2.1]), NT = TS.length, DS = 0.6, ns = Math.ceil(F.len / DS) + 1;
     var rP = [], rC = [], rI = [], wP = [], wF = [], wI = [], col = new T3.Color(), tmp = new T3.Color(), TRAV = new T3.Color(0xddd6c3), WET = new T3.Color(0x9c9786), TAN = new T3.Color(0xcbbd9f), MOSS = new T3.Color(0x6b7a46), DARK = new T3.Color(0x8f8b7b), FLOOR = new T3.Color(0x34552a);
     var WTS = Array.from({ length: 37 }, function (_, i) { return -1.06 + i * 2.12 / 36; }), NW = WTS.length;   // 1-1.5 m columns: the lips curve across the falls, so the grid must be finer than a lip's bend
-    for (var a = 0; a < ns; a++) { var s = Math.min(F.len, a * DS), c = F.at(s), dr = F.dir(s), nx = -dr[1], nz = dr[0], hw = F.hw(s);
+    for (var a = 0; a < ns; a++) { if (slow797()) yield; var s = Math.min(F.len, a * DS), c = F.at(s), dr = F.dir(s), nx = -dr[1], nz = dr[0], hw = F.hw(s);
       for (var j = 0; j < NT; j++) { var t = TS[j], at = Math.abs(t), off = at <= 1 ? t * hw : (t < 0 ? -1 : 1) * (hw + (at - 1) / 1.1 * (3.5 + 0.22 * hw)), x = c[0] + nx * off, z = c[1] + nz * off, y, lump = vnoise(x * 0.35, z * 0.35), side = t < 0 ? 0 : 1;
         var poke = at <= 0.95 ? Math.max(0, vnoise(x * 0.42 + 5, z * 0.42) - 0.56) / 0.44 : 0;   // rounded travertine heads standing out of the water (the photos' pale rocks between the white)
         if (at <= 1.0) y = F.surf(s, t) - 0.32 - 0.25 * lump + 0.8 * poke;
@@ -291,19 +291,19 @@ window.WFR_DUNNS797 = (function () {
   }
 
   /* ---------- 4 · THE REEF WATER ---------- */
-  function reef() {
+  function* reef() {
     var CELL = C.REEF_CELL, X0 = -2600, X1 = 3400, Z0 = -2200, Z1 = 1300, nx = Math.round((X1 - X0) / CELL) + 1, nz = Math.round((Z1 - Z0) / CELL) + 1;
     /* the distance to the shore (a chamfer pass over the same grid): land 0, sea grows */
     var Dd = new Float32Array(nx * nz), Hh = new Float32Array(nx * nz), BIG = 1e6;
-    for (var j = 0; j < nz; j++) for (var i = 0; i < nx; i++) { var x = X0 + i * CELL, z = Z0 + j * CELL, h = Math.abs(x) < HALF - 1 && Math.abs(z) < HALF - 1 ? hG(x, z) : hGrid(x, z); Hh[j * nx + i] = h; Dd[j * nx + i] = h > 0.2 ? 0 : BIG; }
+    for (var j = 0; j < nz; j++) for (var i = 0; i < nx; i++) { if ((i & 31) === 0 && slow797()) yield; var x = X0 + i * CELL, z = Z0 + j * CELL, h = Math.abs(x) < HALF - 1 && Math.abs(z) < HALF - 1 ? hG(x, z) : hGrid(x, z); Hh[j * nx + i] = h; Dd[j * nx + i] = h > 0.2 ? 0 : BIG; }
     var a1 = CELL, a2 = CELL * Math.SQRT2;
     for (j = 0; j < nz; j++) for (i = 0; i < nx; i++) { var k = j * nx + i, v = Dd[k]; if (i > 0) v = Math.min(v, Dd[k - 1] + a1); if (j > 0) { v = Math.min(v, Dd[k - nx] + a1); if (i > 0) v = Math.min(v, Dd[k - nx - 1] + a2); if (i < nx - 1) v = Math.min(v, Dd[k - nx + 1] + a2); } Dd[k] = v; }
     for (j = nz - 1; j >= 0; j--) for (i = nx - 1; i >= 0; i--) { k = j * nx + i; v = Dd[k]; if (i < nx - 1) v = Math.min(v, Dd[k + 1] + a1); if (j < nz - 1) { v = Math.min(v, Dd[k + nx] + a1); if (i < nx - 1) v = Math.min(v, Dd[k + nx + 1] + a2); if (i > 0) v = Math.min(v, Dd[k + nx - 1] + a2); } Dd[k] = v; }
     var P = [], Fv = [], E = [], I = [], map = new Int32Array(nx * nz).fill(-1), nv = 0;
-    for (j = 0; j < nz; j++) for (i = 0; i < nx; i++) { k = j * nx + i; x = X0 + i * CELL; z = Z0 + j * CELL;
+    for (j = 0; j < nz; j++) for (i = 0; i < nx; i++) { if ((i & 31) === 0 && slow797()) yield; k = j * nx + i; x = X0 + i * CELL; z = Z0 + j * CELL;
       var edge = Math.min(sm(0, 520, x - X0), sm(0, 520, X1 - x), sm(0, 520, z - Z0), sm(0, 320, Z1 - z)), land = Hh[k] > 0.2;   // the water runs a little under the beach (the ground hides it): no sliver of the old sea at the shore
       map[k] = nv++; P.push(x, W0 + 0.09, z); Fv.push(land ? -CELL * 0.5 : Dd[k] - CELL * 0.5, x, z, -Hh[k]); E.push(edge); }   // w: the signed depth (negative on land): the shore is cut where it crosses 0 inside each cell, never on the cells' stairs
-    for (j = 0; j < nz - 1; j++) for (i = 0; i < nx - 1; i++) { k = j * nx + i; var q = [k, k + 1, k + nx, k + nx + 1]; if (q.every(function (m) { return Hh[m] > 0.6; })) continue; I.push(map[k], map[k + nx], map[k + 1], map[k + 1], map[k + nx], map[k + nx + 1]); }
+    for (j = 0; j < nz - 1; j++) for (i = 0; i < nx - 1; i++) { if ((i & 31) === 0 && slow797()) yield; k = j * nx + i; var q = [k, k + 1, k + nx, k + nx + 1]; if (q.every(function (m) { return Hh[m] > 0.6; })) continue; I.push(map[k], map[k + nx], map[k + 1], map[k + 1], map[k + nx], map[k + nx + 1]); }
     var g = new T3.BufferGeometry(); g.setAttribute('position', new T3.Float32BufferAttribute(P, 3)); g.setAttribute('aF797', new T3.Float32BufferAttribute(Fv, 4)); g.setAttribute('aE797', new T3.Float32BufferAttribute(E, 1)); g.setIndex(I);
     g.setAttribute('normal', new T3.Float32BufferAttribute(new Float32Array(P.length).map(function (_, n) { return n % 3 === 1 ? 1 : 0; }), 3));
     var m = matL('reef');
@@ -321,12 +321,12 @@ window.WFR_DUNNS797 = (function () {
   function windowed(x, z, w, dpt, h, ry, wall, glass, floorH, out) {   // a block with its floors banded (balconies and glass), merged into out
     var nF = Math.max(1, Math.round(h / floorH)); for (var f = 0; f < nF; f++) { var y0 = f * floorH; out.push({ g: box(w, floorH * 0.55, dpt), m: M4(x, y0 + floorH * 0.275, z, 1, 1, 1, ry), c: wall }); out.push({ g: box(w * 0.985, floorH * 0.45, dpt * 0.985), m: M4(x, y0 + floorH * 0.775, z, 1, 1, 1, ry), c: glass }); }
     out.push({ g: box(w * 1.02, 0.6, dpt * 1.02), m: M4(x, nF * floorH + 0.3, z, 1, 1, 1, ry), c: wall }); }
-  function roadsRaster() { var RD = d.roads; for (var q = 0; q < RD.n; q++) { var pts = lines(RD, q), w = RD.w[q] / 10; for (var i = 1; i < pts.length; i++) rStampSeg(pts[i - 1][0], pts[i - 1][1], pts[i][0], pts[i][1], w / 2 + 1.5, 1); } }   // the roads into the raster first (nothing stands or grows on a road)
-  function built() {
+  function* roadsRaster() { var RD = d.roads; for (var q = 0; q < RD.n; q++) { if ((q & 7) === 0 && slow797()) yield; var pts = lines(RD, q), w = RD.w[q] / 10; for (var i = 1; i < pts.length; i++) rStampSeg(pts[i - 1][0], pts[i - 1][1], pts[i][0], pts[i][1], w / 2 + 1.5, 1); } }   // the roads into the raster first (nothing stands or grows on a road)
+  function* built() {
     var r = rng(79705), houses = [], RD = d.roads;
     var q, pts, w, i;   // the roads went into the raster one step (one frame) earlier: roadsRaster
     /* the houses along the residential and tertiary streets (Ocho Rios, Mammee Bay, the hills), both sides */
-    for (q = 0; q < RD.n && houses.length < C.HOUSES; q++) { var k = RD.k[q]; if (k !== 4 && k !== 3 && k !== 5) continue; pts = lines(RD, q); w = RD.w[q] / 10; var acc = r() * C.HOUSE_SP;
+    for (q = 0; q < RD.n && houses.length < C.HOUSES; q++) { if (slow797()) yield; var k = RD.k[q]; if (k !== 4 && k !== 3 && k !== 5) continue; pts = lines(RD, q); w = RD.w[q] / 10; var acc = r() * C.HOUSE_SP;
       for (i = 1; i < pts.length && houses.length < C.HOUSES; i++) { var ax = pts[i - 1][0], az = pts[i - 1][1], bx = pts[i][0], bz = pts[i][1], L = Math.hypot(bx - ax, bz - az); if (L < 0.01) continue; var ux = (bx - ax) / L, uz = (bz - az) / L;
         for (var s = acc; s < L; s += C.HOUSE_SP * (0.8 + r() * 0.5)) { acc = 0; for (var sd = -1; sd <= 1; sd += 2) { if (r() < (k === 5 ? 0.6 : 0.22)) continue;
           var hw = 4 + r() * 3.5, hd = 4 + r() * 3, off = w / 2 + 3 + hd + r() * 3, x = ax + ux * s - uz * off * sd, z = az + uz * s + ux * off * sd, h0 = hG(x, z);
@@ -402,11 +402,11 @@ window.WFR_DUNNS797 = (function () {
   }
   function soften(g, cy) {   // a crown lit as one soft mass: each leaf corner's normal bent toward the line from the crown's middle (cheap: no new triangles)
     var P = g.attributes.position, N = g.attributes.normal, Cl = g.attributes.color; for (var i = 0; i < P.count; i++) { if (!(Cl.getY(i) > Cl.getX(i) * 1.25 || Cl.getX(i) > Cl.getY(i) * 1.8)) continue; var x = P.getX(i), y = P.getY(i) - cy, z = P.getZ(i), l = Math.hypot(x, y, z) || 1, nx = N.getX(i) * 0.3 + x / l * 0.7, ny = N.getY(i) * 0.3 + y / l * 0.7 + 0.15, nz = N.getZ(i) * 0.3 + z / l * 0.7, k = Math.hypot(nx, ny, nz) || 1; N.setXYZ(i, nx / k, ny / k, nz / k); } N.needsUpdate = true; }
-  function jungle() {
+  function* jungle() {
     var r = rng(79707), mid = F.at(F.len * 0.55), nearL = [], farL = [], palms = [], flames = [], bankL = [], G = treeGeos();
     var tint = function () { var k = r(), b = 0.8 + r() * 0.45; return (k < 0.2 ? [0.82, 1.0, 0.80] : k < 0.38 ? [1.18, 1.10, 0.72] : k < 0.55 ? [0.66, 0.84, 0.80] : k < 0.7 ? [1.0, 1.0, 1.0] : k < 0.85 ? [0.92, 1.12, 0.80] : [1.3, 1.18, 0.78]).map(function (v) { return v * b; }); };
     var shoreNear = function (x, z, R0) { for (var a = 0; a < 8; a++) { var ca = Math.cos(a * Math.PI / 4), sa = Math.sin(a * Math.PI / 4); for (var rr = 25; rr <= R0; rr += 30) if (hGrid(x + ca * rr, z + sa * rr) < 0.1) return true; } return false; };
-    var place = function (sp, R0, R1, list, far) { var n = Math.ceil(R1 / sp); for (var j = -n; j <= n; j++) for (var i = -n; i <= n; i++) {
+    var place = function* (sp, R0, R1, list, far) { var n = Math.ceil(R1 / sp); for (var j = -n; j <= n; j++) for (var i = -n; i <= n; i++) { if ((i & 31) === 0 && slow797()) yield; 
       var x = mid[0] + (i + (r() - 0.5) * 0.9) * sp, z = mid[1] + (j + (r() - 0.5) * 0.9) * sp, dc = Math.hypot(x - mid[0], z - mid[1]); if (dc > R1 || dc < R0) continue; if (Math.abs(x) > HALF - 40 || Math.abs(z) > HALF - 40) continue;
       var h = hG(x, z); if (h < 2.4) { if (h > 0.9 && palms.length < C.PALMS && r() < 0.35 && !rGet(x, z)) palms.push({ x: x, y: W0 + h - 0.3, z: z, s: 0.75 + r() * 0.55, ry: r() * 6.28, rx: (r() - 0.5) * 0.18, rz: (r() - 0.5) * 0.25, c: [1, 1, 1] }); continue; }
       if (rGet(x, z)) continue;
@@ -414,7 +414,7 @@ window.WFR_DUNNS797 = (function () {
       if (coast && rk < 0.4 && palms.length < C.PALMS) { palms.push({ x: x, y: W0 + h - 0.3, z: z, s: 0.8 + r() * 0.6, ry: r() * 6.28, rx: (r() - 0.5) * 0.15, rz: (r() - 0.5) * 0.22, c: [1, 1, 1] }); continue; }
       if (rk > (far ? 0.988 : 0.972) && flames.length < C.FLAMES) { var fr = 3.6 + r() * 2.4; flames.push({ x: x, y: W0 + h - 0.4, z: z, s: fr, sy: fr * (0.9 + r() * 0.3), ry: r() * 6.28, c: [1, 0.9 + r() * 0.2, 0.9 + r() * 0.2] }); continue; }
       var rad = far ? 9 + r() * 5 : 7.5 + r() * 4.5, hy = far ? 0.95 + r() * 0.4 : 0.9 + r() * 0.45; list.push({ x: x, y: W0 + h - 0.5, z: z, s: rad, sy: rad * hy, ry: r() * 6.28, rz: (r() - 0.5) * 0.12, c: tint() }); } };
-    place(C.SP_NEAR, 0, C.R_NEAR, nearL, false); place(C.SP_FAR, C.R_NEAR, C.R_FAR, farL, true);
+    yield* place(C.SP_NEAR, 0, C.R_NEAR, nearL, false); yield* place(C.SP_FAR, C.R_NEAR, C.R_FAR, farL, true);
     /* the falls' own banks: crowns leaning over the water, close (the photos: a tunnel of green) */
     for (var s = 2; s < F.len - 6; s += 3.2) { var c = F.at(s), dr = F.dir(s), nx = -dr[1], nz = dr[0], hw = F.hw(s); for (var sd = -1; sd <= 1; sd += 2) { if (r() < 0.25) continue; var off = hw * 1.25 + 2 + r() * 5, x = c[0] + nx * off * sd, z = c[1] + nz * off * sd, h = hG(x, z); if (h < 2 || rGet(x, z) === 1) continue;
       var rad = 4 + r() * 3.5; if (r() < 0.12) palms.push({ x: x, y: W0 + h - 0.3, z: z, s: 0.8 + r() * 0.4, ry: r() * 6.28, rz: sd * 0.25, c: [1, 1, 1] }); else bankL.push({ x: x, y: W0 + h - 0.5, z: z, s: rad * 1.25, sy: rad * (1.4 + r() * 0.6), ry: r() * 6.28, rx: 0, rz: -sd * 0.18 * (nx > 0 ? 1 : -1), c: tint() }); } }
@@ -428,26 +428,28 @@ window.WFR_DUNNS797 = (function () {
   function chamfer(D, n, m, CELL) { var a1 = CELL, a2 = CELL * Math.SQRT2, i, j, k, v;
     for (j = 0; j < m; j++) for (i = 0; i < n; i++) { k = j * n + i; v = D[k]; if (i > 0) v = Math.min(v, D[k - 1] + a1); if (j > 0) { v = Math.min(v, D[k - n] + a1); if (i > 0) v = Math.min(v, D[k - n - 1] + a2); if (i < n - 1) v = Math.min(v, D[k - n + 1] + a2); } D[k] = v; }
     for (j = m - 1; j >= 0; j--) for (i = n - 1; i >= 0; i--) { k = j * n + i; v = D[k]; if (i < n - 1) v = Math.min(v, D[k + 1] + a1); if (j < m - 1) { v = Math.min(v, D[k + n] + a1); if (i < n - 1) v = Math.min(v, D[k + n + 1] + a2); if (i > 0) v = Math.min(v, D[k + n - 1] + a2); } D[k] = v; } }
-  function shoreGrid() {   /* 797 landing: the beach's height and distance grid, its own step (one frame), then the beach itself */
+  function* shoreGrid() {   /* 797 landing: the beach's height and distance grid, its own step (one frame), then the beach itself */
     var foot = F.at(F.len), dirF = F.dir(F.len), r = rng(79713), CELL = 4, RX = 520, RZ = 380, x0 = foot[0] - RX * 0.8, z0 = foot[1] - RZ, n = Math.round(RX * 1.9 / CELL) + 1, m = Math.round(RZ * 1.9 / CELL) + 1, i, j, k;
-    var H = new Float32Array(n * m), D = new Float32Array(n * m); for (j = 0; j < m; j++) for (i = 0; i < n; i++) { k = j * n + i; H[k] = hG(x0 + i * CELL, z0 + j * CELL); D[k] = H[k] < 0.05 ? 0 : 1e6; }
+    var H = new Float32Array(n * m), D = new Float32Array(n * m); for (j = 0; j < m; j++) for (i = 0; i < n; i++) { if ((i & 31) === 0 && slow797()) yield; k = j * n + i; H[k] = hG(x0 + i * CELL, z0 + j * CELL); D[k] = H[k] < 0.05 ? 0 : 1e6; }
     chamfer(D, n, m, CELL);
     st.shG = { foot: foot, dirF: dirF, r: r, CELL: CELL, x0: x0, z0: z0, n: n, m: m, H: H, D: D };
   }
-  function shore() {
+  function* shore() {
     var G = st.shG, foot = G.foot, dirF = G.dirF, r = G.r, CELL = G.CELL, x0 = G.x0, z0 = G.z0, n = G.n, m = G.m, H = G.H, D = G.D, i, j, k; st.shG = null;
     var wide = function (x, z) { return 24 + 18 * vnoise(x / 70 + 3, z / 70) - 0.035 * Math.hypot(x - foot[0], z - foot[1]); };   // widest at the falls' own beach
     var isSand = function (i2, j2) { var k2 = j2 * n + i2, x = x0 + i2 * CELL, z = z0 + j2 * CELL, v = rGet(x, z); return H[k2] > -0.4 && H[k2] < 8 && D[k2] < wide(x, z) && v !== 3 && v !== 1; };
     var P = [], Cc = [], col = new T3.Color(), SAND = new T3.Color(0xeee2c2), WETS = new T3.Color(0xc9b994), DUNE = new T3.Color(0xe2d3ad);
     var vtx = function (i2, j2) { var k2 = j2 * n + i2, x = x0 + i2 * CELL, z = z0 + j2 * CELL; col.copy(SAND).lerp(DUNE, 0.6 * vnoise(x / 9, z / 9)).lerp(WETS, sm(6, 0, D[k2])); P.push(x, W0 + Math.max(H[k2], 0.02) + 0.08, z); Cc.push(col.r, col.g, col.b); };
-    var nS = 0; for (j = 0; j < m - 1; j++) for (i = 0; i < n - 1; i++) { if (!(isSand(i, j) && isSand(i + 1, j) && isSand(i, j + 1) && isSand(i + 1, j + 1))) continue; vtx(i, j); vtx(i, j + 1); vtx(i + 1, j); vtx(i + 1, j); vtx(i, j + 1); vtx(i + 1, j + 1); nS++; }
+    var nS = 0; for (j = 0; j < m - 1; j++) for (i = 0; i < n - 1; i++) { if ((i & 31) === 0 && slow797()) yield; if (!(isSand(i, j) && isSand(i + 1, j) && isSand(i, j + 1) && isSand(i + 1, j + 1))) continue; vtx(i, j); vtx(i, j + 1); vtx(i + 1, j); vtx(i + 1, j); vtx(i, j + 1); vtx(i + 1, j + 1); nS++; }
     var sg = new T3.BufferGeometry(); sg.setAttribute('position', new T3.Float32BufferAttribute(P, 3)); sg.setAttribute('normal', new T3.Float32BufferAttribute(new Float32Array(P.length).map(function (_, q) { return q % 3 === 1 ? 1 : 0; }), 3)); sg.setAttribute('color', new T3.Float32BufferAttribute(Cc, 3));
     st.sandAt = function (x, z) { var i2 = Math.round((x - x0) / CELL), j2 = Math.round((z - z0) / CELL); if (i2 < 0 || j2 < 0 || i2 >= n - 1 || j2 >= m - 1) return null; var k2 = j2 * n + i2; return isSand(i2, j2) && H[k2] > 0.15 ? Math.max(H[k2], 0.02) + 0.08 : null; };
+    if (slow797()) yield;
     /* the rocky mouth: pale travertine boulders at the falls' foot, either side and out into the sea */
     var parts = [{ g: sg, c: function (y, q) { return [Cc[q * 3], Cc[q * 3 + 1], Cc[q * 3 + 2]]; } }], rk = function (seed) { var g = new T3.IcosahedronGeometry(1, 1), p = g.attributes.position; for (var q = 0; q < p.count; q++) { var kk = 0.8 + 0.4 * hash2(Math.round(p.getX(q) * 40) + seed, Math.round(p.getY(q) * 40) + Math.round(p.getZ(q) * 23)); p.setXYZ(q, p.getX(q) * kk, p.getY(q) * kk, p.getZ(q) * kk); var ln = Math.hypot(p.getX(q), p.getY(q), p.getZ(q)) || 1; g.attributes.normal.setXYZ(q, p.getX(q) / ln, p.getY(q) / ln, p.getZ(q) / ln); } return g; };   // a boulder lit round (normals from its middle), never faceted
     var ROCK = function (y) { return y > 0.2 ? [0.86, 0.83, 0.75] : [0.62, 0.60, 0.52]; }, nR = 0;
     for (var q = 0; q < 60; q++) { var sd = q % 2 ? 1 : -1, sea = q % 3 === 0, s = F.len - 2 - r() * 26, c = F.at(s), dr = F.dir(s), hw = F.hw(s), off = sea ? (r() - 0.5) * 1.8 * hw : sd * hw * (0.85 + r() * 0.6), ahead = sea ? 4 + r() * 22 : 0;
       var x = c[0] - dr[1] * off + dirF[0] * ahead, z = c[1] + dr[0] * off + dirF[1] * ahead, sc = 0.8 + r() * 2.6, gy = Math.max(hG(x, z), -1.4); parts.push({ g: rk(q), m: M4(x, W0 + gy - sc * 0.35, z, sc * (1 + r() * 0.6), sc * 0.55, sc, r() * 6.28), c: ROCK }); nR++; }
+    if (slow797()) yield;
     instancedOnce(merge(parts), 'shore'); st.parts.beachCells = nS; st.parts.mouthRocks = nR;
     st.sh = { foot: foot, r: r, CELL: CELL, x0: x0, z0: z0, n: n, m: m, H: H, D: D, wide: wide };
   }
@@ -471,10 +473,10 @@ window.WFR_DUNNS797 = (function () {
       { g: box(0.68, 0.09, 0.1), m: M4(-0.52, 1.36, 0, 1, 1, 1, 0, 0, 0.25), c: [1, 1, 1] }, { g: box(0.68, 0.09, 0.1), m: M4(0.52, 1.36, 0, 1, 1, 1, 0, 0, -0.25), c: [1, 1, 1] }, { g: box(0.21, 0.25, 0.23), m: M4(0, 1.62, 0, 1), c: [1, 1, 1] },
       { g: box(0.36, 0.42, 0.21), m: M4(0, 1.22, 0, 1), c: [1, 1, 1] }]);
     var cloth = merge([{ g: box(0.38, 0.3, 0.23), m: M4(0, 0.86, 0, 1), c: [1, 1, 1] }, { g: box(0.23, 0.07, 0.25), m: M4(0, 1.775, 0, 1), c: [0.25, 0.25, 0.25] }]); return [skin, cloth]; }
-  function life() {
+  function* life() {
     var r = rng(79711), foot = F.at(F.len), people = [], sand = [], sea = [], q;
     /* the sand and the shallows round the falls' foot, read off the ground every 3 m */
-    for (var z = foot[1] - C.BEACH_R; z < foot[1] + C.BEACH_R; z += 3) for (var x = foot[0] - C.BEACH_R; x < foot[0] + C.BEACH_R * 1.4; x += 3) { var h = hG(x, z); if (rGet(x, z) === 3) continue;
+    for (var z = foot[1] - C.BEACH_R; z < foot[1] + C.BEACH_R; z += 3) for (var x = foot[0] - C.BEACH_R; x < foot[0] + C.BEACH_R * 1.4; x += 3) { if (slow797()) yield; var h = hG(x, z); if (rGet(x, z) === 3) continue;
       var sy = st.sandAt ? st.sandAt(x, z) : null; if (sy != null && !rGet(x, z)) sand.push([x, z, sy]); else if (h < -0.4 && h > -2.6 && st.shoreD(x, z) < 70) sea.push([x, z, h]); }
     var near = function (L, x2, z2, R2) { for (var i = 0; i < L.length; i++) if (Math.hypot(L[i].x - x2, L[i].z - z2) < R2) return true; return false; };
     var umb = [], lng = []; sand.sort(function (a, b) { return Math.hypot(a[0] - foot[0], a[1] - foot[1]) - Math.hypot(b[0] - foot[0], b[1] - foot[1]); });
@@ -568,9 +570,12 @@ window.WFR_DUNNS797 = (function () {
     ['keeper', function () { var g = new T3.BufferGeometry(); g.setAttribute('position', new T3.Float32BufferAttribute([0, -500, 0, 0, -500, 0, 0, -500, 0], 3)); var k = addMesh(new T3.Mesh(g, matL('keeper')), 'keeper', { cull: false });
       k.onBeforeRender = function (rd, sc, cam) { tick(cam); }; st.group.traverse(function (o) { o.layers.enable(C.LAYER); }); X.D.group.add(st.group);
       if (X.renderer) st.progs = X.renderer.info.programs.length; }]];   // no compile here: every program was compiled at boot by warm()
+  function slow797() { return performance.now() - st.tq > C.SLICE2; }   // a slice's own clock (797 landing round 3: steps were 45-75 ms frames under load)
   function buildSlice() {
     if (st.built || st.fault) return; var t0 = performance.now();
-    try { var a = performance.now(); STEPS[st.step][1](); var ms = performance.now() - a; st.sliceMax = Math.max(st.sliceMax, ms); (st.sliceMs = st.sliceMs || {})[STEPS[st.step][0]] = Math.round(ms); st.step++; }   // ONE step a frame
+    try { var a = performance.now(), nm = STEPS[st.step][0]; st.tq = a; if (!st.it) { var out = STEPS[st.step][1](); if (out && typeof out.next === 'function') st.it = out; }
+      var fin = true; if (st.it) { fin = !!st.it.next().done; if (fin) st.it = null; }
+      var ms = performance.now() - a; st.sliceMax = Math.max(st.sliceMax, ms); st.sliceMs = st.sliceMs || {}; st.sliceMs[nm] = Math.max(st.sliceMs[nm] || 0, Math.round(ms)); st.slices = (st.slices || 0) + 1; if (fin) st.step++; }   // ONE slice a frame (a step may take several: its own clock, C.SLICE2 ms)
     catch (e) { st.fault = STEPS[st.step] ? STEPS[st.step][0] + ': ' + String(e && e.message || e) : String(e); console.warn('797: Dunn\'s River stopped building: ' + st.fault); return; }
     st.buildMs += performance.now() - t0; if (st.step >= STEPS.length) { st.built = true; st.building = false; st.buildMs = Math.round(st.buildMs); st.parts.draws = st.meshes.length; st.parts.tris = trisOf(); } else requestAnimationFrame(buildSlice);
   }
