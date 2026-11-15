@@ -141,6 +141,11 @@
     P + '#ui #wordsTop735.h816on{display:block!important;-webkit-line-clamp:none}' + P + '#ui #wordsTop735 .s816,' + P + '#ui #wordsTop735 .o816{display:none}' +
     P + '#ui #wordsTop735 .p816{display:block;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}' +
     P + '#ui #wordsTop735 .h816{display:block;white-space:nowrap;font-weight:700;letter-spacing:.04em;color:var(--h7-mint)}' +
+    /* 822 follow-up (Nov 14 2026): since 816 the pill is two lines (33-63 px down at 390x844) and sat on the round map's ring (its top at 44 px): whenever the
+       pill shows, the round map and the round buttons under it step down 22 px, so the pill sits clear above the ring. Home (no pill): as before. A browser
+       without :has keeps the old places. */
+    'html.ui716.hud795:has(#wordsTop735:not([hidden]):not(:empty)) #ui #mapBtn705{top:calc(var(--h7-top) + 62px)!important}' +
+    'html.ui716.hud795:has(#wordsTop735:not([hidden]):not(:empty)) #ui .hud .side{top:calc(var(--h7-top) + 182px)!important}' +
 
     /* the round buttons under the map: dark glass discs with a glowing rim (the game's own white glyphs) */
     P + '#ui .hud .side{position:fixed!important;right:calc(env(safe-area-inset-right,0px) + 12px)!important;top:calc(var(--h7-top) + 160px)!important;left:auto!important;margin:0!important;' +

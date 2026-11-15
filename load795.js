@@ -41,7 +41,7 @@
         'world-features.js', 'world-vegetation.js', 'world-bar761.js', 'world725d-fast.js', 'world-chicks.js', 'world-imagery.js', 'world-landclass772.js', 'world712-photo.js',
         'hawkwake.js', 'hawkfight.js', 'hawkarena.js', 'orchard.js', 'net678.js', 'net678-config.js', 'net721.js'] },
     { id: 'people', chip: 'People', name: 'Waking the people', say: 'Putting Hal at the lake. He was going there anyway.',
-      files: ['animals714.js', 'world-people.js', 'world-animals.js', 'world-life790.js', 'world-traffic.js', 'world-sky756.js', 'world-huts.js', 'world-interiors.js',
+      files: ['animals714.js', 'world-people.js', 'place-dunns797.js', 'world-animals.js', 'world-life790.js', 'world-traffic.js', 'world-sky756.js', 'world-huts.js', 'world-interiors.js',
         'places790-data.js', 'places790.js', 'world-quests.js'] },
     { id: 'rouge', chip: 'Rouge', name: 'Rouge wakes up', say: 'Planting the big tree. It insists on being the biggest.', files: [] }
   ];

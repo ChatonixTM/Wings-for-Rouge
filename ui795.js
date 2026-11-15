@@ -534,6 +534,7 @@
 
   /* ---------- the ship log, newest first: a bold title and one plain sentence a player cares about (DRAFTS for Marth's pen) ---------- */
   var SHIPS = [
+    { n: 147, title: 'Home shores', line: 'The beaches look like one place now, with no squares or pale patches; Kingston\'s Palisadoes and Negril have their sand; Dunn\'s River Falls stands on the north coast with people climbing it; and the place name at the top no longer sits on the round compass.' },
     { n: 146, title: 'Every country', line: 'Each country you have not reached yet stays grey until you get there, then it gets its own arrival scene, and every visit after gets a short one; big cities get a short scene of their own; Threads of Time, in Pause and the Pouch, lists every country and place you have found; and the place card no longer sits over Pause.' },
     { n: 145, title: 'Bread and thunder', line: 'The people who offer bread now give you a piece, in a storm the lightning can strike you and costs a heart and a half, and town names no longer sit over your cards.' },
     { n: 144, title: 'Find your way', line: 'The main menu wears the same look as the title, the compass strip and the round compass now agree, and the top line tells you the way home, like Home 240 km S.' },

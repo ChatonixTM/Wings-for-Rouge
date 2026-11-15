@@ -70,7 +70,7 @@ window.WFR_INTERACT790 = (function () {
     var ball = new T.Mesh(new T.SphereGeometry(0.16, 8, 6), lam(0xe8c25a)); ball.position.y = 6.3; g.add(ball);
     var flag = new T.Mesh(new T.PlaneGeometry(1.3, 0.8, 4, 1), new T.MeshLambertMaterial({ color: 0xc8314a, side: T.DoubleSide })); flag.position.set(0.68, 2.2, 0); g.add(flag);
     perch({ id: 'flagpole', kind: 'flagpole', x: s.x, y: y + 6.42, z: s.z, r: 0.4, does: 'view', text: 'The whole village, and nobody looking up' });
-    thing({ id: 'flag', kind: 'flag', x: s.x, y: y, z: s.z, r: 1.7, verb: '🚩 Tug', g: g, flag: flag, k: 0, up: 0,
+    thing({ id: 'flag', kind: 'flag', x: s.x, y: y, z: s.z, r: 1.7, verb: '🚩 Tug', g: g, flag: flag, k: 2.2, up: 0,   /* 814: at rest from the first frame (it slid up its pole from 0 at every load) */
       react: function (o) { o.up = 1; o.t = 0; st.tugs++; X.sound('ding'); } , step: function (o, dt) { o.t = (o.t || 0) + dt; var want = o.up ? 5.2 : 2.2; o.k += (want - o.k) * Math.min(1, dt * 1.6); o.flag.position.y = o.k; var pos = o.flag.geometry.attributes.position, i; for (i = 0; i < pos.count; i++) { var u = pos.getX(i) + 0.65; pos.setZ(i, Math.sin(st.t * 6 + u * 4) * 0.12 * u); } pos.needsUpdate = true; if (o.up && o.t > C.RESET) o.up = 0; } });
     /* the bell post: a REST perch (its cap), and Ring swings the bell */
     s = spot(-16, 14); g = pole(s.x, s.z, 2.6, 0x7a5a3a); y = g.userData.y0;

@@ -78,6 +78,15 @@ window.WFR_TRAVEL712 = (function () {
   /* 725b: latOfV moved into the door (W.tileRowLats) */
 
   /* ---------- the far pass's material: carib712's shrink toward the eye and the Earth's curve, at true-distance fog (ONE program for every tile) ---------- */
+  /* 822: ZC the zoom whose data every colour reads (the last before the fine surveys start at z11); off in Classic (frozen, board 645): there the colour
+     height is the vertex's own, exactly as before */
+  /* 822 follow-up (the coordinator: "Kingston's Palisadoes spit turning green is wrong. It's a real sand spit she knows"): THE BEACH COMES BACK where it can
+     never seam. A vertex may wear the low-land sand only (1) where its own height and the z10 data's agree within AGREE m (one height family: Jamaica, Cuba,
+     the Bahamas are SRTM at every zoom; Miami's survey land, 0.5-2 m against SRTM's 8-17 m, does not agree, so it never wears sand, at any zoom), and (2) where
+     the OPEN SEA is near: a pixel of the z8 data (ZS: every tile from z8 reads the same) at DEEP m or deeper within SEA m (the Dutch polders read -6 at z8,
+     the Ganges delta's channels -3: they wore sand by height alone; Kingston's shallows reach the deep 2-3 km off the Palisadoes). A distance band from the
+     z10 shore was tried first: it traced the z10 pixels' squares, and a z9 tile (which never reads z10) set it off at its edge */
+  var C822 = { ZC: 10, AGREE: 2.5, ZS: 8, DEEP: -8, SEA: 3000, ON: !(function () { try { return localStorage.getItem('wfr.look') === 'classic'; } catch (e) { return false; } })() };
   var GREY821 = [720, 360], G821 = { tex: null, frame: null };   /* 821 U2: the discovered mask's size (half a degree a byte, the whole world) and the one mask */
   function makeMaterial(THREE, u, tag) {
     if (!G821.tex) { var g821 = new THREE.DataTexture(new Uint8Array(GREY821[0] * GREY821[1]), GREY821[0], GREY821[1], THREE.LuminanceFormat, THREE.UnsignedByteType); g821.magFilter = g821.minFilter = THREE.LinearFilter; g821.generateMipmaps = false; g821.needsUpdate = true; G821.tex = { value: g821 }; G821.frame = { value: new THREE.Vector4(0, 0, 1, 0) }; }
@@ -95,7 +104,7 @@ window.WFR_TRAVEL712 = (function () {
         '    float w821 = smoothstep( 0.0, 0.03, diffuseColor.b - diffuseColor.g ) * smoothstep( 0.05, 0.12, diffuseColor.b - diffuseColor.r );',   /* water by its colour (754's own test: blue over green and over red): a bay, a lake, a river stay blue */
         '    diffuseColor.rgb = mix( diffuseColor.rgb, vec3( dot( diffuseColor.rgb, vec3( 0.299, 0.587, 0.114 ) ) ), g821 * 0.92 * ( 1.0 - w821 ) );',
         '  }', '#include <emissivemap_fragment>'].join(NL723));
-      sh.vertexShader = 'varying vec2 vW712t; varying float vH821;' + NL723 + sh.vertexShader;   /* 821 U2: vH821, the ground's height */
+      sh.vertexShader = 'varying vec2 vW712t; varying float vH821; attribute float aB822;' + NL723 + sh.vertexShader;   /* 821 U2: vH821, the ground's height. 822 follow-up: aB822 the beach's leave (world-look755b.js reads it; a mesh without it reads 0: no beach) */
       sh.fragmentShader = 'uniform vec4 uHole712t; varying vec2 vW712t;' + NL723 + sh.fragmentShader.replace('void main() {', 'void main() {' + NL723 + '  if ( vW712t.x > uHole712t.x && vW712t.x < uHole712t.z && vW712t.y > uHole712t.y && vW712t.y < uHole712t.w ) discard;');
       sh.uniforms.uPhoto712t = u.uPhoto; sh.vertexShader = 'attribute vec3 aPh712t; varying vec3 vPh712t;' + NL723 + sh.vertexShader.replace('#include <begin_vertex>', '#include <begin_vertex>' + NL723 + 'vPh712t = aPh712t;');   /* 723e: the photo layer (world712-photo.js) */
       sh.fragmentShader = 'uniform sampler2D uPhoto712t; varying vec3 vPh712t;' + NL723 + sh.fragmentShader.replace('#include <color_fragment>', '#include <color_fragment>' + NL723 + '  if ( vPh712t.z > 0.5 ) { vec3 ph712t = texture2D( uPhoto712t, vPh712t.xy ).rgb; if ( ph712t.r + ph712t.g + ph712t.b > 0.03 ) { float sea737 = step( ph712t.g, ph712t.b ) * ( 1.0 - smoothstep( 0.07, 0.14, max( ph712t.r, ph712t.g ) ) ); diffuseColor.rgb = mix( ph712t, diffuseColor.rgb, sea737 ); } }');   /* 723e: the atlas where aPh712t.z is 1; pure black is the tiler's no-data, the vertex colour stays. 737: so is Blue Marble's flat ocean fill (RGB 2,5,20: measured 100% of open-sea tiles, under 0.5% of dark land), or the sea draws black past 20 km */
@@ -148,35 +157,64 @@ window.WFR_TRAVEL712 = (function () {
       var sp = rec.b.size / C.GRID; if (rec.fmax <= 0 && rec.z >= C.SEA_Z) return 0;
       return sp * C.GRID * Math.min(1, Math.max(C.FLAT, (rec.fmax - Math.max(0, rec.fmin)) / sp)); }
 
+    /* 822 (Nov 14 2026): THE COLOUR HEIGHT. The terrain's sources change with the zoom: to z10 SRTM / GMTED / ETOPO (Miami's land 8-17 m), from z11 the fine
+       surveys (USGS NED's bare earth: the same land 0.5-2 m, the sea exactly 0). Every colour rule that reads a height near the waterline (the coast's sand,
+       755b's harbour water and its low-land sand) then gave a z11 tile one answer and its z10 or z9 neighbour another: whole squares of sand, and water
+       on the beach, cut along the tile edges (Miami's square seams and its pale wash). Here, the vertex colours (the atlas tint, worn where NASA's pixel
+       is open ocean or not loaded yet) read ONE height family everywhere: a vertex on land takes the larger of its own height and the z10 data's height
+       there (the coarse family every tile has an ancestor in), so low land is low only when both say so; the sea stays the vertex's own. The shader's
+       own height rules are mended in world-look755b.js. The geometry never changes (the ground's shape stays its own data). */
+    function ancestor822(rec) { for (var z = Math.min(C822.ZC, rec.z - 1); z >= 0; z--) { var dz = rec.z - z, r = tiles.get(keyOf(z, rec.x >> dz, rec.y >> dz)); if (r && r.field) return { r: r, n: 1 << dz, x: rec.x >> dz, y: rec.y >> dz }; } return null; }
+    function colourH822(a, rec, u, v) { var r = a.r; return sampleField(r.field, r.u0 + (rec.x - a.x * a.n + u) / a.n * r.s, r.v0 + (rec.y - a.y * a.n + v) / a.n * r.s); }
+    /* 822 follow-up: the open sea near a tile, ONCE a build: the z8 pixels round the tile (its window plus SEA m each way, across the z8 tile's edge into
+       its loaded neighbours) marked at DEEP or deeper, then grown SEA m each way (a square, a row pass and a column pass); a vertex reads its z8 pixel */
+    function seaNear822(a, rec, mpp) {
+      var r = a.r, n = a.n, K = Math.ceil(C822.SEA / mpp), f = function (u) { return (r.u0 + (rec.x - a.x * n + u) / n * r.s) * PX; }, g = function (v) { return (r.v0 + (rec.y - a.y * n + v) / n * r.s) * PX; };
+      var x0 = Math.floor(f(0)) - K, y0 = Math.floor(g(0)) - K, w = Math.ceil(f(1)) + K - x0 + 1, h = Math.ceil(g(1)) + K - y0 + 1, deep = new Uint8Array(w * h), tmp = new Uint8Array(w * h), out = new Uint8Array(w * h);
+      var sk = (r.srcKey || r.key).split('/'), sz = +sk[0], sx = +sk[1], sy = +sk[2], nb = {};
+      for (var y = 0; y < h; y++) for (var x = 0; x < w; x++) {
+        var px = x0 + x, py = y0 + y, ox = Math.floor(px / PX), oy = Math.floor(py / PX), fld = r.field;
+        if (ox || oy) { var nk = ox + ',' + oy; if (!(nk in nb)) { var t2 = tiles.get(keyOf(sz, sx + ox, sy + oy)); nb[nk] = t2 && t2.field && t2.real ? t2.field : null; } fld = nb[nk]; if (!fld) continue; }
+        if (fld[(py - oy * PX) * PX + (px - ox * PX)] <= C822.DEEP) deep[y * w + x] = 1; }
+      for (y = 0; y < h; y++) { var run = -1e9; for (x = 0; x < w; x++) { if (deep[y * w + x]) run = x; if (x - run <= K) tmp[y * w + x] = 1; } run = 1e9; for (x = w - 1; x >= 0; x--) { if (deep[y * w + x]) run = x; if (run - x <= K) tmp[y * w + x] = 1; } }
+      for (x = 0; x < w; x++) { run = -1e9; for (y = 0; y < h; y++) { if (tmp[y * w + x]) run = y; if (y - run <= K) out[y * w + x] = 1; } run = 1e9; for (y = h - 1; y >= 0; y--) { if (tmp[y * w + x]) run = y; if (run - y <= K) out[y * w + x] = 1; } }
+      return function (u, v) { var x = Math.floor(f(u)) - x0, y = Math.floor(g(v)) - y0; return x >= 0 && y >= 0 && x < w && y < h ? out[y * w + x] : 0; };
+    }
+    function anc822(rec, z) { var dz = rec.z - z; if (dz < 0) return null; var r = dz ? tiles.get(keyOf(z, rec.x >> dz, rec.y >> dz)) : rec; return r && r.field ? { r: r, n: 1 << dz, x: rec.x >> dz, y: rec.y >> dz } : null; }
     function depth737(rec, u, v) { for (var dz = 1; dz <= 6 && dz <= rec.z; dz++) { var n = 1 << dz, x = rec.x >> dz, y = rec.y >> dz, r = tiles.get(keyOf(rec.z - dz, x, y)); if (r && r.field) { var h = sampleField(r.field, r.u0 + (rec.x - x * n + u) / n * r.s, r.v0 + (rec.y - y * n + v) / n * r.s); if (h < 0) return h; } } return -30; }   // 737: the remote terrain has no sea floor past z10 (its sea is exactly 0): the depth comes from the nearest ancestor that has one; none says land is beside her, so shallow
     function build(rec) {   // one tile: a GRID x GRID sheet in the tile's own mercator metres (scaled by the frame's k), plus a skirt round its edge
       var N = C.GRID, V = (N + 1) * (N + 1), E = 4 * (N + 1), s = WORLD / Math.pow(2, rec.z), b = boundsOf(f, rec.z, rec.x, rec.y), skirt = Math.max(30, b.size * 0.04);
       var pos = new Float32Array((V + E) * 3), col = new Float32Array((V + E) * 3), hv = new Float32Array(V), idx = [], fld = rec.field, U0 = rec.u0, V0 = rec.v0, SS = rec.s, minH = 1e9, maxH = -1e9, eps = 0.5 / N;
       for (var j = 0; j <= N; j++) for (var i = 0; i <= N; i++) { var h = sampleField(fld, U0 + i / N * SS, V0 + j / N * SS), q = j * (N + 1) + i; hv[q] = h; }
       var lats = W.tileRowLats(f, rec.z, rec.x, rec.y, b), latTop = lats[0], latBot = lats[1], o725 = W.tilePlace(f, rec.z, rec.x, rec.y);
+      var hc = new Float32Array(V), a822 = C822.ON && rec.z > C822.ZC ? ancestor822(rec) : null;   /* 822: the colour height (0 on the sea) */
+      var bch = new Float32Array(V + E), sea822 = C822.ON ? anc822(rec, C822.ZS) : null, t822 = performance.now(), near822 = sea822 ? seaNear822(sea822, rec, b.size * sea822.n / (sea822.r.s * PX)) : null, ms822 = performance.now() - t822;   /* 822 follow-up: 1 where the low land may be a beach */
+      if (near822 && !(stats.b822Max >= ms822)) stats.b822Max = +ms822.toFixed(2);   // the open sea's look, the costliest part (the bench reads it)
       var edgeSlope = 0;   // W-TERRAIN: the steepest ground along the edge (the skirt must hide a coarser neighbour's step there)
       for (j = 0; j <= N; j++) for (i = 0; i <= N; i++) { q = j * (N + 1) + i; var k = q * 3, hh = hv[q], y = Math.max(0, hh);
+        var c822 = a822 ? colourH822(a822, rec, i / N, j / N) : hh; hc[q] = hh <= 0 ? 0 : Math.max(hh, c822);
+        bch[q] = near822 && hh < 3 && (hh <= 0 || Math.abs(hh - Math.max(0, c822)) < C822.AGREE) && near822(i / N, j / N) ? 1 : 0;   // the sea by the open sea 1 too (it never wears sand itself: its height is 0), so the beach runs to the water's edge; a polder's floor 0
         var tl = W.tileLocal(f, rec.z, rec.x, rec.y, i / N, j / N, o725); pos[k] = tl.x; pos[k + 1] = y; pos[k + 2] = tl.z; if (y < minH) minH = y; if (y > maxH) maxH = y;
         var hx = hv[j * (N + 1) + Math.min(N, i + 1)] - hv[j * (N + 1) + Math.max(0, i - 1)], hz = hv[Math.min(N, j + 1) * (N + 1) + i] - hv[Math.max(0, j - 1) * (N + 1) + i], step = 2 * b.size / N;
         if ((i === 0 || j === 0 || i === N || j === N) && hh > 0) edgeSlope = Math.max(edgeSlope, Math.hypot(hx, hz) / step);
-        tint(hh === 0 ? depth737(rec, i / N, j / N) : hh, Math.hypot(hx, hz) / step, latTop + (latBot - latTop) * j / N, col, k); }
+        tint(hh === 0 ? depth737(rec, i / N, j / N) : hh > 0 ? hc[q] : hh, Math.hypot(hx, hz) / step, latTop + (latBot - latTop) * j / N, col, k); }   // 822: land wears its colour height
       var fr = reliefOf(fld, U0, V0, SS); rec.fmin = fr[0]; rec.fmax = fr[1];   // the field's own range under the tile (every pixel, not the sheet's 33 x 33): the LOD's relief
       skirt = Math.max(skirt, Math.min(maxH - minH + 30, C.SKIRT_K * b.size / N * edgeSlope));
       for (j = 0; j < N; j++) for (i = 0; i < N; i++) { var a = j * (N + 1) + i, c = a + N + 1; idx.push(a, c, a + 1, a + 1, c, c + 1); }   // tiles.js's diagonal (H() below reads the same two triangles)
       var gridFaces = idx.length, edges = [[], [], [], []], vs = V;
       for (i = 0; i <= N; i++) { edges[0].push(i); edges[1].push(N * (N + 1) + i); edges[2].push(i * (N + 1)); edges[3].push(i * (N + 1) + N); }
       for (var ei = 0; ei < 4; ei++) { var e = edges[ei], first = vs, outA = ei === 0 || ei === 3;   // north and east wind one way, south and west the other: every skirt faces OUT
-        for (var g = 0; g < e.length; g++) { var kk = vs * 3, qq = e[g] * 3; pos[kk] = pos[qq]; pos[kk + 1] = pos[qq + 1] - skirt; pos[kk + 2] = pos[qq + 2]; col[kk] = col[qq] * 0.8; col[kk + 1] = col[qq + 1] * 0.8; col[kk + 2] = col[qq + 2] * 0.8; vs++; }
+        for (var g = 0; g < e.length; g++) { var kk = vs * 3, qq = e[g] * 3; pos[kk] = pos[qq]; pos[kk + 1] = pos[qq + 1] - skirt; pos[kk + 2] = pos[qq + 2]; col[kk] = col[qq] * 0.8; col[kk + 1] = col[qq + 1] * 0.8; col[kk + 2] = col[qq + 2] * 0.8; bch[vs] = bch[e[g]]; vs++; }
         for (i = 0; i < e.length - 1; i++) { var ea = e[i], eb = e[i + 1], sa = first + i, sb = first + i + 1; if (outA) idx.push(ea, eb, sa, eb, sb, sa); else idx.push(ea, sa, eb, eb, sa, sb); } }
       var geo = new THREE.BufferGeometry();
-      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+      geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); geo.setAttribute('aB822', new THREE.BufferAttribute(bch, 1));   /* 822 follow-up: the beach's leave (world-look755b.js) */
       geo.setIndex(idx.slice(0, gridFaces)); geo.computeVertexNormals();   // the sheet's normals alone; the skirt copies its edge's
       var nrm = geo.getAttribute('normal').array; vs = V; for (ei = 0; ei < 4; ei++) for (g = 0; g < edges[ei].length; g++) { nrm[vs * 3] = nrm[edges[ei][g] * 3]; nrm[vs * 3 + 1] = nrm[edges[ei][g] * 3 + 1]; nrm[vs * 3 + 2] = nrm[edges[ei][g] * 3 + 2]; vs++; }
       geo.setIndex(idx);
       var mesh = new THREE.Mesh(geo, o.materialFor ? o.materialFor(rec) : material); mesh.name = 'travel712:' + rec.key; mesh.frustumCulled = false; mesh.matrixAutoUpdate = false; mesh.visible = false; mesh.renderOrder = -9.4;
       mesh.castShadow = false; mesh.receiveShadow = false; mesh.layers.set(o.layer == null ? C.LAYER : o.layer);
       rec.gen = ++gen798;   /* 798: each built sheet's own number (what a road draped on it remembers) */
-      rec.mesh = mesh; rec.hv = hv; rec.skirt = skirt; rec.minH = minH; rec.maxH = maxH; rec.tris = idx.length / 3; place(rec); group.add(mesh); stats.built++; if (!rec.real) stats.virt++;
+      rec.mesh = mesh; rec.hv = hv; rec.hc = hc; rec.b822 = bch; rec.c822 = a822 ? keyOf(rec.z - Math.log2(a822.n), a822.x, a822.y) : null; rec.skirt = skirt; rec.minH = minH; rec.maxH = maxH; rec.tris = idx.length / 3; place(rec); group.add(mesh); stats.built++; if (!rec.real) stats.virt++;
       for (var L = 0; L < layers.length; L++) try { if (layers[L].onTile) layers[L].onTile(rec, api); } catch (err) { stats.fault = 'layer ' + layers[L].id + ': ' + (err && err.message || err); }
     }
     function place(rec) { var b = boundsOf(f, rec.z, rec.x, rec.y), tp = W.tilePlace(f, rec.z, rec.x, rec.y); rec.b = b; rec.mesh.position.set(tp.x, 0, tp.z); rec.mesh.scale.set(tp.scale, 1, tp.scale); rec.mesh.updateMatrix(); rec.mesh.matrixWorld.copy(rec.mesh.matrix); }
@@ -293,5 +331,5 @@ window.WFR_TRAVEL712 = (function () {
   }
 
   return { C: C, speedAt: speedAt, horizon: horizon, farOf: farOf, keyOf: keyOf, childrenOf: childrenOf, sampleField: sampleField, fieldOf: fieldOf, boundsOf: boundsOf, tint: tint,
-    makeMaterial: makeMaterial, makeStreamer: makeStreamer, makeClearer: makeClearer, version: 1, grey821: function () { return G821; } };
+    makeMaterial: makeMaterial, makeStreamer: makeStreamer, makeClearer: makeClearer, version: 1, grey821: function () { return G821; }, C822: C822 };
 })();

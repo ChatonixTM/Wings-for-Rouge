@@ -244,13 +244,15 @@
     if (why === 'host') try { G.toast(WORDS.left(W.hostName), 5200); } catch (e) { /* fine */ }
   }
 
-  /* ---------- the guest's save: its own fields only ---------- */
-  const LIVE = ['level', 'xp', 'hearts', 'chick', 'inv', 'toolIn', 'kind'];   /* what the guest keeps from the host's world: its bird (his words: "you still level up") */
-  function ownSave(s_) {
+  /* ---------- the guest's save: its own fields only (799: a reload mid-visit keeps what she earned there; before, only a clean leave did) ---------- */
+  const LIVE = ['level', 'xp', 'hearts', 'chick', 'inv', 'toolIn', 'kind', 'coins', 'runes', 'huethers', 'race782'];   /* what the guest keeps from the host's world: its bird (his words: "you still level up") and, 799, what she earns there: her pouch (the sheet: "your levels and your pouch come home with you") and the Race's cups that paid it */
+  const LIVE_SEEN = ['arrive783', 'arrive821', 'ledger817', 'craft787', 'coin39'];   /* 799: and the seen-keys that are hers alone: the countries she reached and the places she saw (their ledger), her craft bag and what she made (bought with the coins above), her first coin */
+  function ownSave(s_) {   /* 799: S is always HER bird (net721Apply sets only world, choices, dawns, clock), so a live value is hers, never the host's: taken whole, never added, so a clean leave (restoreOwn, then a full save) counts nothing twice */
     let live = null; try { live = JSON.parse(s_); } catch (e) { return s_; }
     if (W.memo && (W.status === 'host' || W.status === 'guest')) { W.memo.at = live.savedAt; saveWorld(W.memo); }   /* the fingerprint follows every save this phone writes in the world */
     if (W.role !== 'guest' || !W.own) return s_;
     const out = Object.assign({}, W.own); for (const k of LIVE) if (k in live) out[k] = live[k]; out.savedAt = live.savedAt;
+    if (live.seen && typeof live.seen === 'object') { const sn = Object.assign({}, out.seen && typeof out.seen === 'object' ? out.seen : {}); let n = 0; for (const k of LIVE_SEEN) if (k in live.seen) { sn[k] = live.seen[k]; n++; } if (n) out.seen = sn; }
     return JSON.stringify(out);
   }
   function creditWin() {   /* "Both get it": a Hawk won together counts in the guest's OWN save */
