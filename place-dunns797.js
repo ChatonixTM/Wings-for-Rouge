@@ -576,7 +576,7 @@ window.WFR_DUNNS797 = (function () {
   }
   function trisOf() { var n = 0; st.meshes.forEach(function (m) { var g = m.geometry, c = g.index ? g.index.count / 3 : (g.attributes.position.count / (m.isPoints ? 1 : 3)); if (m.isPoints) return; n += c * (m.isInstancedMesh ? m.count : 1); }); return Math.round(n); }
   function watch() {   // until built: wait for the patch (it is made 60 km out); after: a slow watch that hushes the sound once the patch is gone
-    try { if (!st.built && !st.building && !st.fault && X.D && X.D.group && X.dData && X.dData()) { st.building = true; requestAnimationFrame(buildSlice); }
+    try { if (!st.built && !st.building && !st.fault && X.D && X.D.group && X.D.built && X.dData && X.dData())   /* 828: the patch is built in slices: wait for its last */ { st.building = true; requestAnimationFrame(buildSlice); }
       if (st.built && st.sndOn && performance.now() - st.last > 400) sound(false, [1e6, 1e6, 1e6]); } catch (e) { st.fault = 'watch: ' + String(e && e.message || e); }
   }
   function tick(cam) {

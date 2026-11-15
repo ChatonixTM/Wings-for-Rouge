@@ -786,10 +786,30 @@ window.WFR_WORLDANIMALS = (function () {
     var k = e[0], d = K[k], n = e[2][0] + Math.floor(r() * (e[2][1] - e[2][0] + 1)), R = d.loop[0] + r() * (d.loop[1] - d.loop[0]), alt = d.alt[0] + r() * (d.alt[1] - d.alt[0]);
     var gr = { k: k, kind: 'flock', realm: 'air', id: cell.key + ':' + G.length, m: [], R: R, dir: r() < 0.5 ? -1 : 1, th: r() * TAU }, cx = q.x, cz = q.z, top = Math.max(0, H(cx, cz));
     for (var p = 0; p < 12; p++) { var t = p / 12 * TAU; top = Math.max(top, H(cx + Math.cos(t) * R, cz + Math.sin(t) * R)); }   // over the highest ground on its ring: never into a hill
-    var ll = WFR_WORLD.toLatLon(f, cx, cz); gr.lat = ll.lat; gr.lon = ll.lon; gr.y = top + alt;
+    var ll = WFR_WORLD.toLatLon(f, cx, cz); gr.lat = ll.lat; gr.lon = ll.lon; gr.y = top + alt; gr.alt = alt; gr.yT = st.t;   /* 801: the height is read again as the ground under it sharpens (airY) */
     for (var i = 0; i < n; i++) { var m = member(gr, k, cx, cz, f, r, R); m.i = i; m.side = (r() - 0.5) * 6; m.dy = (r() - 0.5) * 4; gr.m.push(m); }
     G.push(gr);
   }
+
+  /* 801: a flock's height and a swimmer's water, read again as the ground streams in. A cell may be made before its ground has loaded (sampleCell's
+     6 s cap), from a coarse sheet: egrets were drawn at the height that coarse ground gave (about 1,040 m at the Serengeti, where the real ground is
+     ~1,460 m: 400 m inside the hills), and penguins put in water that the sharper sheet shows to be the shore. Twice a game-second a flock's height is
+     its ring's highest ground plus its own height again; a swimmer that the sheet now puts on land stands on it if its kind can (penguins, seals:
+     on the beach), and is not drawn if it cannot (a whale is never drawn on the shore). */
+  var SHORE801 = { penguin: 1, seal: 1 }, RE801 = 0.5;
+  function airY(gr, f) {
+    if (gr.alt == null || (gr.yT != null && st.t - gr.yT < RE801)) return gr.y; gr.yT = st.t;
+    var c = WFR_WORLD.toLocal(f, gr.lat, gr.lon), top = Math.max(0, H(c.x, c.z));
+    for (var p = 0; p < 12; p++) { var t = p / 12 * TAU; top = Math.max(top, H(c.x + Math.cos(t) * gr.R, c.z + Math.sin(t) * gr.R)); }
+    gr.y = top + gr.alt; return gr.y; }
+  function dry801(m, d, x, z) {   /* 2 when the sheet puts this swimmer's spot on land, 1 when the water there is too shallow for it, 0 in its water: re-read twice a game-second */
+    if (m.dryT != null && st.t - m.dryT < RE801 && Math.abs(x - m.dryX) < 3 && Math.abs(z - m.dryZ) < 3) return m.dry;
+    m.dryT = st.t; m.dryX = x; m.dryZ = z; var h = H(x, z), raw = rawAt(x, z); if (raw == null) return m.dry || 0;
+    m.dry = h > 0.01 && raw > 0 ? 2 : raw > -Math.min(d.depth || 1, 1) ? 1 : 0; return m.dry; }
+  function wet801(m, d, x, z) {   /* the other way: 0 while a land animal's spot is still land on the sheet, 2 when it is water deep enough to swim, 1 in between */
+    if (m.wetT != null && st.t - m.wetT < RE801 && Math.abs(x - m.wetX) < 3 && Math.abs(z - m.wetZ) < 3) return m.wet;
+    m.wetT = st.t; m.wetX = x; m.wetZ = z; var h = H(x, z), raw = rawAt(x, z); if (raw == null) return m.wet || 0;
+    m.wet = h > 0.01 && raw > 0 ? 0 : raw <= -Math.min(d.depth || 1, 1) ? 2 : 1; return m.wet; }
 
   /* ---------- 7. each frame: the cells round her, who is drawn, how each one reacts to her ---------- */
   function herNow() { var S = X.S, T = X.TR, h = st.her; h.x = S.pos.x; h.y = S.pos.y; h.z = S.pos.z; h.agl = S.pos.y - Math.max(0, H(S.pos.x, S.pos.z)); var ll = WFR_WORLD.toLatLon(T.f, S.pos.x, S.pos.z); h.lat = ll.lat; h.lon = ll.lon; h.yaw = S.yaw || 0; return h; }
@@ -857,18 +877,20 @@ window.WFR_WORLDANIMALS = (function () {
       for (var k in st.kinds) { var R = st.kinds[k]; R.n[0] = 0; R.n[1] = 0; R.n[2] = 0; R.near = 1e9; }
       var on = st.mode === 'travel' && X.TR && X.TR.on && X.TR.f, f = on ? X.TR.f : null, S = X.S;
       if (on) for (var c = 0; c < st.act.length; c++) { var G = st.act[c].groups; for (var g = 0; g < G.length; g++) { var gr = G[g], d = K[gr.k], R2 = st.kinds[gr.k]; if (!R2 || !R2.ok) continue;
-        for (var i = 0; i < gr.m.length; i++) { var m = gr.m[i]; motion(m, d, gr, st.t, MO); homeOf(gr, m, f, HO); var x = HO.x + MO.ox + m.fx + m.ex, z = HO.z + MO.oz + m.fz + m.ez, y, wat = -1e4, pitch = MO.pitch, roll = MO.roll, yaw = m.act ? m.yaw2 : MO.yaw, mv = MO.mv || !!m.act;
+        for (var i = 0; i < gr.m.length; i++) { var m = gr.m[i], rl801 = null, dry = 0, wet = 0; motion(m, d, gr, st.t, MO); homeOf(gr, m, f, HO); var x = HO.x + MO.ox + m.fx + m.ex, z = HO.z + MO.oz + m.fz + m.ez, y, wat = -1e4, pitch = MO.pitch, roll = MO.roll, yaw = m.act ? m.yaw2 : MO.yaw, mv = MO.mv || !!m.act;
           var dd = Math.hypot(x - S.pos.x, z - S.pos.z); if (dd > C.R_DROP) continue;   // despawned past 2.4 km (its cell keeps it for her return)
           var fz7 = false; if (m.gone748) { var F7 = WFR_FALL748.C; if (st.t >= m.gone748 && dd > F7.BACK_R) { m.gone748 = 0; m.fall748 = 0; m.hp748 = null; } else if (st.t - m.fall748 >= F7.WHITE) continue; else fz7 = true; } else if (m.hp748 != null && dd > WFR_FALL748.C.BACK_R) m.hp748 = null;   // 748: gone from the picture once it has turned white; whole again when she has left
-          if (gr.realm === 'land' || gr.realm === 'wade') { y = H(x, z) - (gr.realm === 'wade' ? d.sink || 0 : 0); if (m.act === 'face') mv = false; }
-          else if (gr.realm === 'air') y = gr.y + MO.y;
+          if (gr.realm === 'land' && (wet = wet801(m, d, x, z))) { if (wet < 2 || (!SHORE801[d.make] && !SHORE801[gr.k])) continue; y = MO.y > 0.3 ? 0 : MO.y; wat = 0; rl801 = 'sea'; if (d.make === 'penguin') pitch += Math.PI / 2 * 0.92; }   /* 801: a herd the sharper sheet puts in the sea: a penguin or a seal swims there; any other kind is not drawn */
+          else if (gr.realm === 'land' || gr.realm === 'wade') { y = H(x, z) - (gr.realm === 'wade' ? d.sink || 0 : 0); if (m.act === 'face') mv = false; }
+          else if (gr.realm === 'air') y = airY(gr, f) + MO.y;   /* 801 */
           else if (gr.realm === 'lake') { y = lv750(gr) + d.y + m.dy; wat = lv750(gr); }
+          else if ((dry = dry801(m, d, x, z))) { if (dry < 2 || (!SHORE801[d.make] && !SHORE801[gr.k])) continue; y = H(x, z); pitch = 0; roll = 0; rl801 = 'land'; }   /* 801: on the shore a penguin or a seal stands; in the shallows, or a whale on the shore, it is not drawn */
           else { y = MO.y; wat = 0; if (d.make === 'penguin') pitch += Math.PI / 2 * 0.92; }
           var v7 = mv ? 0 : 1;
           if (fz7) { var p7 = WFR_WORLD.toLocal(f, m.fl.lat, m.fl.lon); x = p7.x; z = p7.z; y = m.fl.y; yaw = m.fl.yaw; pitch = m.fl.p; roll = m.fl.r; v7 = R2.v[2] ? 2 : 1; }   // 748: at zero it stops where it stood
           else if (m.h748) { var h7 = m.h748, hu = (st.t - h7.t) / h7.len; if (hu >= 1) { m.fx += h7.kx; m.fz += h7.kz; m.h748 = null; }
             else { var he = hu * (2 - hu), hb = WFR_FALL748.body(m.k, hu, h7.how, (R2.v[0].m.radius || 2) * 0.4); x += h7.kx * he; z += h7.kz * he; if (gr.realm === 'land' || gr.realm === 'wade') y = H(x, z) - (gr.realm === 'wade' ? d.sink || 0 : 0); y += hb.l; yaw += hb.y; pitch += hb.p; roll += hb.r; if (R2.v[2]) v7 = 2; } }   // 748: the throw and the whole body's share of the hit
-          put(R2, v7, gr.id + ':' + i, x, y, z, yaw, pitch, roll, m.s, wat, gr.realm); m.wx = x; m.wy = y; m.wz = z; m.wyaw = yaw; m.wp = pitch; m.wr = roll; m.pf = st.placeN;
+          put(R2, v7, gr.id + ':' + i, x, y, z, yaw, pitch, roll, m.s, wat, rl801 || gr.realm); m.wx = x; m.wy = y; m.wz = z; m.wyaw = yaw; m.wp = pitch; m.wr = roll; m.pf = st.placeN;
           if (dd < R2.near) R2.near = dd; } } }
       if (st.dunns) dunnsPlace();
       for (var k2 in st.kinds) { var R3 = st.kinds[k2]; if (!R3.ok) continue; for (var v = 0; v < R3.v.length; v++) { var im = R3.v[v].im; im.count = R3.n[v]; if (R3.n[v]) { im.instanceMatrix.needsUpdate = true; im.geometry.attributes.aWater714.needsUpdate = true; } } }
@@ -902,7 +924,7 @@ window.WFR_WORLDANIMALS = (function () {
   var V3 = [0, 0, 0];
   function hostPt(e, x, y, z) { V3[0] = e[0] * x + e[4] * y + e[8] * z + e[12]; V3[1] = e[1] * x + e[5] * y + e[9] * z + e[13]; V3[2] = e[2] * x + e[6] * y + e[10] * z + e[14]; return V3; }
   function dunnsPlace() {
-    var D = X.D, P = st.dunns; if (!D || !D.group || D.group.parent !== X.scene || !P) return; D.group.updateMatrixWorld(); var e = D.group.matrixWorld.elements, rot = Math.atan2(e[8], e[10]), T = P.T, W = X.WATER || 0;
+    var D = X.D, P = st.dunns; if (!D || !D.group || !(D.group.parent === X.scene || (D.hold && D.group.parent === D.hold)) || !P) return; D.group.updateMatrixWorld(); var e = D.group.matrixWorld.elements, rot = Math.atan2(e[8], e[10]), T = P.T, W = X.WATER || 0;
     P.G.forEach(function (gr) { var R = st.kinds[gr.k]; if (!R || !R.ok) return; var d = K[gr.k];
       if (gr.kind === 'pools') { gr.m.forEach(function (m, i) { var u = ((st.t * m.v / m.L + m.ph) % 2 + 2) % 2, fw = u < 1, w = fw ? u : 2 - u, s = m.seg, dx = T[s + 3] - T[s], dz = T[s + 4] - T[s + 1], l = Math.hypot(dx, dz) || 1;
           var lx = T[s] + dx * w + dz / l * m.off, lz = T[s + 1] + dz * w - dx / l * m.off, ly = W + T[s + 2] + (T[s + 5] - T[s + 2]) * w + 0.2, p = hostPt(e, lx, ly, lz);
@@ -941,7 +963,7 @@ window.WFR_WORLDANIMALS = (function () {
         for (var c = 0; c < st.act.length; c++) { var G = st.act[c].groups; for (var g = 0; g < G.length; g++) { var gr = G[g], d = K[gr.k]; if (!st.kinds[gr.k]) { if (st.buildN !== st.frame) { st.buildN = st.frame; buildKind(gr.k); } }
           for (var i = 0; i < gr.m.length; i++) { var m = gr.m[i]; motion(m, d, gr, st.t, MO); react(m, d, gr, f, her, dt, MO); } } } }
       else st.act = [];
-      var D = X.D; if (D && D.group && D.group.parent === X.scene && X.dData && X.dData()) { if (!st.dunns) { st.dunns = dunnsBuild(); } if (st.dunns) st.dunns.G.forEach(function (gr) { if (!st.kinds[gr.k] && st.buildN !== st.frame) { st.buildN = st.frame; buildKind(gr.k); } }); }
+      var D = X.D; if (D && D.group && (D.group.parent === X.scene || (D.hold && D.group.parent === D.hold)) && X.dData && X.dData()) { if (!st.dunns) { st.dunns = dunnsBuild(); } if (st.dunns) st.dunns.G.forEach(function (gr) { if (!st.kinds[gr.k] && st.buildN !== st.frame) { st.buildN = st.frame; buildKind(gr.k); } }); }
       /* the pose: every kind drawn last frame, near ones every frame, far ones now and then */
       for (var k in st.kinds) { var R = st.kinds[k]; if (!R.ok || !(R.n[0] + R.n[1])) continue; var every = R.near < 250 ? 1 : R.near < 800 ? 3 : 8; R.acc = (R.acc || 0) + dt; if ((st.frame + R.k.length) % every === 0) { poseKind(R, R.acc); R.acc = 0; } }
       for (var k7 in st.kinds) { var R7 = st.kinds[k7]; if (R7.ok && R7.v[2] && R7.n[2]) actorPose(R7, dt); }   /* 748 */
@@ -999,6 +1021,7 @@ window.WFR_WORLDANIMALS = (function () {
   return { hogRange: hogRange, aim748: aim748, reach748: reach748, where748: where748, blow748: blow748, C: C, KINDS: K, init: init, tick: tick, peek: peek, drawn: drawn, biomeAt: biomeAt, roster: roster,
     resetMs: function () { st.ms = []; st.msMax = 0; }, forget: function () { st.cells.clear(); st.act = []; },   // the bench's revisit: every cell generated again from its key
     cell: function (key) { var c = st.cells.get(key); return c ? { key: c.key, n: c.n, sig: c.sig, b: c.biomes } : null; },
+    ground801: function (x, z) { var f = X && X.TR && X.TR.f, ll = f ? WFR_WORLD.toLatLon(f, x, z) : null; return { h: H(x, z), raw: rawAt(x, z), feat: ll ? featAt(ll.lat, ll.lon) : null }; },   // 801 (bench only): what the sheet says under a spot
     model: function (k) { KIT = KIT || (window.WFR_ANIMALS && WFR_ANIMALS.kit); PR = PR || (KIT && KIT.prim); var d = K[k]; if (!d || !KIT || !PR) return null; return d.kit ? KIT.build(d.kit) : (Q[d.make] || B[d.make] || S3[d.make])(); },   // pure: a kind's body (the unit bench)
     pose: function (k, m, mv, dt) { var d = K[k], a = { sp: d.kit || d.sp, v: mv ? d.v : 0, mv: d.realm === 'air' && mv ? 1 : 0, k: mv ? 1.3 : 0, stand: 0, curl: 0, state: mv ? 'approach' : 'idle', fold: 0, air: false, rear: 0, yaw: 0, atk: -1, swim: d.realm !== 'land' && d.realm !== 'air' }; if (d.make === 'penguin') posePenguin(m, a, dt); else KIT.pose(m, a, dt); return m; },
     set enabled(v) { st.enabled = !!v; if (!v) for (var k in st.kinds) if (st.kinds[k].ok) st.kinds[k].v.forEach(function (P) { P.im.count = 0; }); }, get enabled() { return st.enabled; } };

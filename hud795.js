@@ -102,6 +102,23 @@
     '#cmp795 i.way{width:10px;height:10px;top:6px;margin-left:-5px;border-radius:50%;background:transparent;border:2px solid var(--h7-mint);box-sizing:border-box;box-shadow:0 0 8px var(--h7-glow)}' +
     '#cmp795 s{position:absolute;left:50%;bottom:0;margin-left:-6px;width:12px;height:2px;border-radius:2px;background:var(--h7-mint);box-shadow:0 0 6px var(--h7-glow)}' +
     'html.talk782 #cmp795,html.c712 #cmp795{opacity:0}' +
+    /* 826: the mark she follows, a soft beam in its icon's colour with how far; past the strip's sight it waits at the edge with an arrow. Held, the strip marks a spot */
+    '#cmp795 .bm826{position:absolute;left:50%;top:0;bottom:0;width:0;will-change:transform;pointer-events:none}#cmp795 .bm826[hidden]{display:none}' +
+    /* 826 v2 (the coordinator, from mark826-7: "barely reads"): a dark seat so it reads over bright cloud, then the beam: the strip's full height in the icon's colour,
+       fading to either side, brightest at its centre line; the icon above the distance, the distance in white on a dark outline. All inside the strip */
+    '#cmp795 .bm826 .sd{position:absolute;left:-46px;width:92px;top:0;bottom:0;background:linear-gradient(90deg,rgba(4,6,18,0),rgba(4,6,18,.8) 28%,rgba(4,6,18,.8) 72%,rgba(4,6,18,0))}' +
+    '#cmp795 .bm826 .gl{position:absolute;left:-38px;width:76px;top:0;bottom:0;background:linear-gradient(90deg,rgba(0,0,0,0),var(--c826) 50%,rgba(0,0,0,0));opacity:.95}' +
+    '#cmp795 .bm826 .co{position:absolute;left:-15px;width:30px;top:0;bottom:0;background:linear-gradient(90deg,rgba(0,0,0,0),var(--c826) 35%,var(--c826) 65%,rgba(0,0,0,0))}' +
+    '#cmp795 .bm826 .ln{position:absolute;left:-1px;width:2px;top:0;bottom:0;background:linear-gradient(180deg,#fff,var(--c826) 50%,#fff);box-shadow:0 0 6px var(--c826),0 0 2px #fff}' +
+    '#cmp795 .bm826 svg{position:absolute;left:-6.5px;top:0;width:13px;height:13px;fill:#fff;filter:drop-shadow(0 0 1px #04061a) drop-shadow(0 0 1px #04061a) drop-shadow(0 0 3px var(--c826))}' +
+    '#cmp795 .bm826 b{position:absolute;left:-30px;width:60px;top:12.5px;text-align:center;font:700 9px/10px var(--h7-mono);color:#fff;text-shadow:0 0 1px #04061a,0 0 2px #04061a,1px 0 0 #04061a,-1px 0 0 #04061a,0 1px 0 #04061a,0 -1px 0 #04061a;white-space:nowrap}' +
+    '#cmp795 .bm826.edge[data-side=l] b{left:-8px;text-align:left}#cmp795 .bm826.edge[data-side=r] b{left:-52px;text-align:right}' +
+    '#cmp795 .bm826 u{display:none;position:absolute;top:2px;width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent}#cmp795 .bm826.edge u{display:block}' +
+    '#cmp795 .bm826.edge[data-side=l] u{left:-15px;border-right:7px solid var(--c826)}#cmp795 .bm826.edge[data-side=r] u{left:8px;border-left:7px solid var(--c826)}' +
+    '#cmp795.hold826{box-shadow:0 0 0 1px var(--h7-mint),0 0 16px var(--h7-glow)!important}' +
+    '#mk826{position:fixed;left:50%;top:calc(var(--h7-top) - 8px);width:min(214px,calc(100vw - 150px));height:44px;margin-left:calc(min(214px,calc(100vw - 150px)) / -2);z-index:3;pointer-events:auto;touch-action:none;' +
+      '-webkit-touch-callout:none;-webkit-user-select:none;user-select:none;-webkit-tap-highlight-color:transparent;background:transparent}' +
+    '#mk826.off,html.talk782 #mk826,html.c712 #mk826{pointer-events:none}' +
 
     /* ===== 2 THE JOB CARD ===== */
     P + '#ui #lvPill{position:fixed!important;left:calc(env(safe-area-inset-left,0px) + 12px)!important;top:calc(var(--h7-top) + 36px)!important;margin:0!important;' +
@@ -296,6 +313,8 @@
     P + '.pc795 .go:active{transform:scale(.98)}' +
     P + '.pc795 .no{display:block;margin:8px auto 0;min-height:36px;padding:0 16px;font:500 12.5px/1 var(--h7-body)!important;' + pill + 'background:transparent!important}' +
     P + '#wmap712 .wcap795{color:var(--h7-ink)}' +
+    P + '.pc795 .row826{display:flex;justify-content:center;align-items:center;gap:10px;margin-top:8px}' + P + '.pc795 .row826 .no{margin:0;min-height:44px}' +   /* 826: Mark it beside Not now, both 44 px */
+    P + '.pc795 .mk826{min-height:44px;min-width:112px;padding:0 18px;font:700 13px/1 var(--h7-head)!important;letter-spacing:.1em!important;text-transform:uppercase;' + pill + 'border-color:var(--h7-mint)!important;color:var(--h7-mint)!important;box-shadow:0 0 14px -4px var(--h7-glow)!important}' +
     '';
   }
 
@@ -341,6 +360,18 @@
     var hud = document.querySelector('#ui .hud') || $('ui'), cmp = document.createElement('div'); cmp.id = 'cmp795'; cmp.setAttribute('aria-hidden', 'true');
     cmp.innerHTML = "<div class='tape'>" + stripSvg() + "</div><i class='goal'></i><i class='pin' hidden></i><i class='way' hidden></i><s></s>"; hud.appendChild(cmp);
     var tape = cmp.querySelector('.tape'), gEl = cmp.querySelector('.goal'), pEl = cmp.querySelector('.pin'), wEl = cmp.querySelector('.way');
+    /* 826: the beam (DOM, made here once; each frame only moves it) and the strip's hold (a clear 44 px band over the strip, no new button) */
+    var bEl = document.createElement('div'); bEl.className = 'bm826'; bEl.hidden = true; bEl.innerHTML = "<span class='sd'></span><span class='gl'></span><span class='co'></span><span class='ln'></span><svg viewBox='0 0 16 16' aria-hidden='true'><path d=''/></svg><u></u><b></b>"; cmp.insertBefore(bEl, cmp.querySelector('s'));
+    var bPath = bEl.querySelector('path'), bKm = bEl.querySelector('b'), BM = { i: null, side: null, km: null };
+    var hit = document.createElement('div'); hit.id = 'mk826'; hit.className = 'off'; hit.setAttribute('aria-label', 'Hold the compass to mark a spot'); hud.appendChild(hit);
+    var HG = null, hdrop = function () { if (HG) { clearTimeout(HG.t); HG = null; } cmp.classList.remove('hold826'); };
+    hit.addEventListener('pointerdown', function (e) { e.preventDefault(); hdrop(); if (!e.isPrimary) return; var g0 = { id: e.pointerId, x: e.clientX, y: e.clientY }; cmp.classList.add('hold826');
+      g0.t = setTimeout(function () { if (HG !== g0) return; HG = null; cmp.classList.remove('hold826'); H.holds826 = (H.holds826 || 0) + 1; try { if (api.markHold) api.markHold(); } catch (x) { if (++H.errors < 4) console.warn('hud795 826: ' + (x && x.message)); } }, 550); HG = g0; });
+    hit.addEventListener('pointermove', function (e) { if (HG && HG.id === e.pointerId && Math.hypot(e.clientX - HG.x, e.clientY - HG.y) > 12) hdrop(); });
+    hit.addEventListener('pointerup', function (e) { if (!HG || HG.id !== e.pointerId) return; hdrop(); if (window.UI795 && UI795.toast) UI795.toast('Hold the compass to mark where you are.', { kicker: 'Markers', icon: 'pin', ms: 2400 }); });   /* a short tap only says how */
+    hit.addEventListener('pointercancel', hdrop); hit.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+    hit.addEventListener('touchstart', function (e) { e.preventDefault(); }, { passive: false });   /* iOS: no magnifier, no callout, no click after the hold */
+    function km826(d) { return d < 1000 ? Math.max(10, Math.round(d / 10) * 10) + ' m' : d < 20000 ? (d / 1000).toFixed(1) + ' km' : Math.round(d / 1000).toLocaleString('en-US') + ' km'; }
 
     /* 3 the round map: the island under the radar's dots (the radar's own glass made clear) */
     var mb = $('mapBtn705'), arrow = mb && mb.querySelector('.arrow'), mm = document.createElement('canvas'); mm.id = 'mm795'; mm.width = 136; mm.height = 136; mm.setAttribute('aria-hidden', 'true');
@@ -362,8 +393,18 @@
         var g = api.goal ? api.goal() : null, gr = api.goalRel ? api.goalRel() : undefined;   /* 816: a goal's place on the strip is its turn from her view (no north in it), as the round compass's arrow */
         if (gr !== undefined) { if (gr != null) { gEl.hidden = false; place(gEl, gr, w); } else gEl.hidden = true; H.last.goalRel = gr; }
         else if (g && S && S.pos) { var b = Math.atan2(g[0] - S.pos.x, g[1] - S.pos.z), rel = (((view - b) / D2R) % 360 + 540) % 360 - 180; gEl.hidden = false; place(gEl, rel, w); H.last.goalRel = rel; } else { gEl.hidden = true; H.last.goalRel = null; }
+        var bm = api.beam ? api.beam() : undefined;
+        if (bm !== undefined) {   /* 826: the mark she follows, at the round compass's own angle (bm.rel: + is right) */
+          if (!pEl.hidden) pEl.hidden = true;
+          if (bm) { var inView = Math.abs(bm.rel) * K <= w / 2 - 16, bx = inView ? bm.rel * K : (bm.rel < 0 ? -1 : 1) * (w / 2 - 16), side = inView ? '' : bm.rel < 0 ? 'l' : 'r';
+            if (bEl.hidden) bEl.hidden = false; if (BM.i !== bm.i) { BM.i = bm.i; bEl.style.setProperty('--c826', bm.col); bPath.setAttribute('d', bm.path); bEl.dataset.i = bm.i; }
+            bEl.style.transform = 'translateX(' + bx.toFixed(1) + 'px)'; if (BM.side !== side) { BM.side = side; bEl.classList.toggle('edge', !inView); bEl.dataset.side = side; }
+            var kt = km826(bm.d); if (BM.km !== kt) { BM.km = kt; bKm.textContent = kt; } H.last.pinRel = bm.rel; H.beam826 = { i: bm.i, rel: +bm.rel.toFixed(1), x: +bx.toFixed(1), edge: !inView, side: side, km: kt, col: bm.col, bearing: +bm.bearing.toFixed(1), head: +h.toFixed(1) }; }
+          else { if (!bEl.hidden) bEl.hidden = true; H.last.pinRel = null; H.beam826 = null; }
+        } else {
         var pb = api.pinBearing ? api.pinBearing() : null;
-        if (pb != null && isFinite(pb)) { var pr = ((pb - h) % 360 + 540) % 360 - 180; pEl.hidden = false; place(pEl, pr, w); H.last.pinRel = pr; } else { pEl.hidden = true; H.last.pinRel = null; }
+        if (pb != null && isFinite(pb)) { var pr = ((pb - h) % 360 + 540) % 360 - 180; pEl.hidden = false; place(pEl, pr, w); H.last.pinRel = pr; } else { pEl.hidden = true; H.last.pinRel = null; } }
+        var mo = api.markOk ? !!api.markOk() : false; if (mo !== H.mo826) { H.mo826 = mo; hit.classList.toggle('off', !mo); if (!mo) hdrop(); }   /* 826: the strip takes a hold only out in the world, nothing over her */
         if (H.way && S && S.pos && !(api.away && api.away())) {   /* the place she chose on the chart: a teal flag, gone when she gets there */
           var wd = Math.hypot(H.way.x - S.pos.x, H.way.z - S.pos.z);
           if (wd < 22) { var nm = H.way.name; H.way = null; wEl.hidden = true; if (window.UI795 && UI795.toast) UI795.toast(nm + '.', { kicker: 'You are here', icon: 'pin', ms: 2600 }); }
@@ -540,7 +581,7 @@
         var l = document.createElement('div'); l.className = 'leg795'; l.setAttribute('aria-label', 'Map key');
         l.innerHTML = [['#c8314a', 'you'], ['ring', 'your job'], ['#b07a3c', 'twigs'], ['#e0a82e', 'tools'], ['#4f86c8', 'metal tools'], ['#4f9c40', 'building stuff']].map(function (k) { return "<span><i style='" + (k[0] === 'ring' ? 'background:transparent;border:3px solid #f2b134;box-shadow:0 0 0 1px #17457a' : 'background:' + k[0]) + "'></i>" + k[1] + '</span>'; }).join('');
         var foot = win.querySelector('.m705foot'); if (foot && foot.parentNode) foot.parentNode.insertBefore(l, foot.nextSibling); else win.appendChild(l);
-        var ctl = document.createElement('p'); ctl.className = 'ctl795'; ctl.textContent = 'Tap a place for its card. On the World tab, hold a spot to drop a pin.'; l.parentNode.insertBefore(ctl, l.nextSibling);
+        var ctl = document.createElement('p'); ctl.className = 'ctl795'; ctl.textContent = 'Tap a place for its card. Hold anywhere on either map to place a marker.';   /* 826 */ l.parentNode.insertBefore(ctl, l.nextSibling);
         var sb = document.createElement('div'); sb.className = 'nx795'; sb.id = 'scale795'; win.appendChild(sb);
         var cv = $('map705cv'); if (cv) cv.addEventListener('click', chartTap);
       }
@@ -563,10 +604,12 @@
       var S = api.S || {}, away = api.away ? api.away() : false, c = document.createElement('div'); c.className = 'pc795'; c.setAttribute('role', 'dialog');
       var dx = best[0] - (S.pos ? S.pos.x : 0), dz = best[1] - (S.pos ? S.pos.z : 0), dist = Math.hypot(dx, dz), deg = ((PI - Math.atan2(dx, dz)) / D2R + 360) % 360, way = WAYS[Math.round(deg / 45) % 8];
       var kind = best[3] === 'tree' && /nest/i.test(best[2]) ? 'nest' : best[3];
-      c.innerHTML = "<div class='k'>On the island</div><h4></h4><p></p><div class='d'></div>" + (away ? '' : "<button type='button' class='go'>Fly there</button>") + "<button type='button' class='no'>Not now</button>";
+      var can826 = api.canMark ? !!api.canMark() : false;   /* 826: a place she can mark says so */
+      c.innerHTML = "<div class='k'>On the island</div><h4></h4><p></p><div class='d'></div>" + (away ? '' : "<button type='button' class='go'>Fly there</button>") + "<div class='row826'><button type='button' class='no'>Not now</button>" + (can826 ? "<button type='button' class='mk826'>Mark it</button>" : '') + '</div>';
       c.querySelector('h4').textContent = best[2]; c.querySelector('p').textContent = PLACE_LINE[kind] || '';
       c.querySelector('.d').textContent = away ? 'Across the sea from you' : dist < 25 ? 'You are here' : (dist < 1000 ? Math.round(dist / 10) * 10 + ' m ' : (dist / 1000).toFixed(1) + ' km ') + way + ' of you';
       c.querySelector('.no').addEventListener('click', function () { c.remove(); });
+      var mk = c.querySelector('.mk826'); if (mk) mk.addEventListener('click', function () { c.remove(); if (api.markAt) api.markAt(best[0], best[1]); });
       var go = c.querySelector('.go'); if (go) go.addEventListener('click', function () { H.way = { x: best[0], z: best[1], name: best[2] }; c.remove(); var x = $('map705Close'); if (x) x.click();
         if (window.UI795 && UI795.toast) UI795.toast('Follow the teal flag on the strip.', { kicker: best[2], icon: 'pin', ms: 3000 }); });
       document.querySelector('.m705win').appendChild(c); e.stopPropagation();
@@ -576,7 +619,7 @@
       peek: function () {
         return { on: H.on, frames: H.frames, heading: +H.heading.toFixed(1), tapeX: +H.tapeX.toFixed(1), goalRel: H.last.goalRel == null ? null : +H.last.goalRel.toFixed(1), pinRel: H.last.pinRel == null ? null : +H.last.pinRel.toFixed(1),
           set: JSON.parse(JSON.stringify(H.set)), pz: H.pz, built: built, errors: H.errors, map: !!H.terrC, legend: !!(legend && legend.isConnected),
-          way: H.way ? H.way.name : null, wayRel: H.way && H.last.wayRel != null ? +H.last.wayRel.toFixed(1) : null, talk: TALK.slice(), tab: H.tab || null, now: nowWords() };
+          way: H.way ? H.way.name : null, wayRel: H.way && H.last.wayRel != null ? +H.last.wayRel.toFixed(1) : null, talk: TALK.slice(), tab: H.tab || null, now: nowWords(), beam826: H.beam826 || null, holds826: H.holds826 || 0 };
       },
       set: function (o) { if (o && o.size && SIZE[o.size]) H.set.size = o.size; if (o && (o.hand === 'l' || o.hand === 'r')) H.set.hand = o.hand; store(H.set); applySet(); },
       places: function () { return api.places ? api.places() : []; }, chartTap: function (x, y) { chartTap({ clientX: x, clientY: y, stopPropagation: function () {} }); },

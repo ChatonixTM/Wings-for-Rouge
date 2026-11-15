@@ -301,7 +301,7 @@ window.WFR_PEOPLE724 = (function () {
   function registerBuiltins() {
     var P = window.WFR_DUNNS712 && WFR_DUNNS712.place;
     if (P) addPlace({ id: 'dunns', name: P.name, lat: P.lat, lon: P.lon, r: 3600, folk: 'jm', build: dunnsBuild,
-      host: function () { var D = X.D; return D && D.group && D.group.parent === X.scene && D.d ? D.group : null; },
+      host: function () { var D = X.D; return D && D.group && (D.group.parent === X.scene || (D.hold && D.group.parent === D.hold)) && D.d ? D.group : null; },
       ground: function (lx, lz) { return (X.WATER || 0) + X.dG(lx, lz); } });
     /* Antigua and Tahoe stand on the streamed ground (H) in the travel zone until their own builders hand a host and a ground (addPlace again, same id).
        Coordinates DRAFT from memory, for Izumi to check on a chart before they ship. */

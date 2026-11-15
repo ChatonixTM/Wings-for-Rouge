@@ -204,7 +204,7 @@ window.WFR_QUESTS720 = (function () {
   }
 
   /* ---------- the real place: landmarks (her own position through WFR_WORLD) and lost things (touch) ---------- */
-  function dunnsActive() { var D = X.D; return !!(D && D.group && D.group.parent === X.scene && D.d && D.c); }
+  function dunnsActive() { var D = X.D; return !!(D && D.group && (D.group.parent === X.scene || (D.hold && D.group.parent === D.hold)) && D.d && D.c); }
   function fallsSeg() { var P = window.WFR_DUNNS712; return P && P.dunns ? P.dunns : null; }
   function segDist(px, pz, x0, z0, x1, z1) { var dx = x1 - x0, dz = z1 - z0, l2 = dx * dx + dz * dz, t = l2 ? Math.max(0, Math.min(1, ((px - x0) * dx + (pz - z0) * dz) / l2)) : 0; return Math.hypot(px - x0 - t * dx, pz - z0 - t * dz); }
   function lmHere(L) {   // { d metres, agl, ok } where she is now, or null when the landmark cannot be measured from here
