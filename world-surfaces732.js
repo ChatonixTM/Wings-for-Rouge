@@ -52,42 +52,109 @@ window.WFR_SURF732 = (function () {
      they break white. Where the sea meets the land (754's own sea mask, between sea and shore) a lace of foam washes in and out with the swell. The weather
      sets the mood (the page's sea805: calm on a clear day, rougher in rain, white-capped in a storm). The phases are kept here, wrapped, and follow 754's
      frame shifts, so a recentre never shows. Every number DRAFT (his eye). */
-  var S805 = { L: [110, 63, 37], TURN: [0, 25, -35], W: [1, 0.55, 0.35], LIGHT: 0.13, GLINT: 0.35, CAP: 1, FOAM: 0.85, SHORE: { AT: 0.62, WASH: 0.05, IN: 0.03, OUT: [0.04, 0.12], LACE: [0.78, 0.92], H: [0.25, 0.8] } };   /* SHORE: the foam line in the sea mask's own units (0 land, 1 sea): its middle, how far it washes, its soft edge toward the land, its fade into the sea; LACE the water maps' crests that break it; H the ground's height (m) over which flat water is inland, not the sea's edge (DRAFT) */
-  var U805 = { uD805a: { value: [1, 0, 1, 0] }, uD805b: { value: [1, 0, 1, 0] }, uP805: { value: [0, 0, 0, 0] }, uF805: { value: 0 }, uR805: { value: [0, 0] }, uV805: { value: 0 } }, w805 = { a: 0, cap: 0, foam: 0, dir: 0, light: 0, rain: 0, river: 0, sets: 0 };   /* still until the page sets a mood: Classic (frozen) never does */
-  function set805() { var d = w805.dir, D = U805.uD805a.value, E = U805.uD805b.value, P = U805.uP805.value;
+  var S805 = { L: [110, 63, 37], TURN: [0, 25, -35], W: [1, 0.55, 0.35], LIGHT: 0.13, GLINT: 0.35, CAP: 1, FOAM: 0.85, SHORE: { AT: 0.58, WASH: 0.05, IN: 0.03, OUT: [0.04, 0.12], LACE: [0.887, 0.01], H: [0.25, 0.8] } };   /* SHORE: the foam line in the sea mask's own units (0 land, 1 sea): its middle, how far it washes, its soft edge toward the land, its fade into the sea; LACE (805e) the lace's threshold on the water map's mean (0.886) and how far the swell's wash moves it; H the ground's height (m) over which flat water is inland, not the sea's edge (DRAFT) */
+  /* 805e A WIND SEA, NOT ONE REPEATING WAVE (the finishing round, Nov 18; Marth's new bar the same day, verbatim: "Further additions to the video base. Look at
+     what one made using the Same tools. Water. Clouds. All marine life ... Learn and adapt please"). Three sines crossed into a regular lattice: in a storm a
+     plain checker from 100-400 m. Now seven waves of many sizes (21-110 m, each its real deep-water speed), spread 55 degrees either side of the wind, their
+     sizes rising and falling in groups and their crests bent by the sea's own broad water maps (151 m and 613 m), so no two places line up. The method is
+     the textbook sum of directional waves (GPU Gems 1, ch. 1, Finch: the idea only, no code taken); the noise is the game's own water map. The light they
+     move is kept at the old three's strength (the same RMS), so a calm day stays calm. W: each wave's share; G, P: how hard the groups swell it and bend it. */
+  /* 805f THE SEA'S COLOUR (Su 40, Nov 18, after Marth's bar f08-sea.jpg: deep teal-green, lighter on the crests; a storm sea under a storm sky was still bright
+     Caribbean turquoise). DEEP: out in the world the deep water (755b's own depth read, the ground's colour: blue climbs as it shoals) is pulled toward a darker
+     teal-green, so the turquoise stays where the water is really shallow (Negril, the reefs); the island's home sea is never graded (its program passes no depth).
+     STORM: the weather pulls the water toward a dark grey-teal and the sky's own colour (the fog's), by level (GREY, the page's SEA805) and its fade-in (WX.k);
+     a clear day 0. Both before the white tops and the foam, which stay white. DEEP_B: the ground colour's green over its blue, which only the travel sea's depth ramp (world712-travel.js SEA) brings low: 0.53-0.56 from ~1,000 m down, 0.69 at 200 m, 0.86+ in the shallows; land and the land-sea blend at a waterline 1.0-1.6, and Negril's near-shore water (822's colour, 0.27 0.48 0.48) 1.0. Blue alone was tried first and read Negril's shore water (blue 0.48) as deep: its shallows went dark teal and B1 lost its waterline (measured and looked at, Nov 18). Graded whole at 0.6 and under, none from 0.7; and none within 25 km of home, whole from 60 km (HOME_KM), so the gate's seam with the home sea (20 km) is untouched. (779's own alpha was tried first: it is ~0 for hundreds of km round home, so Jamaica's deep went ungraded: measured, D1 deepDarker 0.) DEEP_K 0 until the page sets a mood (Classic never does). Every number DRAFT. */
+    S805.LINE = { L0: 0.03, W: 0.45, WASH: 1.5, BEND: 0.9, T: [3, 6.5, 10.5], TW: 0.16, TK: [0.75, 0.6, 0.45], TB: [2.6, 1.1] };   /* 805g (DRAFT, metres): the surf line where the ground colour's blue minus red is L0 (sand below 0, the sea's water above ~0.1), its half width W, its wash WASH, its bend BEND; the spent-foam lines T behind it, TW half wide, their strengths TK, bent TB by the 12 m and 5 m maps */
+  S805.GRADE = { HOME_KM: [25, 60], DEEP: [0.6, 0.8, 0.72], DEEP_B: [0.6, 0.7], STORM: [0.2, 0.29, 0.3], SKY: 0.3, DEEP_K: 1 };
+  S805.WAVES = { L: [110, 79, 61, 46, 35, 27, 21], TURN: [0, 24, -31, 47, -55, 12, -18], W: [0.742, 0.571, 0.467, 0.371, 0.297, 0.245, 0.2], G: 0.45, P: 0.8 };
+  var U805 = { uD805a: { value: [1, 0, 1, 0] }, uD805b: { value: [1, 0, 1, 0] }, uP805: { value: [0, 0, 0, 0] }, uF805: { value: 0 }, uR805: { value: [0, 0] }, uV805: { value: 0 }, uS805: { value: new Float32Array(28) }, uW805: { value: [0, 0, 0, 0] } }, w805 = { a: 0, cap: 0, foam: 0, dir: 0, light: 0, rain: 0, river: 0, grey: 0, sets: 0 };   /* still until the page sets a mood: Classic (frozen) never does. uS805: the seven waves (x, z of the way each runs, its phase, unused) */
+  function set805() { var d = w805.dir, D = U805.uD805a.value, E = U805.uD805b.value, P = U805.uP805.value, Q = U805.uS805.value, V = S805.WAVES;
     for (var i = 0; i < 3; i++) { var a = d + S805.TURN[i] * Math.PI / 180, x = Math.sin(a), z = Math.cos(a), k = 2 * Math.PI / S805.L[i], w = Math.sqrt(9.81 * k), ph = ((x * o754[0] + z * o754[1]) * k - w * t754) % (2 * Math.PI);
       if (i < 2) { D[i * 2] = x; D[i * 2 + 1] = z; } else { E[0] = x; E[1] = z; } P[i] = ph; }
-    E[2] = w805.a; E[3] = w805.cap; P[3] = w805.light; U805.uF805.value = w805.foam; U805.uR805.value[0] = w805.rain; U805.uR805.value[1] = t754 % 1000; U805.uV805.value = w805.river; }
-  var HEAD754 = 'uniform sampler2D uSea754; uniform vec4 uA754; uniform vec4 uB754; uniform float uK754; uniform vec4 uD805a; uniform vec4 uD805b; uniform vec4 uP805; uniform float uF805; uniform vec2 uR805; uniform float uV805;\n';
+    for (var j = 0; j < 7; j++) { var aj = d + V.TURN[j] * Math.PI / 180, xj = Math.sin(aj), zj = Math.cos(aj), kj = 2 * Math.PI / V.L[j], wj = Math.sqrt(9.81 * kj); Q[j * 4] = xj; Q[j * 4 + 1] = zj; Q[j * 4 + 2] = ((xj * o754[0] + zj * o754[1]) * kj - wj * t754) % (2 * Math.PI); Q[j * 4 + 3] = 0; }
+    E[2] = w805.a; E[3] = w805.cap; P[3] = w805.light; U805.uF805.value = w805.foam; U805.uR805.value[0] = w805.rain; U805.uR805.value[1] = t754 % 1000; U805.uV805.value = w805.river; U805.uW805.value[0] = w805.grey; U805.uW805.value[1] = w805.sets ? S805.GRADE.DEEP_K : 0; }   /* 805f: uW805 x the weather's grey, y the deep's grade */
+  var HEAD754 = 'uniform sampler2D uSea754; uniform vec4 uA754; uniform vec4 uB754; uniform float uK754; uniform vec4 uD805a; uniform vec4 uD805b; uniform vec4 uP805; uniform float uF805; uniform vec2 uR805; uniform float uV805; uniform vec4 uS805[ 7 ]; uniform vec4 uW805;\n';
   function set754() { if (typeof set805 === 'function') set805(); for (var i = 0; i < 4; i++) { var r = S754.R[i], x = o754[0] + S754.V[i][0] * t754, z = o754[1] + S754.V[i][1] * t754, a = (r[0] * x + r[1] * z) / S754.L[i], b = (r[0] * z - r[1] * x) / S754.L[i], o = i < 2 ? U754.uA754.value : U754.uB754.value, k = (i % 2) * 2; o[k] = a - Math.floor(a); o[k + 1] = b - Math.floor(b); } }
-  function text754(q, eye, mask, open) {   // the GLSL: q the world xz (vec2), eye the true camera (vec3), mask 1 on the sea, open 1 by the open sea (the shore foam's; '1.0' if not given). Writes diffuseColor
-    open = open || '1.0';
+  function text754(q, eye, mask, open, deep, foamMask, foamGate) {   // the GLSL: q the world xz (vec2), eye the true camera (vec3), mask 1 on the sea, open 1 by the open sea (the shore foam's; '1.0' if not given). Writes diffuseColor
+    open = open || '1.0'; deep = deep || '9.0';   /* deep (805f): the ground's depth read, its colour's green over blue (deep under DEEP_B); the home sea passes none: never deep */
     var n = function (x) { return (+x).toFixed(7); }, read = function (i, o) { var r = S754.R[i]; return 'texture2D( uSea754, vec2( ' + n(r[0]) + ' * q754.x + ' + n(r[1]) + ' * q754.y, ' + n(-r[1]) + ' * q754.x + ' + n(r[0]) + ' * q754.y ) * ' + n(1 / S754.L[i]) + ' + ' + o + ' ).r'; }, w = function (i, v) { return n(S754.W[i]) + ' * ( ' + v + ' - ' + n(S754.MEAN) + ' )'; }, c = S754.FOAM;
     return ['{ vec2 q754 = ' + q + '; float s754 = max( 1.0, ' + eye + '.y / ' + n(S754.HS) + ' ), d754 = length( vec3( q754.x - ' + eye + '.x, ' + eye + '.y, q754.y - ' + eye + '.z ) );',
       '  float k754 = uK754 * ( ' + mask + ' ) * ( 1.0 - smoothstep( ' + n(S754.FADE0) + ' * s754, ' + n(S754.FADE1) + ' * s754, d754 ) );',
+      /* 805f: the deep's teal-green and the weather's grey, at every distance (the far sea too), before the swell's light, the white tops and the foam */
+      /* 805g: the metres a pixel spans, and (ground only) the metres from the soft waterline, positive seaward: screen derivatives, read here at the top level (never inside a branch) */
+      '  float mpp805 = max( length( dFdx( q754 ) ), length( dFdy( q754 ) ) );',
+      /* 805g: the surf is measured on the ground's own vertex colour, blue minus red (foamMask): linear inside each triangle, so its gradient in the WORLD (the
+         screen-to-world Jacobian) is exact, the same at every pixel of a triangle and at its edges, and the metres to the line are true; it is read only inside the
+         coast's own blend (foamGate, 755b's soft sea mask, 0.01-0.99), so open water never draws a line. Tried and cut on the way, each looked at at 60 m and 300 m:
+         fwidth's guess of a gradient (dotted dashes), the soft mask's own units (white blotches where the blend is gentle), the soft mask's own gradient (it is a
+         clamped colour test: at a triangle's edge the GPU's helper pixels extrapolate past its clamps, dotted stubs along the grid; capping it did not cure them),
+         its slope estimated from the colours (white blotches), a contour of the 8-bit water map (pixel squiggles), blue minus red unguarded (a line in open water) */
+      foamMask ? ['  float fl805 = ' + foamMask + ', fg805 = clamp( ' + foamGate + ', 0.0, 1.0 ); vec2 qx805 = dFdx( q754 ), qy805 = dFdy( q754 ); float mx805 = dFdx( fl805 ), my805 = dFdy( fl805 ), dt805 = qx805.x * qy805.y - qx805.y * qy805.x;',
+        '  float gl805 = length( vec2( mx805 * qy805.y - my805 * qx805.y, qx805.x * my805 - qy805.x * mx805 ) / ( abs( dt805 ) > 1e-9 ? dt805 : 1e-9 ) );',
+        '  float dm805 = ( fg805 > 0.01 && fg805 < 0.99 && gl805 > 0.0005 ) ? ( fl805 - ' + n(S805.LINE.L0) + ' ) / gl805 : 999.0;'].join('\n') : '',   /* metres from the surf's line, positive seaward; 999 off the coast's blend */
+      '  float g805 = clamp( ' + mask + ', 0.0, 1.0 ) * step( 0.001, uK754 );',
+      '  if ( g805 > 0.001 && uW805.x + uW805.y > 0.001 ) {',
+      '    diffuseColor.rgb *= mix( vec3( 1.0 ), vec3( ' + S805.GRADE.DEEP.map(n).join(', ') + ' ), g805 * uW805.y * ( 1.0 - smoothstep( ' + n(S805.GRADE.DEEP_B[0]) + ', ' + n(S805.GRADE.DEEP_B[1]) + ', ' + deep + ' ) ) );',
+      '    vec3 t805 = vec3( ' + S805.GRADE.STORM.map(n).join(', ') + ' ) * clamp( 0.45 + 1.4 * dot( diffuseColor.rgb, vec3( 0.3, 0.59, 0.11 ) ), 0.5, 1.5 );',
+      '#ifdef USE_FOG',
+      '    t805 = mix( t805, fogColor * 0.7, ' + n(S805.GRADE.SKY) + ' );',
+      '#endif',
+      '    diffuseColor.rgb = mix( diffuseColor.rgb, t805, g805 * uW805.x ); }',
       '  if ( k754 > 0.002 ) {',
       '    float b754 = ' + read(1, 'uA754.zw') + ', a754 = ' + read(0, CL806 ? 'uA754.xy' : 'uA754.xy + ( b754 - 0.89 ) * vec2( 2.5, -1.9 )') + ', c754 = ' + read(2, 'uB754.xy') + ', e754 = ' + read(3, 'uB754.zw') + ';',
       '    diffuseColor.rgb *= 1.0 + k754 * clamp( ' + w(0, 'a754') + ' + ' + w(1, 'b754') + ' + ' + w(2, 'c754') + ' + ' + w(3, 'e754') + ', ' + n(-S754.LO) + ', ' + n(S754.HI) + ' );',
       '    float f754 = ' + n(S754.CAP) + ' * smoothstep( 0.955, 0.995, b754 ) * smoothstep( 0.93, 0.97, c754 ) + ' + n(S754.GLINT) + ' * smoothstep( 0.975, 1.0, a754 ) * smoothstep( 0.9, 0.97, b754 );',
       '    diffuseColor.rgb = mix( diffuseColor.rgb, vec3( ' + n(c[0]) + ', ' + n(c[1]) + ', ' + n(c[2]) + ' ), k754 * min( f754, 1.0 ) );',
       /* 805: the swells (their light, the sun on their crests, white tops in a storm) and the foam where the sea meets the land */
-      '    float s805 = ' + n(S805.W[0]) + ' * sin( dot( q754, uD805a.xy ) * ' + n(2 * Math.PI / S805.L[0]) + ' + uP805.x ) + ' + n(S805.W[1]) + ' * sin( dot( q754, uD805a.zw ) * ' + n(2 * Math.PI / S805.L[1]) + ' + uP805.y ) + ' + n(S805.W[2]) + ' * sin( dot( q754, uD805b.xy ) * ' + n(2 * Math.PI / S805.L[2]) + ' + uP805.z );',
+      /* 805e: seven waves; gA the 151 m map, gB the 613 m map, each about -1.5..1.5 (the map: mean 0.886, sd 0.024, measured): one swells a wave's group, the other bends its crest */
+      '    float gA805 = clamp( ( b754 - 0.886 ) * 40.0, -1.5, 1.5 ), gB805 = clamp( ( c754 - 0.886 ) * 40.0, -1.5, 1.5 ), s805 = 0.0;',
+      S805.WAVES.L.map(function (L, j) { var V = S805.WAVES, g = j % 2 ? 'gA805' : 'gB805', h = j % 2 ? 'gB805' : 'gA805', sg = j % 3 === 1 ? ' - ' : ' + ';
+        return '    s805 += ' + n(V.W[j]) + ' * clamp( 1.0 + ' + n(V.G) + ' * ' + g + ', 0.3, 1.7 ) * sin( dot( q754, uS805[ ' + j + ' ].xy ) * ' + n(2 * Math.PI / L) + ' + uS805[ ' + j + ' ].z' + sg + n(V.P) + ' * ' + h + ' );'; }).join('\n'),
       '    diffuseColor.rgb *= 1.0 + k754 * uD805b.z * ' + n(S805.LIGHT) + ' * s805;',
+      '    diffuseColor.rgb += vec3( -0.01, 0.03, 0.018 ) * ( k754 * uD805b.z * uP805.w * smoothstep( 0.2, 1.4, s805 ) );',   /* 805e: the crests a lighter teal-green (DRAFT) */
       '    diffuseColor.rgb += vec3( 0.95, 0.97, 1.0 ) * ( k754 * uD805b.z * uP805.w * ' + n(S805.GLINT) + ' * smoothstep( 1.1, 1.7, s805 ) * smoothstep( 0.9, 0.98, b754 ) );',
-      '    float w805 = k754 * uD805b.w * ' + n(S805.CAP) + ' * smoothstep( 1.0, 1.6, s805 ) * smoothstep( 0.82, 0.93, c754 );',
+      /* 805e: the white tops broken (the 37 m map's flecks), not whole crests gated by the 613 m map (which clumped them on the lattice) */
+      '    float w805 = k754 * uD805b.w * ' + n(S805.CAP) + ' * smoothstep( 0.95, 1.55, s805 ) * smoothstep( 0.884, 0.93, a754 );',
+      /* 805e: foam streaks lying along the wind (rough weather only): the water map's top flecks read long down the wind (45 m) and narrow across it (5 m),
+         the across line bent by the 151 m map so no two run straight side by side, only where the 613 m map is high (patches, not a ruled sheet), and near
+         only (gone by 650 m: far off they would merge into lines). uA754.x slides them downwind and wraps whole. (Nov 18: a first cut, 170 m by 9 m over the
+         whole sea, drew ruled parallel lines to the horizon, the 806 "lines in the water" again: looked at, and cut.) */
+      '    if ( uD805b.w > 0.01 && d754 < 650.0 ) { vec2 wd805 = uD805a.xy; float ac805 = dot( q754, vec2( -wd805.y, wd805.x ) ) + 14.0 * gA805; float sr805 = texture2D( uSea754, vec2( dot( q754, wd805 ) / 45.0 + uA754.x, ac805 / 5.0 ) ).r;',
+      '      w805 += k754 * uD805b.w * 0.45 * smoothstep( 0.95, 0.99, sr805 ) * smoothstep( 0.0, 1.0, gB805 ) * ( 1.0 - smoothstep( 250.0, 650.0, d754 ) ); }',
       /* 805 foam fix (Nov 18): the foam was 4m(1-m) over the WHOLE of the mask's fade, and that fade is the ground's vertex colours blending over tens of metres,
          onto the land and round inland ponds: a pale wide smear, not a lace (the 834 builder's pictures). Now a thin line on the WATER side of the waterline (the
          mask from SHORE.AT, never under it), washing in and out with the swell (WASH), and only by the open sea (open: 822's beach leave, 0 inland) */
       '    float m805 = clamp( ' + mask + ', 0.0, 1.0 ), x805 = ' + n(S805.SHORE.AT) + ' + ' + n(S805.SHORE.WASH) + ' * clamp( s805 / 1.9, -1.0, 1.0 );',
-      '    float e805 = smoothstep( x805 - ' + n(S805.SHORE.IN) + ', x805 + ' + n(S805.SHORE.IN) + ', m805 ) * ( 1.0 - smoothstep( x805 + ' + n(S805.SHORE.OUT[0]) + ', x805 + ' + n(S805.SHORE.OUT[1]) + ', m805 ) ) * clamp( ' + open + ', 0.0, 1.0 ) * uF805 * ' + n(S805.FOAM) + ' * ( 1.0 - smoothstep( ' + n(S754.FADE0) + ' * s754, ' + n(S754.FADE1) + ' * s754, d754 ) ) * ( 0.45 + 0.55 * smoothstep( -0.6, 1.2, s805 ) ) * smoothstep( ' + n(S805.SHORE.LACE[0]) + ', ' + n(S805.SHORE.LACE[1]) + ', max( a754, b754 ) );',
+      /* 805g CLEAN SURF (Marth, Nov 18, on look2/shore-60.jpg, verbatim: "all three circled parts aren't clean. ESPECIALLY the bottom circle /oval"): the 805e
+         lace was the water map's blobs under a threshold: white splotches. Now LINES: the soft waterline's own contour measured in METRES (the mask's own
+         step across a pixel is its antialias), crisp at 60 m and at 300 m: the surf line
+         (LINE.W each side) washing in and out with the swell (LINE.WASH m), bent a little and broken into long runs by the 31 m water map; behind it, seaward, a
+         net of thin curving threads of spent foam (the 11 m map's middle contour, LINE.TW wide in metres), thinning out by LINE.NET[1] m. Nothing on the land side.
+         Ground only (the open sea has no shore). A first cut drew parallel lines with dotted pixel dashes (fwidth's guess of the gradient): looked at, replaced. */
+      '    float e805 = 0.0;',
+      !foamMask ? '' : ['    if ( dm805 > -3.0 && dm805 < ' + n(S805.LINE.T[S805.LINE.T.length - 1] + 5) + ' && uF805 > 0.0 && d754 < 1800.0 ) {',
+      '      float aa805 = 0.75 * mpp805, b1805 = texture2D( uSea754, q754 / 12.0 + uA754.zw ).r - 0.886, b2805 = texture2D( uSea754, q754.yx / 5.0 - uA754.xy ).r - 0.886, n3805 = texture2D( uSea754, q754.yx / 31.0 - uA754.xy ).r;',
+      '      float x805m = dm805 - ' + n(S805.LINE.WASH) + ' * clamp( s805 / 1.9, -1.0, 1.0 ) + ' + n(S805.LINE.BEND) + ' * clamp( b1805 * 25.0, -1.0, 1.0 ), w805l = max( ' + n(S805.LINE.W) + ', 0.9 * mpp805 );',
+      /* the surf line: long runs (the 31 m map), a pixel of antialias, as thin as it is wide in metres */
+      '      float l805 = ( 1.0 - smoothstep( w805l - aa805, w805l + aa805, abs( x805m ) ) ) * smoothstep( 0.872, 0.882, n3805 ) * ( 1.0 - smoothstep( 900.0, 1800.0, d754 ) ); float tf805 = 1.0 - smoothstep( 250.0, 650.0, d754 );',   /* the line holds to ~1.5 km (a pixel of surf from the air); the thin threads go by 650 m */   /* far off the line holds about a pixel, whole (a surf line seen from the air), not thinned away */
+      /* the spent foam: thin lines behind it, each bent hard by two scales of the map (12 m and 5 m, an offset: the map's 8-bit steps never show), broken into runs */
+      S805.LINE.T.map(function (t, j) { var sg = j % 2 ? -1 : 1; return '      l805 = max( l805, ' + n(S805.LINE.TK[j]) + ' * tf805 * ( 1.0 - smoothstep( ' + n(S805.LINE.TW) + ' - aa805, ' + n(S805.LINE.TW) + ' + aa805, abs( x805m - ' + n(t) + ' + ' + n(sg * S805.LINE.TB[0]) + ' * clamp( b1805 * 25.0, -1.0, 1.0 ) + ' + n(S805.LINE.TB[1]) + ' * clamp( b2805 * 25.0, -1.0, 1.0 ) ) ) ) * min( 1.0, ' + n(S805.LINE.TW) + ' / aa805 ) * smoothstep( ' + n(0.878 + 0.003 * j) + ', ' + n(0.886 + 0.003 * j) + ', texture2D( uSea754, q754 / ' + n(37 + 9 * j) + ' + vec2( ' + n(0.31 * (j + 1)) + ', ' + n(0.17 * (j + 1)) + ' ) ).r ) );'; }).join('\n'),
+      '      e805 = l805 * clamp( ' + open + ', 0.0, 1.0 ) * uF805 * ' + n(S805.FOAM) + '; }'].join('\n'),
       /* 805b RAIN RINGS: in rain, rings open on the water near her (5 m cells, each its own beat and place; more of them the harder it rains) */
       '    if ( uR805.x > 0.01 ) { vec2 g805 = q754 / 5.0, c805 = floor( g805 ), f805 = fract( g805 ) - 0.5; float h805 = fract( sin( dot( c805, vec2( 12.9898, 78.233 ) ) ) * 43758.5453 );',
       '      vec2 o805 = ( vec2( fract( h805 * 7.13 ), fract( h805 * 3.71 ) ) - 0.5 ) * 0.5; float ph805 = fract( uR805.y * 0.9 + h805 * 13.7 ), r805 = ph805 * 0.42;',
-      '      float ring805 = ( 1.0 - smoothstep( 0.0, 0.035, abs( length( f805 - o805 ) - r805 ) ) ) * ( 1.0 - ph805 ) * step( h805, uR805.x ) * ( 1.0 - smoothstep( 60.0, 170.0, d754 ) ) * clamp( ' + mask + ', 0.0, 1.0 );',
+      /* 805g (Marth, Nov 18, verbatim: "The bird can see much further and the water drops stop. Don't like that"): the rings ran out at 60-170 m. Now they reach as far as the
+         sea's own swell fades: each ring line at least ~a pixel wide (rw805, in the 5 m cell's units) and fainter by as much, so a far ring is small and faint and
+         its average is the same; where a ring is under ~2 pixels it eases into that average (0.031 of the cells ringing), so there is no edge and no shimmer. */
+      '      float rw805 = max( 0.035, 0.7 * mpp805 / 5.0 ), ring805 = ( 1.0 - smoothstep( 0.0, rw805, abs( length( f805 - o805 ) - r805 ) ) ) * ( 1.0 - ph805 ) * step( h805, uR805.x ) * ( 0.035 / rw805 );',
+      '      ring805 = mix( ring805, 0.031 * uR805.x, smoothstep( 1.2, 2.6, mpp805 ) ) * ( 1.0 - smoothstep( ' + n(S754.FADE0) + ' * s754, ' + n(S754.FADE1) + ' * s754, d754 ) ) * clamp( ' + mask + ', 0.0, 1.0 );',
       '      diffuseColor.rgb = mix( diffuseColor.rgb, vec3( 0.86, 0.93, 0.98 ), ring805 * 0.55 ); }',
       '    diffuseColor.rgb = mix( diffuseColor.rgb, vec3( ' + n(c[0]) + ', ' + n(c[1]) + ', ' + n(c[2]) + ' ), min( w805 + e805, 0.9 ) );',
       '  } }'].join('\n');
   }
+  function deep805() {   /* 805f: the ground's depth read (green over blue), plus 9 (never deep) within HOME_KM of home; the pixel's latitude and longitude from 779's frame (world-look755b.js) */
+    var H = (window.WFR_WORLD && window.WFR_WORLD.HOME) || { lat: 16.5, lon: -77.0 }, k = S805.GRADE.HOME_KM, c = Math.cos(H.lat * Math.PI / 180);
+    return 'vColor.g / max( vColor.b, 0.01 ) + 9.0 * ( 1.0 - smoothstep( ' + k[0].toFixed(1) + ', ' + k[1].toFixed(1) + ', 111.2 * length( vec2( uOcA779.x + uOcA779.z * vW712t.x + uOcA779.w * vW712t.y - ' + H.lat.toFixed(4) + ', ( uOcA779.y + uOcB779.x * vW712t.x + uOcB779.y * vW712t.y - ' + H.lon.toFixed(4) + ' ) * ' + c.toFixed(5) + ' ) ) ) )'; }
   function uniforms754(sh) { for (var k in U754) sh.uniforms[k] = U754[k]; for (var k2 in U805) sh.uniforms[k2] = U805[k2]; }
   function patch754(sh, map) {   // the open sea's Phong program (the page calls this from its onBeforeCompile; the key carib712sea-phong stays)
     var a = 'vR712k = smoothstep( 700.0, 3000.0, d712 );', b = '#include <color_fragment>';
@@ -99,7 +166,8 @@ window.WFR_SURF732 = (function () {
   }
   var sea754 = { patch: patch754, shift: function (dx, dz) { o754[0] -= dx; o754[1] -= dz; n754.shifts++; set754(); if (window.WFR_LOOK755B) window.WFR_LOOK755B.shift(dx, dz); }, tick: function (t) { t754 = t; set754(); },
     amp: function (k) { U754.uK754.value = U754.uSea754.value ? S754.AMP * k : 0; },
-    mood805: function (a, cap, foam, dir, light, rain, river) { rain = rain || 0; river = river == null ? foam : river; if (w805.a === a && w805.cap === cap && w805.foam === foam && w805.dir === dir && w805.light === light && w805.rain === rain && w805.river === river) return; w805.a = a; w805.cap = cap; w805.foam = foam; w805.dir = dir; w805.light = light; w805.rain = rain; w805.river = river; w805.sets++; set805(); },   /* 805; 805b: rain; 805d: the rivers */
+    mood805: function (a, cap, foam, dir, light, rain, river, grey) { rain = rain || 0; river = river == null ? foam : river; grey = grey || 0; if (w805.a === a && w805.cap === cap && w805.foam === foam && w805.dir === dir && w805.light === light && w805.rain === rain && w805.river === river && w805.grey === grey && w805.sets) return; w805.a = a; w805.cap = cap; w805.foam = foam; w805.dir = dir; w805.light = light; w805.rain = rain; w805.river = river; w805.grey = grey; w805.sets++; set805(); },   /* 805; 805b: rain; 805d: the rivers; 805f: the weather's grey (0 clear) */
+    grade805: function (k) { S805.GRADE.DEEP_K = k; set805(); },   /* 805f (bench): the deep's grade, 1 as built; water805 D1 reads it with and without */
     peek805: function () { return { S: S805, mood: Object.assign({}, w805), D: U805.uD805a.value.slice().concat(U805.uD805b.value.slice()), P: U805.uP805.value.slice(), foam: U805.uF805.value }; }, peek: function () { return { on: ON, amp: U754.uK754.value, patched: n754.patched, shifts: n754.shifts, off: o754.slice() }; } };
   function canvasTex(fill, size) { var c = document.createElement('canvas'); c.width = c.height = size; var g = c.getContext('2d', { willReadFrequently: true }); g.fillStyle = fill; g.fillRect(0, 0, size, size); var t = new T.CanvasTexture(c); t.wrapS = t.wrapT = T.RepeatWrapping; t.anisotropy = 4; return { t: t, c: c, g: g }; }
   function load(src, done, fail) { var im = new Image(); im.onload = function () { try { done(im); } catch (e) { fail(e); } }; im.onerror = function () { fail(new Error('decode')); }; im.src = src; }
@@ -120,13 +188,13 @@ window.WFR_SURF732 = (function () {
     var vA = 'vW712t = wp712t.xz;', fA = '#include <alphamap_fragment>', fB = '#include <aomap_fragment>';
     if (sh.vertexShader.indexOf(vA) < 0 || sh.fragmentShader.indexOf(fA) < 0 || sh.fragmentShader.indexOf(fB) < 0 || sh.fragmentShader.indexOf('varying vec2 vW712t;') < 0) { st.faults.push('ground: an anchor is missing, not patched'); return; }
     sh.uniforms.uGr732 = { value: groundTex() }; sh.uniforms.uGrK732 = U.k; sh.uniforms.uDet732 = { value: (this.polygonOffset || MODE === 'nodetail') ? 0 : 1 }; uniforms754(sh); if (window.WFR_LOOK755B) window.WFR_LOOK755B.uniforms(sh, T, this.polygonOffset);
-    sh.vertexShader = (window.WFR_LOOK755B ? window.WFR_LOOK755B.headV() : '') + 'varying float vD732;\n' + sh.vertexShader.replace(vA, vA + ' vD732 = distance( wp712t.xyz, uEye712t );' + (window.WFR_LOOK755B ? window.WFR_LOOK755B.vert() : ''));
-    sh.fragmentShader = (window.WFR_LOOK755B ? window.WFR_LOOK755B.head() : '') + HEAD754 + 'uniform vec3 uEye712t; uniform sampler2D uGr732; uniform vec3 uGrK732; uniform float uDet732; varying float vD732;\n' + sh.fragmentShader
+    sh.vertexShader = (window.WFR_LOOK755B ? window.WFR_LOOK755B.headV() : '') + 'varying float vD732; attribute vec2 aR805; varying vec2 vR805;\n' + sh.vertexShader.replace(vA, vA + ' vD732 = distance( wp712t.xyz, uEye712t ); vR805 = aR805;' + (window.WFR_LOOK755B ? window.WFR_LOOK755B.vert() : ''));
+    sh.fragmentShader = (window.WFR_LOOK755B ? window.WFR_LOOK755B.head() : '') + HEAD754 + 'uniform vec3 uEye712t; uniform sampler2D uGr732; uniform vec3 uGrK732; uniform float uDet732; varying float vD732; varying vec2 vR805;\n' + sh.fragmentShader
       .replace(fA, [
         'float sh732 = 1.0;',
         'float m754 = uDet732 * smoothstep( 0.0, 0.03, diffuseColor.b - diffuseColor.g ) * smoothstep( 0.05, 0.12, diffuseColor.b - diffuseColor.r );',   // 754: the sea by its colour: blue over green and over red (737's ramp and the photo's water; the land never is)
         window.WFR_LOOK755B ? window.WFR_LOOK755B.text('m754', 'uDet755', 'uEye712t', 'vD732') : '',   // 755b: the sea in the main sea's colours, the land in the photos' grain and the island's palette
-        '{ float k732 = uDet732 * ( 1.0 - m754 ) * ( 1.0 - smoothstep( ' + f(C.FADE0) + ', ' + f(C.FADE1) + ', vD732 ) );',   // grain and relief fade with true distance; 754: a grass photo never lay right on the water
+        '{ float k732 = uDet732 * ( 1.0 - m754 ) * ( 1.0 - smoothstep( ' + f(C.FADE0) + ', ' + f(C.FADE1) + ', vD732 ) )' + (window.WFR_LOOK755B && window.WFR_LOOK755B.head() ? ' * ( 1.0 - 0.75 * sand755o )' : '') + ';',   /* 805g: the ground photo's grain and relief lie lighter on sand (755b's sand755o): an even beach, not a blotched one */   // grain and relief fade with true distance; 754: a grass photo never lay right on the water
         '  if ( k732 > 0.002 ) {',
         '    vec2 q732 = vec2( vW712t.x, -vW712t.y );',   // world x, and -z: the photo's tangent is +x, its bitangent -z, its normal +y
         '    vec3 a732 = texture2D( uGr732, q732 * ' + f(1 / C.GM1) + ' ).rgb, b732 = texture2D( uGr732, q732 * ' + f(1 / C.GM2) + ' + vec2( 0.37, 0.61 ) ).rgb;',
@@ -138,12 +206,17 @@ window.WFR_SURF732 = (function () {
         '    sh732 = clamp( ( max( dot( n732, L732 ), 0.0 ) + 0.08 ) / ( max( L732.y, 0.0 ) + 0.08 ), ' + f(C.SH_LO) + ', ' + f(C.SH_HI) + ' );',   // the sun on the bumped normal over the sun on the flat
         '#endif',
         '  } }',
-        text754('vW712t', 'uEye712t', 'm754', window.WFR_LOOK755B && window.WFR_LOOK755B.head() ? 'vB822 * ( 1.0 - smoothstep( ' + f(S805.SHORE.H[0]) + ', ' + f(S805.SHORE.H[1]) + ', vH755.x ) * max( 1.0 - smoothstep( 0.06, 0.2, 1.0 - vH755.y ), smoothstep( 0.3, 0.6, vW825 ) ) )' : '0.0'),   /* 805 foam fix: the shore's foam only by the open sea (vB822: 822's beach leave, world712-travel.js, 0 more than 3 km from deep water) and never where the ground stands above the sea (vH755.x over H m: water drawn on land, e.g. Biscayne Bay's flattened 2 m plateau, Miami), unless the shore is steep (a cliff keeps its surf) and the water is the sea's own, not 825's land cover's (vW825) */
+        text754('vW712t', 'uEye712t', 'm754', window.WFR_LOOK755B && window.WFR_LOOK755B.head() ? 'clamp( vB822 * 5.0, 0.0, 1.0 ) * ( 1.0 - smoothstep( ' + f(S805.SHORE.H[0]) + ', ' + f(S805.SHORE.H[1]) + ', vH755.x ) * max( 1.0 - smoothstep( 0.06, 0.2, 1.0 - vH755.y ), smoothstep( 0.3, 0.6, vW825 ) ) )' : '0.0', window.WFR_LOOK755B && window.WFR_LOOK755B.head() ? deep805() : '9.0', 'vColor.b - vColor.r', window.WFR_LOOK755B && window.WFR_LOOK755B.head() ? 'm754f' : 'm754'),   /* 805f: the depth read, faded out round home (25-60 km: the island's sea meets the travel sea at the gate, 20 km, exactly as before); 805 foam fix: the shore's foam only by the open sea (vB822: 822's beach leave, world712-travel.js, 0 more than 3 km from deep water) and never where the ground stands above the sea (vH755.x over H m: water drawn on land, e.g. Biscayne Bay's flattened 2 m plateau, Miami), unless the shore is steep (a cliff keeps its surf) and the water is the sea's own, not 825's land cover's (vW825) */   /* 805e (Nov 18, Kingston's Palisadoes): the leave is 1 on the sea's vertices and 0 on a land vertex that is no beach (a spit with an airport, a town, a cliff), so across the last cell before such a shore it fell to ~0.1 just where the foam's line sits, and an open coast had no surf at all; read x5 (clamped), it is whole along every shore within 3 km of deep water and still 0 far inland */
         /* 805c RIVERS AND LAKES MOVE: the street map's rivers and lakes (world-features.js: its water colour, laid over the ground with uDet732 = 0) shimmer as they
-           run: two of the sea's water maps drift across them at a river's pace, and the sun glints on the crests. The ribbon carries no direction, so the drift
-           is the same way everywhere (DRAFT; a true downstream flow needs the ribbon's own direction). Only once the page has set the sea's mood (Classic never does) */
+           run: two of the sea's water maps drift across them at a river's pace, and the sun glints on the crests. A lake's drift is the same way everywhere;
+           a river's runs down its own line (805e, below). Only once the page has set the sea's mood (Classic never does) */
         '{ float r805 = ( 1.0 - uDet732 ) * ( 1.0 - smoothstep( 0.03, 0.08, distance( vColor.rgb, vec3( 0.24, 0.47, 0.62 ) ) ) ) * uK754 * uV805 * ( 1.0 - smoothstep( 1500.0, 6000.0, vD732 ) );',
-        '  if ( r805 > 0.002 ) { float ra805 = texture2D( uSea754, vW712t / 9.0 + vec2( uR805.y * 0.08, uR805.y * 0.05 ) ).r, rb805 = texture2D( uSea754, vW712t / 23.0 + vec2( uR805.y * 0.035, -uR805.y * 0.06 ) ).r;',
+        '  if ( r805 > 0.002 ) { float ra805, rb805;',
+        /* 805e A RIVER FLOWS DOWNSTREAM: a waterway's ribbon carries vR805 (world-features.js: x the metres along its line, y 1000 + metres across it; OSM draws a
+           waterway the way it flows), so its ripples run as long streaks down the river at 1.6 and 1.1 m/s. A lake (or a mesh without it: y 0, or 1 from a
+           stale default) keeps the slow two-way shimmer. Speeds times 1000 are whole numbers, so the clock's wrap at 1000 s never jumps. */
+        '    if ( vR805.y > 500.0 ) { vec2 rf805 = vec2( vR805.y - 1000.0, vR805.x ); ra805 = texture2D( uSea754, rf805 / vec2( 5.0, 19.0 ) + vec2( 0.0, -uR805.y * 0.084 ) ).r; rb805 = texture2D( uSea754, rf805 / vec2( 11.0, 37.0 ) + vec2( 0.37, -uR805.y * 0.03 ) ).r; }',
+        '    else { ra805 = texture2D( uSea754, vW712t / 9.0 + vec2( uR805.y * 0.08, uR805.y * 0.05 ) ).r; rb805 = texture2D( uSea754, vW712t / 23.0 + vec2( uR805.y * 0.035, -uR805.y * 0.06 ) ).r; }',
         '    diffuseColor.rgb *= 1.0 + r805 * 1.1 * ( ra805 + rb805 - 1.78 );',
         '    diffuseColor.rgb = mix( diffuseColor.rgb, vec3( 0.9, 0.95, 1.0 ), r805 * 0.55 * smoothstep( 0.91, 0.98, ra805 ) * smoothstep( 0.85, 0.96, rb805 ) ); } }',
         fA].join('\n'))

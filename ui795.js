@@ -534,6 +534,7 @@
 
   /* ---------- the ship log, newest first: a bold title and one plain sentence a player cares about (DRAFTS for Marth's pen) ---------- */
   var SHIPS = [
+    { n: 156, title: 'Clean shores', line: 'The shore is clean now: a thin line of surf at the water’s edge, even sand and a crisp edge where the grass begins. Rain rings reach as far as you can see. Storms turn the sea dark grey-green, the deep open sea is a deeper teal, rivers run downstream, and the open sea rolls in waves of every size.' },
     { n: 155, title: 'Fly far', line: 'The stamina bar only starts once you have beaten the Doctor Bird, so the flight to Jamaica is free. After that, flaps cost much less, high up a flight costs no more than a glide, and an empty bar up high never takes your hearts.' },
     { n: 154, title: 'Indoors', line: 'Inside Notre-Dame, the Pantheon and the other rooms you can fly into, the sun and the moon no longer shine through the walls.' },
     { n: 153, title: 'Light and weather', line: 'The shores look right again: the sea’s foam is a thin line at the waterline, not a pale band on the sand. Golden hour comes at each place’s own dusk, fog lies on the bays at dawn and you can fly up out of it, towers fade into the haze, and a low sun glows. The weather counts now: a headwind tires you faster, rain makes your wings heavy, storm gusts push you, and rain rings open on the water. Stars and the moon no longer show through church domes.' },

@@ -90,6 +90,10 @@ window.WFR_LOOK755B = (function () {
       /* 825: THE BAYS NASA DRAWS OLIVE (Biscayne Bay: shallow sea-grass, green over blue and too bright for the line above): water where the height says sea
          and NASA's land cover says water (vW825: world712-travel.js; 0 on a mesh without it) */
       m + ' = max( ' + m + ', uK755 * ( ' + det + ' ) * smoothstep( 0.3, 0.6, vW825 ) );',
+      /* 805g (Marth, Nov 18, the shore "aren't clean"): the sea mask is the ground's colours blending over a whole grid cell, so sea paint and land paint lay half over
+         each other there: a greenish smear between the sand and the water. Now the paint takes a CRISP waterline (half way through the blend, the coast's own curve); the soft mask stays as ' + m + 'f for the surf, which is measured from it. sand755o: the sand's share, for 732's grain */
+      'float ' + m + 'f = ' + m + ', sand755o = 0.0;',
+      'if ( ' + m + ' > 0.01 && ' + m + ' < 0.99 && uK755 > 0.0 ) ' + m + ' = smoothstep( 0.45, 0.55, ' + m + ' );',   /* no raggedness: noise of 0.08 at 7 m, then 0.035 at 3 m, scalloped the edge in blobs (both looked at); the ground's own blend is the coast's own curve */
       /* THE SEA: the far sea's depth, read back off its own ramp (blue climbs as it shoals), in the main sea's colours; where NASA drew a shelf over it, how pale says how shallow */
       '{ float w755 = ( ' + m + ' ) * uK755;',
       '  if ( w755 > 0.002 ) { float b755 = vColor.b, p755 = clamp( ( diffuseColor.g - vColor.g ) * 2.5, 0.0, 1.0 );',
@@ -113,11 +117,11 @@ window.WFR_LOOK755B = (function () {
       '    float warm755 = smoothstep( 0.015, 0.06, c755.r - c755.g );',
       '    vec3 g755 = mix( ' + ramp(S755.GRASS, 'ga755.r') + ', ' + ramp(S755.DRY, 'ga755.r') + ', max( smoothstep( 0.46, 0.68, big755 ) * 0.45, smoothstep( 0.24, 0.36, lum755 + e755 * 0.5 ) * warm755 ) );',
       '    g755 = mix( g755, ' + ramp(S755.FOREST, 'gb755.r') + ', 1.0 - smoothstep( 0.1, 0.22, lum755 + e755 * 0.5 ) );',
-      '    float sand755 = max( smoothstep( 0.46, 0.58, lum755 + e755 * 0.5 ) * warm755, smoothstep( 0.02, 0.3, vH755.x ) * ( 1.0 - smoothstep( 0.6, 2.0, vH755.x + e755 * 3.0 ) ) * vB822 );',   /* 822: sand where NASA's pixel is bright and warm (a beach, a cay, a dune), and low land (under 0.6-2 m) by the open sea where the heights' sources agree (vB822: world712-travel.js). Was all land under 0.6-2 m: the US survey's land (0.5-2 m from z11; 8-17 m to z10) wore sand on a fine tile beside its coarse neighbour's green, whole squares cut along the tile edges, and a pale wash over Miami; the Dutch polders and the Ganges delta wore it too; the flat sea floor (0) too, never now */
-      '    g755 = mix( g755, ' + ramp(S755.SAND, 'ga755.g') + ', sand755 );',
+      '    float sand755 = max( smoothstep( 0.49, 0.55, lum755 + e755 * 0.5 ) * warm755, smoothstep( 0.02, 0.15, vH755.x ) * ( 1.0 - smoothstep( 1.1, 1.3, vH755.x + e755 * 1.2 + ( ga755.r - 0.5 ) * 0.6 ) ) * vB822 ); sand755o = sand755 * k755;',   /* 822: sand where NASA's pixel is bright and warm (a beach, a cay, a dune), and low land (under 0.6-2 m) by the open sea where the heights' sources agree (vB822: world712-travel.js). Was all land under 0.6-2 m: the US survey's land (0.5-2 m from z11; 8-17 m to z10) wore sand on a fine tile beside its coarse neighbour's green, whole squares cut along the tile edges, and a pale wash over Miami; the Dutch polders and the Ganges delta wore it too; the flat sea floor (0) too, never now */
+      '    g755 = mix( g755, ' + ramp(S755.SAND, '0.52 + 0.45 * ( ga755.g - 0.5 )') + ', sand755 );',
       '    g755 = mix( g755, ' + ramp(S755.ROCK, 'ga755.b') + ', smoothstep( 0.18, 0.4, up755 + e755 * 0.6 ) );',
       '    g755 = mix( g755, ' + ramp(S755.SNOW, 'gb755.g') + ', smoothstep( 0.56, 0.72, low755 + e755 * 0.4 ) );',
-      '    diffuseColor.rgb = mix( c755, g755 * ( 0.8 + 0.32 * big755 ), k755 * ' + n(S755.MIX) + ' );',
+      '    diffuseColor.rgb = mix( c755, g755 * mix( 0.8 + 0.32 * big755, 0.95 + 0.08 * big755, sand755 ), k755 * ' + n(S755.MIX) + ' );',
       '  } }'].join('\n');
   }
   return { uniforms: uniforms, head: head, headV: headV, vert: vert, text: text, S: S755,

@@ -184,7 +184,7 @@ window.WFR_FEATURES = (function () {
       if (J.feed && J.feed.pois && ft.type === 1 && ft.rings[0] && /^(office|cafe|shop|clothing_store|grocery|bakery|ice_cream)$/.test(P['class'])) { var g729 = llOf(t.z, t.x, t.y, ft.rings[0][0], ft.rings[0][1], E); J.feed.pois.push({ id: ft.id, cls: P['class'], sub: P.subclass || null, name: P['name:en'] || P.name_en || P.name || null, lat: g729.lat, lon: g729.lon }); } return; }   /* 729 */
     if (name === 'building') { if (ft.type !== 3 || P.hide_3d) return; var ps = polygons(ft.rings); if (J.city) { J.bq = { ps: ps, P: P, id: ft.id, E: E, i: 0 }; return; } for (var i = 0; i < ps.length; i++) building(t, J, ps[i], P, ft.id, E); return; }   /* 790: one z14 feature can hold 9,000 buildings: the city drains it a slice at a time */
     if (name === 'transportation') { var cl = P['class']; if (cl === 'transit' && t.z === 14 && J.feed && ft.type === 2 && P.brunnel !== 'tunnel') { var fl790 = feedLine(t, ft.rings, E, 'transit', 3); fl790.sub = P.subclass || null; J.feed.roads.push(fl790); return; }   /* 790 B: the streetcar lines to the listeners (world-life790.js), not drawn */ if (!ROADS[t.z][cl] || ft.type !== 2 || P.brunnel === 'tunnel') return; for (i = 0; i < ft.rings.length; i++) { var lr = locRing(t, J, ft.rings[i], E); if (!(J.city && WFR_CITY790.road(J, cl, lr))) ribbon(J, lr, ROAD_W[cl] * C.WIDEN[t.z], ROAD_C[cl], C.LIFT[t.z], C.SUB[t.z]); } J.nR++; if (J.feed) J.feed.roads.push(feedLine(t, ft.rings, E, cl, ROAD_W[cl] * C.WIDEN[t.z])); return; }   /* veg (Nov 4): the listeners hear the roads too (no grass or tree on a road) */
-    if (name === 'waterway') { var wc = P['class'], ww = WAY_W[wc]; if (!ww || ft.type !== 2 || (wc === 'stream' && t.z < 14) || P.brunnel === 'tunnel') return; for (i = 0; i < ft.rings.length; i++) ribbon(J, locRing(t, J, ft.rings[i], E), ww * C.WIDEN[t.z], WATER_C, C.LIFT[t.z] * 1.2, C.SUB[t.z]); if (J.feed) J.feed.roads.push(feedLine(t, ft.rings, E, 'water', ww * C.WIDEN[t.z])); return; }
+    if (name === 'waterway') { var wc = P['class'], ww = WAY_W[wc]; if (!ww || ft.type !== 2 || (wc === 'stream' && t.z < 14) || P.brunnel === 'tunnel') return; for (i = 0; i < ft.rings.length; i++) ribbon(J, locRing(t, J, ft.rings[i], E), ww * C.WIDEN[t.z], WATER_C, C.LIFT[t.z] * 1.2, C.SUB[t.z], true); if (J.feed) J.feed.roads.push(feedLine(t, ft.rings, E, 'water', ww * C.WIDEN[t.z])); return; }
     if (name === 'water') { if (ft.type !== 3) return; ps = polygons(ft.rings); if (J.s830) WFR_SACRED830.water(J, ps);   /* 830: the golf's stripes stop at the water */
       for (i = 0; i < ps.length; i++) { if (J.feed) J.feed.water.push(feedPoly(t, J, ps[i], E, P['class'])); if (!WATER_SKIP[P['class']]) { lake(t, J, ps[i], E, ft.id); J.nW++; } } return; }
     if (name === 'place') { var pc = P['class'], nm = P['name:en'] || P.name_en || P.name; if (!PLACE_R[pc] || !nm || ft.type !== 1 || !ft.rings[0]) return; if (t.z === 9 && !(pc === 'city' || pc === 'town' || pc === 'island')) return;
@@ -293,17 +293,23 @@ window.WFR_FEATURES = (function () {
       p = q; }
     return p;
   }
-  function ribbon(J, pts, w, col, lift, sub) {   // a line on the ground: cut every sub metres, each point's two edges sampled on the ground she sees
+  function ribbon(J, pts, w, col, lift, sub, flow) {   // a line on the ground: cut every sub metres, each point's two edges sampled on the ground she sees
     var P = [pts[0], pts[1]]; for (var i = 2; i < pts.length; i += 2) { var x0 = pts[i - 2], z0 = pts[i - 1], x1 = pts[i], z1 = pts[i + 1], d = Math.hypot(x1 - x0, z1 - z0), k = Math.max(1, Math.ceil(d / sub)); for (var q = 1; q <= k; q++) P.push(x0 + (x1 - x0) * q / k, z0 + (z1 - z0) * q / k); }
-    var n = P.length / 2; if (n < 2) return; var G = J.gnd, prev = -1, hw = w / 2;
+    var n = P.length / 2; if (n < 2) return; var G = J.gnd, prev = -1, hw = w / 2, s = 0, s1 = 0, rev = false;
+    if (flow) { for (i = 1; i < n; i++) s1 += Math.hypot(P[2 * i] - P[2 * i - 2], P[2 * i + 1] - P[2 * i - 1]); rev = H(J, P[2 * n - 2], P[2 * n - 1]) > H(J, P[0], P[1]) + 2; }   /* 805e: water runs downhill: a line whose end stands 2 m+ over its start flows the other way (a tile's merge can turn a line round); on the flat, OSM's own order */
     for (i = 0; i < n; i++) { var a = Math.max(0, i - 1), b = Math.min(n - 1, i + 1), tx = P[2 * b] - P[2 * a], tz = P[2 * b + 1] - P[2 * a + 1], tl = Math.hypot(tx, tz) || 1, px = -tz / tl * hw, pz = tx / tl * hw;
+      if (i) s += Math.hypot(P[2 * i] - P[2 * i - 2], P[2 * i + 1] - P[2 * i - 1]);
       var lx = P[2 * i] + px, lz = P[2 * i + 1] + pz, rx = P[2 * i] - px, rz = P[2 * i + 1] - pz, kl = G.v(lx, Math.max(0, H(J, lx, lz)) + lift, lz, 0, 1, 0, col[0], col[1], col[2]), kr = G.v(rx, Math.max(0, H(J, rx, rz)) + lift, rz, 0, 1, 0, col[0], col[1], col[2]);
-      drp(G, kl, lift); drp(G, kr, lift); if (prev >= 0) { tri(G, prev, prev + 1, kl); tri(G, prev + 1, kr, kl); } prev = kl; }
+      drp(G, kl, lift); drp(G, kr, lift); if (flow) { flw(G, kl, rev ? s1 - s : s, rev ? -hw : hw); flw(G, kr, rev ? s1 - s : s, rev ? hw : -hw); } if (prev >= 0) { tri(G, prev, prev + 1, kl); tri(G, prev + 1, kr, kl); } prev = kl; }
   }
+  /* 805e a waterway's flow (world-surfaces732.js vR805): the metres along its line (OSM draws a waterway the way it flows) and 1000 + metres across it.
+     Sparse like drp's: only a tile with a river carries the attribute (8 bytes a vertex); every other vertex of that mesh reads 0, still water */
+  function flw(o, k, s, x) { var f = o.fl || (o.fl = []); f[2 * k] = s; f[2 * k + 1] = 1000 + x; }
   function meshOf(o, mat, name, order) {
     if (!o || !o.i.length) return null; var g = new THREE.BufferGeometry();
     g.setAttribute('position', new THREE.Float32BufferAttribute(o.p, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(o.n, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(o.c, 3));
     if (o.uv) g.setAttribute('uv', new THREE.Float32BufferAttribute(o.uv, 2)); if (o.f && o.f.length) { g.setAttribute('aF790', new THREE.Float32BufferAttribute(o.f, 2)); g.setAttribute('aM790', new THREE.Float32BufferAttribute(o.m, 2)); } g.setIndex(o.p.length / 3 > 65535 ? new THREE.Uint32BufferAttribute(o.i, 1) : new THREE.Uint16BufferAttribute(o.i, 1));
+    if (o.fl && o.fl.length) { var nf = o.p.length / 3, fa = new Float32Array(nf * 2); for (var qf = 0; qf < o.fl.length && qf < nf * 2; qf++) fa[qf] = o.fl[qf] || 0; g.setAttribute('aR805', new THREE.Float32BufferAttribute(fa, 2)); }   /* 805e */
     var m = new THREE.Mesh(g, mat); if (o.dl && o.dl.length) { var nv = o.p.length / 3, dl = new Float32Array(nv), q; for (q = 0; q < nv; q++) dl[q] = q < o.dl.length ? o.dl[q] : NaN; m.userData.dl = dl; }   /* 798 */
     m.name = name; m.frustumCulled = false; m.matrixAutoUpdate = false; m.renderOrder = order; m.layers.set(C.LAYER); m.castShadow = m.receiveShadow = false; m.userData.tris = o.i.length / 3; return m;
   }
