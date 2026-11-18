@@ -125,6 +125,10 @@ window.WFR_FALL748 = (function () {
     python: { r: 0.75, f: 2, p: -0.2 },   /* a heavy thrash */
     anaconda: { r: 0.95, f: 1.5, y: TAU }   /* the great body rolls right round */
   });
+  /* 829 link 3: the old gator of the Everglades (chain829.js), the first strong one across the earth: four alligators' hit points (5.5 x 4), a coin
+     every time, hardly thrown at all; its fall a slow heavy roll to its side, the jaws flung up (DRAFT, his thumb) */
+  ROW.oldgator = [22, 'serpent', 1, 0.05];
+  FLAV.oldgator = { r: 1.1, f: 0.5, l: 0.15, b: { head: [-0.55, 0.2, 0, 1], legFL: [0, 0, 0.8, 0], legFR: [0, 0, -0.8, 0], tail: [0, 0.7, 0, 1.5] } };
   function row(k) { return ROW[k] || [3, 'small', 0.2, 0.7]; }
   function clamp(x, a, b) { return x < a ? a : x > b ? b : x; }
   function damage(how, lv, gear) {   /* the 744 scale: her level and her weapon, the same numbers as the throw */

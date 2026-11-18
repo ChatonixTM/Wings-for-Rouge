@@ -43,7 +43,7 @@ window.WFR_UP829 = (function () {
   function bagOf(S) { var c = S.seen && S.seen.craft787; return c && c.bag && typeof c.bag === 'object' ? c.bag : {}; }
   /* a drop a recipe of the Craft still needs is kept for it (craft787's RECIPES, by what she has made) */
   function keptOf(S) { var out = {}, C = window.WFR_CRAFT787, made = (S.seen && S.seen.craft787 && S.seen.craft787.made) || {}; if (!C || !C.RECIPES) return out;
-    C.RECIPES.forEach(function (r) { if (made[r.id]) return; for (var m in r.need) out[m] = (out[m] || 0) + r.need[m]; }); return out; }
+    C.RECIPES.forEach(function (r) { if (made[r.id] || (C.shown && !C.shown(r, S.seen && S.seen.craft787))) return; for (var m in r.need) out[m] = (out[m] || 0) + r.need[m]; }); return out; }   /* 829 link 3: a recipe not yet shown (the Scute shield, before her first scute) keeps nothing */
   function spare(S, m) { if (m === 'token') { var u = rec(S, false); return u ? Math.max(0, u.tokens | 0) : 0; } return Math.max(0, (bagOf(S)[m] | 0) - (keptOf(S)[m] | 0)); }
   function priceOf(S, id) { var U = upOf(id), n = level(S, id); return U && n < MAX_LV ? U.cost[n] : null; }
   function lacks(S, id) { var p = priceOf(S, id), out = []; if (!p) return out; for (var m in p) if (spare(S, m) < p[m]) out.push({ m: m, more: p[m] - spare(S, m) }); return out; }

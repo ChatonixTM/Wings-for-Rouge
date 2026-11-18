@@ -68,6 +68,9 @@ window.WFR_PEOPLE724 = (function () {
     walker: ['out walking', '👋', ['Sea breeze is up today. Good day for wings.', 'I walk this way every morning. I have never met a bird who talks back.', 'Mind the cars on the main road.']],
     local: ['who lives here', '👋', ['Welcome! First time here?', 'You look like you are looking for someone.', 'Ackee and saltfish at the corner shop. Best on the island. Every shop says so.']]
   };
+  var AR830 = ['Omar', 'Layla', 'Youssef', 'Fatima', 'Karim', 'Nour', 'Ahmed', 'Mariam', 'Hassan', 'Salma', 'Khalid', 'Huda'];
+  var NAMES830 = { gulf: AR830, gulf_city: AR830.concat(['Priya', 'Arjun', 'Maria', 'Jose']), egypt: AR830, sudan: AR830, levant: AR830, iraq: AR830, libya: AR830, maghreb: AR830.concat(['Amine', 'Imane']), amazigh: ['Idir', 'Tafsut', 'Massinissa', 'Dihya', 'Amastan', 'Tiziri', 'Yuba', 'Thiziri'], tuareg: ['Amastan', 'Tinariwen', 'Akli', 'Tadla', 'Ibrahim', 'Fadimata'],
+    turkey: ['Emre', 'Elif', 'Mehmet', 'Zeynep', 'Can', 'Ayse', 'Burak', 'Defne'], iran: ['Reza', 'Shirin', 'Dariush', 'Leila', 'Kian', 'Parisa', 'Arash', 'Niloufar'], kurd: ['Rojhat', 'Berivan', 'Azad', 'Hevi', 'Serdar', 'Ronahi', 'Dilan', 'Baran'] };   /* 830 (DRAFT, Marth's pen) */
   var LINES_GT = ['¡Buenos días, pajarito! Welcome to Antigua.', 'Agua is quiet today. Fuego is smoking, but Fuego always smokes.', 'The yellow arch was built so the nuns could cross the street unseen.'];
   var LINES_US = ['So clear you could spot a dinner plate twenty metres down. Scientists check.', 'Careful, the air is thin up here.', 'Are you lost? Tahoe is a long way from the sea.'];
 
@@ -153,11 +156,11 @@ window.WFR_PEOPLE724 = (function () {
   }
 
   /* ---------- 2. one material program for every person: Lambert, its vertex read from the animation texture ---------- */
-  var PARS = ['uniform sampler2D uVat724; uniform vec3 uVat724I; uniform float uTime724;', 'attribute vec2 aV724; attribute vec4 aAnim724; attribute vec3 aSkin724; attribute vec3 aTop724; attribute vec3 aBot724;',
+  var PARS = ['uniform sampler2D uVat724; uniform vec3 uVat724I; uniform float uTime724;', 'attribute vec2 aV724; attribute vec4 aAnim724; attribute vec3 aSkin724; attribute vec3 aTop724; attribute vec3 aBot724; attribute vec3 aHead724;',
     'vec4 vat724(float k) { float y = floor((k + 0.5) / uVat724I.x); float x = k - y * uVat724I.x; return texture2D(uVat724, vec2((x + 0.5) / uVat724I.x, (y + 0.5) / uVat724I.y)); }'].join('\n');
   var COLOR = ['#if defined( USE_COLOR ) || defined( USE_INSTANCING_COLOR )', 'vColor = vec3( 1.0 );', '#endif', '#ifdef USE_COLOR', 'vColor.xyz *= color.xyz;',
     'if (aV724.y > 0.5 && aV724.y < 1.5) vColor.xyz = aSkin724; else if (aV724.y > 4.5) vColor.xyz = aSkin724 * 0.8;',
-    'else if (aV724.y > 1.5 && aV724.y < 2.5 && aTop724.r >= 0.0) vColor.xyz = aTop724; else if (aV724.y > 2.5 && aV724.y < 3.5 && aBot724.r >= 0.0) vColor.xyz = aBot724;', '#endif'].join('\n');
+    'else if (aV724.y > 1.5 && aV724.y < 2.5 && aTop724.r >= 0.0) vColor.xyz = aTop724; else if (aV724.y > 2.5 && aV724.y < 3.5 && aBot724.r >= 0.0) vColor.xyz = aBot724;', 'else if (aV724.y > 3.5 && aV724.y < 4.5 && aHead724.r >= 0.0) vColor.xyz = aHead724;', '#endif'].join('\n');   /* 830: a headscarf, a ghutra or a hood over the hair */
   var BEGINN = ['float n724 = max(aAnim724.y, 1.0); float f724 = max(0.0, (uTime724 - aAnim724.w) * aAnim724.z);', 'float i0724 = mod(floor(f724), n724); float i1724 = aAnim724.y > 1.5 ? mod(i0724 + 1.0, n724) : i0724; float t724 = fract(f724);',
     'float k0724 = (aAnim724.x + i0724) * 2.0 * uVat724I.z + aV724.x; float k1724 = (aAnim724.x + i1724) * 2.0 * uVat724I.z + aV724.x;',
     'vec3 p724 = mix(vat724(k0724).xyz, vat724(k1724).xyz, t724);', 'vec3 objectNormal = normalize(mix(vat724(k0724 + uVat724I.z).xyz, vat724(k1724 + uVat724I.z).xyz, t724));'].join('\n');
@@ -171,7 +174,7 @@ window.WFR_PEOPLE724 = (function () {
     g.setAttribute('aV724', new THREE.BufferAttribute(new Float32Array(6), 2)); addInst(THREE, g, cap); return g; }
   function addInst(THREE, g, cap, from) {   // the per-person attributes (shared with the placeholder they replace)
     var mk = function (n, sz) { var a = from ? from.getAttribute(n) : new THREE.InstancedBufferAttribute(new Float32Array(cap * sz), sz); if (!from) a.setUsage(THREE.DynamicDrawUsage); g.setAttribute(n, a); };
-    mk('aAnim724', 4); mk('aSkin724', 3); mk('aTop724', 3); mk('aBot724', 3); }
+    mk('aAnim724', 4); mk('aSkin724', 3); mk('aTop724', 3); mk('aBot724', 3); mk('aHead724', 3); }
 
   function init(ctx) {
     if (st.inited) return true; X = ctx || {};
@@ -228,8 +231,9 @@ window.WFR_PEOPLE724 = (function () {
     if (role === 'guide') { top = rgb(GUIDE_TOP); bot = rgb(GUIDE_BOT); }
     else if (role === 'bather' || role === 'swimmer' || role === 'climber' || (role === 'beach' && r() < 0.5)) { top = fem ? rgb(pick(r, SWIM)) : (r() < 0.7 ? skin.slice() : rgb(pick(r, TOPS))); bot = rgb(pick(r, SWIM)); }
     else { top = r() < 0.15 ? null : rgb(pick(r, TOPS)); bot = r() < 0.15 ? null : rgb(pick(r, BOTS)); }
-    var names = loc === 'gt' ? NAMES_GT : loc === 'us' ? NAMES_US : (visitor || loc === 'world') ? NAMES_VISIT : NAMES_JM, R0 = ROLE[role] || ROLE.local, lines = p.lines || (loc === 'gt' ? LINES_GT : loc === 'us' ? LINES_US : loc === 'world' ? ROLE.local[2].slice(0, 2) : R0[2]);   // refine-1: 'world' = a features tile beyond Jamaica (no falls, no Tahoe in its words)
-    var sp = { id: p.id + ':' + p.spawns.length, place: p.id, role: role, model: model, scale: (0.92 + r() * 0.16) * (o.child ? 0.72 : 1), skin: skin, top: top, bot: bot,
+    var head = null; if (p.reg && window.WFR_LIFE790 && WFR_LIFE790.outfit830 && (role === 'local' || role === 'walker')) { var o8 = WFR_LIFE790.outfit830(p.reg, r); skin = o8.skin; top = o8.c1; bot = o8.c2; head = o8.c4 && (o8.c4[3] & 2) ? o8.c4.slice(0, 3) : null; }   /* 830: North Africa and the Middle East dress as they truly do (world-life790.js's table) */
+    var names = p.reg && NAMES830[p.reg] ? NAMES830[p.reg] : loc === 'gt' ? NAMES_GT : loc === 'us' ? NAMES_US : (visitor || loc === 'world') ? NAMES_VISIT : NAMES_JM, R0 = ROLE[role] || ROLE.local, lines = p.lines || (loc === 'gt' ? LINES_GT : loc === 'us' ? LINES_US : loc === 'world' ? ROLE.local[2].slice(0, 2) : R0[2]);   // refine-1: 'world' = a features tile beyond Jamaica (no falls, no Tahoe in its words)
+    var sp = { id: p.id + ':' + p.spawns.length, place: p.id, role: role, model: model, scale: (0.92 + r() * 0.16) * (o.child ? 0.72 : 1), skin: skin, top: top, bot: bot, head: head,
       kind: o.kind || 'stand', clip: o.clip || 'idle', x: o.x || 0, z: o.z || 0, yaw: o.yaw != null ? o.yaw : r() * Math.PI * 2, phase: r() * 8, name: pick(r, names), line: pick(r, lines), emoji: R0[1], title: R0[0] };
     if (o.path) { sp.kind = 'walk'; sp.clip = 'walk'; sp.path = o.path; sp.cum = polyLen(o.path); sp.L = sp.cum[sp.cum.length - 1]; sp.v = o.v || (0.95 + r() * 0.45); sp.s0 = r() * sp.L * 2; sp.side = o.side || 0;
       var mid = at(sp, sp.L / 2); sp.x = mid[0]; sp.z = mid[1]; }
@@ -332,7 +336,7 @@ window.WFR_PEOPLE724 = (function () {
     [feed.landuse || [], feed.landcover || []].forEach(function (L) { for (var j = 0; j < L.length && lu.length < LMAX; j++) { var k = (L[j].cls || '') + ' ' + (L[j].subclass || ''), q = L[j].rings && L[j].rings[0];
       if (!/park|grass|retail|commercial|square|beach/.test(k) || !q || q.length < 6 || !(m = ringMid(q)) || inBuilt(m.lat, m.lon)) continue; lu.push({ kind: k, lat: m.lat, lon: m.lon }); } });
     var c = B[0] || lu[0], jm = c && c.lat > JM_BOX[0] && c.lat < JM_BOX[2] && c.lon > JM_BOX[1] && c.lon < JM_BOX[3];
-    return { key: z + '/' + x + '/' + y, buildings: B, landuse: lu, folk: jm ? 'jm' : 'world' };
+    return { key: z + '/' + x + '/' + y, buildings: B, landuse: lu, folk: jm ? 'jm' : 'world', reg: c && window.WFR_SACRED830 ? WFR_SACRED830.region(c.lat, c.lon) : null };   /* 830 */
   }
   function featureTile(tile) {
     try {
@@ -342,7 +346,7 @@ window.WFR_PEOPLE724 = (function () {
       if (!lls.length && !lu.length) return null;
       var la = 0, lo = 0, all = lls.map(function (q) { return q.ll; }).concat(lu); all.forEach(function (q) { la += q.lat; lo += q.lon; }); la /= all.length; lo /= all.length;
       st.featTiles++;
-      return addPlace({ id: 'f:' + key, name: 'tile ' + key, lat: la, lon: lo, r: 2000, folk: tile.folk || 'jm', build: function (p, r) {
+      return addPlace({ id: 'f:' + key, name: 'tile ' + key, lat: la, lon: lo, r: 2000, folk: tile.folk || 'jm', reg: tile.reg || null, build: function (p, r) {
         var rr = rng(hash(p.id + ':doors')), doors = [], n = 0;
         lls.forEach(function (q) { if (n >= 40 || rr() > 0.35) return; var c = LL(p, q.ll.lat, q.ll.lon), half = q.b.r || (q.b.w && q.b.d ? Math.max(q.b.w, q.b.d) / 2 : 6), a = rr() * Math.PI * 2, x = c.x + Math.cos(a) * (half + 1.5), z = c.z + Math.sin(a) * (half + 1.5), u = rr(); n++;
           doors.push([x, z]); person(p, rr, { role: 'local', x: x, z: z, kind: u < 0.2 ? 'sit' : 'stand', clip: u < 0.2 ? 'sit' : u < 0.45 ? 'interact' : u < 0.55 ? 'wave' : 'idle', yaw: Math.atan2(c.x - x, c.z - z) + Math.PI }); });
@@ -387,10 +391,10 @@ window.WFR_PEOPLE724 = (function () {
     for (var id of st.born.keys()) if (!byId.has(id)) st.born.delete(id);
     st.meshes.forEach(function (im, mi) { im.count = used[mi]; im.userData.ids = []; });
     for (var s = 0; s < set.length; s++) { var E = set[s], im2 = st.meshes[E.mi], g = im2.geometry, sp2 = E.sp; im2.userData.ids[E.slot] = sp2.id;
-      var S3 = g.getAttribute('aSkin724'), T3 = g.getAttribute('aTop724'), B3 = g.getAttribute('aBot724');
+      var S3 = g.getAttribute('aSkin724'), T3 = g.getAttribute('aTop724'), B3 = g.getAttribute('aBot724'), H3 = g.getAttribute('aHead724'); if (sp2.head) H3.setXYZ(E.slot, sp2.head[0], sp2.head[1], sp2.head[2]); else H3.setXYZ(E.slot, -1, -1, -1);
       S3.setXYZ(E.slot, sp2.skin[0], sp2.skin[1], sp2.skin[2]); if (sp2.top) T3.setXYZ(E.slot, sp2.top[0], sp2.top[1], sp2.top[2]); else T3.setXYZ(E.slot, -1, -1, -1); if (sp2.bot) B3.setXYZ(E.slot, sp2.bot[0], sp2.bot[1], sp2.bot[2]); else B3.setXYZ(E.slot, -1, -1, -1);
       if (sp2.kind !== 'walk') E.gy = groundL(E.p, E.o, sp2.x, sp2.z); animOf(E); }
-    st.meshes.forEach(function (im) { var g = im.geometry; ['aSkin724', 'aTop724', 'aBot724', 'aAnim724'].forEach(function (n) { g.getAttribute(n).needsUpdate = true; }); });
+    st.meshes.forEach(function (im) { var g = im.geometry; ['aSkin724', 'aTop724', 'aBot724', 'aHead724', 'aAnim724'].forEach(function (n) { g.getAttribute(n).needsUpdate = true; }); });
     st.set = set; st.setById = byId;
   }
   function animOf(E) {   // the clip a townsperson plays now: its own, or (held by her) a wave then stillness

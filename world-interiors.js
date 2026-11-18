@@ -606,7 +606,7 @@ window.WFR_INTERIORS729 = (function () {
   /* ---------- building an interior (behind the veil): one mesh per room, the shared material, rooms hosted for the people ---------- */
   function material() { var F = window.WFR_FEATURES, m = F && F.materials && F.materials(); return (m && m.wall) || (X.TR && X.TR.mat) || null; }
   function sunDir() { try { return X.sunDir ? norm(X.sunDir()) : [0.4, 0.8, 0.3]; } catch (e) { return [0.4, 0.8, 0.3]; } }
-  function buildRoomGeo(R, seed) { var G = new Geo(); G.yh = R.yh || 6; G.glowN = sunDir(); G.fill = 0.85; R.build(G, rng(seed), { clock: function () { return X.S.clock || 0; } }); return G; }
+  function buildRoomGeo(R, seed) { var G = new Geo(); G.yh = R.yh || 6; G.glowN = sunDir(); G.fill = 0.85; R.build(G, rng(seed), { clock: function () { return (window.WFR_HIGH809 && WFR_HIGH809.clockHere ? WFR_HIGH809.clockHere() : X.S.clock) || 0; } }   /* 809: a room's clock tells the local hour */); return G; }
   function meshOf(G, name) {
     var g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(G.p, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(G.n, 3));
     g.setAttribute('color', new THREE.Float32BufferAttribute(G.c, 3)); g.setAttribute('uv', new THREE.Float32BufferAttribute(G.uv, 2)); g.setIndex(G.p.length / 3 > 65535 ? new THREE.Uint32BufferAttribute(G.i, 1) : new THREE.Uint16BufferAttribute(G.i, 1));

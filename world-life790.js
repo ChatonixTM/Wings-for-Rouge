@@ -35,7 +35,7 @@ window.WFR_LIFE790 = (function () {
   'use strict';
   var C = { LAYER: 7, NEAR: 1.02, REFRESH: 0.5, GRID: 8, ACT_R: 760, DROP_R: 960, P_ON: 480, P_OFF: 600, NEW_CELLS: 4, SPAWNS: 40, INGEST_MS: 2.5, TARGET_EVERY: 15,
     P_R: 420, P_NEAR: 140, C_R: 760, C_NEAR: 220, T_R: 1400, F_R: 300, W_R: 1100, AGENTS: 1500, H_EVERY: 3, H_BUDGET: 1500, STEP: 25, CELL_CAP: { walk: 34, car: 34 },
-    CAP: { personN: 240, personF: 420, prop: 12, dog: 48, car: 180, carF: 240, bus: 20, tram: 36, train: 48, sail: 12, motor: 12, ferry: 3, pigeon: 300, gull: 72, duck: 40 },
+    CAP: { personN: 240, personF: 420, prop: 12, dog: 48, car: 180, carF: 240, bus: 20, tram: 36, train: 48, sail: 12, motor: 12, ferry: 3, pigeon: 300, gull: 72, duck: 40, cart: 24 },   /* 830: the golf carts */
     SCALE: { pigeon: 1.7, gull: 1.4, duck: 1.4, person: 1.12, personFar: 1.3 },   /* a little larger than life, so a figure reads from her height (DRAFT) */
     SCATTER: { R: 30, AGL: 75, R3: 14, AIR: [9, 14], GULL_R: 26 },
     SIGNAL: { CYCLE: 40, RED: 18, STOP: 7 } };
@@ -72,6 +72,50 @@ window.WFR_LIFE790 = (function () {
   var DOGS = [0x8a5a2b, 0x1d1d1d, 0xe8e0d0, 0xc8964f, 0x6b6b6b, 0xd9b77a].map(hex);
   var PIGEONS = [0x8b93a0, 0x7d8592, 0x9aa2ae, 0x6f7480, 0xa59a8c, 0xd8d8d4].map(hex), SHEEN = [0x4f8a6e, 0x6e4f8a, 0x5d7f86].map(hex);
   var SAILS = [0xf7f7f2, 0xf7f7f2, 0xeb5757, 0x2d9cdb, 0xf2c94c].map(hex), HULLS = [0xf4f4f2, 0x1f4e9a, 0xb3261e, 0x24452e, 0xf4f4f2].map(hex), FERRY = [hex(0xf4f4f2), hex(0x1f4e9a)];
+  /* ---------- 830: HOW PEOPLE DRESS IN NORTH AFRICA AND THE MIDDLE EAST TODAY (DRAFT shares, Marth's pen; respectful, varied, never a costume).
+     The region is WFR_SACRED830.region (world-features.js): rough country boxes, Israel apart (nobody dressed by guess there). Many in everyday
+     Western clothes everywhere, most in the big cities; the robes and headwear as each country truly wears them. Persians are not Arabs: Iran has
+     its own (the manteau or the chador and a scarf; the men in Western clothes). Elsewhere people stay exactly as they were. ---------- */
+  var RC = { white: [0.95, 0.95, 0.93], cream: [0.92, 0.88, 0.78], beige: [0.8, 0.72, 0.58], sand: [0.76, 0.66, 0.5], grey: [0.6, 0.6, 0.62], lgrey: [0.8, 0.8, 0.8], brown: [0.5, 0.38, 0.28], dbrown: [0.34, 0.25, 0.19],
+    navy: [0.17, 0.2, 0.33], black: [0.07, 0.07, 0.08], olive: [0.42, 0.42, 0.3], khaki: [0.62, 0.56, 0.42], slate: [0.42, 0.48, 0.56], indigo: [0.16, 0.2, 0.44], shemagh: [0.85, 0.48, 0.48], kufiya: [0.55, 0.55, 0.56] };
+  var SCARF = [[0.85, 0.32, 0.42], [0.25, 0.45, 0.7], [0.93, 0.9, 0.85], [0.1, 0.1, 0.11], [0.52, 0.34, 0.6], [0.3, 0.55, 0.45], [0.88, 0.7, 0.38], [0.6, 0.24, 0.26], [0.74, 0.65, 0.56], [0.2, 0.55, 0.6], [0.95, 0.6, 0.55], [0.92, 0.75, 0.8]];
+  var BRIGHT = [[0.85, 0.2, 0.45], [0.2, 0.6, 0.55], [0.55, 0.25, 0.65], [0.95, 0.7, 0.2], [0.9, 0.35, 0.2], [0.2, 0.4, 0.75], [0.3, 0.65, 0.3]];
+  var COAT = [[0.78, 0.7, 0.58], [0.17, 0.2, 0.33], [0.1, 0.1, 0.11], [0.5, 0.5, 0.52], [0.42, 0.42, 0.3], [0.55, 0.38, 0.32], [0.68, 0.62, 0.66]];
+  var SKIN830 = { north: [0xe6c3a0, 0xd8aa84, 0xc69472, 0xb5835e, 0x9a6a48, 0x7d4e33], nile: [0xd8aa84, 0xc69472, 0xb5835e, 0x9a6a48, 0x8a5a3c, 0x6b412b], sahel: [0x7d4e33, 0x6b412b, 0x5a3624, 0x4a2c1e, 0x3b2219, 0x8a5a3c],
+    gulf: [0xd8aa84, 0xc69472, 0xb5835e, 0x9a6a48, 0x8a5a3c, 0x6b412b, 0xe6bf9a], east: [0xf0cfb2, 0xe6bf9a, 0xd8aa84, 0xc69472, 0xb5835e, 0x9a6a48] };
+  var REGSKIN = { maghreb: 'north', amazigh: 'north', libya: 'north', tuareg: 'sahel', egypt: 'nile', sudan: 'sahel', gulf: 'gulf', gulf_city: 'gulf', levant: 'east', iraq: 'gulf', kurd: 'east', turkey: 'east', iran: 'east' };
+  function W4(c, f) { return [c[0], c[1], c[2], f]; }
+  function west(r, a) { a.c1 = pick(r, TOPS); a.c2 = pick(r, BOTS); a.c4 = null; }
+  function scarfOn(r, a, top, bot, robe) { a.c1 = top; a.c2 = bot; a.c4 = W4(pick(r, SCARF), 2 + (robe ? 1 : 0)); }
+  function outfit830(reg, r, a) {   // sets a.c1 (top), a.c2 (legs or robe), a.c4 (headwear rgb + what is worn: 1 robe, 2 headwear, 4 agal)
+    var man = r() < 0.52, u = r(), c, h;
+    if (reg === 'gulf' || reg === 'gulf_city') { var wst = reg === 'gulf_city' ? 0.55 : 0.2;   /* the UAE and Qatar: most of the people in the street are from abroad */
+      if (u < wst) { if (!man && r() < 0.35) scarfOn(r, a, pick(r, TOPS), pick(r, BOTS), false); else west(r, a); return; }
+      if (man) { c = r() < 0.8 ? RC.white : pick(r, [RC.cream, RC.lgrey, RC.beige]); h = r(); a.c1 = c; a.c2 = c; a.c4 = h < 0.5 ? W4(RC.white, 1 + 2 + (r() < 0.75 ? 4 : 0)) : h < 0.9 ? W4(RC.shemagh, 1 + 2 + (r() < 0.75 ? 4 : 0)) : W4(c, 1); return; }
+      a.c1 = RC.black; a.c2 = RC.black; a.c4 = W4(r() < 0.85 ? RC.black : pick(r, SCARF), 3); return; }
+    if (reg === 'egypt' || reg === 'sudan') {
+      if (man) { if (u < (reg === 'sudan' ? 0.5 : 0.62)) { west(r, a); return; } c = reg === 'sudan' ? RC.white : pick(r, [RC.grey, RC.beige, RC.slate, RC.white, RC.brown, RC.lgrey]); a.c1 = c; a.c2 = c; a.c4 = (reg === 'sudan' || r() < 0.25) ? W4(RC.white, 3) : W4(c, 1); return; }
+      if (reg === 'sudan' && u < 0.7) { c = pick(r, BRIGHT.concat([RC.white])); a.c1 = c; a.c2 = c; a.c4 = W4(c, 3); return; }   /* the toob: one bright cloth, robe and head */
+      if (u < 0.72) { scarfOn(r, a, pick(r, COAT.concat(TOPS.slice(0, 6))), pick(r, BOTS.concat([RC.black, RC.navy])), r() < 0.3); return; } if (u < 0.86) { a.c1 = RC.black; a.c2 = RC.black; a.c4 = W4(RC.black, 3); return; } west(r, a); return; }
+    if (reg === 'maghreb' || reg === 'amazigh' || reg === 'libya') { var am = reg === 'amazigh';
+      if (man) { if (u < (am ? 0.45 : 0.62)) { west(r, a); return; } c = pick(r, [RC.beige, RC.brown, RC.grey, RC.cream, RC.dbrown, RC.white, RC.sand]); a.c1 = c; a.c2 = c; a.c4 = r() < 0.3 ? W4(c, 3) : am && r() < 0.3 ? W4(RC.white, 3) : W4(c, 1); return; }   /* the djellaba, its hood up on some */
+      if (am && u < 0.5) { a.c1 = pick(r, BRIGHT); a.c2 = pick(r, BRIGHT); a.c4 = W4(pick(r, BRIGHT.concat([RC.black])), 3); return; }   /* the Amazigh dress, bright, a bright scarf */
+      if (u < (reg === 'libya' ? 0.75 : 0.5)) { scarfOn(r, a, pick(r, COAT.concat(TOPS.slice(0, 6))), pick(r, BOTS), false); return; } if (u < 0.65) { c = pick(r, BRIGHT.concat([RC.cream, RC.beige])); a.c1 = c; a.c2 = c; a.c4 = W4(pick(r, SCARF), 3); return; } west(r, a); return; }
+    if (reg === 'tuareg') { if (man) { if (u < 0.3) { west(r, a); return; } c = pick(r, [RC.indigo, RC.white, RC.slate, RC.indigo]); a.c1 = c; a.c2 = c; a.c4 = W4(r() < 0.6 ? RC.indigo : RC.white, 3); return; }   /* the tagelmust, indigo or white */
+      c = pick(r, BRIGHT.concat([RC.indigo])); a.c1 = c; a.c2 = c; a.c4 = W4(pick(r, BRIGHT.concat([RC.black])), 3); return; }
+    if (reg === 'levant' || reg === 'iraq') {
+      if (man) { if (u < (reg === 'iraq' ? 0.62 : 0.78)) { west(r, a); if (r() < 0.12) a.c4 = W4(reg === 'levant' && r() < 0.5 ? RC.kufiya : RC.shemagh, 2); return; } c = pick(r, [RC.white, RC.grey, RC.beige, RC.brown, RC.lgrey]); a.c1 = c; a.c2 = c; a.c4 = r() < 0.6 ? W4(r() < 0.6 ? RC.shemagh : RC.kufiya, 1 + 2 + 4) : W4(c, 1); return; }
+      if (reg === 'iraq' && u < 0.45) { a.c1 = RC.black; a.c2 = RC.black; a.c4 = W4(RC.black, 3); return; } if (u < 0.6) { scarfOn(r, a, pick(r, COAT.concat(TOPS.slice(0, 6))), pick(r, BOTS), r() < 0.3); return; } west(r, a); return; }
+    if (reg === 'kurd') { if (man) { if (u < 0.55) { west(r, a); return; } c = pick(r, [RC.khaki, RC.olive, RC.grey, RC.brown, RC.navy]); a.c1 = c; a.c2 = c; a.c4 = r() < 0.5 ? W4(RC.kufiya, 2) : null; return; }   /* the shal u shapik, a turban on some */
+      if (u < 0.5) { c = pick(r, BRIGHT); a.c1 = c; a.c2 = c; a.c4 = W4(pick(r, SCARF.concat(BRIGHT)), 3); return; } if (u < 0.75) { scarfOn(r, a, pick(r, TOPS), pick(r, BOTS), false); return; } west(r, a); return; }
+    if (reg === 'turkey') { if (man || u > 0.5) { west(r, a); return; } if (u < 0.45) { c = pick(r, COAT); scarfOn(r, a, c, r() < 0.6 ? c : pick(r, BOTS), r() < 0.6); return; } a.c1 = RC.black; a.c2 = RC.black; a.c4 = W4(RC.black, 3); return; }
+    if (reg === 'iran') { if (man) { west(r, a); a.c1 = pick(r, [RC.black, RC.navy, RC.grey, RC.dbrown, RC.white, RC.slate].concat(TOPS.slice(0, 4))); return; }
+      if (u < 0.3) { a.c1 = RC.black; a.c2 = RC.black; a.c4 = W4(RC.black, 3); return; } if (u < 0.85) { c = pick(r, COAT); scarfOn(r, a, c, r() < 0.5 ? c : pick(r, BOTS.concat([RC.black])), r() < 0.5); return; } west(r, a); return; }
+    west(r, a);
+  }
+  function dressReg(a, r, T) { a.c3 = hex(pick(r, SKIN830[REGSKIN[T.reg]] || T.skins)); outfit830(T.reg, r, a); if (a.c4 && (a.c4[3] & 1)) a.gait = Math.min(a.gait || 0.5, 0.32); a.reg = T.reg; }
+  var POLO = [hex(0xf7f7f2), hex(0x1f2a44), hex(0xa7c7e7), hex(0xf2b8c6), hex(0x2e8b57), hex(0xd0201b), hex(0xf2c94c)], SLACKS = [hex(0xd9c7a7), hex(0x1f2a44), hex(0xf2f2ee), hex(0x4b4b50), hex(0x8d8d8d)];
+  function golfDress(a, r, T) { a.c1 = pick(r, POLO); a.c2 = pick(r, SLACKS); a.c3 = hex(pick(r, SKIN.all)); a.c4 = [1, 1, 1, 8]; }   /* 830: golfers dress for golf the world over: a polo, slacks, the club */
   function torontoish(lat, lon) { return lat > 43.55 && lat < 43.86 && lon > -79.65 && lon < -79.1; }
 
   /* ---------- the hour, from the game's one clock (S.clock in [0, 2700): dawn 0-150, day 150-1800, dusk 1800-2100, night 2100-2700) ---------- */
@@ -99,8 +143,11 @@ window.WFR_LIFE790 = (function () {
     b.box(-0.3, -0.2, 0.9, 1.45, -0.06, 0.06, W1, 1, 4, S); b.box(-0.29, -0.21, 0.78, 0.9, -0.05, 0.05, W1, 3, 4, S);
     b.box(-0.11, 0.11, 1.5, 1.75, -0.11, 0.12, W1, 3); b.box(-0.06, 0.06, 1.45, 1.52, -0.05, 0.05, W1, 3, 0, 0, true);
     b.box(-0.12, 0.12, 1.69, 1.8, -0.125, 0.1, HAIR, 0, 0, 0, true); b.box(-0.12, 0.12, 1.5, 1.72, -0.135, -0.08, HAIR, 0, 0, 0, true);
+    /* 830: what only some wear (folded to a point otherwise): the headwear over the head and down to the shoulders, the robe, the agal, the golf club */
+    b.box(-0.135, 0.135, 1.47, 1.84, -0.155, 0.1, W1, 6); b.box(-0.205, 0.205, 1.28, 1.55, -0.165, 0.06, W1, 6); b.box(-0.215, 0.215, 0.07, 0.96, -0.13, 0.15, W1, 7);
+    b.box(-0.145, 0.145, 1.75, 1.8, -0.165, 0.11, W1, 8, 0, 0, true); b.box(0.23, 0.27, -0.02, 0.84, 0.0, 0.04, W1, 9, 3, S);
     return b; }
-  function personFar() { var b = new Body(); b.box(-0.19, 0.19, 0, 0.9, -0.1, 0.1, W1, 2, 0, 0, true); b.box(-0.22, 0.22, 0.9, 1.48, -0.12, 0.12, W1, 1, 0, 0, true); b.box(-0.11, 0.11, 1.48, 1.76, -0.1, 0.1, W1, 3, 0, 0, true); return b; }
+  function personFar() { var b = new Body(); b.box(-0.19, 0.19, 0, 0.9, -0.1, 0.1, W1, 2, 0, 0, true); b.box(-0.22, 0.22, 0.9, 1.48, -0.12, 0.12, W1, 1, 0, 0, true); b.box(-0.11, 0.11, 1.48, 1.76, -0.1, 0.1, W1, 3, 0, 0, true); b.box(-0.13, 0.13, 1.46, 1.8, -0.12, 0.09, W1, 6, 0, 0, true); b.box(-0.24, 0.24, 1.3, 1.5, -0.135, 0.05, W1, 6, 0, 0, true); return b; }   /* 830: the headwear, far */
   function guitarBody() { var b = new Body(), wd = [0.55, 0.3, 0.12], dk = [0.2, 0.12, 0.06]; b.box(-0.2, 0.12, 0.92, 1.28, 0.13, 0.22, wd); b.box(0.1, 0.62, 1.16, 1.22, 0.15, 0.2, dk); b.box(-0.06, 0.04, 1.06, 1.14, 0.219, 0.23, dk); return b; }
   function dogBody() { var b = new Body(), dk = [0.12, 0.1, 0.09], P = 0.34;
     b.box(-0.12, 0.12, 0.3, 0.54, -0.32, 0.3, W1, 1); b.box(-0.1, 0.1, 0.44, 0.66, 0.26, 0.48, W1, 1); b.box(-0.05, 0.05, 0.44, 0.53, 0.47, 0.6, dk);
@@ -128,6 +175,11 @@ window.WFR_LIFE790 = (function () {
   function trainBody() { var b = new Body(), roof = [0.42, 0.43, 0.45]; b.box(-1.5, 1.5, 0.75, 3.9, -10.4, 10.4, W1, 1); b.box(-1.52, 1.52, 2.0, 2.95, -9.8, 9.8, GLASS, 5, 0, 0, true); b.box(-1.53, 1.53, 1.3, 1.6, -10.4, 10.4, W1, 2, 0, 0, true);
     b.box(-1.3, 1.3, 3.9, 4.15, -10, 10, roof, 0, 0, 0, true); b.box(-1.3, 1.3, 0.1, 0.75, -8.6, -5.6, TYRE, 0, 0, 0, true); b.box(-1.3, 1.3, 0.1, 0.75, 5.6, 8.6, TYRE, 0, 0, 0, true);
     b.box(-0.9, 0.9, 0.9, 1.15, 10.38, 10.45, HEAD, 4); b.box(-0.9, 0.9, 0.9, 1.15, -10.45, -10.38, TAIL, 4); return b; }
+  function cartBody() { var b = new Body(), roof = [0.95, 0.95, 0.93], seat = [0.2, 0.2, 0.22], bag = [0.15, 0.25, 0.45];   /* 830: a golf cart, canopy and bag */
+    b.box(-0.62, 0.62, 0.22, 0.75, -1.2, 1.2, W1, 1); b.box(-0.55, 0.55, 0.75, 1.05, -0.5, 0.15, seat); b.box(-0.55, 0.55, 0.75, 1.3, -0.62, -0.5, seat);
+    b.box(-0.6, -0.54, 0.75, 1.85, 0.75, 0.81, seat, 0, 0, 0, true); b.box(0.54, 0.6, 0.75, 1.85, 0.75, 0.81, seat, 0, 0, 0, true); b.box(-0.6, -0.54, 0.75, 1.85, -1.0, -0.94, seat, 0, 0, 0, true); b.box(0.54, 0.6, 0.75, 1.85, -1.0, -0.94, seat, 0, 0, 0, true);
+    b.box(-0.68, 0.68, 1.85, 1.93, -1.12, 0.95, roof); b.box(-0.6, 0.6, 0.85, 1.25, 0.75, 0.82, GLASS, 0, 0, 0, true); b.box(-0.3, 0.3, 0.6, 1.45, -1.32, -1.0, bag, 0, 0, 0, true);
+    wheels(b, 0.66, 0.42, [0.8, -0.8], 0.21); return b; }
   var FOAM = [0.88, 0.94, 0.96];
   function sailBody() { var b = new Body(), dk = [0.3, 0.3, 0.32]; b.box(-1.1, 1.1, 0, 0.85, -3.4, 2.6, W1, 2); b.tri([-1.1, 0.85, 2.6], [0, 0.85, 4.2], [1.1, 0.85, 2.6], W1, 2); b.tri([-1.1, 0, 2.6], [1.1, 0, 2.6], [0, 0.85, 4.2], W1, 2);
     b.box(-0.05, 0.05, 0.85, 9.5, 0.6, 0.7, dk, 0, 0, 0, true); b.tri([0, 1.4, 0.55], [0, 9.3, 0.55], [0, 1.4, -3.0], W1, 1); b.tri([0, 1.4, 0.75], [0, 7.8, 0.75], [0, 1.4, 3.6], W1, 1); return b; }
@@ -152,17 +204,20 @@ window.WFR_LIFE790 = (function () {
   function OBC(sh) {
     var U = st.U, NL = String.fromCharCode(10), R = window.WFR_TRAVEL712 && WFR_TRAVEL712.C ? WFR_TRAVEL712.C.REFR : 1e30;
     sh.uniforms.uEye790 = U.eye; sh.uniforms.uInvK790 = U.invK; sh.uniforms.uT790 = U.t; sh.uniforms.uGlow790 = U.glow;
-    sh.vertexShader = ['attribute float aPart790; attribute float aAnim790; attribute float aPiv790; attribute vec4 iA790; attribute vec3 iC1790; attribute vec3 iC2790; attribute vec3 iC3790;',
+    sh.vertexShader = ['attribute float aPart790; attribute float aAnim790; attribute float aPiv790; attribute vec4 iA790; attribute vec3 iC1790; attribute vec3 iC2790; attribute vec3 iC3790; attribute vec4 iC4790;',
       'uniform vec3 uEye790; uniform float uInvK790; uniform float uT790; uniform float uGlow790; varying float vGlow790;',
       'vec3 rotX790( vec3 p, float py, float a ) { float c = cos( a ), s = sin( a ), y = p.y - py; return vec3( p.x, py + y * c - p.z * s, y * s + p.z * c ); }',
       'vec3 rotZ790( vec3 p, float py, float a ) { float c = cos( a ), s = sin( a ), y = p.y - py; return vec3( p.x * c - y * s, py + p.x * s + y * c, p.z ); }'].join(NL) + NL + sh.vertexShader
       .replace('#include <color_vertex>', ['#include <color_vertex>', 'vGlow790 = 0.0;', '#ifdef USE_COLOR',
         'if ( aPart790 > 0.5 && aPart790 < 3.5 ) vColor.rgb *= aPart790 < 1.5 ? iC1790 : aPart790 < 2.5 ? iC2790 : iC3790;',
+        'if ( aPart790 > 5.5 ) vColor.rgb *= aPart790 < 6.5 ? iC4790.rgb : aPart790 < 7.5 ? iC2790 : aPart790 < 8.5 ? vec3( 0.06 ) : vec3( 0.74, 0.75, 0.77 );',   /* 830: the headwear (its own colour), the robe (the legs' colour), the agal, the club */
         'vGlow790 = aPart790 > 4.5 ? uGlow790 * 0.85 : aPart790 > 3.5 ? uGlow790 * 1.8 : 0.0;', '#endif'].join(NL))
       .replace('#include <begin_vertex>', ['#include <begin_vertex>',
+        'if ( aPart790 > 5.5 ) { float nb790 = aPart790 < 6.5 ? 2.0 : aPart790 < 7.5 ? 1.0 : aPart790 < 8.5 ? 4.0 : 8.0; if ( mod( floor( iC4790.w / nb790 + 0.001 ), 2.0 ) < 0.5 ) transformed = vec3( 0.0, 1.6, 0.0 ); }',   /* 830: a part someone does not wear folds to a point */
         'float md790 = iA790.w, tt790 = uT790 * iA790.z + iA790.x, sit790 = ( md790 > 1.5 && md790 < 2.5 ) ? 1.0 : 0.0;',
         'if ( aAnim790 > 0.5 ) {',
         '  if ( aAnim790 < 2.5 ) { float g790 = aAnim790 < 1.5 ? 1.0 : -1.0; float a790 = md790 < 0.5 ? sin( tt790 ) * iA790.y * g790 : 0.0; if ( sit790 > 0.5 ) a790 = -1.45; transformed = rotX790( transformed, aPiv790, a790 ); }',
+        '  else if ( aAnim790 < 4.5 && md790 > 6.5 && md790 < 7.5 ) { float sw790 = fract( tt790 * 0.22 ); float a790 = sw790 < 0.45 ? 2.3 * smoothstep( 0.0, 0.45, sw790 ) : sw790 < 0.53 ? mix( 2.3, -2.0, ( sw790 - 0.45 ) / 0.08 ) : sw790 < 0.75 ? -2.0 : -2.0 * ( 1.0 - smoothstep( 0.75, 1.0, sw790 ) ); transformed = rotZ790( transformed, aPiv790, a790 ); }',   /* 830: a golf swing, both arms and the club together */
         '  else if ( aAnim790 < 4.5 ) { float g790 = aAnim790 < 3.5 ? 1.0 : -1.0; float a790 = md790 < 0.5 ? -sin( tt790 ) * iA790.y * 0.8 * g790 : md790 < 1.5 ? sin( uT790 * 0.9 + iA790.x ) * 0.06 : md790 < 2.5 ? -0.35 : ( aAnim790 < 3.5 ? -1.15 : -0.75 + sin( uT790 * 11.0 + iA790.x ) * 0.3 ); transformed = rotX790( transformed, aPiv790, a790 ); }',
         '  else if ( aAnim790 < 6.5 ) { float g790 = aAnim790 < 5.5 ? 1.0 : -1.0; if ( md790 > 5.5 ) { transformed.x = g790 * 0.06 + ( transformed.x - g790 * 0.06 ) * 0.18; } else { float a790 = md790 > 4.5 ? 0.1 + sin( tt790 * 0.3 ) * 0.06 : sin( tt790 ) * 0.85; transformed = rotZ790( transformed, aPiv790, a790 * g790 ); } }',
         '  else if ( aAnim790 < 7.5 ) { float a790 = ( md790 > 5.5 && md790 < 6.5 ) ? max( 0.0, sin( tt790 ) ) * 1.1 : 0.0; transformed = rotX790( transformed, aPiv790, a790 ); }',
@@ -181,7 +236,7 @@ window.WFR_LIFE790 = (function () {
     g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(b.p), 3)); g.setAttribute('normal', new THREE.BufferAttribute(new Float32Array(b.n), 3)); g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(b.c), 3));
     g.setAttribute('aPart790', new THREE.BufferAttribute(new Float32Array(b.part), 1)); g.setAttribute('aAnim790', new THREE.BufferAttribute(new Float32Array(b.anim), 1)); g.setAttribute('aPiv790', new THREE.BufferAttribute(new Float32Array(b.piv), 1));
     var iA = new THREE.InstancedBufferAttribute(new Float32Array(cap * 4), 4), c1 = new THREE.InstancedBufferAttribute(new Float32Array(cap * 3), 3), c2 = new THREE.InstancedBufferAttribute(new Float32Array(cap * 3), 3), c3 = new THREE.InstancedBufferAttribute(new Float32Array(cap * 3), 3);
-    [iA, c1, c2, c3].forEach(function (a) { a.setUsage(THREE.DynamicDrawUsage); }); g.setAttribute('iA790', iA); g.setAttribute('iC1790', c1); g.setAttribute('iC2790', c2); g.setAttribute('iC3790', c3);
+    var c4 = new THREE.InstancedBufferAttribute(new Float32Array(cap * 4), 4); [iA, c1, c2, c3, c4].forEach(function (a) { a.setUsage(THREE.DynamicDrawUsage); }); g.setAttribute('iA790', iA); g.setAttribute('iC1790', c1); g.setAttribute('iC2790', c2); g.setAttribute('iC3790', c3); g.setAttribute('iC4790', c4);   /* 830: c4 = headwear colour, w = what is worn (1 robe, 2 headwear, 4 agal, 8 club) */
     var im = new THREE.InstancedMesh(g, st.mat, cap); im.name = 'life790:' + name; im.count = 0; im.visible = false; im.frustumCulled = false; im.matrixAutoUpdate = false; im.castShadow = false; im.receiveShadow = false; im.layers.set(C.LAYER); im.renderOrder = -9.35; im.instanceMatrix.setUsage(THREE.DynamicDrawUsage);   /* before the travel pass's depth clear (-9.3), as the trees and the city do: the buildings hide what is behind them */
     im.userData.tris = b.p.length / 9; im.userData.cap = cap; st.root.add(im); st.mesh[name] = im; st.lists[name] = []; return im;
   }
@@ -195,7 +250,7 @@ window.WFR_LIFE790 = (function () {
     var b = tileBounds(z, x, y); this.key = z + '/' + x + '/' + y; this.z = z; this.x = x; this.y = y; this.feed = feed; this.lat = (b.lat0 + b.lat1) / 2; this.lon = (b.lon0 + b.lon1) / 2; this.KX = 111320 * Math.cos(this.lat * D2R);
     this.x0 = (b.lon0 - this.lon) * this.KX; this.x1 = (b.lon1 - this.lon) * this.KX; this.z0 = (this.lat - b.lat1) * KY; this.z1 = (this.lat - b.lat0) * KY; this.cw = (this.x1 - this.x0) / C.GRID; this.ch = (this.z1 - this.z0) / C.GRID;
     this.paths = []; this.bgrid = new Map(); this.grid = new Map(); this.rgrid = new Map(); this.jmap = new Map(); this.lu = []; this.park = []; this.water = []; this.pois = []; this.nb = new Int16Array(C.GRID * C.GRID); this.hmax = new Float32Array(C.GRID * C.GRID);
-    this.cells = null; this.ready = false; this.phase = 0; this.i = 0; this.j = 0; this.A = null; this.left = inBoxes(LEFT, this.lat, this.lon); this.skins = skins(this.lat, this.lon); this.toronto = torontoish(this.lat, this.lon); this.r = rng(hash('life790/' + this.key));
+    this.cells = null; this.ready = false; this.phase = 0; this.i = 0; this.j = 0; this.A = null; this.left = inBoxes(LEFT, this.lat, this.lon); this.skins = skins(this.lat, this.lon); this.reg = window.WFR_SACRED830 ? WFR_SACRED830.region(this.lat, this.lon) : null; this.golf = []; this.greens = []; this.dts = []; this.toronto = torontoish(this.lat, this.lon); this.r = rng(hash('life790/' + this.key));
     var rr = rng(hash('life790c/' + Math.round(this.lat * 4) + '/' + Math.round(this.lon * 4))); this.tram = this.toronto ? TRAMS[0] : pick(rr, TRAMS); this.train = pick(rr, TRAINS); this.bus = this.toronto ? BUSES[0] : pick(rr, BUSES); this.taxi = this.lat > 25 && this.lat < 50 && this.lon < -60 ? 0.08 : 0.03;
   }
   Tile.prototype.m = function (lat, lon, out) { out[0] = (lon - this.lon) * this.KX; out[1] = (this.lat - lat) * KY; return out; };
@@ -253,12 +308,13 @@ window.WFR_LIFE790 = (function () {
       if (T.phase === 2) {   // land use, parks, water, buildings, shops
         var lu = F.landuse || [], lc = F.landcover || [], wa = F.water || [], bu = F.buildings || [], po = F.pois || [], all = lu.length + lc.length + wa.length, k0 = T.i;
         if (k0 < lu.length) { var L1 = lu[k0], c1 = L1.cls || ''; if (L1.rings && L1.rings[0] && L1.rings[0].length >= 6) { var pm = polyM(T, L1.rings); pm.cls = /commercial|retail/.test(c1) ? 'core' : /residential|school|university|college|kindergarten|hospital|library|neighbourhood|suburb|quarter/.test(c1) ? 'res' : /industrial|garages|railway|military/.test(c1) ? 'ind' : /playground|pitch|stadium|theme_park|zoo|cemetery/.test(c1) ? 'park' : null; if (pm.cls === 'park') T.park.push(pm); else if (pm.cls) T.lu.push(pm); } T.i++; continue; }
-        if (k0 < lu.length + lc.length) { var L2 = lc[k0 - lu.length], k2 = L2.subclass || ''; if (/park|garden|recreation_ground|village_green|playground/.test(k2) && L2.rings && L2.rings[0] && L2.rings[0].length >= 6) { var pp = polyM(T, L2.rings); pp.cls = 'park'; if (pp.area > 1500) T.park.push(pp); } T.i++; continue; }
+        if (k0 < lu.length + lc.length) { var L2 = lc[k0 - lu.length], k2 = L2.subclass || ''; if (k2 === 'golf_course' && L2.rings && L2.rings[0] && L2.rings[0].length >= 6) { var gp830 = polyM(T, L2.rings); if (gp830.area > 5000) T.golf.push(gp830); }   /* 830: the golf courses */ if (/park|garden|recreation_ground|village_green|playground/.test(k2) && L2.rings && L2.rings[0] && L2.rings[0].length >= 6) { var pp = polyM(T, L2.rings); pp.cls = 'park'; if (pp.area > 1500) T.park.push(pp); } T.i++; continue; }
         if (k0 < all) { var L3 = wa[k0 - lu.length - lc.length]; if (L3.rings && L3.rings[0] && L3.rings[0].length >= 6 && L3.cls !== 'swimming_pool') { var pw = polyM(T, L3.rings); pw.cls = L3.cls; if (pw.area > 600) T.water.push(pw); } T.i++; continue; }
         var b0 = k0 - all, b1 = Math.min(bu.length, b0 + 300);   /* the buildings, 300 a slice: only where they stand and how tall (a town's density) */
         for (i = b0; i < b1; i++) { var r0 = bu[i].rings && bu[i].rings[0]; if (!r0 || r0.length < 2) continue; T.m(r0[1], r0[0], q); var ci = Math.floor((q[0] - T.x0) / T.cw), cj = Math.floor((q[1] - T.z0) / T.ch); if (ci < 0 || cj < 0 || ci >= C.GRID || cj >= C.GRID) continue; var cc = cj * C.GRID + ci; T.nb[cc]++; if ((bu[i].h || 0) > T.hmax[cc]) T.hmax[cc] = bu[i].h || 0; addB(T, polyM(T, [r0])); }
         if (b1 < bu.length) { T.i = all + b1; continue; }
         for (i = 0; i < po.length; i++) { T.m(po[i].lat, po[i].lon, q); T.pois.push([q[0], q[1]]); }
+        if (F.p830) { (F.p830.golf || []).forEach(function (g) { g.greens.forEach(function (gr) { T.m(gr[0], gr[1], q); T.greens.push([q[0], q[1]]); }); }); (F.p830.dt || []).forEach(function (d) { var P8 = dtPath(T, d); if (P8) T.dts.push(P8); }); }   /* 830: the greens and the drive-thru lanes world-features found */
         T.phase = 3; T.i = 0; T.cells = []; continue; }
       if (T.phase === 3) { makeCell(T, T.i++); if (T.i >= C.GRID * C.GRID) { T.phase = 4; T.i = 0; } continue; }
       if (T.phase === 4) {   // the paths sampled into the cells (every 20 m, inside the tile's own bounds: the buffer belongs to the neighbour)
@@ -283,8 +339,16 @@ window.WFR_LIFE790 = (function () {
       var nb = T.nb[i], lu = 'none', best = 0; for (var v in votes) if (votes[v] > best) { best = votes[v]; lu = v; }
       if (lu === 'none' && nb >= 25) lu = 'res'; if ((lu === 'res' || lu === 'none') && (T.hmax[i] > 45 || nb >= 90)) lu = 'core'; if (lu === 'none' && nb >= 6) lu = 'res';
       var parkPts = []; if (T.park.length) { var rr = rng(hash('pk/' + T.key + '/' + i)); for (var a = 0; a < 12 && parkPts.length < 6; a++) { var px = cx + (rr() - 0.5) * T.cw, pz = cz + (rr() - 0.5) * T.ch; if (polyAt(T.park, px, pz) && !polyAt(T.water, px, pz)) parkPts.push(px, pz); } }
-      T.cells.push({ key: T.key + '#' + i, T: T, i: i, cx: cx, cz: cz, lu: lu, nb: nb, walk: [], car: [], carW: 0, path: [], bus: [], stops: [], transit: [], parkPts: parkPts, loops: [], gulls: [], ducks: [], active: false, people: false, agents: [], flocks: [], tg: null, tgAt: -1e9, seed: hash('cell790/' + T.key + '/' + i) }); }
+      T.cells.push({ key: T.key + '#' + i, T: T, i: i, cx: cx, cz: cz, lu: lu, nb: nb, walk: [], car: [], carW: 0, path: [], bus: [], stops: [], transit: [], parkPts: parkPts, golfPts: golfPts(T, cx, cz), greens: T.greens.filter(function (g) { return Math.abs(g[0] - cx) <= T.cw / 2 && Math.abs(g[1] - cz) <= T.ch / 2; }), dts: T.dts.filter(function (P8) { return Math.abs(P8.m[0] - cx) <= T.cw / 2 && Math.abs(P8.m[1] - cz) <= T.ch / 2; }), loops: [], gulls: [], ducks: [], active: false, people: false, agents: [], flocks: [], tg: null, tgAt: -1e9, seed: hash('cell790/' + T.key + '/' + i) }); }
   }
+  /* 830: the golf course's open ground in a cell (never in its water or a building), a drive-thru lane as a one-way path with its two stops */
+  function golfPts(T, cx, cz) { if (!T.golf.length) return []; var out = [], rr = rng(hash('golf830/' + T.key + '/' + Math.round(cx) + ',' + Math.round(cz)));
+    for (var a = 0; a < 20 && out.length < 12; a++) { var x = cx + (rr() - 0.5) * T.cw, z = cz + (rr() - 0.5) * T.ch; if (polyAt(T.golf, x, z) && !polyAt(T.water, x, z) && !inB(T, x, z)) out.push(x, z); } return out; }
+  function synth(T, pts, kind) { var m = [], cum = [], L = 0; for (var i = 0; i < pts.length; i += 2) { if (i) L += Math.hypot(pts[i] - pts[i - 2], pts[i + 1] - pts[i - 1]); m.push(pts[i], pts[i + 1]); cum.push(L); }
+    if (L < 6) return null; return { id: ++st.ids, T: T, cls: 'path', w: 2, kind: kind, m: new Float32Array(m), cum: new Float32Array(cum), len: L, ov: [], hy: null, hT: -1e9, junc: null, jax: null, stops: null, dirOnly: 0, cells: null, act: false, nAg: 0 }; }
+  function sOn(P, x, z) { var best = 0, bd = 1e18; for (var k = 0; k + 1 < P.cum.length; k++) { var x0 = P.m[2 * k], z0 = P.m[2 * k + 1], ex = P.m[2 * k + 2] - x0, ez = P.m[2 * k + 3] - z0, l2 = ex * ex + ez * ez || 1, t = Math.max(0, Math.min(1, ((x - x0) * ex + (z - z0) * ez) / l2)), dx = x0 + ex * t - x, dz = z0 + ez * t - z, d = dx * dx + dz * dz; if (d < bd) { bd = d; best = P.cum[k] + t * Math.sqrt(l2); } } return best; }
+  function dtPath(T, d) { var P = mkPath(T, d.lane, 'service', 3.6, 'dt'); if (!P) return null; var q = [0, 0]; P.dirOnly = 1; T.m(d.board[0], d.board[1], q); var sb = sOn(P, q[0], q[1]); P.board = [q[0], q[1]]; T.m(d.win[0], d.win[1], q); var sw = sOn(P, q[0], q[1]); P.win = [q[0], q[1]];
+    P.stops = new Float32Array([Math.max(1, sb - 1.5), Math.max(sb + 3, sw - 1.0)]); P.name = d.name; P.ll = [d.lat, d.lon]; return P; }
   function waterLife(T, w) {   // one water of the tile: boats on loops, gulls by the shore, ducks on the ponds (seeded by the tile and the water)
     var r = rng(hash('w790/' + T.key + '/' + w)), town = 0, i; for (i = 0; i < T.nb.length; i++) town += T.nb[i];
     { var p = T.water[w], o = p.rings[0], n = o.length / 2, small = p.area < 60000;
@@ -325,15 +389,15 @@ window.WFR_LIFE790 = (function () {
   function newAgent(k, T, cell) { var a = new Agent(); a.id = ++st.ids; a.k = k; a.what = KIND[k] || k; a.T = T; a.cell = cell; a.P = null; a.s = 0; a.seg = 0; a.d = 1; a.v = 0; a.vm = 1; a.off = 0; a.lane = 0; a.mode = 0; a.fade = 0; a.fadeTo = 1; a.ph = Math.random() * 6.283; a.gait = 0; a.rate = 0;
     a.lx = 0; a.ly = 0; a.lz = 0; a.mx = 0; a.mz = 0; a.yaw = 0; a.htx = 0; a.htz = 1; a.dead = false; a.c1 = W1; a.c2 = W1; a.c3 = W1; a.rideable = k === 'bus' || k === 'tram' || k === 'train' || k === 'river'; a.dwell = 0; a.dist = 0; a.lastStop = -1;
     st.agents.push(a); st.byId.set(a.id, a); if (cell) cell.agents.push(a); st.spawned++; return a; }
-  function dress(a, r, T) { var sk = T.skins; a.c1 = pick(r, TOPS); a.c2 = pick(r, BOTS); a.c3 = hex(pick(r, sk)); }
+  function dress(a, r, T) { if (T.reg) { dressReg(a, r, T); return; } var sk = T.skins; a.c1 = pick(r, TOPS); a.c2 = pick(r, BOTS); a.c3 = hex(pick(r, sk)); }   /* 830: North Africa and the Middle East dress as they do */
   function onSample(a, list, r) { var n = list.length / 2; if (!n) return false; var q = Math.floor(r() * n) * 2; a.P = list[q]; a.s = list[q + 1] + (r() - 0.5) * 16; a.seg = 0; a.T = a.P.T; return true; }
   function lane(a, r) { var w = a.P.w, sideK = a.T.left ? -1 : 1; if (a.P.cls === 'motorway' || a.P.cls === 'trunk') a.lane = sideK * w * (r() < 0.5 ? 0.17 : 0.34); else a.lane = sideK * Math.max(1.3, w * 0.25); }
 
   function spawn(cell, kind, r) {
     if (st.agents.length >= C.AGENTS) return null; var T = cell.T, a;
     if (kind === 'walker' || kind === 'jogger') { a = newAgent(kind, T, cell); if (!onSample(a, (kind === 'jogger' && cell.path.length) || !cell.walk.length ? cell.path : cell.walk, r)) { a.dead = true; return null; }
-      dress(a, r, T); a.d = r() < 0.5 ? 1 : -1; a.side = r() < 0.5 ? 1 : -1; a.off = a.P.kind === 'path' ? a.side * (0.5 + r() * 0.6) : a.side * (a.P.w / 2 + 1.3 + r() * 0.9); var sp0 = pathAt(a.P, a.s, null), tz0 = sp0.tz, tx0 = sp0.tx, px0 = sp0.x, pz0 = sp0.z, offIn = function (o) { return inB(T, px0 - tz0 * o, pz0 + tx0 * o); }; if (offIn(a.off)) { a.off = -a.off; if (offIn(a.off)) { a.off = (a.off > 0 ? 1 : -1) * (a.P.kind === 'path' ? 0 : a.P.w / 2 + 0.5); if (offIn(a.off)) { a.dead = true; return null; } } }   /* the sidewalk side that is not a wall */ a.vm = kind === 'jogger' ? 2.6 + r() * 0.7 : 1.1 + r() * 0.45; a.v = a.vm; a.gait = kind === 'jogger' ? 0.85 : 0.5; a.rate = (kind === 'jogger' ? 2.7 : 1.9) * 3.1416 * a.vm / (kind === 'jogger' ? 2.9 : 1.3); a.mode = 0;
-      if (kind === 'jogger' && r() < 0.6) { a.c1 = pick(r, [hex(0xff4f6d), hex(0x2d9cdb), hex(0xf2f2ee), hex(0x1d1d1f), hex(0x9be15d)]); a.c2 = hex(0x1d1d1f); }
+      dress(a, r, T); a.d = r() < 0.5 ? 1 : -1; a.side = r() < 0.5 ? 1 : -1; a.off = a.P.kind === 'path' ? a.side * (0.5 + r() * 0.6) : a.side * (a.P.w / 2 + 1.3 + r() * 0.9); var sp0 = pathAt(a.P, a.s, null), tz0 = sp0.tz, tx0 = sp0.tx, px0 = sp0.x, pz0 = sp0.z, offIn = function (o) { return inB(T, px0 - tz0 * o, pz0 + tx0 * o); }; if (offIn(a.off)) { a.off = -a.off; if (offIn(a.off)) { a.off = (a.off > 0 ? 1 : -1) * (a.P.kind === 'path' ? 0 : a.P.w / 2 + 0.5); if (offIn(a.off)) { a.dead = true; return null; } } }   /* the sidewalk side that is not a wall */ a.vm = kind === 'jogger' ? 2.6 + r() * 0.7 : 1.1 + r() * 0.45; a.v = a.vm; a.gait = kind === 'jogger' ? 0.85 : (a.c4 && (a.c4[3] & 1) ? 0.32 : 0.5); a.rate = (kind === 'jogger' ? 2.7 : 1.9) * 3.1416 * a.vm / (kind === 'jogger' ? 2.9 : 1.3); a.mode = 0;
+      if (kind === 'jogger' && r() < 0.6) { a.c1 = pick(r, [hex(0xff4f6d), hex(0x2d9cdb), hex(0xf2f2ee), hex(0x1d1d1f), hex(0x9be15d)]); a.c2 = hex(0x1d1d1f); if (a.c4) a.c4 = (a.c4[3] & 2) ? [a.c4[0], a.c4[1], a.c4[2], 2] : null; }
       if (kind === 'walker' && r() < (cell.lu === 'core' ? 0.06 : 0.13)) { var dg = newAgent('dog', T, cell); dg.owner = a; a.dog = dg; dg.c1 = pick(r, DOGS); dg.gait = 0.7; dg.rate = a.rate * 1.6; dg.mode = 0; dg.size = 0.75 + r() * 0.5; }
       return a; }
     if (kind === 'car' || kind === 'bus') { a = newAgent(kind, T, cell); if (!onSample(a, kind === 'bus' ? cell.bus : carList(cell, r), r)) { a.dead = true; return null; } a.d = r() < 0.5 ? 1 : -1; lane(a, r);
@@ -365,6 +429,8 @@ window.WFR_LIFE790 = (function () {
     t.busk = lu === 'core' && h >= 10 && h < 21 && (cell.seed % 100) < (cell.T.pois.length ? 40 : 22) && cell.walk.length ? 1 : 0;
     t.pigeon = (h < 5.5 || h >= 21) ? 0 : cell.walk.length || cell.parkPts.length ? (   /* pigeons roost at night */lu === 'core' ? 2 : lu === 'park' ? 1 : lu === 'res' ? ((cell.seed >> 3) % 2) : lu === 'ind' ? ((cell.seed >> 5) % 3 === 0 ? 1 : 0) : 0) : 0;
     t.waiters = h > 5.5 && h < 23.5 ? Math.round(pk * (lu === 'core' ? 3 : 1.5)) : 0;
+    t.dt = cell.dts.length ? cell.dts.length * ((h >= 11 && h < 14) || (h >= 17 && h < 20.5) ? 4 : h >= 6 && h < 23 ? 3 : 1) : 0;   /* 830: the drive-thru line, longest at lunch and supper */
+    t.golf = cell.golfPts.length && h >= 6.5 && h < 19.5 ? 1 : 0;
     return t;
   }
   function count(cell, k) { var n = 0; for (var i = 0; i < cell.agents.length; i++) { var a = cell.agents[i]; if (a.k === k && !a.dead && !a.leaving) n++; } return n; }
@@ -373,10 +439,12 @@ window.WFR_LIFE790 = (function () {
     var r = rng(cell.seed ^ Math.floor(st.t * 7)), tg = cell.tg, k, have, made = 0;
     var kinds = cell.people ? ['walker', 'jogger', 'car', 'bus'] : ['car', 'bus'];
     for (var q = 0; q < kinds.length; q++) { k = kinds[q]; have = count(cell, k); if (have > tg[k] + 2) retire(cell, k, have - tg[k]); while (have < tg[k] && made < budget) { var a = spawn(cell, k, r); if (!a) break; have++; made++; } }
+    if (tg.dt) { have = count(cell, 'dt'); if (have > tg.dt + 1) retire(cell, 'dt', have - tg.dt); for (; have < tg.dt && made < budget + 4; have++, made++) { var DP = cell.dts[have % cell.dts.length], da = newAgent('dt', cell.T, cell), qn = Math.floor(have / cell.dts.length);
+      da.P = DP; da.T = DP.T; da.d = 1; da.s = Math.max(0, DP.stops[1] - 2 - qn * 6.6); da.seg = 0; da.lane = 0; da.vm = 2.6; da.v = 0; da.len = 4.4; da.lastStop = qn === 0 ? 0 : -1; da.c1 = pick(r, CARS); da.c2 = da.c1; da.c3 = da.c1; } }   /* 830: queued nose to tail, the first at the window */
     var band = st.hour < 6 || st.hour >= 21 ? 'night' : 'day';   /* the sitters, waiters, buskers and pigeons are made again when day turns to night (and back) */
     if (cell.statics && cell.sband !== band) { for (var j = 0; j < cell.agents.length; j++) if (!cell.agents[j].P && cell.agents[j].k !== 'dog') cell.agents[j].dead = true; for (var g = 0; g < cell.flocks.length; g++) cell.flocks[g].dead = true; cell.flocks = []; cell.statics = false; }
     if (cell.people && !cell.statics) { cell.statics = true; cell.sband = band; statics(cell, rng(cell.seed)); made += 4; }
-    if (!cell.people && cell.statics) { cell.statics = false; for (var i = 0; i < cell.agents.length; i++) { var b = cell.agents[i]; if ((!b.P || b.k === 'walker' || b.k === 'jogger') && !b.dead) { b.dead = true; if (b.dog) b.dog.dead = true; } } for (var f = 0; f < cell.flocks.length; f++) cell.flocks[f].dead = true; cell.flocks = []; }
+    if (!cell.people && cell.statics) { cell.statics = false; for (var i = 0; i < cell.agents.length; i++) { var b = cell.agents[i]; if ((!b.P || b.k === 'walker' || b.k === 'jogger' || b.golf) && !b.dead) { b.dead = true; if (b.dog) b.dog.dead = true; } } for (var f = 0; f < cell.flocks.length; f++) cell.flocks[f].dead = true; cell.flocks = []; }
     return made;
   }
   function statics(cell, r) {   // sitters on the park grass, waiters at the stops, a busker and a ring of listeners, the pigeons, the ducks
@@ -390,6 +458,16 @@ window.WFR_LIFE790 = (function () {
     for (i = 0; i < tg.pigeon; i++) { var fx, fz; if (cell.parkPts.length && (cell.lu === 'park' || r() < 0.3)) { var pj = Math.floor(r() * cell.parkPts.length / 2) * 2; fx = cell.parkPts[pj]; fz = cell.parkPts[pj + 1]; } else if (cell.walk.length) { var wq = Math.floor(r() * cell.walk.length / 2) * 2, WP = cell.walk[wq], wp = pathAt(WP, cell.walk[wq + 1], null), ws = r() < 0.5 ? 1 : -1; fx = wp.x - wp.tz * ws * (WP.w / 2 + 2.5); fz = wp.z + wp.tx * ws * (WP.w / 2 + 2.5); } else continue;
       flock(cell, 'pigeon', fx, fz, 7 + Math.floor(r() * 12), r); }
     for (i = 0; i < cell.ducks.length; i++) flock(cell, 'duck', cell.ducks[i].x, cell.ducks[i].z, cell.ducks[i].n, r);
+    if (tg.golf) golfers(cell, r);
+  }
+  function golfers(cell, r) {   // 830: a group at a few spots of the course (one swings, the others wait, a cart parked by), two on each green, a cart and a pair walking on
+    var T = cell.T, G = cell.golfPts, i, k, a; for (i = 0; i < cell.agents.length; i++) if (cell.agents[i].golf) cell.agents[i].dead = true;
+    for (i = 0; i < G.length && i < 6; i += 2) { var x = G[i], z = G[i + 1], yaw = r() * 6.283, pl = spawnStatic(cell, 'golfer', x, z, yaw, r, 7); if (pl.dead) continue; golfDress(pl, r, T); pl.golf = true; pl.rate = 1; pl.ph = r() * 20;
+      var nW = 1 + Math.floor(r() * 3); for (k = 0; k < nW; k++) { var an = yaw + 2.2 + k * 0.6, wx = x + Math.sin(an) * 3.2, wz = z + Math.cos(an) * 3.2, w = spawnStatic(cell, 'golfer', wx, wz, Math.atan2(x - wx, z - wz), r, 1); if (!w.dead) { golfDress(w, r, T); w.golf = true; if (r() < 0.5) w.c4 = [1, 1, 1, 0]; } }
+      var ct = spawnStatic(cell, 'cart', x + Math.sin(yaw + 1.6) * 6, z + Math.cos(yaw + 1.6) * 6, yaw + 1.2, r, 1); if (!ct.dead) { ct.golf = true; ct.c1 = hex(0xf4f4f2); ct.c2 = ct.c1; ct.c3 = ct.c1; } }
+    for (i = 0; i < cell.greens.length && i < 3; i++) { var gx = cell.greens[i][0], gz = cell.greens[i][1]; for (k = 0; k < 2; k++) { var ga = r() * 6.283, px = gx + Math.sin(ga) * (2 + r() * 5), pz = gz + Math.cos(ga) * (2 + r() * 5), pu = spawnStatic(cell, 'golfer', px, pz, Math.atan2(gx - px, gz - pz), r, 1); if (!pu.dead) { golfDress(pu, r, T); pu.golf = true; } } }
+    if (G.length >= 4) { var P = synth(T, [G[0], G[1], G[G.length - 2], G[G.length - 1]], 'golf'); if (P) { a = newAgent('cart', T, cell); a.P = P; a.s = r() * P.len; a.d = 1; a.vm = 4.5; a.v = 0; a.len = 2.6; a.lane = 0; a.golf = true; a.c1 = hex(0xf4f4f2); a.c2 = a.c1; a.c3 = a.c1;
+      var P2 = synth(T, [G[2], G[3], G[0], G[1]], 'golf'); if (P2) for (k = 0; k < 2; k++) { var w2 = newAgent('walker', T, cell); w2.P = P2; w2.s = P2.len * 0.3 + k * 1.2; w2.d = 1; w2.off = k ? 0.9 : -0.1; w2.vm = 1.0; w2.v = 1.0; w2.gait = 0.45; w2.rate = 1.9 * 3.1416 / 1.3; w2.mode = 0; w2.golf = true; golfDress(w2, r, T); } } }
   }
   function flock(cell, kind, x, z, n, r) { var F = { id: ++st.ids, kind: kind, what: kind === 'pigeon' ? 'pigeons' : kind === 'gull' ? 'gulls' : 'ducks', T: cell.T, cell: cell, mx: x, mz: z, n: n, b: [], state: 'ground', t0: -1e9, gy: null, gyT: -1e9, dead: false, R: 0, alt: 0 };
     for (var i = 0; i < n; i++) { var a = r() * 6.283, d = Math.sqrt(r()) * (kind === 'pigeon' ? 3.5 : kind === 'duck' ? 4 : 1); F.b.push({ ox: Math.cos(a) * d, oz: Math.sin(a) * d, yaw: r() * 6.283, ph: r() * 6.283, c1: kind === 'pigeon' ? pick(r, PIGEONS) : kind === 'duck' ? (r() < 0.5 ? hex(0x7a5c3e) : hex(0x8f8f88)) : W1, c2: kind === 'pigeon' ? pick(r, SHEEN) : kind === 'duck' ? (r() < 0.5 ? hex(0x1f6f3a) : hex(0x7a5c3e)) : W1, out: r() * 6.283, up: 3.5 + r() * 3, air: C.SCATTER.AIR[0] + r() * (C.SCATTER.AIR[1] - C.SCATTER.AIR[0]), cr: 10 + r() * 14, ca: r() * 6.283, cw: (r() < 0.5 ? -1 : 1) * (0.5 + r() * 0.35), ch: 9 + r() * 12, peck: r() < 0.6 }); }
@@ -427,7 +505,7 @@ window.WFR_LIFE790 = (function () {
   }
   function sleep(c) { c.active = false; c.people = false; c.statics = false; st.cells.delete(c.key); for (var i = 0; i < c.agents.length; i++) { c.agents[i].dead = true; if (c.agents[i].dog) c.agents[i].dog.dead = true; } c.agents = []; c.flocks.forEach(function (F) { F.dead = true; }); c.flocks = []; c.tg = null; }
   function lanes() {   // who follows whom: the vehicles on each path and direction, in order
-    var M = new Map(), i, a; for (i = 0; i < st.agents.length; i++) { a = st.agents[i]; a.lead = null; if (!a.P || !(a.k === 'car' || a.k === 'bus' || a.k === 'tram' || a.k === 'train')) continue; var key = a.P.id * 2 + (a.d > 0 ? 1 : 0), L = M.get(key); if (!L) M.set(key, L = []); L.push(a); }
+    var M = new Map(), i, a; for (i = 0; i < st.agents.length; i++) { a = st.agents[i]; a.lead = null; if (!a.P || !(a.k === 'car' || a.k === 'bus' || a.k === 'tram' || a.k === 'train' || a.k === 'dt')) continue; var key = a.P.id * 2 + (a.d > 0 ? 1 : 0), L = M.get(key); if (!L) M.set(key, L = []); L.push(a); }
     M.forEach(function (L) { L.sort(function (p, q) { return p.s * p.d - q.s * q.d; }); for (var j = 0; j + 1 < L.length; j++) L[j].lead = L[j + 1]; });
   }
   function lists() {   // each mesh's list, nearest first under its cap; the full figure near, the light one far
@@ -435,9 +513,10 @@ window.WFR_LIFE790 = (function () {
     for (i = 0; i < st.agents.length; i++) { var a = st.agents[i]; if (a.dead) continue; if (a.P) { var pp = pathAt(a.P, a.s, null); a.mx = pp.x; a.mz = pp.z; a.T = a.P.T; } else if (a.k === 'dog' && a.owner) { a.mx = a.owner.mx; a.mz = a.owner.mz; a.T = a.owner.T; }
       var h = a.T.her(), dx = a.mx - h[0], dz = a.mz - h[1], d = Math.sqrt(dx * dx + dz * dz); a.dist = d;
       switch (a.k) {
-        case 'walker': case 'jogger': case 'waiter': case 'listener': case 'busker': case 'sitter': if (d < C.P_NEAR || (a.mode === 2 && d < C.P_R) || a.k === 'busker') Ls.personN.push(a); else if (d < C.P_R) Ls.personF.push(a); if (a.prop && d < C.P_R) Ls.prop.push(a); break;
+        case 'walker': case 'jogger': case 'waiter': case 'listener': case 'busker': case 'sitter': case 'golfer': if (d < C.P_NEAR || (a.mode === 2 && d < C.P_R) || a.k === 'busker') Ls.personN.push(a); else if (d < C.P_R) Ls.personF.push(a); if (a.prop && d < C.P_R) Ls.prop.push(a); break;
         case 'dog': break;   // drawn with its walker
-        case 'car': if (d < C.C_NEAR) Ls.car.push(a); else if (d < C.C_R) Ls.carF.push(a); break;
+        case 'car': case 'dt': if (d < C.C_NEAR) Ls.car.push(a); else if (d < C.C_R) Ls.carF.push(a); break;
+        case 'cart': if (d < C.C_R) Ls.cart.push(a); break;
         case 'bus': if (d < C.C_R) Ls.bus.push(a); break;
         case 'tram': if (d < C.T_R) Ls.tram.push(a); break;
         case 'train': if (d < C.T_R) Ls.train.push(a); break;
@@ -469,14 +548,14 @@ window.WFR_LIFE790 = (function () {
     if (a.k === 'dog') { if (!a.owner || a.owner.dead) { a.dead = true; return; } return; }
     if (!P) { if (a.mode === 1 && a.scared && t - a.scared > 4) a.scared = 0; return; }
     if (a.k === 'walker' || a.k === 'jogger') { var v = a.vm * (a.boost && t - a.scared < 3 ? a.boost : 1); a.v = v; a.s += a.d * v * dt;
-      if (a.s < 0 || a.s > P.len) { var c = Math.random() < 0.5 ? carryOn(a, P.kind === 'path' ? 'path' : 'road') : null; if (c) { moveTo(a, c); a.off = (a.off >= 0 ? 1 : -1) * (a.P.kind === 'path' ? 0.8 : a.P.w / 2 + 1.6); } else { a.d = -a.d; a.s = Math.max(0, Math.min(P.len, a.s)); a.off = -a.off * (Math.random() < 0.5 ? 1 : -1); } } return; }
+      if (a.s < 0 || a.s > P.len) { var c = P.kind !== 'golf' && Math.random() < 0.5 ? carryOn(a, P.kind === 'path' ? 'path' : 'road') : null; if (c) { moveTo(a, c); a.off = (a.off >= 0 ? 1 : -1) * (a.P.kind === 'path' ? 0.8 : a.P.w / 2 + 1.6); } else { a.d = -a.d; a.s = Math.max(0, Math.min(P.len, a.s)); a.off = -a.off * (Math.random() < 0.5 ? 1 : -1); } } return; }
     /* vehicles */
     var vt = a.vm, ahead;
     if (a.dwell > 0) { a.dwell -= dt; a.v = 0; if (a.dwell <= 0 && a.atEnd) { a.atEnd = false; a.d = -a.d; a.lastStop = -1; } return; }
     if (a.brake && t - a.scared < a.brake) vt = 0;
     if (a.lead && a.lead.P === P && !a.lead.dead) { var gap = (a.lead.s - a.s) * a.d - (a.lead.len * (a.lead.cars || 1) + a.len) / 2 - 2.5; if (gap < a.v * 1.3 + 3) vt = Math.min(vt, Math.max(0, (gap - 1) / 1.3)); }
     if (P.junc && (a.k === 'car' || a.k === 'bus')) { var j = nextJ(P, a.s, a.d); if (j >= 0) { var dj = Math.abs(P.junc[j] - a.s) - C.SIGNAL.STOP; if (dj < 40 && red(P, j, t)) { if (dj > -1.5) vt = Math.min(vt, Math.sqrt(Math.max(0, 2 * 4 * Math.max(0, dj - 0.5)))); } } }
-    if ((a.k === 'bus' || a.k === 'tram') && P.stops) { var sI = nextStop(P, a.s, a.d, a.lastStop); if (sI >= 0) { var ds = Math.abs(P.stops[sI] - a.s); if (ds < 30) vt = Math.min(vt, Math.sqrt(Math.max(0, 2 * 2.5 * (ds - 0.3))) + 0.3); if (ds < 0.8) { a.dwell = a.k === 'tram' ? 10 : 8; a.lastStop = sI; a.v = 0; return; } } }
+    if ((a.k === 'bus' || a.k === 'tram' || a.k === 'dt') && P.stops) { var sI = nextStop(P, a.s, a.d, a.lastStop); if (sI >= 0) { var ds = Math.abs(P.stops[sI] - a.s); if (ds < 30) vt = Math.min(vt, Math.sqrt(Math.max(0, 2 * 2.5 * (ds - 0.3))) + 0.3); if (ds < 0.8) { a.dwell = a.k === 'tram' ? 10 : a.k === 'dt' ? (sI ? 9 : 7) : 8; a.lastStop = sI; a.v = 0; return; } } }   /* 830: a drive-thru car stops at the board, then at the window */
     a.v += Math.max(-6 * dt, Math.min(2.4 * dt, vt - a.v)); if (a.v < 0) a.v = 0; a.s += a.d * a.v * dt;
     if (a.s < 0 || a.s > P.len) {
       var want = a.k === 'car' || a.k === 'bus' ? 'road' : a.k === 'tram' ? 'tram' : a.k === 'train' ? 'train' : null, cc = want ? carryOn(a, want) : null;
@@ -497,7 +576,8 @@ window.WFR_LIFE790 = (function () {
   /* ---------- the drawing, every frame after the recentre ---------- */
   var MM = null;
   function put(im, i, x, y, z, yaw, s) { var a = im.instanceMatrix.array, o = i * 16, c = Math.cos(yaw) * s, n = Math.sin(yaw) * s; a[o] = c; a[o + 1] = 0; a[o + 2] = -n; a[o + 3] = 0; a[o + 4] = 0; a[o + 5] = s; a[o + 6] = 0; a[o + 7] = 0; a[o + 8] = n; a[o + 9] = 0; a[o + 10] = c; a[o + 11] = 0; a[o + 12] = x; a[o + 13] = y; a[o + 14] = z; a[o + 15] = 1; }
-  function attr(im, i, ph, gait, rate, mode, c1, c2, c3) { var g = im.geometry.attributes, A = g.iA790.array, a = g.iC1790.array, b = g.iC2790.array, c = g.iC3790.array, o = i * 4, p = i * 3; A[o] = ph; A[o + 1] = gait; A[o + 2] = rate; A[o + 3] = mode; a[p] = c1[0]; a[p + 1] = c1[1]; a[p + 2] = c1[2]; b[p] = c2[0]; b[p + 1] = c2[1]; b[p + 2] = c2[2]; c[p] = c3[0]; c[p + 1] = c3[1]; c[p + 2] = c3[2]; }
+  var NOWEAR = [1, 1, 1, 0];
+  function attr(im, i, ph, gait, rate, mode, c1, c2, c3, c4) { var g = im.geometry.attributes, A = g.iA790.array, a = g.iC1790.array, b = g.iC2790.array, c = g.iC3790.array, d = g.iC4790.array, o = i * 4, p = i * 3; A[o] = ph; A[o + 1] = gait; A[o + 2] = rate; A[o + 3] = mode; a[p] = c1[0]; a[p + 1] = c1[1]; a[p + 2] = c1[2]; b[p] = c2[0]; b[p + 1] = c2[1]; b[p + 2] = c2[2]; c[p] = c3[0]; c[p + 1] = c3[1]; c[p + 2] = c3[2]; c4 = c4 || NOWEAR; d[o] = c4[0]; d[o + 1] = c4[1]; d[o + 2] = c4[2]; d[o + 3] = c4[3]; }
   function toLocal(T, mx, mz, out) { var A = T.anchor(); out[0] = A.ox + A.a * mx + A.b * mz; out[1] = A.oz + A.c * mx + A.d * mz; return out; }
   function yawOf(T, hx, hz) { var A = T.anchor(); return Math.atan2(A.a * hx + A.b * hz, A.c * hx + A.d * hz); }
   var Q2 = [0, 0];
@@ -537,13 +617,16 @@ window.WFR_LIFE790 = (function () {
       ['personN', 'personF'].forEach(function (mk) { var L = Ls[mk], im2 = M[mk]; for (var q = 0; q < L.length; q++) { var b = L[q], p;
         if (b.P) { if (mk === 'personN') step808(b, foot808, dt808); p = placeOn(b, b.s, b.off + (b.av808 || 0), 0.04); b.yaw = p.yaw; } else { toLocal(b.T, b.mx, b.mz, Q2); p = { x: Q2[0], y: (b.gy || 0) + 0.02, z: Q2[1] }; b.yaw = yawOf(b.T, Math.sin(b.yaw0), Math.cos(b.yaw0)); if (b.mode === 1 && b.scared) b.yaw += Math.PI; }
         b.lx = p.x; b.ly = p.y; b.lz = p.z; if (b.fade <= 0.001 && b.fadeTo === 1) b.fade = 0.001; var sc = Math.min(1, b.fade * 3) * (b.size || 1) * (mk === 'personN' ? C.SCALE.person : C.SCALE.personFar);
-        put(im2, n[mk], p.x, p.y, p.z, b.yaw, sc); attr(im2, n[mk], b.ph, b.gait, b.rate, b.mode, b.c1, b.c2, b.c3); n[mk]++;
+        put(im2, n[mk], p.x, p.y, p.z, b.yaw, sc); attr(im2, n[mk], b.ph, b.gait, b.rate, b.mode, b.c1, b.c2, b.c3, b.c4); n[mk]++;
         if (b.dog && !b.dog.dead && n.dog < M.dog.userData.cap && b.dist < C.P_NEAR * 1.6) { var g = b.dog, gp = placeOn(b, b.s - b.d * 1.4, b.off + (b.off > 0 ? -0.55 : 0.55), 0.02); g.lx = gp.x; g.ly = gp.y; g.lz = gp.z; g.yaw = gp.yaw; g.mx = b.mx; g.mz = b.mz;
           put(M.dog, n.dog, gp.x, gp.y, gp.z, gp.yaw, (g.size || 1) * Math.min(1, b.fade * 3)); attr(M.dog, n.dog, b.ph * 1.3, 0.7, b.rate * 1.5, 0, g.c1, g.c1, g.c1); n.dog++; } } });
       for (i = 0; i < Ls.prop.length; i++) { a = Ls.prop[i]; put(M.prop, n.prop, a.lx, a.ly, a.lz, a.yaw, 1); attr(M.prop, n.prop, 0, 0, 0, 1, W1, W1, W1); n.prop++; }
       /* cars and buses */
       ['car', 'carF', 'bus'].forEach(function (mk) { var L = Ls[mk], im2 = M[mk]; for (var q = 0; q < L.length; q++) { var b = L[q], p = placeOn(b, b.s, b.lane * b.d, 0.32); b.lx = p.x; b.ly = p.y; b.lz = p.z; b.yaw = p.yaw;
         put(im2, n[mk], p.x, p.y, p.z, p.yaw, Math.max(0.001, b.fade)); attr(im2, n[mk], 0, 0, 0, 1, b.c1, b.c2, b.c3); n[mk]++; } });
+      /* 830: the golf carts (driving a course path, or parked) */
+      for (i = 0; i < Ls.cart.length; i++) { a = Ls.cart[i]; var pc; if (a.P) { pc = placeOn(a, a.s, 0, 0.05); a.yaw = pc.yaw; } else { toLocal(a.T, a.mx, a.mz, Q2); pc = { x: Q2[0], y: (a.gy || 0) + 0.05, z: Q2[1] }; a.yaw = yawOf(a.T, Math.sin(a.yaw0), Math.cos(a.yaw0)); }
+        a.lx = pc.x; a.ly = pc.y; a.lz = pc.z; put(M.cart, n.cart, pc.x, pc.y, pc.z, a.yaw, Math.max(0.001, a.fade) * 1.15); attr(M.cart, n.cart, 0, 0, 0, 1, a.c1, a.c2, a.c3); n.cart++; }
       /* streetcars and trains: their sections follow the line */
       ['tram', 'train'].forEach(function (mk) { var L = Ls[mk], im2 = M[mk]; for (var q = 0; q < L.length; q++) { var b = L[q], seg0 = b.seg;
         for (var c = 0; c < b.cars && n[mk] < im2.userData.cap; c++) { var s = b.s - b.d * c * (b.len + 0.6), sOk = s >= 0 && s <= b.P.len, p = placeOn(b, Math.max(0, Math.min(b.P.len, s)), b.lane, 0.3); if (c === 0) { b.lx = p.x; b.ly = p.y; b.lz = p.z; b.yaw = p.yaw; b.mx0 = b.mx; b.mz0 = b.mz; }
@@ -570,11 +653,18 @@ window.WFR_LIFE790 = (function () {
             bx = F.mx + Math.cos(ag) * rr; bz = F.mz + Math.sin(ag) * rr; by = gy0 + B.ch + v2 * 18 + Math.sin(G * 0.4 + B.ph) * 2; toLocal(F.T, bx, bz, Q2);
             put(imF, n.gull, Q2[0], by, Q2[1], yawOf(F.T, -Math.sin(ag) * B.cw, Math.cos(ag) * B.cw), sc0); attr(imF, n.gull, B.ph, 0, v2 > 0.1 ? 14 : 6, Math.sin(G * 0.5 + B.ph) > 0 || v2 > 0.1 ? 4 : 5, W1, W1, W1); n.gull++; }
           else { bx = F.mx + B.ox + Math.sin(G * 0.05 + B.ph) * 2; bz = F.mz + B.oz + Math.cos(G * 0.04 + B.ph) * 2; toLocal(F.T, bx, bz, Q2); put(imF, n.duck, Q2[0], gy0 + 0.25, Q2[1], B.yaw + G * 0.03, sc0); attr(imF, n.duck, 0, 0, 0, 1, B.c1, B.c2, B.c1); n.duck++; } } }
-      for (k in M) { im = M[k]; im.count = n[k]; im.visible = n[k] > 0; if (n[k]) { im.instanceMatrix.needsUpdate = true; var ga = im.geometry.attributes; ga.iA790.needsUpdate = true; ga.iC1790.needsUpdate = true; ga.iC2790.needsUpdate = true; ga.iC3790.needsUpdate = true; } }
+      for (k in M) { im = M[k]; im.count = n[k]; im.visible = n[k] > 0; if (n[k]) { im.instanceMatrix.needsUpdate = true; var ga = im.geometry.attributes; ga.iA790.needsUpdate = true; ga.iC1790.needsUpdate = true; ga.iC2790.needsUpdate = true; ga.iC3790.needsUpdate = true; ga.iC4790.needsUpdate = true; } }
       st.drawnN = n;
     } catch (e) { fail('place', e); }
     st.placeMs = performance.now() - t0; if (st.placeMs > (st.placeMax || 0)) st.placeMax = st.placeMs;
   }
+  /* 830, THE LOOP (row 829, "every system feeds the next"): she lands at a drive-thru window and is handed a few fries; carried home, they feed her chick
+     (the page's own beak and feed: food 20, stamina +1). One a window an in-game day. */
+  var TREAT830 = { id: 'fries830', emoji: '🍟', name: 'a few fries from the drive-thru window', gives: { sta: 1 }, food: 20, xp: 4 };
+  function treat830() { var S = X.S; if (!S || !S.pos || (st.frame & 7)) return; var T = X.TR, gr = Math.max(0, T.st.H(S.pos.x, S.pos.z)); if (S.pos.y - gr > 5 || S.fruit) return;
+    st.cells.forEach(function (c) { for (var i = 0; i < c.dts.length; i++) { var P = c.dts[i]; toLocal(P.T, P.win[0], P.win[1], Q2); if (Math.hypot(S.pos.x - Q2[0], S.pos.z - Q2[1]) > 8) continue;
+      var day = Math.floor(S.dawns || 0), key = P.T.key + '/' + Math.round(P.win[0]) + ',' + Math.round(P.win[1]); st.treats = st.treats || {}; if (st.treats[key] === day) continue;
+      if (window.WFR_BEAK830 && WFR_BEAK830(TREAT830, P.name)) { st.treats[key] = day; st.treated = (st.treated || 0) + 1; st.lastTreat = { at: P.name, key: key }; } return; } }); }
   function fail(where, e) { st.fault = where + ': ' + (e && e.stack ? String(e.stack).split('\n').slice(0, 3).join(' | ') : e); st.enabled = false; for (var k in st.mesh) { st.mesh[k].count = 0; st.mesh[k].visible = false; } }   // a fault takes the life away, never the game
 
   /* ---------- the feed: world-features.js hands each tile it builds (z14 only: the streets near her) ---------- */
@@ -595,7 +685,7 @@ window.WFR_LIFE790 = (function () {
       st.mat = new THREE.MeshLambertMaterial({ vertexColors: true, side: THREE.DoubleSide }); st.mat.name = 'life790'; st.mat.onBeforeCompile = OBC; st.mat.customProgramCacheKey = function () { return 'life790'; };
       st.root = new THREE.Group(); st.root.name = 'life790'; st.root.matrixAutoUpdate = false;
       var Cp = C.CAP; meshOf('personN', personBody(), Cp.personN); meshOf('personF', personFar(), Cp.personF); meshOf('prop', guitarBody(), Cp.prop); meshOf('dog', dogBody(), Cp.dog); meshOf('car', carBody(), Cp.car); meshOf('carF', carFar(), Cp.carF); meshOf('bus', busBody(), Cp.bus);
-      meshOf('tram', tramBody(), Cp.tram); meshOf('train', trainBody(), Cp.train); meshOf('sail', sailBody(), Cp.sail); meshOf('motor', motorBody(), Cp.motor); meshOf('ferry', ferryBody(), Cp.ferry); meshOf('pigeon', pigeonBody(), Cp.pigeon); meshOf('gull', gullBody(), Cp.gull); meshOf('duck', duckBody(), Cp.duck);
+      meshOf('tram', tramBody(), Cp.tram); meshOf('train', trainBody(), Cp.train); meshOf('sail', sailBody(), Cp.sail); meshOf('motor', motorBody(), Cp.motor); meshOf('ferry', ferryBody(), Cp.ferry); meshOf('pigeon', pigeonBody(), Cp.pigeon); meshOf('gull', gullBody(), Cp.gull); meshOf('duck', duckBody(), Cp.duck); meshOf('cart', cartBody(), Cp.cart);
       var kb = new Body(); kb.tri([0, 0, 0], [0, 0, 0], [0, 0, 0], [0, 0, 0]); var keeper = meshOf('keep', kb, 1); delete st.mesh.keep; delete st.lists.keep; keeper.count = 1; keeper.visible = true; keeper.layers.set(0); keeper.setMatrixAt(0, new THREE.Matrix4().makeScale(0, 0, 0));   // one empty instance: the program compiles at load, never in flight
       X.scene.add(st.root); st.root.updateMatrixWorld(true);
       var prev = X.scene.onBeforeRender; X.scene.onBeforeRender = function () { if (typeof prev === 'function') prev.apply(this, arguments); place(); };
@@ -608,11 +698,12 @@ window.WFR_LIFE790 = (function () {
       st.t += dt; st.frame++; if (!st.hooked) listen(); var T = X.TR, on = !!(T && T.on && T.f && T.st && X.S && X.S.pos); st.mode = on ? 'travel' : 'off';
       if (!on) { st.acc = 0; } else {
         if (T.f !== st.f) { st.f = T.f; st.ep++; }
-        st.hour = hourOf(X.S.clock); st.night = nightOf(st.hour);
+        st.hour = hourOf((window.WFR_HIGH809 && WFR_HIGH809.clockHere ? WFR_HIGH809.clockHere() : X.S.clock));   /* 809: the people keep the hour of where they are (her local sky) */ st.night = nightOf(st.hour);
         var ti = performance.now(), until = ti + C.INGEST_MS; while (st.queue.length && performance.now() < until) { if (ingest(st.queue[0], until)) st.queue.shift(); } var im = performance.now() - ti; st.ingestMs += im; if (im > st.ingestMax) st.ingestMax = im;
         st.acc -= dt; if (st.acc <= 0) { st.acc = C.REFRESH; var tr = performance.now(); st.nRef = (st.nRef || 0) + 1; refresh(); tr = performance.now() - tr; if (tr > st.refMax) st.refMax = tr; }
         for (var i = 0; i < st.agents.length; i++) { var a = st.agents[i]; if (!a.dead) stepAgent(a, dt); }
         stepFlocks(dt);
+        treat830();
       }
     } catch (e) { fail('tick', e); }
     var ms = performance.now() - t0 + st.placeMs; st.placeMs = 0; st.ms.push(ms); if (st.ms.length > 600) st.ms.shift(); if (ms > st.msMax) st.msMax = ms;
@@ -633,9 +724,10 @@ window.WFR_LIFE790 = (function () {
     var lu = {}, cellsN = 0; st.cells.forEach(function (c) { cellsN++; lu[c.lu] = (lu[c.lu] || 0) + 1; }); var paths = { tram: 0, train: 0, road: 0, path: 0, river: 0 }, wat = { polys: 0, big: 0, cls: {}, loops: 0, gulls: 0, ducks: 0 }; st.tiles.forEach(function (T) { T.paths.forEach(function (P) { paths[P.kind] = (paths[P.kind] || 0) + 1; }); T.water.forEach(function (w) { wat.polys++; if (w.area >= 60000) wat.big++; wat.cls[w.cls] = (wat.cls[w.cls] || 0) + 1; }); (T.cells || []).forEach(function (c) { wat.loops += c.loops.length; wat.gulls += c.gulls.length; wat.ducks += c.ducks.length; }); });
     return { inited: st.inited, enabled: st.enabled, fault: st.fault, why: st.why, mode: st.mode, t: +st.t.toFixed(2), hour: +st.hour.toFixed(2), night: +st.night.toFixed(2), tiles: st.tiles.size, tilesIn: st.tilesIn, queue: st.queue.length, cells: cellsN, lu: lu, paths: paths,
       agents: st.agents.length, byKind: byK, water: wat, flocks: fl, loops: st.loops.length, n: n, draws: draws, tris: Math.round(tris), caps: C.CAP, scatters: st.scatters, gullVeers: st.gullVeers, lastScatter: st.lastScatter, agl: st.agl != null ? +st.agl.toFixed(1) : null,
-      ms: { n: ms.length, med: q(0.5), p95: q(0.95), max: +st.msMax.toFixed(3) }, ingest: { ms: +st.ingestMs.toFixed(1), max: +st.ingestMax.toFixed(2) }, refMax: +(st.refMax || 0).toFixed(2), nRef: st.nRef || 0, filled: st.filled, nActive: st.cells.size, frame: st.frame, placeMax: +(st.placeMax || 0).toFixed(2), programs: X && X.renderer ? X.renderer.info.programs.filter(function (p) { return /life790/.test(p.cacheKey || ''); }).length : null, listenFault: st.listenFault, hookFault: st.hookFault }; }
+      ms: { n: ms.length, med: q(0.5), p95: q(0.95), max: +st.msMax.toFixed(3) }, ingest: { ms: +st.ingestMs.toFixed(1), max: +st.ingestMax.toFixed(2) }, refMax: +(st.refMax || 0).toFixed(2), nRef: st.nRef || 0, filled: st.filled, nActive: st.cells.size, frame: st.frame, placeMax: +(st.placeMax || 0).toFixed(2), programs: X && X.renderer ? X.renderer.info.programs.filter(function (p) { return /life790/.test(p.cacheKey || ''); }).length : null, listenFault: st.listenFault, hookFault: st.hookFault,
+      g830: (function () { var g = { courses: 0, greens: 0, dts: 0, golfCells: 0, regions: {} }; st.tiles.forEach(function (T) { g.courses += T.golf.length; g.greens += T.greens.length; g.dts += T.dts.length; if (T.reg) g.regions[T.reg] = (g.regions[T.reg] || 0) + 1; (T.cells || []).forEach(function (c) { if (c.golfPts.length) g.golfCells++; }); }); g.treated = st.treated || 0; g.lastTreat = st.lastTreat || null; return g; })() }; }
   function drawn(kind) {   // what SHIPS: read back from the instance buffers, with each point's lat/lon
-    var out = [], f = st.f; for (var k in st.mesh) { if (kind && k !== kind) continue; var im = st.mesh[k], A = im.instanceMatrix.array; if (!im.visible) continue; for (var i = 0; i < im.count; i++) { var o = i * 16, x = A[o + 12], z = A[o + 14], ll = f ? WFR_WORLD.toLatLon(f, x, z) : null; out.push({ k: k, x: x, y: A[o + 13], z: z, s: Math.hypot(A[o], A[o + 1], A[o + 2]), lat: ll && ll.lat, lon: ll && ll.lon, mode: im.geometry.attributes.iA790.array[i * 4 + 3] }); } } return out; }
+    var out = [], f = st.f; for (var k in st.mesh) { if (kind && k !== kind) continue; var im = st.mesh[k], A = im.instanceMatrix.array; if (!im.visible) continue; for (var i = 0; i < im.count; i++) { var o = i * 16, x = A[o + 12], z = A[o + 14], ll = f ? WFR_WORLD.toLatLon(f, x, z) : null; var ga = im.geometry.attributes; out.push({ k: k, x: x, y: A[o + 13], z: z, s: Math.hypot(A[o], A[o + 1], A[o + 2]), lat: ll && ll.lat, lon: ll && ll.lon, mode: ga.iA790.array[i * 4 + 3], wear: ga.iC4790.array[i * 4 + 3], head: [ga.iC4790.array[i * 4], ga.iC4790.array[i * 4 + 1], ga.iC4790.array[i * 4 + 2]], c1: [ga.iC1790.array[i * 3], ga.iC1790.array[i * 3 + 1], ga.iC1790.array[i * 3 + 2]], c2: [ga.iC2790.array[i * 3], ga.iC2790.array[i * 3 + 1], ga.iC2790.array[i * 3 + 2]] }); } } return out; }
   function flocksNear(r) { var out = []; st.flocks.forEach(function (F) { if (F.dead) return; var h = F.T.her(), d = Math.hypot(F.mx - h[0], F.mz - h[1]); if (d <= r) { var w = flockWhere(F); out.push({ id: F.id, kind: F.kind, state: F.state, n: F.n, d: +d.toFixed(1), x: w.x, y: w.y, z: w.z, lat: w.lat, lon: w.lon }); } }); return out.sort(function (p, q) { return p.d - q.d; }); }
   function pathsNear(lat, lon, r, kind) { var out = []; st.tiles.forEach(function (T) { if (!T.ready) return; var q = T.m(lat, lon, [0, 0]); T.paths.forEach(function (P) { if (kind && P.kind !== kind) return; for (var i = 0; i < P.cum.length; i++) { var dx = P.m[2 * i] - q[0], dz = P.m[2 * i + 1] - q[1]; if (dx * dx + dz * dz < r * r) { out.push({ id: P.id, kind: P.kind, cls: P.cls, len: Math.round(P.len), dirOnly: P.dirOnly, stops: P.stops ? P.stops.length : 0 }); return; } } }); }); return out; }
   function onLine(lat, lon, kinds) {   // the bench's read: metres from a point to the nearest path of these kinds (the map's own line), with its class
@@ -644,6 +736,6 @@ window.WFR_LIFE790 = (function () {
         if (!best || d < best.d) best = { d: +d.toFixed(2), kind: P.kind, cls: P.cls, sub: P.sub || null, w: P.w }; } }); });
     return best; }
   function tramLines() { var n = 0, sub = 0, len = 0; st.tiles.forEach(function (T) { T.paths.forEach(function (P) { if (P.kind === 'tram') { n++; len += P.len; if (P.sub === 'tram' || P.sub === 'light_rail') sub++; } }); }); return { n: n, fromMap: sub, km: +(len / 1000).toFixed(2) }; }
-  return { C: C, init: init, tick: tick, peek: peek, drawn: drawn, near: near, solid808: solid808, lensOut808: lensOut808, get: get, flocksNear: flocksNear, pathsNear: pathsNear, onLine: onLine, tramLines: tramLines, hourOf: hourOf, resetMs: function () { st.ms = []; st.msMax = 0; st.ingestMax = 0; st.refMax = 0; st.placeMax = 0; },
+  return { C: C, init: init, tick: tick, peek: peek, drawn: drawn, outfit830: function (reg, r) { var a = {}; outfit830(reg, r, a); a.skin = hex(pick(r, SKIN830[REGSKIN[reg]] || SKIN.all)); return a; }, dts830: function () { var o = []; st.tiles.forEach(function (T) { T.dts.forEach(function (P) { var w = T.ll(P.win[0], P.win[1]); o.push({ name: P.name, tile: T.key, win: [w.lat, w.lon], len: Math.round(P.len), stops: Array.from(P.stops).map(function (v) { return +v.toFixed(1); }) }); }); }); return o; }, near: near, solid808: solid808, lensOut808: lensOut808, get: get, flocksNear: flocksNear, pathsNear: pathsNear, onLine: onLine, tramLines: tramLines, hourOf: hourOf, resetMs: function () { st.ms = []; st.msMax = 0; st.ingestMax = 0; st.refMax = 0; st.placeMax = 0; },
     set enabled(v) { st.enabled = !!v; if (!v) for (var k in st.mesh) { st.mesh[k].count = 0; st.mesh[k].visible = false; } }, get enabled() { return st.enabled; } };
 })();

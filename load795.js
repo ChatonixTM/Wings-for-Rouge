@@ -32,7 +32,7 @@
     { id: 'village', chip: 'Village', name: 'Raising the village', say: 'Waking the village. Most of them were already up.',
       files: ['trees.js', 'treehouses.js', 'cabins.js', 'cave.js', 'hermits.js', 'homes784.js'] },
     { id: 'stories', chip: 'Stories', name: 'Setting the scenes', say: 'Telling the Hawk he is not invited. He is coming anyway.',
-      files: ['sounds.js', 'cine.js', 'haven781.js', 'race782.js', 'school782.js', 'arrive783.js', 'arrive821.js', 'ocarina781.js', 'after786.js', 'doctor766.js', 'interact790.js', 'craft787.js', 'bread818.js', 'strike819.js', 'stamina832.js', 'night833.js', 'up829.js', 'ledger817.js', 'hud795.js', 'missions788.js', 'show795.js',
+      files: ['sounds.js', 'cine.js', 'haven781.js', 'race782.js', 'school782.js', 'arrive783.js', 'arrive821.js', 'ocarina781.js', 'after786.js', 'doctor766.js', 'interact790.js', 'craft787.js', 'bread818.js', 'strike819.js', 'stamina832.js', 'night833.js', 'up829.js', 'chain829.js', 'ledger817.js', 'hud795.js', 'missions788.js', 'show795.js',
         'music.js', 'battle703-song.js', 'music-orchestra.js', 'rhythm.js', 'pictograms.js', 'chick-wear.js', 'hedgehogs.js', 'opening.js'] },
     { id: 'weather', chip: 'Weather', name: 'Mixing the weather', say: 'Hanging the clouds. Some of them are soft and wet.',
       files: ['skypiea.js', 'pirate.js', 'atmo.js', 'world-realism.js', 'boat.js', 'weather.js', 'seasons.js', 'village-build.js', 'runes.js', 'fall748.js', 'fx760.js', 'hearts714.js'] },
@@ -42,7 +42,7 @@
         'hawkwake.js', 'hawkfight.js', 'hawkarena.js', 'orchard.js', 'net678.js', 'net678-config.js', 'net721.js'] },
     { id: 'people', chip: 'People', name: 'Waking the people', say: 'Putting Hal at the lake. He was going there anyway.',
       files: ['animals714.js', 'world-people.js', 'place-dunns797.js', 'world-animals.js', 'world-life790.js', 'world-traffic.js', 'world-sky756.js', 'world-huts.js', 'world-interiors.js',
-        'places790-data.js', 'places790.js', 'world-quests.js'] },
+        'places790-data.js', 'places790.js', 'high809.js', 'world-quests.js'] },
     { id: 'rouge', chip: 'Rouge', name: 'Rouge wakes up', say: 'Planting the big tree. It insists on being the biggest.', files: [] }
   ];
   var IDLE = ['Counting twigs. There are always more twigs.', 'Slow? Mountains are slow. Nobody complains about mountains.', 'Laying the reef. Mind the coral: it was here first.',

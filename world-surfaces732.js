@@ -46,8 +46,20 @@ window.WFR_SURF732 = (function () {
   var S754 = { AMP: 1, L: [37, 151, 613, 2450], R: [[0.8, 0.6], [0.28, 0.96], [0.6, -0.8], [-0.96, 0.28]], V: [[0.9, 0.4], [-0.7, 0.8], [0.5, -0.6], [0.3, 0.2]], W: [1.6, 1.6, 1.4, 1.4], MEAN: 0.89, LO: 0.26, HI: 0.26, FADE0: 900, FADE1: 9000, HS: 500, CAP: 0.55, GLINT: 0.45, FOAM: [0.82, 0.9, 0.94] };
   if (!CL806) S754.W = S754.W.map(function (w, i) { return i < 2 ? w * 2.4 : w; });   // 806 seam b: the round-ripple map is softer than the old crest bands (its spread about 0.4 of theirs), so the two fine layers' pull on the light is raised to match: the sea passes under her as plainly as before (motion754). The two broad layers stay as they were, now calmer: no big light and dark patches far out (seams806 C2)
   var U754 = { uSea754: { value: null }, uA754: { value: [0, 0, 0, 0] }, uB754: { value: [0, 0, 0, 0] }, uK754: { value: 0 } }, o754 = [0, 0], t754 = 0, n754 = { patched: 0, shifts: 0 };
-  var HEAD754 = 'uniform sampler2D uSea754; uniform vec4 uA754; uniform vec4 uB754; uniform float uK754;\n';
-  function set754() { for (var i = 0; i < 4; i++) { var r = S754.R[i], x = o754[0] + S754.V[i][0] * t754, z = o754[1] + S754.V[i][1] * t754, a = (r[0] * x + r[1] * z) / S754.L[i], b = (r[0] * z - r[1] * x) / S754.L[i], o = i < 2 ? U754.uA754.value : U754.uB754.value, k = (i % 2) * 2; o[k] = a - Math.floor(a); o[k + 1] = b - Math.floor(b); } }
+  /* 805 THE SEA MOVES EVERYWHERE (Marth, Nov 14 2026, verbatim: "At some point we gotta work on the water animations! The weather implications"). Over 754's
+     drifting ripples, three long swells roll across the whole sea, out in the world as at home: each a real deep-water wave (its speed from its length:
+     c = sqrt(g L / 2 pi)), the first along the day's wind, the others 25 and 35 degrees off it; their crests lift the light and catch the sun, and in a storm
+     they break white. Where the sea meets the land (754's own sea mask, between sea and shore) a lace of foam washes in and out with the swell. The weather
+     sets the mood (the page's sea805: calm on a clear day, rougher in rain, white-capped in a storm). The phases are kept here, wrapped, and follow 754's
+     frame shifts, so a recentre never shows. Every number DRAFT (his eye). */
+  var S805 = { L: [110, 63, 37], TURN: [0, 25, -35], W: [1, 0.55, 0.35], LIGHT: 0.13, GLINT: 0.35, CAP: 1, FOAM: 0.85 };
+  var U805 = { uD805a: { value: [1, 0, 1, 0] }, uD805b: { value: [1, 0, 1, 0] }, uP805: { value: [0, 0, 0, 0] }, uF805: { value: 0 } }, w805 = { a: 0, cap: 0, foam: 0, dir: 0, light: 0, sets: 0 };   /* still until the page sets a mood: Classic (frozen) never does */
+  function set805() { var d = w805.dir, D = U805.uD805a.value, E = U805.uD805b.value, P = U805.uP805.value;
+    for (var i = 0; i < 3; i++) { var a = d + S805.TURN[i] * Math.PI / 180, x = Math.sin(a), z = Math.cos(a), k = 2 * Math.PI / S805.L[i], w = Math.sqrt(9.81 * k), ph = ((x * o754[0] + z * o754[1]) * k - w * t754) % (2 * Math.PI);
+      if (i < 2) { D[i * 2] = x; D[i * 2 + 1] = z; } else { E[0] = x; E[1] = z; } P[i] = ph; }
+    E[2] = w805.a; E[3] = w805.cap; P[3] = w805.light; U805.uF805.value = w805.foam; }
+  var HEAD754 = 'uniform sampler2D uSea754; uniform vec4 uA754; uniform vec4 uB754; uniform float uK754; uniform vec4 uD805a; uniform vec4 uD805b; uniform vec4 uP805; uniform float uF805;\n';
+  function set754() { if (typeof set805 === 'function') set805(); for (var i = 0; i < 4; i++) { var r = S754.R[i], x = o754[0] + S754.V[i][0] * t754, z = o754[1] + S754.V[i][1] * t754, a = (r[0] * x + r[1] * z) / S754.L[i], b = (r[0] * z - r[1] * x) / S754.L[i], o = i < 2 ? U754.uA754.value : U754.uB754.value, k = (i % 2) * 2; o[k] = a - Math.floor(a); o[k + 1] = b - Math.floor(b); } }
   function text754(q, eye, mask) {   // the GLSL: q the world xz (vec2), eye the true camera (vec3), mask 1 on the sea. Writes diffuseColor
     var n = function (x) { return (+x).toFixed(7); }, read = function (i, o) { var r = S754.R[i]; return 'texture2D( uSea754, vec2( ' + n(r[0]) + ' * q754.x + ' + n(r[1]) + ' * q754.y, ' + n(-r[1]) + ' * q754.x + ' + n(r[0]) + ' * q754.y ) * ' + n(1 / S754.L[i]) + ' + ' + o + ' ).r'; }, w = function (i, v) { return n(S754.W[i]) + ' * ( ' + v + ' - ' + n(S754.MEAN) + ' )'; }, c = S754.FOAM;
     return ['{ vec2 q754 = ' + q + '; float s754 = max( 1.0, ' + eye + '.y / ' + n(S754.HS) + ' ), d754 = length( vec3( q754.x - ' + eye + '.x, ' + eye + '.y, q754.y - ' + eye + '.z ) );',
@@ -57,9 +69,16 @@ window.WFR_SURF732 = (function () {
       '    diffuseColor.rgb *= 1.0 + k754 * clamp( ' + w(0, 'a754') + ' + ' + w(1, 'b754') + ' + ' + w(2, 'c754') + ' + ' + w(3, 'e754') + ', ' + n(-S754.LO) + ', ' + n(S754.HI) + ' );',
       '    float f754 = ' + n(S754.CAP) + ' * smoothstep( 0.955, 0.995, b754 ) * smoothstep( 0.93, 0.97, c754 ) + ' + n(S754.GLINT) + ' * smoothstep( 0.975, 1.0, a754 ) * smoothstep( 0.9, 0.97, b754 );',
       '    diffuseColor.rgb = mix( diffuseColor.rgb, vec3( ' + n(c[0]) + ', ' + n(c[1]) + ', ' + n(c[2]) + ' ), k754 * min( f754, 1.0 ) );',
+      /* 805: the swells (their light, the sun on their crests, white tops in a storm) and the foam where the sea meets the land */
+      '    float s805 = ' + n(S805.W[0]) + ' * sin( dot( q754, uD805a.xy ) * ' + n(2 * Math.PI / S805.L[0]) + ' + uP805.x ) + ' + n(S805.W[1]) + ' * sin( dot( q754, uD805a.zw ) * ' + n(2 * Math.PI / S805.L[1]) + ' + uP805.y ) + ' + n(S805.W[2]) + ' * sin( dot( q754, uD805b.xy ) * ' + n(2 * Math.PI / S805.L[2]) + ' + uP805.z );',
+      '    diffuseColor.rgb *= 1.0 + k754 * uD805b.z * ' + n(S805.LIGHT) + ' * s805;',
+      '    diffuseColor.rgb += vec3( 0.95, 0.97, 1.0 ) * ( k754 * uD805b.z * uP805.w * ' + n(S805.GLINT) + ' * smoothstep( 1.1, 1.7, s805 ) * smoothstep( 0.9, 0.98, b754 ) );',
+      '    float w805 = k754 * uD805b.w * ' + n(S805.CAP) + ' * smoothstep( 1.0, 1.6, s805 ) * smoothstep( 0.82, 0.93, c754 );',
+      '    float e805 = clamp( 4.0 * ( ' + mask + ' ) * ( 1.0 - ( ' + mask + ' ) ), 0.0, 1.0 ) * uF805 * ' + n(S805.FOAM) + ' * ( 1.0 - smoothstep( ' + n(S754.FADE0) + ' * s754, ' + n(S754.FADE1) + ' * s754, d754 ) ) * ( 0.45 + 0.55 * smoothstep( -0.6, 1.2, s805 ) ) * smoothstep( 0.72, 0.9, max( a754, b754 ) );',
+      '    diffuseColor.rgb = mix( diffuseColor.rgb, vec3( ' + n(c[0]) + ', ' + n(c[1]) + ', ' + n(c[2]) + ' ), min( w805 + e805, 0.9 ) );',
       '  } }'].join('\n');
   }
-  function uniforms754(sh) { for (var k in U754) sh.uniforms[k] = U754[k]; }
+  function uniforms754(sh) { for (var k in U754) sh.uniforms[k] = U754[k]; for (var k2 in U805) sh.uniforms[k2] = U805[k2]; }
   function patch754(sh, map) {   // the open sea's Phong program (the page calls this from its onBeforeCompile; the key carib712sea-phong stays)
     var a = 'vR712k = smoothstep( 700.0, 3000.0, d712 );', b = '#include <color_fragment>';
     if (!ON) return false; if (!map || sh.vertexShader.indexOf(a) < 0 || sh.fragmentShader.indexOf(b) < 0) { st.faults.push('sea754: an anchor or the water map is missing, not patched'); return false; }
@@ -69,7 +88,9 @@ window.WFR_SURF732 = (function () {
     return true;
   }
   var sea754 = { patch: patch754, shift: function (dx, dz) { o754[0] -= dx; o754[1] -= dz; n754.shifts++; set754(); if (window.WFR_LOOK755B) window.WFR_LOOK755B.shift(dx, dz); }, tick: function (t) { t754 = t; set754(); },
-    amp: function (k) { U754.uK754.value = U754.uSea754.value ? S754.AMP * k : 0; }, peek: function () { return { on: ON, amp: U754.uK754.value, patched: n754.patched, shifts: n754.shifts, off: o754.slice() }; } };
+    amp: function (k) { U754.uK754.value = U754.uSea754.value ? S754.AMP * k : 0; },
+    mood805: function (a, cap, foam, dir, light) { if (w805.a === a && w805.cap === cap && w805.foam === foam && w805.dir === dir && w805.light === light) return; w805.a = a; w805.cap = cap; w805.foam = foam; w805.dir = dir; w805.light = light; w805.sets++; set805(); },   /* 805 */
+    peek805: function () { return { S: S805, mood: Object.assign({}, w805), D: U805.uD805a.value.slice().concat(U805.uD805b.value.slice()), P: U805.uP805.value.slice(), foam: U805.uF805.value }; }, peek: function () { return { on: ON, amp: U754.uK754.value, patched: n754.patched, shifts: n754.shifts, off: o754.slice() }; } };
   function canvasTex(fill, size) { var c = document.createElement('canvas'); c.width = c.height = size; var g = c.getContext('2d', { willReadFrequently: true }); g.fillStyle = fill; g.fillRect(0, 0, size, size); var t = new T.CanvasTexture(c); t.wrapS = t.wrapT = T.RepeatWrapping; t.anisotropy = 4; return { t: t, c: c, g: g }; }
   function load(src, done, fail) { var im = new Image(); im.onload = function () { try { done(im); } catch (e) { fail(e); } }; im.onerror = function () { fail(new Error('decode')); }; im.src = src; }
 

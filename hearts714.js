@@ -115,6 +115,7 @@ window.WFR_HEARTS = (function () {
       else { st.costs++; res.stagger = STAG2; st.tumble = TUMBLE2; knock(info, KNOCK2); res.knock = KNOCK2; res.hop = HOP2;
         if (h) { h.now = Math.max(0, h.now - RULE_HEART_COST); res.heartsNow = h.now; if (h.now === 0) res.down = true; } }
       var have = Math.max(0, Math.floor(num(S.runes, 0))), take = plant() === 'none' ? 0 : plant() === 'below0' ? RULE_LOSE : Math.min(RULE_LOSE, have);
+      if (res.first && take > 0 && io && typeof io.shield === 'function') { try { if (io.shield()) { take = 0; res.shield = true; st.shields = (st.shields || 0) + 1; } } catch (e3) { /* the shield is a nicety */ } }   /* 829 link 3: the Scute shield: the first hit of every fight costs no runes */
       S.runes = have - take; res.scattered = take; if (take > 0) { st.scatters++; st.scattered += take; scatter(take); }
       st.stagT = res.stagger; st.stagDur = res.stagger; st.invT = res.stagger + BLINK_T; st.last = res;
       if (io && typeof io.onHit === 'function') { try { io.onHit(res); } catch (e) { st.error = String(e && e.message || e); } }
@@ -216,7 +217,7 @@ window.WFR_HEARTS = (function () {
   function peek() {
     var h = S ? clean(S.hearts) : null, on = 0, shown = 0, pend = 0, air = 0, leaving = 0, bars = 0;
     for (var i = 0; i < POOL; i++) if (P[i].on) { on++; pend += P[i].share; if (P[i].shown) shown++; if (P[i].air) air++; if (P[i].leave) leaving++; if (P[i].bar > 0) bars++; }
-    return { attached: !!S, hearts: h, won: won(), level: S ? S.level : null, runes: S ? S.runes : null, stagT: +st.stagT.toFixed(3), invT: +st.invT.toFixed(3), blinking: blinking(), hits: st.hits, costs: st.costs, frees: st.frees,
+    return { attached: !!S, hearts: h, won: won(), level: S ? S.level : null, runes: S ? S.runes : null, stagT: +st.stagT.toFixed(3), invT: +st.invT.toFixed(3), blinking: blinking(), hits: st.hits, costs: st.costs, frees: st.frees, shields: st.shields || 0,
       ignored: st.ignored, scatters: st.scatters, scattered: st.scattered, picked: st.picked, pickedN: st.pickedN, lost: st.lost, left: st.left, downs: st.downs, fruit: st.fruit, dawnGave: st.dawn, made: st.made, pieceAdds: st.pieceAdds, grown: st.grown,
       pushed: +st.pushed.toFixed(3), knockOn: st.kb.on, fights: st.fightN, on: on, shown: shown, pending: pend, air: air, leaving: leaving, bars: bars, last: st.last, error: st.error || API.error, plant: plant(), t: +st.t.toFixed(3) };
   }

@@ -360,7 +360,7 @@
     /* the sky picks kept from the last flight (only the weather and the clock's running need putting back; the clock itself is in her save) */
     try { if (api.sky && api.sky.pass && H.set.pass === false) api.sky.pass(false); applyWx(); } catch (e) { /* the clock runs */ }
     function nowWords() {   /* 'Morning · rain': the part of the day and the weather, named all the time (on the job card's tab and the pause page) */
-      var S = api.S || {}, nav = $('navHud'), aria = nav ? nav.getAttribute('aria-label') || '' : '', wm = /weather today ([a-z ]+)/i.exec(aria), p = partOfDay(S.clock);
+      var S = api.S || {}, nav = $('navHud'), aria = nav ? nav.getAttribute('aria-label') || '' : '', wm = /weather today ([a-z ]+)/i.exec(aria), p = partOfDay((window.WFR_HIGH809 && WFR_HIGH809.clockHere ? WFR_HIGH809.clockHere() : S.clock));   /* 809: her own part of the day out in the world */
       var fx = api.sky && api.sky.forced ? api.sky.forced() : null, wx = fx || (wm ? wm[1].trim() : '');
       return [p ? p.charAt(0).toUpperCase() + p.slice(1) : '', wx === 'clear' ? 'clear sky' : wx].filter(Boolean).join(' · ');
     }

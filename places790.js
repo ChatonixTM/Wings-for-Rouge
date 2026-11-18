@@ -172,8 +172,8 @@ window.WFR_PLACES790 = (function () {
      sits where it always did. Standard only (Classic is frozen: no style is set there). */
   var C825 = { MAXK: 0.62, GAP: 6 }, cx825 = null;
   /* #150 B5 (Su 40, measured: clear825 was 12.4 of say()'s 12.7 ms): a page canvas's font, set just after the card's DOM write, made the browser restyle the whole
-     page first. Now the widths are measured on an OffscreenCanvas (no document, no style pass; a page canvas only where there is none), its font set only when it
-     changes, and every width kept (a name is measured once). */
+     page first. Now the widths are measured on an OffscreenCanvas (no document, no style pass; a page canvas only where there is none), and every width kept (a name is
+     measured once); the second measure below gives each font its own canvas. */
   /* Then measured again (Su 40): the place still cost 6.4 ms, all of it the measuring: one canvas switched between the card's three fonts, and every switch
      parsed and looked the font up again. So each font has its own canvas, its font set once, ever: a new name costs only its measure. */
   var w825 = new Map(); cx825 = {};

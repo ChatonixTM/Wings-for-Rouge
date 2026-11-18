@@ -127,6 +127,7 @@ window.WFR_FEATURES = (function () {
     warm = new THREE.Mesh(g, mats.wall); warm.name = 'features:warm'; warm.frustumCulled = false; warm.layers.set(C.LAYER); scene.add(warm);
     if (mats.city) { var w790 = new THREE.Mesh(g, mats.city); w790.name = 'features:warm790'; w790.frustumCulled = false; w790.layers.set(C.LAYER); scene.add(w790); }   /* 790 A: the city walls' program, compiled at the gate too */   // a point-sized triangle: the walls' program compiles with the ground's at the gate, never later
     group = new THREE.Group(); group.name = 'features'; group.matrixAutoUpdate = false;
+    if (window.WFR_SACRED831) WFR_SACRED831.attach(THREE, T, group);   /* 831: the rooms she can fly into, made here at load inside this group (Standard only) */
     T.layers.push({ id: 'features', onTile: onTerrainTile, onDrop: null });
     return api;
   }
@@ -147,14 +148,15 @@ window.WFR_FEATURES = (function () {
      came under the tile's centre, so roads kept the heights of a sheet no longer drawn (floating over valleys, buried in hills, out to 100 m far off). */
   function drp(o, k, lift) { var d = o.dl || (o.dl = []); while (d.length < k) d.push(NaN); d[k] = lift; }
   var poiWant = null;   /* 729: world-interiors.js asks for shops, cafes and offices near the quests */
-  function want(z, t) { var w = { transportation: 1, water: 1, waterway: 1, place: z <= 12 ? 1 : 0, building: z >= 14 ? 1 : 0 }; if (listeners.length) { w.landcover = 1; w.landuse = 1; if (window.WFR_LANDCLASS && window.WFR_LANDCLASS.live && window.WFR_LANDCLASS.live()) w.aeroway = 1; } if (poiWant && z >= 14 && t && poiWant(t)) w.poi = 1; return w; }
+  function want(z, t) { var w = { transportation: 1, water: 1, waterway: 1, place: z <= 12 ? 1 : 0, building: z >= 14 ? 1 : 0 }; if (listeners.length) { w.landcover = 1; w.landuse = 1; if (window.WFR_LANDCLASS && window.WFR_LANDCLASS.live && window.WFR_LANDCLASS.live()) w.aeroway = 1; } if (poiWant && z >= 14 && t && poiWant(t)) w.poi = 1; if (z >= 14 && window.WFR_SACRED830 && WFR_SACRED830.on()) { w.poi = 1; w.landcover = 1; }   /* 830: the houses of prayer, the drive-thrus and the golf courses (WFR_SACRED830, at the end of this file) */ return w; }
   function startJob(t) {
-    var st = T.st, f = T.f, L = decodeTile(t.raw, want(t.z, t)), order = ['water', 'waterway', 'transportation', 'building', 'place', 'landcover', 'landuse', 'aeroway', 'poi'], lays = [];
+    var st = T.st, f = T.f, L = decodeTile(t.raw, want(t.z, t)), order = ['water', 'waterway', 'transportation', 'poi', 'building', 'place', 'landcover', 'landuse', 'aeroway']   /* 830: the points before the buildings (a mosque's or a church's own walls are known as they are built) */, lays = [];
     for (var i = 0; i < order.length; i++) if (L[order[i]]) lays.push(L[order[i]]);
     var a = W.toLocal(f, t.nw.lat, t.nw.lon), b = W.toLocal(f, t.se.lat, t.se.lon), cx = (a.x + b.x) / 2, cz = (a.z + b.z) / 2, pr = st.probe(cx, cz);
     t.job = { lakeK: 0, f: f, ax: a.x, az: a.z, lays: lays, li: 0, fi: 0, wall: new Out(), roof: new Out(), gnd: new Out(), wallN: 0, nB: 0, nR: 0, nW: 0, places: [], feed: listeners.length ? { landcover: [], landuse: [], aeroway: [], water: [], buildings: [], roads: [], pois: [] } : null, terrZ: pr ? pr.zoom : -1 };
     t.job.gnd.uv = null; t.job.sig798 = null; t.job.terrA = { x0: Math.min(a.x, b.x), x1: Math.max(a.x, b.x), z0: Math.min(a.z, b.z), z1: Math.max(a.z, b.z) }; t.job.sig798 = sigOf(t.job.terrA); t.job.fp = t.z === 14 ? [] : null; stats.jobs++;
     if (t.z === 14 && mats.city && window.WFR_CITY790) { var J7 = t.job; J7.Out = Out; J7.tri = tri; J7.drp = drp; J7.Hf = function (lx, lz) { return H(J7, lx, lz); }; WFR_CITY790.begin(J7, t); }   /* 790 A */
+    if (t.z === 14 && window.WFR_SACRED830) { t.job.Out830 = Out; WFR_SACRED830.begin(t.job, t, KIT830); }   /* 830 */
   }
   function stepJob(t, deadline) {   // true when done
     var J = t.job; if (J.f !== T.f) { startJob(t); J = t.job; }   // re-centred mid-build: start again in the new frame (rare: every 10 km)
@@ -164,6 +166,7 @@ window.WFR_FEATURES = (function () {
         if ((++cnt & (J.city ? 1 : 7)) === 0 && now() > deadline) return false; }   /* 790: a dressed building weighs more: the clock asked every second one */
       if (J.bq && !drainB(t, J, deadline)) return false; J.li++; J.fi = 0; }
     if (J.city && !WFR_CITY790.stepRoads(J, deadline, H, now)) return false;   /* 790 A: the streets, after the buildings, a slice at a time */
+    if (J.s830 && !WFR_SACRED830.step(t, J, KIT830, deadline)) return false;   /* 830: the mosques, the golf, the drive-thrus, a task at a time, before the meshes are made */
     finish(t); return true;
   }
   function drainB(t, J, deadline) { var q = J.bq; while (q.i < q.ps.length) { building(t, J, q.ps[q.i], q.P, q.id, q.E, q.i); q.i++; if ((q.i & 3) === 0 && now() > deadline) return false; } J.bq = null; return true; }   /* 790 */
@@ -173,17 +176,21 @@ window.WFR_FEATURES = (function () {
     return out;
   }
   function H(J, lx, lz) { return T.st.H(J.ax + lx, J.az + lz); }
+  var KIT830 = { locRing: locRing, H: H, ribbon: function (J, pts, w, col, lift, sub) { return ribbon(J, pts, w, col, lift, sub); }, tri: tri, triangulate: function (r) { return triangulate(r); }, drp: drp,   /* 830: world-features' own tools, for WFR_SACRED830 */
+    llOf: function (t, px, py, E) { return llOf(t.z, t.x, t.y, px, py, E); }, toLL: function (J, x, z) { return W.toLatLon(J.f, J.ax + x, J.az + z); }, fromLL: function (J, lat, lon) { var p = W.toLocal(J.f, lat, lon); return [p.x - J.ax, p.z - J.az]; } };
   function emit(t, J, L, ft) {
     var name = L.name, P = ft.props, E = L.extent;
-    if (name === 'poi') { if (J.feed && J.feed.pois && ft.type === 1 && ft.rings[0] && /^(office|cafe|shop|clothing_store|grocery|bakery|ice_cream)$/.test(P['class'])) { var g729 = llOf(t.z, t.x, t.y, ft.rings[0][0], ft.rings[0][1], E); J.feed.pois.push({ id: ft.id, cls: P['class'], sub: P.subclass || null, name: P['name:en'] || P.name_en || P.name || null, lat: g729.lat, lon: g729.lon }); } return; }   /* 729 */
+    if (name === 'poi') { if (J.s830 && ft.type === 1 && ft.rings[0]) WFR_SACRED830.poi(J, P, ft.rings[0][0], ft.rings[0][1], E);   /* 830 */
+      if (J.feed && J.feed.pois && ft.type === 1 && ft.rings[0] && /^(office|cafe|shop|clothing_store|grocery|bakery|ice_cream)$/.test(P['class'])) { var g729 = llOf(t.z, t.x, t.y, ft.rings[0][0], ft.rings[0][1], E); J.feed.pois.push({ id: ft.id, cls: P['class'], sub: P.subclass || null, name: P['name:en'] || P.name_en || P.name || null, lat: g729.lat, lon: g729.lon }); } return; }   /* 729 */
     if (name === 'building') { if (ft.type !== 3 || P.hide_3d) return; var ps = polygons(ft.rings); if (J.city) { J.bq = { ps: ps, P: P, id: ft.id, E: E, i: 0 }; return; } for (var i = 0; i < ps.length; i++) building(t, J, ps[i], P, ft.id, E); return; }   /* 790: one z14 feature can hold 9,000 buildings: the city drains it a slice at a time */
     if (name === 'transportation') { var cl = P['class']; if (cl === 'transit' && t.z === 14 && J.feed && ft.type === 2 && P.brunnel !== 'tunnel') { var fl790 = feedLine(t, ft.rings, E, 'transit', 3); fl790.sub = P.subclass || null; J.feed.roads.push(fl790); return; }   /* 790 B: the streetcar lines to the listeners (world-life790.js), not drawn */ if (!ROADS[t.z][cl] || ft.type !== 2 || P.brunnel === 'tunnel') return; for (i = 0; i < ft.rings.length; i++) { var lr = locRing(t, J, ft.rings[i], E); if (!(J.city && WFR_CITY790.road(J, cl, lr))) ribbon(J, lr, ROAD_W[cl] * C.WIDEN[t.z], ROAD_C[cl], C.LIFT[t.z], C.SUB[t.z]); } J.nR++; if (J.feed) J.feed.roads.push(feedLine(t, ft.rings, E, cl, ROAD_W[cl] * C.WIDEN[t.z])); return; }   /* veg (Nov 4): the listeners hear the roads too (no grass or tree on a road) */
     if (name === 'waterway') { var wc = P['class'], ww = WAY_W[wc]; if (!ww || ft.type !== 2 || (wc === 'stream' && t.z < 14) || P.brunnel === 'tunnel') return; for (i = 0; i < ft.rings.length; i++) ribbon(J, locRing(t, J, ft.rings[i], E), ww * C.WIDEN[t.z], WATER_C, C.LIFT[t.z] * 1.2, C.SUB[t.z]); if (J.feed) J.feed.roads.push(feedLine(t, ft.rings, E, 'water', ww * C.WIDEN[t.z])); return; }
-    if (name === 'water') { if (ft.type !== 3) return; ps = polygons(ft.rings);
+    if (name === 'water') { if (ft.type !== 3) return; ps = polygons(ft.rings); if (J.s830) WFR_SACRED830.water(J, ps);   /* 830: the golf's stripes stop at the water */
       for (i = 0; i < ps.length; i++) { if (J.feed) J.feed.water.push(feedPoly(t, J, ps[i], E, P['class'])); if (!WATER_SKIP[P['class']]) { lake(t, J, ps[i], E, ft.id); J.nW++; } } return; }
     if (name === 'place') { var pc = P['class'], nm = P['name:en'] || P.name_en || P.name; if (!PLACE_R[pc] || !nm || ft.type !== 1 || !ft.rings[0]) return; if (t.z === 9 && !(pc === 'city' || pc === 'town' || pc === 'island')) return;
       var g = llOf(t.z, t.x, t.y, ft.rings[0][0], ft.rings[0][1], E); if (ft.rings[0][0] < 0 || ft.rings[0][0] >= E || ft.rings[0][1] < 0 || ft.rings[0][1] >= E) return; J.places.push({ name: String(nm), cls: pc, rank: P.rank || 9, lat: g.lat, lon: g.lon }); return; }
     if (name === 'aeroway') { if (J.feed && J.feed.aeroway) { if (ft.type === 3) { ps = polygons(ft.rings); for (i = 0; i < ps.length; i++) J.feed.aeroway.push(feedPoly(t, J, ps[i], E, P['class'])); } else if (ft.type === 2) J.feed.aeroway.push(feedLine(t, ft.rings, E, P['class'], P['class'] === 'runway' ? 60 : 25)); } return; }   // 772a: pavement for the listeners (areas as polygons; a centre line with a DRAFT width: runway 60 m, taxiway 25 m)
+    if (name === 'landcover' && J.s830 && ft.type === 3 && /golf_course|^sand$|^grass$/.test(String(P.subclass || P['class'] || ''))) WFR_SACRED830.cover(J, P, polygons(ft.rings), E);   /* 830 */
     if ((name === 'landcover' || name === 'landuse') && J.feed && ft.type === 3) { ps = polygons(ft.rings); for (i = 0; i < ps.length; i++) J.feed[name].push(feedPoly(t, J, ps[i], E, P['class'], P.subclass)); }
   }
   function feedLine(t, rings, E, cls, w) { var out = []; for (var i = 0; i < rings.length; i++) { var r = rings[i], ll = new Float64Array(r.length); for (var k = 0; k < r.length; k += 2) { var g = llOf(t.z, t.x, t.y, r[k], r[k + 1], E); ll[k] = g.lon; ll[k + 1] = g.lat; } out.push(ll); } return { cls: cls, width: w, lines: out }; }   // a line for the listeners: [lon, lat] pairs and its drawn width (m)
@@ -203,8 +210,10 @@ window.WFR_FEATURES = (function () {
     var bot = mh > 0 ? gC + mh : gMin - C.SINK, top = Math.max(gC + h, (mh > 0 ? bot : gMax) + 1.5);
     if (t.z === 14 && J.fp) { var fx0 = 1e9, fx1 = -1e9, fz0 = 1e9, fz1 = -1e9; for (i = 0; i < n; i++) { fx0 = Math.min(fx0, outer[2 * i]); fx1 = Math.max(fx1, outer[2 * i]); fz0 = Math.min(fz0, outer[2 * i + 1]); fz1 = Math.max(fz1, outer[2 * i + 1]); } var po = poly.outer, pn = po.length / 2, clip = new Uint8Array(pn); for (i = 0; i < pn; i++) { var j8 = (i + pn - 1) % pn, xa = po[2 * j8], ya = po[2 * j8 + 1], xb = po[2 * i], yb = po[2 * i + 1]; clip[i] = (xa <= 0 && xb <= 0) || (xa >= E && xb >= E) || (ya <= 0 && yb <= 0) || (ya >= E && yb >= E) ? 1 : 0; }   /* an edge the tile's own cut made (both ends on or past its border): not a wall; the next tile's piece carries the house on */
       J.fp.push({ r: outer, clip: clip, x0: fx0, x1: fx1, z0: fz0, z1: fz1, bot: bot, top: top, gC: gC, cx: (fx0 + fx1) / 2, cz: (fz0 + fz1) / 2 }); }   /* 808: its footprint, for her feet and the lens */
+    var sc830 = J.s830 ? WFR_SACRED830.atB(J, outer) : null;   /* 830: a house of prayer's own walls in its stone, no windows; a landmark rebuilt by hand drops the map's boxes (its footprint stays for her feet) */
+    if (sc830 === 'skip') { J.nB++; if (J.feed) J.feed.buildings.push({ h: h, minH: mh, id: id, rings: [poly.outer].concat(poly.holes).map(function (q) { var ll = new Float64Array(q.length); locRing(t, J, q, E, ll); return ll; }) }); return; }
     var rnd = hash((id | 0) ^ (Math.floor(gC * 7) | 0)), tall = h >= 60, col = tall ? GLASS[Math.floor(rnd * GLASS.length)] : WALLS[Math.floor(rnd * WALLS.length)], house = h <= 14 && Math.abs(area / 2) <= 600 && !mh;
-    if (J.city) { WFR_CITY790.building(J, { rings: rings, area: area / 2, h: h, mh: mh, top: top, bot: bot, gC: gC, P: P, house: house, id: pi ? (id | 0) ^ Math.imul(pi, 0x9E3779B1) : id, faces: triangulate(rings), tri: tri }, Out);   /* 790 A */
+    if (J.city) { WFR_CITY790.building(J, { rings: rings, area: area / 2, h: h, mh: mh, top: top, bot: bot, gC: gC, P: P, house: house, sacredCol: sc830 || null, id: pi ? (id | 0) ^ Math.imul(pi, 0x9E3779B1) : id, faces: triangulate(rings), tri: tri }, Out);   /* 790 A */
       J.nB++; if (J.feed) J.feed.buildings.push({ h: h, minH: mh, id: id, rings: [poly.outer].concat(poly.holes).map(function (q) { var ll = new Float64Array(q.length); locRing(t, J, q, E, ll); return ll; }) }); return; }
     var W2 = mh > 0 ? J.wallUp || (J.wallUp = new Out()) : J.wall;   // a part that starts in the air (render_min_height) keeps its walls apart from the ones standing on the ground
     for (var r = 0; r < rings.length; r++) { var R = rings[r], m = R.length / 2, A = 0; for (i = 0; i < m; i++) { j = (i + 1) % m; A += R[2 * i] * R[2 * j + 1] - R[2 * j] * R[2 * i + 1]; }
@@ -431,7 +440,7 @@ window.WFR_FEATURES = (function () {
   function fpAt(x, y, z, pad, fn) {   // fn(tile, footprint, local x, local z, k, mesh) for each footprint whose wall (grown by pad) holds the point; true stops
     var hit = false; tiles.forEach(function (t) { if (hit || t.z !== 14 || !t.fp || !t.meshes.length || !t.box || x < t.box.x0 - 30 || x > t.box.x1 + 30 || z < t.box.z0 - 30 || z > t.box.z1 + 30) return;
       var m = t.meshes[0], k = m.scale.x, lx = (x - m.position.x) / k, lz = (z - m.position.z) / k, L = fpGrid(t).get(Math.floor(lx / 16) + ',' + Math.floor(lz / 16)); if (!L) return;
-      for (var i = 0; i < L.length; i++) { var f = L[i]; if (lx < f.x0 - pad || lx > f.x1 + pad || lz < f.z0 - pad || lz > f.z1 + pad || y < f.bot - 0.5 || y > f.top) continue; if (fn(t, f, lx, lz, k, m)) { hit = true; return; } } });
+      for (var i = 0; i < L.length; i++) { var f = L[i]; if (f.open831 || lx < f.x0 - pad || lx > f.x1 + pad || lz < f.z0 - pad || lz > f.z1 + pad || y < f.bot - 0.5 || y > f.top) continue; if (fn(t, f, lx, lz, k, m)) { hit = true; return; } } });   /* 831: a dome she may fly into is open */
     return hit;
   }
   function inside808() { return !!(window.WFR_INTERIORS729 && WFR_INTERIORS729.k1 && WFR_INTERIORS729.k1()); }
@@ -445,12 +454,14 @@ window.WFR_FEATURES = (function () {
     return moved;
   }
   function lensOut808(cam, her) {   // a spring arm from her eyes out to the lens: the first wall on that line brings the lens in to just short of it
+    if (window.WFR_SACRED831 && her && WFR_SACRED831.lensIn(cam, her)) { if (T && T.u && T.u.uEye) T.u.uEye.value.copy(cam); return true; }   /* 831: inside a room the lens stays inside its walls */
     if (inside808() || !her) return false; var hx = her.x, hy = her.y + 0.5, hz = her.z, dx = cam.x - hx, dy = cam.y - hy, dz = cam.z - hz, L = Math.sqrt(dx * dx + dy * dy + dz * dz); if (L < 0.7) return false;
     for (var s2 = 0.3; s2 <= L + 1e-6; s2 += 0.2) { var f2 = Math.min(1, s2 / L), x = hx + dx * f2, y = hy + dy * f2, z = hz + dz * f2;
       if (fpAt(x, y, z, 0.25, function (t, f, lx, lz) { var e5 = nearEdge(f.r, lx, lz, f.clip); return inPoly(f.r, lx, lz) || (e5 && e5.d < 0.25); })) { var k = Math.max(0.6, s2 - 0.25) / L; x = hx + dx * k; y = hy + dy * k; z = hz + dz * k; cam.set(x, y, z); if (T && T.u && T.u.uEye) T.u.uEye.value.set(x, y, z); stats.lens808 = (stats.lens808 || 0) + 1; return true; } }
     return false;
   }
   function update(cam, travel) {   // every travel frame, before the render; off the travel zone it hides what it shows (labels, credit)
+    if (window.WFR_SACRED831 && T && T.on && cam) WFR_SACRED831.update(T, cam);   /* 831: the rooms placed at their spots, shown near her (cam: the camera's position) */
     if (!mats) return; hudTick820(); var t0 = now(); frameNo++;
     try {
       T = travel || T; if (!T || !T.on || !T.st || !T.f) { hideAll(); return; }
@@ -495,6 +506,8 @@ window.WFR_FEATURES = (function () {
     if (!camera) return; if (!labelsEl) { labelsEl = document.createElement('div'); labelsEl.id = 'features-labels'; labelsEl.style.cssText = 'position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:6;overflow:hidden'; document.body.appendChild(labelsEl); v3 = new THREE.Vector3(); }
     if (cover820 && !(window.WFR_DOOR && window.WFR_DOOR.classic) && cover820()) { for (var j = 0; j < pool.length; j++) if (!pool[j].hidden) pool[j].hidden = true;   /* 820: a sheet or a card is open (the page's own test, 818's covered(), and Pause): no name over it */
       if (!labelsEl.hidden) labelsEl.hidden = true; stats.labels = 0; stats.cover820 = (stats.cover820 || 0) + 1; return; }
+    if (window.WFR_SACRED831 && WFR_SACRED831.inside && WFR_SACRED831.inside(cam)) { for (var j2 = 0; j2 < pool.length; j2++) if (!pool[j2].hidden) pool[j2].hidden = true;   /* 831 (Su 40, seen in the pictures): inside a room no street or town name from outside shows through its walls */
+      if (!labelsEl.hidden) labelsEl.hidden = true; stats.labels = 0; stats.in831 = (stats.in831 || 0) + 1; return; }
     var cand = [], names = new Set(), REFR = window.WFR_TRAVEL712 && WFR_TRAVEL712.C.REFR;
     tiles.forEach(function (t) { if (t.used !== frameNo && t.used !== frameNo - 1 && t.used !== frameNo - 2 && t.used !== frameNo - 3) return; for (var i = 0; i < t.places.length; i++) { var p = t.places[i]; if (names.has(p.name)) continue;
       var L = W.toLocal(T.f, p.lat, p.lon), d = Math.hypot(L.x - cam.x, L.z - cam.z); if (d > PLACE_R[p.cls]) continue; names.add(p.name); cand.push({ p: p, x: L.x, z: L.z, d: d, s: PLACE_W[p.cls] / (1 + d / 4000) / (1 + (p.rank || 5) * 0.05) }); } });
@@ -759,8 +772,9 @@ window.WFR_CITY790 = (function () {
       else if (tall) { if (tc ? isBlue(tc) || r1 < 0.45 : r1 < 0.6) { style = 4; fl = 3.7; col = tc && isBlue(tc) ? tc : pick(PAL_GLASS, r2); } else { style = 3; fl = 3.5; col = tc || pick(PAL_STONE, r2); } }
       else if (big) { style = 5; fl = 4.5; col = tc || pick(PAL_STONE, r2); }
       else { if (tc ? isRedBrown(tc) : nb < 0.55 + (r1 - 0.5) * 0.4) { style = 2; fl = 3.2; col = tc || pick(PAL_BRICK, r2); } else { style = 3; fl = 3.3; col = tc || pick(PAL_STONE, r2); } }
+      if (B.sacredCol) { style = 0; col = B.sacredCol; house = false; }   /* 830 */
       if (HAS('nofacade')) style = 0; if (tc) st.tagged++; else st.seeded++; st.styles[style]++;
-      var shop = 0; if (!tall && !house && J.city && J.city.near(cx, cz, C.SHOP_D + Math.sqrt(area) / 2)) { shop = 1; st.shops++; }
+      var shop = 0; if (!B.sacredCol && !tall && !house && J.city && J.city.near(cx, cz, C.SHOP_D + Math.sqrt(area) / 2)) { shop = 1; st.shops++; }
       else if (house && J.city && h >= 7 && J.city.near(cx, cz, C.SHOP_D * 0.8)) { shop = r3 < 0.5 ? 1 : 0; if (shop) st.shops++; }
       col = toLin(col); var F = [style, r2, shop, fl];
       if (J.city) { J.city.addB(cx, cz, area, shop); J.city.occupy(outer); }
@@ -972,5 +986,953 @@ window.WFR_CITY790 = (function () {
   function changed() { ver++; }
   function restale(t) { return !!(mats && on() && t.z === 14 && t.detail790 === false && t.d < C.DETAIL_UP); }   /* world-features asks: a far-built tile she now nears is rebuilt with its detail */
   function peek() { var o = JSON.parse(JSON.stringify(st)); o.on = on(); o.ink = INK; o.mats = !!mats; o.pool = pool ? { tris: pool.tris, counts: pool.meshes.map(function (m) { return m.count; }) } : null; return o; }
-  return { C: C, on: on, materials: materials, begin: begin, building: building, road: road, stepRoads: stepRoads, finishTile: finishTile, tick: tick, changed: changed, restale: restale, peek: peek, tagColour: tagColour, obb: obb, U: U, version: 1 };
+  return { C: C, on: on, materials: materials, begin: begin, building: building, road: road, stepRoads: stepRoads, finishTile: finishTile, tick: tick, changed: changed, restale: restale, peek: peek, tagColour: tagColour, obb: obb, U: U, version: 1,
+    g830: { V: V, obb: obb, toLin: toLin, quadRoof: quadRoof, triRoof: triRoof } };   /* 830: the wall's own vertex and roof planes, for WFR_SACRED830 */
+})();
+
+/* ---------- BOARD 830 (Nov 14 2026): HOUSES OF PRAYER, GOLF AND DRIVE-THRUS, from the z14 tiles world-features.js already reads. Su, Nov 14 2026.
+   Marth, verbatim: "We need to add people golfing, and drive thrus and mosques and arabs :) especially in upper africa and Middle East".
+   WHAT ROUGE SEES (Standard only; Classic is frozen, board 645), and the data each piece reads (OpenMapTiles via OpenFreeMap, OSM, ODbL, credited on
+   screen by world-features.js):
+     MOSQUES     at every poi class place_of_worship whose subclass (OSM religion) is muslim: the building the point stands in (or the nearest within
+                 20 m) gets a dome and minaret(s) in its region's style: the Maghreb a square minaret with a small lantern and green tile roofs; Egypt
+                 and Sudan a Mamluk tiered octagonal minaret with a bulb top and a stone dome; Turkey and the Ottoman Balkans pencil minarets with lead
+                 cones, a lead dome and half-domes; Iran, Afghanistan and Central Asia a turquoise bulb dome, an iwan and blue minarets; South Asia a
+                 white onion dome; the Gulf, the Levant and Iraq a white or gold dome and slender round minarets with balconies. A crescent finial at
+                 most. No figure, no image. Where the map already draws the minarets or the domes as parts (Hassan II, the Blue Mosque, Sheikh Zayed),
+                 those parts are crowned (a cap, a dome on the round part) and nothing is added beside them. Outside the lands where a mosque is
+                 nearly always purpose-built, a mosque is dressed only when the map itself draws a minaret or a dome part (a converted hall in London
+                 keeps its own roof: nothing is invented).
+     GOLF        landcover subclass golf_course: the course mown in two-tone stripes (water and the bunkers left out), the map's sand polygons on the
+                 course as bunkers, and the small round grass polygons on it (8+ corners, 200-2,000 m2: how OSM draws a green) as greens with a flag.
+                 world-life790.js puts the golfers and the carts on the same polygons.
+     DRIVE-THRU  the OpenMapTiles schema has no drive_through tag (checked: transportation.service and poi carry none), so: a fast_food poi of a
+                 drive-thru chain (by its name) in a country where drive-thrus are the rule (the US, Canada, Australia, New Zealand, the Gulf), standing
+                 in a FREE-STANDING small building (90-1,000 m2, no other building within 5 m): the lane round it, the menu board, a canopy at the
+                 window. world-life790.js queues the cars and hands her a treat at the window.
+   COST: geometry only, inside the tile's own meshes (the walls', the roofs' and the ground's: the programs they already use), built in slices with
+   the tile's job; nothing joins the scene and no program compiles. localStorage 'wfr.sacred830' = 'off' is the game before this unit (the guard's control). */
+window.WFR_SACRED830 = (function () {
+  'use strict';
+  var C = { MAX_MOSQUES: 90, MAX_DT: 16, MAX_GOLF: 8, STRIPE: 12, SUB: 30, LIFT_G: 0.34, LIFT_B: 0.42, LIFT_L: 0.46, DT_OFF: 4.2, SEG: 14, FLAG: 3.4 };
+  var MODE = (function () { try { return localStorage.getItem('wfr.sacred830') || 'on'; } catch (e) { return 'on'; } })();
+  function on() { return MODE !== 'off' && !(window.WFR_DOOR && window.WFR_DOOR.classic) && !!(window.WFR_CITY790 && WFR_CITY790.on() && WFR_CITY790.g830); }
+  var st = { mode: MODE, tiles: 0, mosques: 0, skipped: 0, domes: 0, mappedDomes: 0, minarets: 0, mappedMinarets: 0, golf: 0, stripes: 0, bunkers: 0, greens: 0, dt: 0, dtNo: 0, ms: 0, msMax: 0, faults: [], styles: {}, items: new Map() };
+  function fault(w, e) { if (st.faults.length < 12) st.faults.push(w + ': ' + (e && e.message || e)); }
+  function hash(s) { var h = 2166136261 >>> 0; s = String(s); for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return (h >>> 0) / 4294967296; }
+
+  /* ---------- where: the region (people's dress in world-life790.js, the mosques' style here). Rough boxes, first match wins (DRAFT, for Izumi's chart) ---------- */
+  var BOX = [
+    ['levant', 31.22, 31.6, 34.2, 34.57], [null, 31.7, 31.88, 35.08, 35.27], ['levant', 31.35, 32.55, 34.95, 35.57], [null, 30.5, 33.35, 34.2, 35.57], [null, 29.45, 30.5, 34.2, 34.98],   // Gaza; Jerusalem (mixed: left as it is); the West Bank; then Israel (no Arab dress invented there)
+    [null, 40.0, 43.6, 43.6, 50.9], [null, 41.45, 43.6, 41.5, 43.6], [null, 38.8, 40.0, 44.8, 48.0], [null, 41.75, 44.2, 22.0, 28.0], [null, 40.6, 41.75, 22.0, 26.6],   // the Caucasus, Bulgaria, Greek Thrace: not Turkey
+    [null, 38.95, 39.4, 25.8, 26.65], [null, 38.15, 38.62, 25.8, 26.2], [null, 37.65, 37.82, 26.55, 27.1], [null, 36.7, 36.92, 26.9, 27.4], [null, 35.85, 36.48, 27.65, 28.3], [null, 34.5, 35.75, 32.2, 34.7],   // the Greek islands off Turkey, Cyprus
+    [null, 37.7, 42.8, 52.5, 66.7], [null, 29.8, 38.5, 60.9, 75.0], [null, 24.5, 29.8, 61.6, 63.5], ['gulf', 28.5, 30.1, 46.5, 48.5],   // Turkmenistan, Afghanistan, Pakistan: not Iran; Kuwait before Iraq
+    ['kurd', 35.0, 37.4, 43.4, 46.3], ['kurd', 36.8, 39.8, 38.5, 44.8], ['kurd', 34.3, 37.0, 45.0, 48.0], ['kurd', 36.3, 37.4, 40.0, 42.4],
+    ['turkey', 35.8, 42.2, 25.6, 44.8, 'tr'], ['levant', 33.05, 34.7, 35.1, 36.65], ['levant', 32.3, 37.3, 35.7, 42.4], ['levant', 29.2, 33.4, 34.9, 39.3],
+    ['iraq', 29.0, 37.4, 38.8, 48.6, 'iraq'], ['gulf_city', 22.6, 26.1, 51.5, 56.4], ['gulf_city', 24.4, 26.2, 50.7, 51.7], ['gulf', 25.8, 26.35, 50.3, 50.85],
+    ['gulf', 16.6, 24.9, 52.0, 59.9], ['gulf', 25.6, 26.4, 56.0, 56.5], ['iran', 25.0, 39.8, 44.0, 63.4], ['egypt', 22.0, 31.7, 24.7, 36.9, 'egypt'], ['gulf', 16.3, 32.2, 34.5, 55.7], ['gulf', 12.1, 19.0, 42.5, 53.1],
+    ['tuareg', 16.0, 26.0, -5.0, 12.0], ['sudan', 8.7, 22.0, 21.8, 38.6], ['libya', 19.5, 33.2, 9.3, 25.2],
+    ['amazigh', 29.5, 33.5, -9.5, -4.0], ['amazigh', 34.6, 35.4, -5.6, -2.9], ['amazigh', 36.3, 36.95, 3.6, 5.2], ['amazigh', 34.8, 35.7, 5.6, 7.2],
+    ['maghreb', 30.2, 37.6, 7.5, 11.6], ['maghreb', 18.9, 37.1, -8.7, 12.0], ['maghreb', 27.6, 35.95, -13.2, -1.0], ['maghreb', 20.7, 27.7, -17.1, -8.7], ['maghreb', 14.7, 27.3, -17.1, -4.8]];
+  function region(lat, lon) {
+    for (var i = 0; i < BOX.length; i++) { var b = BOX[i]; if (lat < b[1] || lat > b[2] || lon < b[3] || lon > b[4]) continue;
+      if (b[5] === 'iraq' && (!(lon < 45.6 || (lat < 31.0 && lon < 48.4)) || lat < 32.2 - (lon - 39) * 0.55)) continue;   // Iraq's east edge leans (Kermanshah and Ahvaz are Iran), its south-west edge too (Arar and Sakaka are Saudi)
+      if (b[5] === 'tr' && ((lon > 42.2 && lat < 37.15) || (lon > 36.6 && lon <= 42.2 && lat < 36.75) || (lon > 35.9 && lon <= 36.6 && lat < 35.95))) continue;   // Turkey's south edge: Aleppo and Mosul are not Turkey, Hatay is
+      if (b[5] === 'egypt' && lat >= 24 && lon > 34.9) continue;                     // Egypt ends at the Gulf of Aqaba; the Saudi coast is east of it
+      return b[0]; }
+    return null;
+  }
+  var OTTO = [[42.5, 45.3, 15.7, 19.7], [41.8, 43.3, 20.0, 21.8], [39.6, 42.7, 19.2, 21.1]], PERS = [[29.4, 38.5, 60.5, 74.9], [37.0, 45.6, 55.9, 73.2]], MUGH = [[23.6, 37.1, 60.9, 77.8], [20.6, 26.6, 88.0, 92.7], [8.0, 30.5, 68.0, 88.0]];
+  function inB(B, lat, lon) { for (var i = 0; i < B.length; i++) { var b = B[i]; if (lat >= b[0] && lat <= b[1] && lon >= b[2] && lon <= b[3]) return true; } return false; }
+  function mosqueStyle(lat, lon) {   // null: not a land where a mosque is nearly always purpose-built (dressed only where the map draws its minaret or dome)
+    var r = region(lat, lon);
+    if (r === 'maghreb' || r === 'amazigh' || r === 'libya' || r === 'tuareg') return 'maghreb';
+    if (r === 'egypt' || r === 'sudan') return 'mamluk';
+    if (r === 'turkey' || (r === 'kurd' && lat > 36.8 && lon < 44.8) || inB(OTTO, lat, lon)) return 'ottoman';
+    if (r === 'iran' || inB(PERS, lat, lon)) return 'persian';
+    if (r) return 'arab';
+    if (inB(MUGH, lat, lon)) return 'mughal';
+    return null;
+  }
+
+  /* ---------- the drive-thru chains and the countries where the drive-thru is the rule ---------- */
+  var CHAIN = /^(mcdonald'?s|wendy'?s|taco bell|chick-fil-a|kfc|kentucky fried chicken|burger king|tim hortons|in-n-out( burger)?|sonic( drive-in)?|whataburger|jack in the box|popeyes( louisiana kitchen)?|arby'?s|dairy queen|hardee'?s|carl'?s jr\.?|culver'?s|raising cane'?s( chicken fingers)?|checkers|rally'?s|del taco|zaxby'?s|bojangles'?|white castle|dunkin'?( donuts)?|hungry jack'?s)$/i;
+  function usBorderLat(lon) {   // the US-Mexico line, west to east (lat at a lon), for lon -117.2..-97.1
+    var P = [[-117.2, 32.55], [-114.8, 32.5], [-111.1, 31.33], [-108.2, 31.33], [-106.5, 31.8], [-104.5, 29.7], [-103.0, 29.0], [-101.4, 29.8], [-100.5, 28.7], [-99.5, 27.5], [-98.3, 26.1], [-97.1, 25.9]];
+    for (var i = 1; i < P.length; i++) if (lon <= P[i][0]) { var f = (lon - P[i - 1][0]) / (P[i][0] - P[i - 1][0]); return P[i - 1][1] + (P[i][1] - P[i - 1][1]) * f; } return 25.8; }
+  function dtCountry(lat, lon) {   // { left: drives on the left } or null
+    if (lat > 24.4 && lat < 49.5 && lon > -125 && lon < -66.8) { if (lon > -117.2 && lon < -97.1 && lat < usBorderLat(lon)) return null; if (lat < 27 && lon > -80.0) return null; return { left: false }; }   // the contiguous US (not Mexico, not the Bahamas)
+    if (lat >= 49.5 && lat < 70 && lon > -141 && lon < -52) return { left: false };   // Canada
+    if ((lat > 18.8 && lat < 22.4 && lon > -160.5 && lon < -154.7) || (lat > 51 && lat < 71.5 && lon > -170 && lon < -129.9) || (lat > 17.8 && lat < 18.6 && lon > -67.4 && lon < -65.2)) return { left: false };   // Hawaii, Alaska, Puerto Rico
+    if (lat > -44 && lat < -10 && lon > 112 && lon < 154) return { left: true };   // Australia
+    if (lat > -47.5 && lat < -34 && lon > 166 && lon < 179) return { left: true };   // New Zealand
+    var r = region(lat, lon); if (r === 'gulf' || r === 'gulf_city') return { left: false };
+    return null;
+  }
+
+  /* ---------- the tile's lists (from world-features' emit, tile units) ---------- */
+  var K0 = null;
+  function begin(J, t, K) { if (!on() || t.z !== 14) return null; K0 = K || K0; G = WFR_CITY790.g830; J.s830 = { pois: [], golf: [], sand: [], grass: [], water: [], tasks: null, ti: 0, t: t, skip: window.WFR_SACRED831 ? WFR_SACRED831.skips(J, t, K || K0) : null }; st.tiles++; return J.s830; }
+  var STONE = { maghreb: [0.93, 0.9, 0.84], ottoman: [0.86, 0.84, 0.79], persian: [0.82, 0.72, 0.56], mamluk: [0.82, 0.71, 0.53], arab: [0.95, 0.94, 0.9], mughal: [0.93, 0.92, 0.88], church: [0.84, 0.81, 0.74], synagogue: [0.88, 0.85, 0.78] };
+  function atB(J, R) {   // a building as it is made: dropped (a hand-built landmark stands there), or worn in its house of prayer's stone, or as it was (null)
+    var S = J.s830; if (!S) return null; var n = R.length / 2, x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9, i; for (i = 0; i < n; i++) { x0 = Math.min(x0, R[2 * i]); x1 = Math.max(x1, R[2 * i]); z0 = Math.min(z0, R[2 * i + 1]); z1 = Math.max(z1, R[2 * i + 1]); }
+    var cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+    if (S.skip) for (i = 0; i < S.skip.length; i++) { var k = S.skip[i], dx = cx - k.x, dz = cz - k.z, s = dx * k.ux + dz * k.uz, t = -dx * k.uz + dz * k.ux; if (Math.abs(s) <= k.hl && Math.abs(t) <= k.hw && (!k.minTop || true)) return 'skip'; }
+    var a = (x1 - x0) * (z1 - z0);
+    for (i = 0; i < S.pois.length; i++) { var p = S.pois[i]; if (p.x == null) continue; var inside = p.x >= x0 && p.x <= x1 && p.z >= z0 && p.z <= z1 && inPoly(R, p.x, p.z), d = Math.hypot(cx - p.x, cz - p.z);
+      if (p.k === 'dt') { if (inside && a < 1000 && p.ll && dtCountry(p.ll.lat, p.ll.lon)) return col([0.9, 0.82, 0.68]); continue; }   /* a drive-thru's own walls: a flat-roofed restaurant in warm render, not a house */
+      if (inside || (p.k === 'mosque' && d < 60 && a < 1500)) { if (p.k === 'mosque') { var sty = p.sty !== undefined ? p.sty : (p.sty = mosqueStyle(p.ll.lat, p.ll.lon)); return sty ? col(STONE[sty]) : null; } return p.k === 'church' ? col(STONE.church) : p.k === 'synagogue' ? col(STONE.synagogue) : null; } }
+    return null; }
+  function poi(J, P, px, py, E) {
+    var S = J.s830; if (!S || S.pois.length > 400 || px < 0 || py < 0 || px >= E || py >= E) return; S.E = E; var n0 = S.pois.length; var cl = P['class'], sub = P.subclass, nm = P['name:en'] || P.name_en || P.name || '';
+    if (cl === 'place_of_worship') S.pois.push({ k: sub === 'muslim' ? 'mosque' : sub === 'christian' ? 'church' : sub === 'jewish' ? 'synagogue' : 'worship', sub: sub || null, name: nm, px: px, py: py, rank: +P.rank || 999 });
+    else if (cl === 'fast_food' && CHAIN.test(String(P.name || '').trim())) S.pois.push({ k: 'dt', name: String(P.name).trim(), px: px, py: py });
+    if (S.pois.length > n0 && K0) { var q = S.pois[n0], lc = K0.locRing(S.t, J, [px, py], E); q.x = lc[0]; q.z = lc[1]; q.ll = K0.llOf(S.t, px, py, E); }
+  }
+  function cover(J, P, polys, E) { var S = J.s830; if (!S) return; S.E = E; var sub = P.subclass, cl = P['class'];
+    for (var i = 0; i < polys.length; i++) { if (sub === 'golf_course') S.golf.push(polys[i]); else if (cl === 'sand') S.sand.push(polys[i]); else if (sub === 'grass' && polys[i].outer.length >= 16 && polys[i].outer.length <= 400) S.grass.push(polys[i]); } }
+  function water(J, polys) { var S = J.s830; if (!S) return; for (var i = 0; i < polys.length && S.water.length < 300; i++) S.water.push(polys[i]); }
+
+  /* ---------- the geometry: world-city790's own vertex (the facade's attributes, PLAIN: no windows, no ink) ---------- */
+  var G = null, PLAIN = [6, 0, 0, 3];
+  function col(c) { return G.toLin(c); }
+  function revolve(o, cx, cz, y0, prof, c, seg) {   // a surface of revolution: prof [[r, y], ...] bottom to top; smooth normals; faces out
+    var n = prof.length, rows = [], i, k, cc = col(c);
+    for (i = 0; i < n; i++) { var a = prof[Math.max(0, i - 1)], b = prof[Math.min(n - 1, i + 1)], dr = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dr, dy) || 1, nr = dy / l, ny = -dr / l, row = [];
+      for (k = 0; k <= seg; k++) { var th = k / seg * 6.283185, cs = Math.cos(th), sn = Math.sin(th); row.push(G.V(o, cx + cs * prof[i][0], y0 + prof[i][1], cz + sn * prof[i][0], cs * nr, ny, sn * nr, cc, 0, 0, PLAIN, 0, 0)); }
+      rows.push(row); }
+    for (i = 0; i < n - 1; i++) for (k = 0; k < seg; k++) { var a0 = rows[i][k], a1 = rows[i][k + 1], b0 = rows[i + 1][k], b1 = rows[i + 1][k + 1]; o.i.push(a0, b0, a1, a1, b0, b1); }
+    return (n - 1) * seg * 2;
+  }
+  function half(o, cx, cz, y0, r, h, ux, uz, c, seg) {   // a half-dome opening toward -u (its flat side against the main dome's drum)
+    var cc = col(c), rows = [], R = 5, i, k, px = -uz, pz = ux;
+    for (i = 0; i <= R; i++) { var ph = i / R * Math.PI / 2, rr = Math.cos(ph) * r, yy = Math.sin(ph) * h, row = [];
+      for (k = 0; k <= seg; k++) { var th = -Math.PI / 2 + k / seg * Math.PI, cs = Math.cos(th), sn = Math.sin(th), dx = ux * cs + px * sn, dz = uz * cs + pz * sn, nl = Math.hypot(Math.cos(ph) * h, Math.sin(ph) * r) || 1;
+        row.push(G.V(o, cx + dx * rr, y0 + yy, cz + dz * rr, dx * Math.cos(ph) * h / nl, Math.sin(ph) * r / nl, dz * Math.cos(ph) * h / nl, cc, 0, 0, PLAIN, 0, 0)); }
+      rows.push(row); }
+    for (i = 0; i < R; i++) for (k = 0; k < seg; k++) { var a0 = rows[i][k], a1 = rows[i][k + 1], b0 = rows[i + 1][k], b1 = rows[i + 1][k + 1]; o.i.push(a0, b0, a1, a1, b0, b1); }
+  }
+  function box(o, cx, cz, ux, uz, hl, hw, y0, y1, c, roof) {   // an upright box, long axis (ux, uz); flat normals; faces out
+    var px = -uz, pz = ux, cc = col(c), P = function (s, t, y) { return [cx + ux * s + px * t, y, cz + uz * s + pz * t]; };
+    var q = [[P(-hl, -hw, y0), P(hl, -hw, y0), P(hl, -hw, y1), P(-hl, -hw, y1), [-px, 0, -pz]], [P(hl, -hw, y0), P(hl, hw, y0), P(hl, hw, y1), P(hl, -hw, y1), [ux, 0, uz]],
+      [P(hl, hw, y0), P(-hl, hw, y0), P(-hl, hw, y1), P(hl, hw, y1), [px, 0, pz]], [P(-hl, hw, y0), P(-hl, -hw, y0), P(-hl, -hw, y1), P(-hl, hw, y1), [-ux, 0, -uz]]];
+    if (roof !== false) q.push([P(-hl, -hw, y1), P(hl, -hw, y1), P(hl, hw, y1), P(-hl, hw, y1), [0, 1, 0]]);
+    for (var i = 0; i < q.length; i++) quad(o, q[i][0], q[i][1], q[i][2], q[i][3], q[i][4], cc);
+  }
+  function quad(o, a, b, c, d, n, cc) {   // a planar quad turned to face n
+    var ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2], vx = d[0] - a[0], vy = d[1] - a[1], vz = d[2] - a[2], fx = uy * vz - uz * vy, fy = uz * vx - ux * vz, fz = ux * vy - uy * vx;
+    if (fx * n[0] + fy * n[1] + fz * n[2] < 0) { var t = b; b = d; d = t; }
+    var k = [a, b, c, d].map(function (p) { return G.V(o, p[0], p[1], p[2], n[0], n[1], n[2], cc, 0, 0, PLAIN, 0, 0); }); o.i.push(k[0], k[1], k[2], k[0], k[2], k[3]);
+  }
+  function dome(o, cx, cz, y0, r, kind, c, seg) {   // the profile of each region's dome
+    var p = [], i, N = 7;
+    if (kind === 'bulb' || kind === 'onion') { var sw = kind === 'onion' ? 1.18 : 1.1, ht = kind === 'onion' ? 1.55 : 1.3;   // swells past the drum, then draws to a point
+      p = [[r * 0.92, 0], [r * sw, r * 0.25 * ht], [r * sw * 0.98, r * 0.45 * ht], [r * 0.86, r * 0.68 * ht], [r * 0.55, r * 0.86 * ht], [r * 0.22, r * 0.96 * ht], [r * 0.04, r * ht], [0, r * ht + 0.01]]; }
+    else { var hk = kind === 'flat' ? 0.62 : kind === 'pointed' ? 1.15 : 0.92;
+      for (i = 0; i <= N; i++) { var ph = i / N * Math.PI / 2, rr = Math.cos(ph) * r, yy = Math.sin(ph) * r * hk; if (kind === 'pointed' && i === N) yy += r * 0.12; p.push([rr, yy]); } }
+    return revolve(o, cx, cz, y0, p, c, seg);
+  }
+  function finial(o, x, z, y, s, c) {   // a short pole and a crescent (two thin bars bent into a C), no more
+    box(o, x, z, 1, 0, 0.05 * s, 0.05 * s, y, y + 1.1 * s, c);
+    var r = 0.38 * s, yc = y + 1.5 * s, prev = null; for (var i = 0; i <= 6; i++) { var a = -Math.PI * 0.85 + i / 6 * Math.PI * 1.7, px = x + Math.sin(a) * r, py = yc + Math.cos(a) * r; if (prev) { var mx = (px + prev[0]) / 2, my = (py + prev[1]) / 2; box(o, mx, z, 1, 0, 0.07 * s, 0.03 * s, my - 0.07 * s, my + 0.07 * s, c); } prev = [px, py]; }
+  }
+
+  /* ---------- a minaret by style: y0 its foot, h its height ---------- */
+  var PAL = {
+    arab: { dome: [[0.95, 0.94, 0.9], [0.95, 0.94, 0.9], [0.95, 0.94, 0.9], [0.84, 0.66, 0.3], [0.22, 0.5, 0.36]], min: [0.94, 0.92, 0.86], trim: [0.78, 0.72, 0.6] },
+    mamluk: { dome: [[0.84, 0.73, 0.56], [0.8, 0.69, 0.52]], min: [0.82, 0.71, 0.53], trim: [0.68, 0.56, 0.42] },
+    ottoman: { dome: [[0.52, 0.55, 0.58]], min: [0.91, 0.89, 0.83], trim: [0.52, 0.55, 0.58] },
+    persian: { dome: [[0.19, 0.6, 0.68], [0.16, 0.5, 0.66]], min: [0.82, 0.72, 0.56], trim: [0.15, 0.42, 0.62] },
+    maghreb: { dome: [[0.14, 0.44, 0.3]], min: [0.87, 0.76, 0.58], trim: [0.14, 0.46, 0.32] },
+    mughal: { dome: [[0.95, 0.94, 0.9]], min: [0.72, 0.42, 0.32], trim: [0.95, 0.94, 0.9] } };
+  function minaret(o, x, z, y0, h, sty, pal, ux, uz, rnd) {
+    var M = pal.min, T = pal.trim, seg = 10, r;
+    if (sty === 'maghreb') { var w = Math.max(1.6, Math.min(6, h * 0.11)); box(o, x, z, ux, uz, w, w, y0, y0 + h * 0.84, M); box(o, x, z, ux, uz, w * 1.02, w * 1.02, y0 + h * 0.74, y0 + h * 0.8, T);
+      box(o, x, z, ux, uz, w * 1.08, w * 1.08, y0 + h * 0.84, y0 + h * 0.86, M); box(o, x, z, ux, uz, w * 0.45, w * 0.45, y0 + h * 0.86, y0 + h, M); dome(o, x, z, y0 + h, w * 0.45, 'flat', T, 8); finial(o, x, z, y0 + h + w * 0.28, Math.max(1, w * 0.4), [0.85, 0.72, 0.35]); return; }
+    if (sty === 'ottoman') { r = Math.max(0.9, h / 42); revolve(o, x, z, y0, [[r * 1.15, 0], [r * 1.15, h * 0.12], [r, h * 0.13], [r, h * 0.62]], M, seg);
+      revolve(o, x, z, y0 + h * 0.62, [[r, 0], [r * 1.6, h * 0.015], [r * 1.6, h * 0.03], [r * 0.95, h * 0.035], [r * 0.95, h * 0.2], [r * 1.5, h * 0.21], [r * 1.5, h * 0.225], [r * 0.9, h * 0.23], [r * 0.9, h * 0.28]], M, seg);
+      revolve(o, x, z, y0 + h * 0.9, [[r * 1.02, 0], [r * 0.5, h * 0.12], [0.06, h * 0.21], [0, h * 0.215]], T, seg); finial(o, x, z, y0 + h * 1.1, Math.max(1, r * 0.8), [0.85, 0.72, 0.35]); return; }
+    if (sty === 'mamluk') { var b0 = Math.max(1.5, h / 16); box(o, x, z, ux, uz, b0, b0, y0, y0 + h * 0.32, M); box(o, x, z, ux, uz, b0 * 1.15, b0 * 1.15, y0 + h * 0.32, y0 + h * 0.34, T);
+      r = b0 * 0.92; revolve(o, x, z, y0 + h * 0.34, [[r, 0], [r, h * 0.3], [r * 1.3, h * 0.31], [r * 1.3, h * 0.33], [r * 0.7, h * 0.335], [r * 0.7, h * 0.5]], M, 8);
+      revolve(o, x, z, y0 + h * 0.84, [[r * 0.9, 0], [r * 0.9, h * 0.02], [r * 0.55, h * 0.03]], T, 8); dome(o, x, z, y0 + h * 0.86, r * 0.55, 'bulb', M, 8); finial(o, x, z, y0 + h * 0.86 + r * 0.7, Math.max(1, r * 0.5), [0.85, 0.72, 0.35]); return; }
+    if (sty === 'persian') { r = Math.max(1.1, h / 22); revolve(o, x, z, y0, [[r * 1.1, 0], [r, h * 0.08], [r * 0.85, h * 0.8]], M, seg); revolve(o, x, z, y0 + h * 0.45, [[r * 0.95, 0], [r * 0.86, h * 0.35]], T, seg);
+      revolve(o, x, z, y0 + h * 0.8, [[r * 0.85, 0], [r * 1.35, h * 0.04], [r * 1.35, h * 0.1], [r * 0.85, h * 0.11]], T, seg); revolve(o, x, z, y0 + h * 0.91, [[r * 0.6, 0], [r * 0.6, h * 0.04]], M, seg); dome(o, x, z, y0 + h * 0.95, r * 0.62, 'bulb', T, 8); return; }
+    if (sty === 'mughal') { r = Math.max(1.1, h / 20); revolve(o, x, z, y0, [[r * 1.15, 0], [r, h * 0.85]], M, 8); revolve(o, x, z, y0 + h * 0.85, [[r * 1.2, 0], [r * 1.2, h * 0.02]], pal.trim, 8);
+      for (var c = 0; c < 4; c++) { var a = c * Math.PI / 2 + 0.785; box(o, x + Math.cos(a) * r * 0.8, z + Math.sin(a) * r * 0.8, 1, 0, 0.12, 0.12, y0 + h * 0.87, y0 + h * 0.95, pal.trim); }
+      dome(o, x, z, y0 + h * 0.95, r * 1.05, 'onion', pal.trim, 8); return; }
+    /* arab: a slender round shaft, one or two balconies, a small cap */
+    r = Math.max(0.9, h / 24); var two = h > 30 || rnd < 0.4;
+    revolve(o, x, z, y0, [[r * 1.25, 0], [r * 1.25, h * 0.18], [r, h * 0.2], [r, h * 0.55]], M, seg);
+    revolve(o, x, z, y0 + h * 0.55, [[r, 0], [r * 1.5, h * 0.02], [r * 1.5, h * 0.04], [r * 0.85, h * 0.045], [r * 0.85, two ? h * 0.2 : h * 0.3]], M, seg);
+    if (two) revolve(o, x, z, y0 + h * 0.75, [[r * 0.85, 0], [r * 1.3, h * 0.02], [r * 1.3, h * 0.035], [r * 0.7, h * 0.04], [r * 0.7, h * 0.13]], M, seg);
+    dome(o, x, z, y0 + h * 0.88, r * 0.75, 'pointed', T, 8); finial(o, x, z, y0 + h * 0.88 + r * 0.95, Math.max(1, r * 0.6), [0.85, 0.72, 0.35]);
+  }
+
+  /* ---------- one mosque: the building the point stands in, its parts round it, the dressing ---------- */
+  function fpArea(f) { var R = f.r, n = R.length / 2, a = 0; for (var i = 0; i < n; i++) { var j = (i + 1) % n; a += R[2 * i] * R[2 * j + 1] - R[2 * j] * R[2 * i + 1]; } return Math.abs(a / 2); }
+  function inPoly(R, x, z) { var c = false, n = R.length / 2; for (var i = 0, j = n - 1; i < n; j = i++) { var xi = R[2 * i], zi = R[2 * i + 1], xj = R[2 * j], zj = R[2 * j + 1]; if (((zi > z) !== (zj > z)) && (x < (xj - xi) * (z - zi) / (zj - zi) + xi)) c = !c; } return c; }
+  function boxD(f, x, z) { var dx = Math.max(f.x0 - x, 0, x - f.x1), dz = Math.max(f.z0 - z, 0, z - f.z1); return Math.hypot(dx, dz); }
+  function hostOf(J, x, z, near) { var F = J.fp || [], best = null, bd = 1e9;
+    for (var i = 0; i < F.length; i++) { var f = F[i]; if (f.top - f.gC < 2.5) continue; var d = boxD(f, x, z); if (d > near) continue; if (d === 0 && inPoly(f.r, x, z)) d = -fpArea(f) / 1e6; if (d < bd) { bd = d; best = f; } }
+    return best; }
+  function mosque(J, p, ll, sty) {
+    var hall = hostOf(J, p.x, p.z, 20); if (!hall) { st.skipped++; return null; }
+    var o = J.wallX || (J.wallX = new J.Out830()), F = J.fp, hA = fpArea(hall), hH = hall.top - hall.gC, cx = (hall.x0 + hall.x1) / 2, cz = (hall.z0 + hall.z1) / 2, R = Math.max(25, Math.hypot(hall.x1 - hall.x0, hall.z1 - hall.z0) * 0.8);
+    if (!o.f) { o.f = []; o.m = []; }
+    var mins = [], rounds = [], i, f;
+    for (i = 0; i < F.length; i++) { f = F[i]; var fx = (f.x0 + f.x1) / 2, fz = (f.z0 + f.z1) / 2; if (Math.hypot(fx - cx, fz - cz) > R) continue; var w = f.x1 - f.x0, d = f.z1 - f.z0, hh = f.top - f.gC;
+      var mw = Math.max(11, Math.sqrt(hA) * 0.35); if (w < mw && d < mw && hh >= Math.max(15, hH * 1.4)) { var mm = null; for (var q0 = 0; q0 < mins.length; q0++) if (Math.hypot((mins[q0].x0 + mins[q0].x1) / 2 - fx, (mins[q0].z0 + mins[q0].z1) / 2 - fz) < 3) mm = q0;
+        if (mm === null) mins.push(f); else if (f.top > mins[mm].top) mins[mm] = f; continue; }   // a stack of minaret parts: the tallest is its top
+      var rq0 = fpArea(f) / (Math.PI * w * d / 4); if (f.r.length / 2 >= 10 && w > 4 && Math.abs(w - d) < 0.2 * Math.max(w, d) && rq0 > 0.85 && rq0 < 1.08 && hh >= hH * 0.8 && f !== hall) rounds.push(f); }   // a circle fills pi/4 of its box (a square would read 1.27)
+    rounds = rounds.filter(function (q) { return !rounds.some(function (s) { return s !== q && s.top > q.top && Math.hypot((s.x0 + s.x1) / 2 - (q.x0 + q.x1) / 2, (s.z0 + s.z1) / 2 - (q.z0 + q.z1) / 2) < 1.5; }); });   // a dome's stacked rings: its top ring carries it
+    if (!sty && !mins.length && !rounds.length) { st.skipped++; return null; }   // a hall in a land of converted halls, with nothing drawn by the map: left as it is
+    var s = sty || 'arab', pal = PAL[s], rnd = hash(p.name + Math.round(p.x) + ',' + Math.round(p.z)), domeC = pal.dome[Math.floor(rnd * pal.dome.length) % pal.dome.length], ob = G.obb(hall.r) || { cx: cx, cz: cz, ux: 1, uz: 0, L: (hall.x1 - hall.x0) / 2, W: (hall.z1 - hall.z0) / 2 };
+    var dk = s === 'persian' ? 'bulb' : s === 'mughal' ? 'onion' : s === 'mamluk' ? 'pointed' : s === 'ottoman' ? 'flat' : 'round', out = { domes: 0, minarets: 0, mapped: mins.length + rounds.length };
+    /* the minarets: the map's own crowned, else made at the hall's corners */
+    if (mins.length) for (i = 0; i < mins.length && i < 6; i++) { f = mins[i]; var mx = (f.x0 + f.x1) / 2, mz = (f.z0 + f.z1) / 2, mr = Math.min(f.x1 - f.x0, f.z1 - f.z0) / 2, mh = f.top - f.gC;
+        if (s === 'ottoman') { revolve(o, mx, mz, f.top, [[mr * 1.02, 0], [mr * 0.5, mh * 0.08], [0.06, mh * 0.15], [0, mh * 0.155]], pal.trim, 10); finial(o, mx, mz, f.top + mh * 0.15, Math.max(1, mr * 0.6), [0.85, 0.72, 0.35]); }
+        else if (s === 'maghreb') { dome(o, mx, mz, f.top, mr * 0.9, 'flat', pal.trim, 8); finial(o, mx, mz, f.top + mr * 0.56, Math.max(1, mr * 0.3), [0.85, 0.72, 0.35]); }   // the map draws its lantern already: a small green cap and the finial
+        else { dome(o, mx, mz, f.top, mr * 0.9, s === 'persian' || s === 'mamluk' ? 'bulb' : 'pointed', pal.trim, 8); finial(o, mx, mz, f.top + mr * 1.1, Math.max(1, mr * 0.5), [0.85, 0.72, 0.35]); }
+        out.minarets++; st.mappedMinarets++; }
+    else if (sty) { var n = hA < 1500 ? (s === 'arab' && hA > 800 ? 2 : 1) : hA < 6000 ? 2 : (s === 'ottoman' || s === 'arab' ? 4 : 2); if (s === 'maghreb') n = 1; if (s === 'persian' || s === 'mughal') n = Math.max(2, Math.min(n, 4));
+      var mh2 = Math.max(14, Math.min(s === 'maghreb' ? 45 : 70, hH * (s === 'ottoman' ? 3.0 : 2.4) + Math.sqrt(hA) * 0.25)), corners = [[1, 1], [-1, -1], [1, -1], [-1, 1]], c0 = Math.floor(rnd * 4);
+      for (i = 0; i < n; i++) { var cr = corners[(c0 + i) % 4], ins = s === 'maghreb' ? 2.2 : 1.6, sx = ob.L - ins, tx = ob.W - ins, x = ob.cx + ob.ux * sx * cr[0] - ob.uz * tx * cr[1], z = ob.cz + ob.uz * sx * cr[0] + ob.ux * tx * cr[1];
+        minaret(o, x, z, hall.gC - 0.5, mh2, s, pal, ob.ux, ob.uz, rnd); out.minarets++; st.minarets++; } }
+    /* the domes: the map's round parts crowned, else the hall's own */
+    if (rounds.length) for (i = 0; i < rounds.length && i < 12; i++) { f = rounds[i]; var dr = Math.min(f.x1 - f.x0, f.z1 - f.z0) / 2 * 0.98; dome(o, (f.x0 + f.x1) / 2, (f.z0 + f.z1) / 2, f.top - 0.05, dr, dk === 'round' ? 'flat' : dk, domeC, C.SEG); out.domes++; st.mappedDomes++; }
+    else if (sty) { var top = hall.top;
+      if (s === 'maghreb') {   /* the green tile roof: a low hip over the hall's rectangle (the roofs' mesh: its tile courses), and a small dome over the mihrab bay */
+        var RO = J.roof, e = 0.3, L = ob.L + e, W = ob.W + e, rise = Math.min(6, W * 0.32), ri = Math.max(0, L - W), P = function (a, b, y) { return [ob.cx + ob.ux * a - ob.uz * b, y, ob.cz + ob.uz * a + ob.ux * b]; }, gc = col(pal.dome[0]);
+        var A = P(-L, -W, top), B = P(L, -W, top), Cq = P(L, W, top), D = P(-L, W, top), H0 = P(-ri, 0, top + rise), H1 = P(ri, 0, top + rise);
+        G.quadRoof(RO, A, B, H1, H0, gc); G.quadRoof(RO, Cq, D, H0, H1, gc); G.triRoof(RO, B, Cq, H1, gc); G.triRoof(RO, D, A, H0, gc); out.roof = 1; }
+      else { var rD = Math.max(2.4, Math.min(s === 'ottoman' ? 22 : 18, Math.min(ob.L, ob.W) * (s === 'ottoman' ? 0.62 : s === 'mamluk' ? 0.45 : 0.55))), dy = top;
+        if (s === 'ottoman' || s === 'persian' || s === 'mughal') { revolve(o, ob.cx, ob.cz, top - 0.2, [[rD * 1.02, 0], [rD * 1.02, rD * 0.28]], s === 'ottoman' ? pal.min : pal.min, C.SEG); dy = top + rD * 0.28; }
+        dome(o, ob.cx, ob.cz, dy, rD, dk === 'round' ? 'round' : dk, domeC, C.SEG); out.domes++; st.domes++;
+        if (s === 'ottoman' && ob.L > rD * 1.6) for (var hs = -1; hs <= 1; hs += 2) { half(o, ob.cx + ob.ux * rD * hs, ob.cz + ob.uz * rD * hs, top - 0.1, rD * 0.72, rD * 0.62, ob.ux * hs, ob.uz * hs, domeC, 10); out.domes++; }
+        if (s === 'ottoman' && hA > 900) for (var q = 0; q < 4; q++) { var qa = [[1, 1], [-1, -1], [1, -1], [-1, 1]][q], qs = ob.L * 0.72, qt = ob.W * 0.72; dome(o, ob.cx + ob.ux * qs * qa[0] - ob.uz * qt * qa[1], ob.cz + ob.uz * qs * qa[0] + ob.ux * qt * qa[1], top, Math.min(rD * 0.32, ob.W * 0.2), 'flat', domeC, 8); out.domes++; }
+        if (s === 'persian' && ob.L > 6) {   /* the iwan: a tall portal on the hall's long side, its pointed arch set back in tile blue */
+          var iw = Math.min(ob.L * 0.9, 22), ih = Math.max(hH * 1.35, hH + 4), ix = ob.cx - ob.uz * (ob.W + 1.0), iz = ob.cz + ob.ux * (ob.W + 1.0);
+          box(o, ix, iz, ob.ux, ob.uz, iw / 2, 1.2, hall.gC - 0.4, hall.gC + ih, pal.min); var fn = [-ob.uz, 0, ob.ux], ar = col([0.12, 0.33, 0.52]), fx2 = ix - ob.uz * 1.25, fz2 = iz + ob.ux * 1.25, aw = iw * 0.3, ay0 = hall.gC, ay1 = hall.gC + ih * 0.62;
+          quad(o, [fx2 - ob.ux * aw, ay0, fz2 - ob.uz * aw], [fx2 + ob.ux * aw, ay0, fz2 + ob.uz * aw], [fx2 + ob.ux * aw, ay1, fz2 + ob.uz * aw], [fx2 - ob.ux * aw, ay1, fz2 - ob.uz * aw], fn, ar);
+          var tk = G.V(o, fx2 - ob.ux * aw, ay1, fz2 - ob.uz * aw, fn[0], 0, fn[2], ar, 0, 0, PLAIN, 0, 0), tk2 = G.V(o, fx2 + ob.ux * aw, ay1, fz2 + ob.uz * aw, fn[0], 0, fn[2], ar, 0, 0, PLAIN, 0, 0), tk3 = G.V(o, fx2, ay1 + aw * 0.9, fz2, fn[0], 0, fn[2], ar, 0, 0, PLAIN, 0, 0);
+          o.i.push(tk, tk3, tk2, tk, tk2, tk3); out.iwan = 1; }
+        finial(o, ob.cx, ob.cz, dy + rD * (dk === 'onion' ? 1.55 : dk === 'bulb' ? 1.3 : dk === 'pointed' ? 1.27 : dk === 'flat' ? 0.62 : 0.92), Math.max(1, rD * 0.12), [0.85, 0.72, 0.35]); } }
+    st.mosques++; st.styles[s] = (st.styles[s] || 0) + 1; return { k: 'mosque', name: p.name, lat: +ll.lat.toFixed(5), lon: +ll.lon.toFixed(5), style: s, domes: out.domes, minarets: out.minarets, mapped: out.mapped, hallA: Math.round(hA), roof: out.roof || 0, iwan: out.iwan || 0 };
+  }
+
+  /* ---------- golf ---------- */
+  function scan(rings, ox, oz, ux, uz, t) { var px = -uz, pz = ux, xs = [];
+    for (var r = 0; r < rings.length; r++) { var R = rings[r], n = R.length / 2; for (var i = 0; i < n; i++) { var j = (i + 1) % n, ax = R[2 * i] - ox, az = R[2 * i + 1] - oz, bx = R[2 * j] - ox, bz = R[2 * j + 1] - oz, ta = ax * px + az * pz, tb = bx * px + bz * pz;
+      if ((ta > t) !== (tb > t)) { var f = (t - ta) / (tb - ta), sa = ax * ux + az * uz, sb = bx * ux + bz * uz; xs.push(sa + (sb - sa) * f); } } }
+    return xs.sort(function (a, b) { return a - b; }); }
+  function bbox(R) { var b = [1e9, 1e9, -1e9, -1e9]; for (var i = 0; i < R.length; i += 2) { b[0] = Math.min(b[0], R[i]); b[1] = Math.min(b[1], R[i + 1]); b[2] = Math.max(b[2], R[i]); b[3] = Math.max(b[3], R[i + 1]); } return b; }
+  function inRings(rings, bb, x, z) { if (x < bb[0] || x > bb[2] || z < bb[1] || z > bb[3] || !inPoly(rings[0], x, z)) return false; for (var h = 1; h < rings.length; h++) if (inPoly(rings[h], x, z)) return false; return true; }
+  function fill(J, K, rings, c, lift) { var faces = K.triangulate(rings), Gd = J.gnd, base = Gd.p.length / 3, cc = c, r, i;
+    for (r = 0; r < rings.length; r++) for (i = 0; i < rings[r].length; i += 2) { var k = Gd.v(rings[r][i], Math.max(0, K.H(J, rings[r][i], rings[r][i + 1])) + lift, rings[r][i + 1], 0, 1, 0, cc[0], cc[1], cc[2]); K.drp(Gd, k, lift); }
+    for (i = 0; i < faces.length; i++) K.tri(Gd, base + faces[i][0], base + faces[i][1], base + faces[i][2]); }
+  var MOW = [[0.42, 0.62, 0.27], [0.34, 0.53, 0.22]], SAND = [0.93, 0.86, 0.66], GREEN = [0.5, 0.76, 0.33];
+  function golf(J, K, poly, S, t, E) {
+    var rings = [K.locRing(t, J, poly.outer, E)].concat(poly.holes.map(function (h) { return K.locRing(t, J, h, E); })), bb = bbox(rings[0]), ob = G.obb(rings[0]); if (!ob) return null;
+    var wat = S.water.map(function (w) { var rr = [K.locRing(t, J, w.outer, E)].concat(w.holes.map(function (h) { return K.locRing(t, J, h, E); })); return { r: rr, b: bbox(rr[0]) }; }).filter(function (w) { return w.b[0] < bb[2] && w.b[2] > bb[0] && w.b[1] < bb[3] && w.b[3] > bb[1]; });
+    var ux = ob.ux, uz = ob.uz, ext = Math.hypot(ob.L, ob.W) + 2, stripes = 0, i;
+    for (var tt = -ext, k = 0; tt <= ext; tt += C.STRIPE, k++) { var xs = scan(rings, ob.cx, ob.cz, ux, uz, tt);
+      for (i = 0; i + 1 < xs.length; i += 2) { var run = []; for (var s = xs[i]; s <= xs[i + 1]; s += 8) { var x = ob.cx + ux * s - uz * tt, z = ob.cz + uz * s + ux * tt, wet = false;
+          for (var w = 0; w < wat.length && !wet; w++) wet = inRings(wat[w].r, wat[w].b, x, z);
+          if (!wet) run.push(x, z); else { if (run.length >= 4) { K.ribbon(J, run, C.STRIPE + 0.3, MOW[k & 1], C.LIFT_G, C.SUB); stripes++; } run = []; } }
+        if (run.length >= 4) { K.ribbon(J, run, C.STRIPE + 0.3, MOW[k & 1], C.LIFT_G, C.SUB); stripes++; } } }
+    var bunk = 0, greens = [], o = J.wallX || (J.wallX = new J.Out830()); if (!o.f) { o.f = []; o.m = []; }
+    S.sand.forEach(function (sp) { var rr = [K.locRing(t, J, sp.outer, E)], b = bbox(rr[0]); if (b[2] - b[0] > 120 || b[3] - b[1] > 120 || !inRings(rings, bb, (b[0] + b[2]) / 2, (b[1] + b[3]) / 2)) return; fill(J, K, rr, SAND, C.LIFT_B); bunk++; });
+    S.grass.forEach(function (gp) { var rr = [K.locRing(t, J, gp.outer, E)], b = bbox(rr[0]), a = fpArea({ r: rr[0] }), gx = (b[0] + b[2]) / 2, gz = (b[1] + b[3]) / 2; if (a < 200 || a > 2000 || !inRings(rings, bb, gx, gz) || greens.length >= 30) return;
+      fill(J, K, rr, GREEN, C.LIFT_B); var gy = Math.max(0, K.H(J, gx, gz)); box(o, gx, gz, 1, 0, 0.05, 0.05, gy, gy + C.FLAG, [0.95, 0.95, 0.93]);
+      var fk = [G.V(o, gx, gy + C.FLAG, gz, 0, 0, 1, col([0.92, 0.18, 0.15]), 0, 0, PLAIN, 0, 0), G.V(o, gx, gy + C.FLAG - 0.9, gz, 0, 0, 1, col([0.92, 0.18, 0.15]), 0, 0, PLAIN, 0, 0), G.V(o, gx + 1.3, gy + C.FLAG - 0.45, gz, 0, 0, 1, col([0.92, 0.18, 0.15]), 0, 0, PLAIN, 0, 0)];
+      o.i.push(fk[0], fk[1], fk[2], fk[0], fk[2], fk[1]); greens.push([gx, gz]); });
+    st.golf++; st.stripes += stripes; st.bunkers += bunk; st.greens += greens.length;
+    return { stripes: stripes, bunkers: bunk, greens: greens };
+  }
+
+  /* ---------- the drive-thru: a free-standing chain building, its lane, board and canopy ---------- */
+  function driveThru(J, K, p, ll, cty) {
+    var F = J.fp || [], host = hostOf(J, p.x, p.z, 10); if (!host) { st.dtNo++; return null; } var A = fpArea(host), hh = host.top - host.gC;
+    if (A < 90 || A > 1000 || hh > 12) { st.dtNo++; return null; }
+    for (var i = 0; i < F.length; i++) { var f = F[i]; if (f === host || f.top - f.gC < 2) continue; if (f.x0 < host.x1 + 5 && f.x1 > host.x0 - 5 && f.z0 < host.z1 + 5 && f.z1 > host.z0 - 5) { st.dtNo++; return null; } }   // not free-standing: a mall's food court, a corner of a block
+    var ob = G.obb(host.r); if (!ob) return null; var off = C.DT_OFF, side = cty.left ? -1 : 1, L = ob.L, W = ob.W;
+    var P = function (s, t2) { t2 *= side; return [ob.cx + ob.ux * s - ob.uz * t2, ob.cz + ob.uz * s + ob.ux * t2]; };
+    var pts = [P(-L - off, -W - off), P(-L - off, W + off), P(L + off, W + off), P(L + off + 7, W + off + 3)].reduce(function (a, q) { return a.concat(q); }, []);
+    for (i = 0; i < pts.length; i += 2) for (var j = 0; j < F.length; j++) { var g = F[j]; if (g !== host && boxD(g, pts[i], pts[i + 1]) < 1.5 && inPoly(g.r, pts[i], pts[i + 1])) { st.dtNo++; return null; } }
+    K.ribbon(J, pts, 3.6, [0.29, 0.29, 0.3], C.LIFT_L, 6);
+    var o = J.wallX || (J.wallX = new J.Out830()); if (!o.f) { o.f = []; o.m = []; }
+    var bd = P(-L * 0.25, W + 1.3), gy = Math.max(0, K.H(J, bd[0], bd[1])), fx = -ob.uz * side, fz = ob.ux * side;   // the menu board, between the lane and the wall, facing the lane
+    box(o, bd[0] + ob.ux * 0.8, bd[1] + ob.uz * 0.8, ob.ux, ob.uz, 0.05, 0.05, gy, gy + 1.0, [0.2, 0.2, 0.22]); box(o, bd[0] - ob.ux * 0.8, bd[1] - ob.uz * 0.8, ob.ux, ob.uz, 0.05, 0.05, gy, gy + 1.0, [0.2, 0.2, 0.22]);
+    box(o, bd[0], bd[1], ob.ux, ob.uz, 1.1, 0.12, gy + 0.9, gy + 2.5, [0.16, 0.16, 0.18]);
+    var fc = col([0.96, 0.84, 0.42]), fb = [bd[0] + fx * 0.13, bd[1] + fz * 0.13], k0 = G.V(o, fb[0] - ob.ux, gy + 1.0, fb[1] - ob.uz, fx, 0, fz, fc, 0, 0, PLAIN, 0, 0), k1 = G.V(o, fb[0] + ob.ux, gy + 1.0, fb[1] + ob.uz, fx, 0, fz, fc, 0, 0, PLAIN, 0, 0), k2 = G.V(o, fb[0] + ob.ux, gy + 2.4, fb[1] + ob.uz, fx, 0, fz, fc, 0, 0, PLAIN, 0, 0), k3 = G.V(o, fb[0] - ob.ux, gy + 2.4, fb[1] - ob.uz, fx, 0, fz, fc, 0, 0, PLAIN, 0, 0);
+    o.i.push(k0, k1, k2, k0, k2, k3, k0, k2, k1, k0, k3, k2);
+    var wn = P(L * 0.45, W + 0.6), wy = Math.max(0, K.H(J, wn[0], wn[1]));   // the canopy over the window
+    box(o, wn[0], wn[1], ob.ux, ob.uz, 1.8, 0.9, host.gC + 2.7, host.gC + 2.95, [0.82, 0.18, 0.14]);
+    var lls = [], b0 = K.toLL(J, bd[0], bd[1]), w0 = K.toLL(J, wn[0], wn[1]); for (i = 0; i < pts.length; i += 2) { var q = K.toLL(J, pts[i], pts[i + 1]); lls.push(q.lon, q.lat); }
+    st.dt++; return { k: 'dt', name: p.name, lat: +ll.lat.toFixed(5), lon: +ll.lon.toFixed(5), lane: new Float64Array(lls), board: [b0.lat, b0.lon], win: [w0.lat, w0.lon], left: !!cty.left, area: Math.round(A), wy: wy };
+  }
+
+  /* ---------- the slices: one task (a course, a mosque, a drive-thru) at a time, with the tile's job ---------- */
+  function step(t, J, K, deadline) {
+    var S = J.s830; if (!S) return true; G = WFR_CITY790.g830; if (!G) return true; var t0 = performance.now();
+    try {
+      if (!S.tasks) { S.tasks = []; var E = S.E || 4096, nm = 0, nd = 0;
+        S.golf.slice(0, C.MAX_GOLF).forEach(function (g) { S.tasks.push({ k: 'golf', g: g }); });
+        if (window.WFR_SACRED831) WFR_SACRED831.tasks(J, t, K, S.tasks);   /* 831: the hand-built landmarks whose middle is in this tile */
+        S.pois.slice().sort(function (a, b) { return (a.rank || 999) - (b.rank || 999); }).forEach(function (p) { if (p.x == null)   /* the map's most important first (its rank): a city tile of a hundred mosques dresses its great ones */ { var q = K.locRing(t, J, [p.px, p.py], E); p.x = q[0]; p.z = q[1]; p.ll = K.llOf(t, p.px, p.py, E); } var ll = p.ll;
+          if (p.k === 'mosque' && nm < C.MAX_MOSQUES) { nm++; S.tasks.push({ k: 'mosque', p: p }); } else if (p.k === 'dt' && nd < C.MAX_DT) { var c = dtCountry(ll.lat, ll.lon); if (c) { nd++; S.tasks.push({ k: 'dt', p: p, c: c }); } }
+          else if (p.k !== 'dt' && window.WFR_SACRED831 && WFR_SACRED831.want(p)) S.tasks.push({ k: 'w831', p: p }); }); }
+      var cLL = K.llOf(t, 2048, 2048, 4096), sty = mosqueStyle(cLL.lat, cLL.lon);
+      while (S.ti < S.tasks.length) { var T = S.tasks[S.ti++], r = null;
+        try { if (T.k === 'golf') { r = golf(J, K, T.g, S, t, S.E || 4096); if (r && J.feed) { var gl = r.greens.map(function (g) { var q = K.toLL(J, g[0], g[1]); return [q.lat, q.lon]; }); (J.feed.p830 = J.feed.p830 || { golf: [], dt: [] }).golf.push({ greens: gl }); } }
+          else if (T.k === 'mosque') r = mosque(J, T.p, T.p.ll, sty);
+          else if (T.k === 'dt') { r = driveThru(J, K, T.p, T.p.ll, T.c); if (r && J.feed) (J.feed.p830 = J.feed.p830 || { golf: [], dt: [] }).dt.push(r); }
+          else if (T.k === 'w831' || T.k === 'lm831') r = WFR_SACRED831.dress(J, K, T, G, GEO);
+          if (r && r.k) { var key = r.k + '|' + r.lat + ',' + r.lon; st.items.set(key, Object.assign({ tile: t.key }, r, { lane: undefined })); if (st.items.size > 600) st.items.delete(st.items.keys().next().value); } }
+        catch (e) { fault(T.k, e); }
+        if (performance.now() > deadline) break; }
+    } catch (e) { fault('step', e); S.ti = S.tasks ? S.tasks.length : 0; }
+    var ms = performance.now() - t0; st.ms += ms; if (ms > st.msMax) st.msMax = ms;
+    return !S.tasks || S.ti >= S.tasks.length;
+  }
+  var GEO = { box: box, quad: quad, revolve: revolve, dome: dome, half: half, col: col, hostOf: hostOf, fpArea: fpArea, inPoly: inPoly, finial: finial, minaret: minaret, PLAIN: PLAIN, region: region, PAL: PAL };
+  function items(kind) { var out = []; st.items.forEach(function (v) { if (!kind || v.k === kind) out.push(v); }); return out; }
+  function peek() { var o = {}; for (var k in st) if (k !== 'items') o[k] = st[k]; o.on = on(); o.n = st.items.size; o.msMax = +st.msMax.toFixed(2); return JSON.parse(JSON.stringify(o)); }
+  return { C: C, on: on, region: region, mosqueStyle: mosqueStyle, dtCountry: dtCountry, CHAIN: CHAIN, begin: begin, poi: poi, cover: cover, water: water, step: step, atB: atB, geo: function () { G = WFR_CITY790.g830; return GEO; }, items: items, peek: peek, version: 1 };
+})();
+
+/* ---------- BOARD 831 (Nov 14 2026): THE HOUSES OF THE GOD OF ISRAEL, GOTHIC AND GRECO-ROMAN, AND THE DOMES SHE CAN FLY INTO. Su, Nov 14 2026.
+   Marth, verbatim: "We need to add beautiful gothic cathedrals (annodes cathodes) and the Greco-Roman style where they apply."; "You can try and replicate
+   the art in the middle of the domes on the inside"; and his ruling: "Definitely include more YHWH related temples rather than Allah".
+   WHAT ROUGE SEES (Standard only; the same tiles, slices and programs as 830's WFR_SACRED830, no second pipeline):
+     CHURCHES    every poi place_of_worship whose subclass (OSM religion) is christian: its building in pale stone, a pitched roof, a bell tower with a
+                 spire and a plain cross (the Caribbean's square tower with a parapet; Russia's onion domes; Greece and the Balkans a drum and dome),
+                 the map's own tower crowned with a spire where it draws one, the map's round parts domed with a cross.
+     SYNAGOGUES  every one whose subclass is jewish: its stone, a Star of David on its roof's front. Shaare Shalom (Kingston, with its sand floor
+                 inside), the Dohany (Budapest, its twin onion towers), Touro (Newport) and Bevis Marks (London) by hand.
+     GOTHIC      real Gothic cathedrals of Europe and the Gothic Revival where it truly stands (St Patrick's, Washington National), by hand at their
+                 places from their known plans: pale stone (Cologne's blackened sandstone), slate roofs, flying buttresses with pinnacles, lancet
+                 windows, rose windows, twin west towers or the spire each truly has, a plain cross on each spire.
+     GRECO-ROMAN the Parthenon (a ruin, no roof), the Hephaisteion, the Pantheon, the Colosseum (its south outer ring fallen), the Forum's temples
+                 and arch, Ephesus' library, Baalbek, Leptis Magna, Jerash; neoclassical where it truly is (the Lincoln and Jefferson memorials, the
+                 Madeleine, the Brandenburg Gate (no quadriga: no figures), the Pantheon of Paris, the Maison Carree).
+     THE BIBLE'S PLACES  the Western Wall, the Holy Sepulchre and the Nativity (their churches dressed from the map), Capernaum's white synagogue
+                 ruins, St Catherine's at Sinai; and Rouge's home: Kingston Parish Church, the Cathedral of St Jago de la Vega in Spanish Town.
+     INTERIORS   six she can fly into (the dome's footprint is open to her): the Pantheon (in through the oculus, its coffers, the light falling),
+                 Florence's dome and St Peter's (their gold and blue rings, ribs and stars, never their figures), Notre-Dame's nave (ribbed vault,
+                 glass in colour only), Shaare Shalom (its sand floor, mahogany pews, bimah and ark), the Sultan Ahmed (Iznik blue, ornament bands).
+   HOUSE LAW: no figure of God or Christ anywhere; until Marth answers about saints and angels, no human or angel figure at all; a plain cross on a
+   church, a Star of David on a synagogue. Where a real dome is figural, only its framework is drawn: rings, gold, sky blue, stars, light.
+   COST: the exteriors are geometry inside the tiles' own meshes (830's way); the six interiors are made AT LOAD (attach), each one group of meshes
+   in the features group, wearing the roofs' own program (a painted canvas map: the 'feat' program, warmed at the gate), hidden until she is
+   within 600 m. Coordinates: the map's own points where it has them (checked Nov 14 2026 in the OpenFreeMap tiles), else known plans (DRAFT). */
+window.WFR_SACRED831 = (function () {
+  'use strict';
+  var D2R = Math.PI / 180;
+  function on() { return !!(window.WFR_SACRED830 && WFR_SACRED830.on()); }
+  var st = { churches: 0, synagogues: 0, towers: 0, spires: 0, crosses: 0, stars: 0, roofs: 0, landmarks: 0, kinds: {}, opened: 0, interiors: 0, shown: [], faults: [], built: [] };
+  function fault(w, e) { if (st.faults.length < 12) st.faults.push(w + ': ' + (e && e.message || e)); }
+  function hash(s) { var h = 2166136261 >>> 0; s = String(s); for (var i = 0; i < s.length; i++) { h ^= s.charCodeAt(i); h = Math.imul(h, 16777619) >>> 0; } return (h >>> 0) / 4294967296; }
+  var PALE = [0.88, 0.85, 0.77], LEAD = [0.27, 0.3, 0.34], SLATE = [0.33, 0.36, 0.41], MARBLE = [0.92, 0.89, 0.82], TRAV = [0.86, 0.79, 0.65], GOLD = [0.88, 0.72, 0.32], BRICK = [0.62, 0.32, 0.25], WHITE = [0.94, 0.93, 0.89], GLASS = [0.16, 0.2, 0.34];
+
+  /* ---------- the hand-built places (b: the bearing of the axis, front to back, degrees from north) ---------- */
+  function G_(name, lat, lon, b, o) { return Object.assign({ k: 'gothic', name: name, lat: lat, lon: lon, b: b }, o); }
+  var LM = [
+    G_('Notre-Dame de Paris', 48.85296, 2.34996, 112, { L: 128, W: 40, Wn: 13, Hn: 33, Ha: 16, tr: [0.55, 48, 14], tw: 'twin', Ht: 69, cs: 96, stone: [0.9, 0.86, 0.76], inside: 'notredame' }),
+    G_('Cologne Cathedral', 50.94131, 6.95813, 92, { L: 144, W: 45, Wn: 15, Hn: 43, Ha: 19, tr: [0.5, 86, 15], tw: 'twinSpire', Ht: 100, Hs: 157, stone: [0.43, 0.41, 0.39] }),
+    G_('Chartres Cathedral', 48.44774, 1.48760, 90, { L: 130, W: 32, Wn: 16, Hn: 37, Ha: 15, tr: [0.55, 64, 14], tw: 'twinSpire', Ht: 60, Hs: 113, stone: [0.78, 0.74, 0.66], roof: [0.36, 0.56, 0.47] }),
+    G_('Reims Cathedral', 49.25373, 4.03407, 90, { L: 149, W: 30, Wn: 14, Hn: 38, Ha: 16, tr: [0.55, 61, 14], tw: 'twin', Ht: 81, stone: [0.88, 0.84, 0.74] }),
+    G_('Amiens Cathedral', 49.89489, 2.30210, 90, { L: 145, W: 33, Wn: 15, Hn: 42, Ha: 18, tr: [0.5, 70, 15], tw: 'twin', Ht: 64, cs: 112, stone: [0.88, 0.85, 0.77] }),
+    G_('Milan Cathedral', 45.46416, 9.19190, 90, { L: 158, W: 67, Wn: 16, Hn: 45, Ha: 26, tr: [0.62, 93, 16], tw: 'none', cs: 108, stone: [0.95, 0.91, 0.88], pinn: 1 }),
+    G_('Westminster Abbey', 51.49929, -0.12731, 87, { L: 156, W: 30, Wn: 12, Hn: 31, Ha: 14, tr: [0.55, 62, 12], tw: 'twin', Ht: 69, stone: [0.86, 0.83, 0.74] }),
+    G_('York Minster', 53.96204, -1.08194, 90, { L: 158, W: 32, Wn: 14, Hn: 31, Ha: 15, tr: [0.5, 76, 14], tw: 'twin', Ht: 60, ct: 71, stone: [0.86, 0.82, 0.7] }),
+    G_('Salisbury Cathedral', 51.06508, -1.79745, 90, { L: 135, W: 25, Wn: 12, Hn: 26, Ha: 12, tr: [0.5, 70, 12], tw: 'none', cs: 123, ct: 62, stone: [0.8, 0.79, 0.75] }),
+    G_('Canterbury Cathedral', 51.27976, 1.08296, 90, { L: 157, W: 28, Wn: 12, Hn: 24, Ha: 13, tr: [0.45, 47, 12], tw: 'twin', Ht: 48, ct: 72, stone: [0.85, 0.82, 0.72] }),
+    G_('Strasbourg Cathedral', 48.58181, 7.75107, 90, { L: 112, W: 41, Wn: 16, Hn: 32, Ha: 15, tr: [0.6, 50, 14], tw: 'oneSpire', Ht: 66, Hs: 142, stone: [0.74, 0.5, 0.44] }),
+    G_('Ulm Minster', 48.39845, 9.99244, 90, { L: 123, W: 49, Wn: 15, Hn: 41, Ha: 20, tw: 'westSpire', Ht: 100, Hs: 161, stone: [0.86, 0.84, 0.78] }),
+    G_("St. Stephen's Cathedral, Vienna", 48.20849, 16.37315, 90, { L: 107, W: 39, Wn: 12, Hn: 28, Ha: 26, tw: 'none', st: 136, stone: [0.66, 0.63, 0.57], roof: [0.42, 0.5, 0.38] }),
+    G_('St. Vitus Cathedral', 50.09086, 14.40043, 90, { L: 124, W: 34, Wn: 13, Hn: 33, Ha: 15, tr: [0.55, 60, 13], tw: 'twinSpire', Ht: 60, Hs: 82, st: 96, stone: [0.6, 0.58, 0.55] }),
+    G_('Burgos Cathedral', 42.34045, -3.70444, 100, { L: 108, W: 30, Wn: 12, Hn: 26, Ha: 14, tr: [0.5, 59, 12], tw: 'twinSpire', Ht: 50, Hs: 80, stone: [0.9, 0.86, 0.76] }),
+    G_('Seville Cathedral', 37.38582, -5.99319, 90, { L: 135, W: 76, Wn: 16, Hn: 37, Ha: 26, tw: 'none', giralda: 104, stone: [0.86, 0.78, 0.64] }),
+    G_("St. Patrick's Cathedral, New York", 40.75846, -73.97604, 119, { L: 101, W: 39, Wn: 14, Hn: 34, Ha: 16, tr: [0.55, 53, 14], tw: 'twinSpire', Ht: 50, Hs: 100, stone: [0.93, 0.91, 0.87] }),
+    G_('Washington National Cathedral', 38.93063, -77.07069, 90, { L: 161, W: 40, Wn: 13, Hn: 31, Ha: 15, tr: [0.5, 84, 13], tw: 'twin', Ht: 71, ct: 92, stone: [0.82, 0.8, 0.74] }),
+    { k: 'rock', name: 'Acropolis of Athens', lat: 37.97160, lon: 23.72630, b: 0, ring: [[37.9722, 23.7245], [37.9725, 23.7256], [37.9727, 23.7268], [37.9725, 23.7279], [37.9718, 23.7284], [37.9711, 23.7281], [37.9707, 23.7270], [37.9708, 23.7258], [37.9711, 23.7248], [37.9716, 23.7243]], up: 58 },
+    { k: 'colrow', name: 'Propylaea', lat: 37.97160, lon: 23.72505, b: 0, n: 6, gap: 3.6, Hc: 8.8, D: 1.55, pod: 1, ent: 2.2, on: 'acropolis', stone: [0.89, 0.84, 0.74] },
+    { k: 'temple', on: 'acropolis', name: 'Parthenon', lat: 37.97150, lon: 23.72662, b: 77, L: 69.5, W: 30.9, nf: 8, ns: 17, Hc: 10.4, D: 1.9, pod: 1.6, ent: 3.3, roof: false, ped: 'frame', cella: 'ruin', stone: [0.89, 0.84, 0.74] },
+    { k: 'temple', name: 'Temple of Hephaestus', lat: 37.97559, lon: 23.72135, b: 77, L: 31.8, W: 13.7, nf: 6, ns: 13, Hc: 5.7, D: 1.0, pod: 1.2, ent: 1.6, roof: true, cella: true, stone: [0.84, 0.78, 0.66] },
+    { k: 'pantheon', name: 'Pantheon', lat: 41.89855, lon: 12.47683, b: 172, inside: 'pantheon' },
+    { k: 'colosseum', name: 'Colosseum', lat: 41.89021, lon: 12.49223, b: 70, A: 94.5, B: 78, H: 48 },
+    { k: 'temple', name: 'Temple of Saturn', lat: 41.89262, lon: 12.48438, b: 330, L: 22, W: 15, nf: 6, ns: 3, Hc: 11, D: 1.4, pod: 9, ent: 2.2, roof: false, ped: 'none', cella: false, front: true, stone: [0.82, 0.76, 0.66] },
+    { k: 'colrow', name: 'Temple of Castor and Pollux', lat: 41.89178, lon: 12.48614, b: 70, n: 3, gap: 4.2, Hc: 14.8, D: 1.5, pod: 7, ent: 2.4, stone: [0.86, 0.82, 0.72] },
+    { k: 'arch', name: 'Arch of Septimius Severus', lat: 41.89303, lon: 12.48473, b: 60, W: 25, D: 11, H: 21, n: 3, stone: [0.86, 0.82, 0.72] },
+    { k: 'facade', name: 'Library of Celsus', lat: 37.93939, lon: 27.34063, b: 270, W: 21, H: 16.7, stone: [0.88, 0.84, 0.76] },
+    { k: 'colrow', name: 'Temple of Jupiter, Baalbek', lat: 34.00686, lon: 36.20391, b: 90, n: 6, gap: 4.4, Hc: 20, D: 2.2, pod: 7, ent: 5, stone: [0.82, 0.72, 0.58] },
+    { k: 'temple', name: 'Temple of Bacchus', lat: 34.00611, lon: 36.20385, b: 90, L: 69, W: 36, nf: 8, ns: 15, Hc: 19, D: 1.9, pod: 5, ent: 4, roof: false, ped: 'none', cella: true, stone: [0.82, 0.72, 0.58] },
+    { k: 'arch', name: 'Arch of Septimius Severus, Leptis Magna', lat: 32.63710, lon: 14.28940, b: 0, W: 18, D: 18, H: 20, n: 4, stone: [0.84, 0.74, 0.6] },
+    { k: 'theatre', name: 'Theatre of Leptis Magna', lat: 32.63930, lon: 14.29010, b: 330, R: 45, H: 14, stone: [0.84, 0.74, 0.6] },
+    { k: 'oval', name: 'Oval Plaza, Jerash', lat: 32.28060, lon: 35.89080, b: 0, A: 45, B: 40, n: 56, Hc: 6, stone: [0.86, 0.8, 0.68] },
+    { k: 'cardo', name: 'Cardo Maximus, Jerash', lat: 32.28410, lon: 35.89170, b: 8, L: 600, w: 12, gap: 6, Hc: 6, stone: [0.86, 0.8, 0.68] },
+    { k: 'colrow', name: 'Temple of Artemis, Jerash', lat: 32.28400, lon: 35.88890, b: 90, n: 6, gap: 3.4, Hc: 13, D: 1.5, pod: 4, ent: 2, side: 5, stone: [0.86, 0.8, 0.68] },
+    { k: 'temple', name: 'Maison Carree', lat: 43.83826, lon: 4.35612, b: 180, L: 26.4, W: 13.5, nf: 6, ns: 11, Hc: 9, D: 0.9, pod: 2.9, ent: 2.2, roof: true, cella: true, front: true, stone: [0.88, 0.84, 0.74] },
+    { k: 'temple', name: 'La Madeleine', lat: 48.87005, lon: 2.32455, b: 180, L: 108, W: 43, nf: 8, ns: 18, Hc: 20, D: 1.8, pod: 7, ent: 4, roof: true, cella: true, stone: [0.86, 0.83, 0.76] },
+    { k: 'temple', name: 'Lincoln Memorial', lat: 38.88927, lon: -77.05017, b: 270, L: 57.8, W: 36, nf: 12, ns: 8, Hc: 13.4, D: 2.1, pod: 4, ent: 4, roof: 'attic', cella: true, stone: [0.94, 0.93, 0.9] },
+    { k: 'gate', name: 'Brandenburg Gate', lat: 52.51628, lon: 13.37770, b: 90, W: 65.5, D: 11, H: 26, n: 6, Hc: 15, stone: [0.86, 0.82, 0.72] },
+    { k: 'rotunda', name: 'Jefferson Memorial', lat: 38.88136, lon: -77.03651, b: 180, R: 26, H: 20, D: 30, stone: [0.94, 0.93, 0.9] },
+    { k: 'rotunda', name: 'Pantheon, Paris', lat: 48.84622, lon: 2.34637, b: 270, R: 17, H: 50, D: 83, cross: true, stone: [0.88, 0.85, 0.77] },
+    { k: 'domeChurch', name: 'Florence Cathedral dome', lat: 43.77312, lon: 11.25695, r: 27, drum: 55, top: 91, lan: 107, col: [0.72, 0.36, 0.24], drumCol: [0.9, 0.88, 0.82], seg: 8, ribs: [0.95, 0.94, 0.9], inside: 'florence' },
+    { k: 'domeChurch', name: "St. Peter's Basilica dome", lat: 41.90217, lon: 12.45338, r: 30, drum: 73, top: 120, lan: 133, col: [0.55, 0.6, 0.63], drumCol: [0.88, 0.84, 0.74], seg: 16, ribs: [0.85, 0.83, 0.78], inside: 'stpeter' },
+    { k: 'wall', name: 'Western Wall', lat: 31.77670, lon: 35.23425, b: 0, L: 57, H: 19, T: 3, stone: [0.88, 0.82, 0.66] },
+    { k: 'ruin', name: 'Synagogue of Capernaum', lat: 32.88105, lon: 35.57541, b: 0, L: 24.4, W: 18.6, stone: [0.94, 0.92, 0.86] },
+    { k: 'monastery', name: "Saint Catherine's Monastery", lat: 28.55593, lon: 33.97588, b: 120, L: 85, W: 75, H: 12, stone: [0.7, 0.6, 0.5] },
+    { k: 'church', name: 'Kingston Parish Church', lat: 17.97004, lon: -76.79257, b: 90, L: 40, W: 18, H: 11, tower: 27, walls: [0.93, 0.91, 0.85], roofC: [0.62, 0.28, 0.22], top: 'parapet' },
+    { k: 'church', name: 'Cathedral of St. Jago de la Vega', lat: 17.99441, lon: -76.95209, b: 90, L: 45, W: 16, H: 10, tower: 22, spire: 36, walls: [0.64, 0.33, 0.26], roofC: [0.4, 0.42, 0.45], tr: 28 },
+    { k: 'synagogue', own: 1, name: 'Shaare Shalom Synagogue', lat: 17.97509, lon: -76.79011, b: 90, L: 24, W: 16, H: 11, walls: [0.95, 0.94, 0.9], portico: 4, inside: 'shaare' },
+    { k: 'synagogue', name: 'Touro Synagogue', lat: 41.48943, lon: -71.31193, b: 70, L: 15, W: 12, H: 9, walls: [0.84, 0.76, 0.62], hip: 1 },
+    { k: 'synagogue', name: 'Dohany Street Synagogue', lat: 47.49565, lon: 19.06073, b: 135, L: 75, W: 27, H: 26, walls: [0.86, 0.72, 0.6], towers: 43 }];
+  var IN = {   /* the interiors: where, how big (m), what kind of room */
+    pantheon: { lat: 41.89855, lon: 12.47683, kind: 'rotunda', r: 21.65, h: 21.65, dh: 21.65, eye: 4.1, seg: 28 },
+    florence: { lat: 43.77312, lon: 11.25695, kind: 'rotunda', r: 22.7, h: 55, dh: 32, eye: 3, seg: 8 },
+    stpeter: { lat: 41.90217, lon: 12.45338, kind: 'rotunda', r: 21, h: 72, dh: 42, eye: 3.2, seg: 32 },
+    bluemosque: { lat: 41.00525, lon: 28.97688, kind: 'rotunda', r: 24, h: 24, dh: 19, eye: 0, seg: 32 },
+    notredame: { lat: 48.852973, lon: 2.349911, kind: 'nave', b: 112, L: 110, W: 12.5, h: 33, bay: 7.3333, dw: 3, dy: 11, endH: 41 },   /* round 3: 3.9 m west of the church's middle, 110 m: from inside its west towers to the apse's curve (the exterior's walls all stand outside it); bay, its 15 bays (m); dw/dy, the west portal's half width and its top (m, from the room's base); endH, the end walls up into the vault's point (no gap over them) */
+    shaare: { lat: 17.97509, lon: -76.79011, kind: 'hall', b: 90, L: 22.6, W: 14.6, h: 10, dw: 1.8, dy: 6.5 } };
+
+  /* ---------- tile doors: the landmarks' rectangles (the map's boxes under them dropped), the tasks, the open footprints ---------- */
+  function frameOf(J, K, lat, lon, b) { var p = K.fromLL(J, lat, lon), q = K.fromLL(J, lat + Math.cos(b * D2R) * 1e-4, lon + Math.sin(b * D2R) * 1e-4 / Math.cos(lat * D2R)), dx = q[0] - p[0], dz = q[1] - p[1], l = Math.hypot(dx, dz) || 1; return { x: p[0], z: p[1], ux: dx / l, uz: dz / l }; }
+  function ext(L) { if (L.k === 'gothic') return [Math.max(L.L, (L.tr ? L.tr[1] : 0)) / 2 + 4, Math.max(L.W, L.tr ? L.tr[1] : 0) / 2 + 4]; if (L.k === 'domeChurch') return [L.r + 2, L.r + 2]; if (L.k === 'pantheon') return [56, 32];
+    if (L.k === 'colosseum') return [L.A + 4, L.B + 4]; if (L.k === 'wall' || L.k === 'cardo' || L.k === 'oval' || L.k === 'theatre' || L.k === 'arch' || L.k === 'colrow' || L.k === 'facade') return null; if (L.k === 'monastery') return null;
+    if (L.own) return [L.L / 2 + 2, L.W / 2 + 2]; if (L.k === 'temple') return [L.L / 2 + 2, L.W / 2 + 2]; if (L.k === 'rotunda') return [L.R + 2, L.R + 2]; if (L.k === 'gate') return [L.D / 2 + 2, L.W / 2 + 2]; return null; }   // the ones beside the map's own (a wall, a colonnade, a ruin on open ground) drop nothing
+  function bounds(t) { var n = Math.pow(2, t.z), la = function (y) { return Math.atan(Math.sinh(Math.PI * (1 - 2 * y / n))) / D2R; }; return { lat0: la(t.y + 1), lat1: la(t.y), lon0: t.x / n * 360 - 180, lon1: (t.x + 1) / n * 360 - 180 }; }
+  function inTile(t, lat, lon, m) { var b = bounds(t); return lat >= b.lat0 - m && lat <= b.lat1 + m && lon >= b.lon0 - m && lon <= b.lon1 + m; }
+  var Kk = null;
+  function skips(J, t, K) { if (!on()) return null; var out = []; Kk = K || Kk; if (!Kk) return null;
+    for (var i = 0; i < LM.length; i++) { var L = LM[i], e = ext(L); if (!e || !inTile(t, L.lat, L.lon, 0.004)) continue; var f = frameOf(J, Kk, L.lat, L.lon, L.b || 0); out.push({ x: f.x, z: f.z, ux: f.ux, uz: f.uz, hl: e[0], hw: e[1], name: L.name }); }
+    return out.length ? out : null; }
+  function tasks(J, t, K, list) { Kk = K; for (var i = 0; i < LM.length; i++) { var L = LM[i]; if (inTile(t, L.lat, L.lon, 0)) list.unshift({ k: 'lm831', L: L }); }
+    for (var k in IN) { var I = IN[k]; if (!inTile(t, I.lat, I.lon, 0.003)) continue; var c = K.fromLL(J, I.lat, I.lon), R = I.kind === 'rotunda' ? I.r + 6 : Math.max(I.L, I.W) / 2 + 6;   /* her way in: the footprints over the room are open */
+      (J.fp || []).forEach(function (f) { if (Math.hypot((f.x0 + f.x1) / 2 - c[0], (f.z0 + f.z1) / 2 - c[1]) < R) { f.open831 = true; st.opened++; } });
+      /* round 3: and the map's own blocks in front of its door (Notre-Dame's west towers held her 13 m out of the portal): a corridor 30 m out, the door's width and 2 m */
+      var brg = (I.kind === 'rotunda' ? (k === 'pantheon' ? 0 : (I.b || 90) + 180) : (I.b || 90) + 180) * D2R, e0 = I.kind === 'rotunda' ? I.r : I.L / 2, hw2 = (I.dw || (I.kind === 'rotunda' ? 3.5 : 1.8)) + 2, pts = [];
+      for (var s = e0 - 4; s <= e0 + 30; s += 2) for (var w2 = -1; w2 <= 1; w2++) { var dN = Math.cos(brg) * s - Math.sin(brg) * w2 * hw2, dE = Math.sin(brg) * s + Math.cos(brg) * w2 * hw2; pts.push(K.fromLL(J, I.lat + dN / 111320, I.lon + dE / (111320 * Math.cos(I.lat * D2R)))); }
+      (J.fp || []).forEach(function (f) { if (f.open831) return; for (var q = 0; q < pts.length; q++) if (pts[q][0] > f.x0 - 0.5 && pts[q][0] < f.x1 + 0.5 && pts[q][1] > f.z0 - 0.5 && pts[q][1] < f.z1 + 0.5) { f.open831 = true; st.opened++; st.doorOpened = (st.doorOpened || 0) + 1; return; } }); } }
+  function want(p) { return p.k === 'church' || p.k === 'synagogue'; }
+
+  /* ---------- the parts every builder uses ---------- */
+  var g = null, G = null;
+  function P_(f, s, t) { return [f.x + f.ux * s - f.uz * t, f.z + f.uz * s + f.ux * t]; }
+  function bx(o, f, s, t, hl, hw, y0, y1, c, roof) { var p = P_(f, s, t); g.box(o, p[0], p[1], f.ux, f.uz, hl, hw, y0, y1, c, roof); }
+  function cross(o, x, z, y, s, c) { c = c || GOLD; g.box(o, x, z, 1, 0, 0.09 * s, 0.09 * s, y, y + 2.2 * s, c); g.box(o, x, z, 1, 0, 0.55 * s, 0.09 * s, y + 1.35 * s, y + 1.55 * s, c); st.crosses++; }
+  function pyramid(o, f, s, t, hw, y0, y1, c, n) { var p = P_(f, s, t); g.revolve(o, p[0], p[1], y0, [[hw * 1.41, 0], [0.02, y1 - y0], [0, y1 - y0 + 0.01]], c, n || 4); }
+  function column(o, x, z, y0, h, d, c) { g.revolve(o, x, z, y0, [[d * 0.5, 0], [d * 0.5, h * 0.04], [d * 0.45, h * 0.06], [d * 0.4, h * 0.92], [d * 0.55, h * 0.97], [d * 0.55, h]], c, 8); }
+  function gable(o, f, s, hw, y0, rise, c, n) { var a = P_(f, s, -hw), b = P_(f, s, hw), m = P_(f, s, 0), cc = g.col(c), k0 = G.V(o, a[0], y0, a[1], n[0], 0, n[1], cc, 0, 0, g.PLAIN, 0, 0), k1 = G.V(o, b[0], y0, b[1], n[0], 0, n[1], cc, 0, 0, g.PLAIN, 0, 0), k2 = G.V(o, m[0], y0 + rise, m[1], n[0], 0, n[1], cc, 0, 0, g.PLAIN, 0, 0); o.i.push(k0, k1, k2, k0, k2, k1); }
+  function roofGable(J, f, s0, s1, hw, y0, rise, c) { var RO = J.roof, cc = g.col(c), A = P_(f, s0, -hw), B = P_(f, s1, -hw), Cq = P_(f, s1, hw), D = P_(f, s0, hw), R0 = P_(f, s0, 0), R1 = P_(f, s1, 0);
+    G.quadRoof(RO, [A[0], y0, A[1]], [B[0], y0, B[1]], [R1[0], y0 + rise, R1[1]], [R0[0], y0 + rise, R0[1]], cc); G.quadRoof(RO, [Cq[0], y0, Cq[1]], [D[0], y0, D[1]], [R0[0], y0 + rise, R0[1]], [R1[0], y0 + rise, R1[1]], cc); st.roofs++; }
+  function halfCyl(o, cx, cz, y0, y1, r, ux, uz, c, n) { var cc = g.col(c), px = -uz, pz = ux, prev = null; for (var i = 0; i <= n; i++) { var th = -Math.PI / 2 + i / n * Math.PI, dx = ux * Math.cos(th) + px * Math.sin(th), dz = uz * Math.cos(th) + pz * Math.sin(th);
+      var k0 = G.V(o, cx + dx * r, y0, cz + dz * r, dx, 0, dz, cc, 0, 0, g.PLAIN, 0, 0), k1 = G.V(o, cx + dx * r, y1, cz + dz * r, dx, 0, dz, cc, 0, 0, g.PLAIN, 0, 0); if (prev) o.i.push(prev[0], k0, prev[1], prev[1], k0, k1, prev[0], prev[1], k0, prev[1], k1, k0); prev = [k0, k1]; } }
+  function flat(o, f, s, t, cc, nrm, y0, y1, hw) {   // a dark pointed window (lancet) on a wall facing nrm
+    var a = P_(f, s - hw, t), b = P_(f, s + hw, t), m = P_(f, s, t), c = g.col(cc), k = [G.V(o, a[0], y0, a[1], nrm[0], 0, nrm[1], c, 0, 0, g.PLAIN, 0, 0), G.V(o, b[0], y0, b[1], nrm[0], 0, nrm[1], c, 0, 0, g.PLAIN, 0, 0), G.V(o, b[0], y1, b[1], nrm[0], 0, nrm[1], c, 0, 0, g.PLAIN, 0, 0), G.V(o, a[0], y1, a[1], nrm[0], 0, nrm[1], c, 0, 0, g.PLAIN, 0, 0), G.V(o, m[0], y1 + hw * 1.5, m[1], nrm[0], 0, nrm[1], c, 0, 0, g.PLAIN, 0, 0)];
+    o.i.push(k[0], k[1], k[2], k[0], k[2], k[3], k[3], k[2], k[4], k[0], k[2], k[1], k[0], k[3], k[2], k[3], k[4], k[2]); }
+  function rose(o, f, s, t0, y, r, nrm) {   // a rose window: a wheel of coloured glass (colour only), a stone ring and spokes
+    var p = P_(f, s, t0), cc = [g.col(GLASS), g.col([0.42, 0.16, 0.2]), g.col([0.2, 0.3, 0.55])], ring = g.col([0.78, 0.74, 0.66]), N = 16, ctr = G.V(o, p[0], y, p[1], nrm[0], 0, nrm[1], cc[2], 0, 0, g.PLAIN, 0, 0), px = -f.uz, pz = f.ux, prev = null;
+    for (var i = 0; i <= N; i++) { var a = i / N * 6.283, q = [p[0] + px * Math.cos(a) * r, y + Math.sin(a) * r, p[1] + pz * Math.cos(a) * r], k = G.V(o, q[0], q[1], q[2], nrm[0], 0, nrm[1], cc[i % 2], 0, 0, g.PLAIN, 0, 0); if (prev !== null) o.i.push(ctr, prev, k, ctr, k, prev); prev = k; }
+    for (i = 0; i < 8; i++) { var a2 = i / 8 * 3.1416; g.box(o, p[0], p[1], Math.cos(a2) * px, Math.cos(a2) * pz, 0.12, 0.06, y + Math.sin(a2) * r - 0.12, y + Math.sin(a2) * r + 0.12, [0.78, 0.74, 0.66]); }
+    g.revolve(o, p[0], p[1], y - 0.01, [[r * 1.08, 0], [r * 1.08, 0.02]], [0.78, 0.74, 0.66], 6); }
+
+  /* ---------- the builders ---------- */
+  function gothic(J, K, L, o, f, y) {   // 831 round 2 (the coordinator's look at 260 m): the Gothic kit's signature parts, each big enough to read from her height
+    var S = L.stone, Sd = [S[0] * 0.8, S[1] * 0.79, S[2] * 0.78], Sl = [Math.min(1, S[0] * 1.07), Math.min(1, S[1] * 1.07), Math.min(1, S[2] * 1.06)], R = L.roof || LEAD, hl = L.L / 2, Wn = L.Wn, Wa = (L.W - Wn) / 2, Tw = L.tw === 'none' ? 0 : Math.min(L.W * 0.32, 17);
+    var s0 = -hl + Tw, apse = Wn / 2 + Wa * 0.6, s1 = hl - apse, back = [-f.ux, -f.uz], rise = Wn * 1.05, sd, s;
+    var lancet = function (fr, sA, tA, nrm, y0, y1, w) {   // a tall pointed window: a darker stone frame, the glass, a mullion and a little rosette in its head
+      flat(o, fr, sA, tA, Sd, nrm, y0 - 0.6, y1 + 0.2, w + 0.45); flat(o, { x: fr.x + nrm[0] * 0.05, z: fr.z + nrm[1] * 0.05, ux: fr.ux, uz: fr.uz }, sA, tA, GLASS, nrm, y0, y1, w);
+      var m = P_(fr, sA, tA); g.box(o, m[0] + nrm[0] * 0.12, m[1] + nrm[1] * 0.12, fr.ux, fr.uz, 0.09, 0.05, y0, y1 + w * 0.6, Sl); };
+    /* the nave and its steep dark lead roof (a cresting along the ridge), its parapet of pinnacles */
+    if (L.inside) { for (var sw = -1; sw <= 1; sw += 2) bx(o, f, (s0 + s1) / 2, sw * (Wn / 2 - 0.12), (s1 - s0) / 2, 0.12, y - 1, y + L.Hn, S, false);   /* round 3: a nave she flies into: its two walls, no end caps (they stood inside her room, a plain wall across the choir) */
+      roofGable(J, f, -hl + 0.3, s1 + 0.1, Wn / 2 + 0.6, y + L.Hn, rise, R); gable(o, f, -hl + 0.3, Wn / 2, y + L.Hn, rise, S, back); }   /* the roof runs on over the room's west bay to the front, its gable there */
+    else { bx(o, f, (s0 + s1) / 2, 0, (s1 - s0) / 2, Wn / 2, y - 1, y + L.Hn, S, false);
+      roofGable(J, f, s0, s1 + 0.1, Wn / 2 + 0.6, y + L.Hn, rise, R); gable(o, f, s0, Wn / 2, y + L.Hn, rise, S, back); }
+    bx(o, f, (s0 + s1) / 2, 0, (s1 - s0) / 2, 0.18, y + L.Hn + rise - 0.1, y + L.Hn + rise + 0.6, [0.62, 0.55, 0.38]);
+    for (sd = -1; sd <= 1; sd += 2) {
+      var nrm = sd > 0 ? [-f.uz, f.ux] : [f.uz, -f.ux];
+      bx(o, f, (s0 + s1) / 2, sd * (Wn / 2 + Wa / 2), (s1 - s0) / 2, Wa / 2, y - 1, y + L.Ha, S);   // the aisle, its lean-to roof
+      var ra = P_(f, s0, sd * (Wn / 2)), rb = P_(f, s1, sd * (Wn / 2)), rc = P_(f, s1, sd * (Wn / 2 + Wa + 0.4)), rd = P_(f, s0, sd * (Wn / 2 + Wa + 0.4)), yr = y + L.Ha, yt = y + L.Ha + Wa * 0.5;
+      if (sd > 0) G.quadRoof(J.roof, [rd[0], yr, rd[1]], [rc[0], yr, rc[1]], [rb[0], yt, rb[1]], [ra[0], yt, ra[1]], g.col(R)); else G.quadRoof(J.roof, [ra[0], yt, ra[1]], [rb[0], yt, rb[1]], [rc[0], yr, rc[1]], [rd[0], yr, rd[1]], g.col(R));
+      bx(o, f, (s0 + s1) / 2, sd * (Wn / 2 + 0.25), (s1 - s0) / 2, 0.35, y + L.Hn - 0.4, y + L.Hn + 0.5, Sl);   // the cornice
+      for (s = s0 + 4; s < s1 - 2; s += 7.5) {
+        var tb = sd * (Wn / 2 + Wa + 1.8);   // the pier outside the aisle, its pinnacle, and two flying arms up to the nave wall
+        bx(o, f, s, tb, 0.9, 1.6, y - 1, y + L.Ha + 7, Sd); pyramid(o, f, s, tb, 1.0, y + L.Ha + 7, y + L.Ha + 14, Sl, 4);
+        for (var arm = 0; arm < 2; arm++) { var a = P_(f, s, tb - sd * 1.6), b = P_(f, s, sd * (Wn / 2 + 0.2)), ya = y + L.Ha + 2 + arm * 4, yb = y + L.Hn * (0.62 + arm * 0.24), th = 1.1, cc = g.col(Sd), n2 = [-f.ux, 0, -f.uz];
+          var kk = [[a, ya], [a, ya + th], [b, yb + th], [b, yb]].map(function (q) { return G.V(o, q[0][0] - f.ux * 0.45, q[1], q[0][1] - f.uz * 0.45, n2[0], 0, n2[2], cc, 0, 0, g.PLAIN, 0, 0); }), kb = [[a, ya], [a, ya + th], [b, yb + th], [b, yb]].map(function (q) { return G.V(o, q[0][0] + f.ux * 0.45, q[1], q[0][1] + f.uz * 0.45, -n2[0], 0, -n2[2], cc, 0, 0, g.PLAIN, 0, 0); });
+          o.i.push(kk[0], kk[1], kk[2], kk[0], kk[2], kk[3], kk[0], kk[2], kk[1], kk[0], kk[3], kk[2], kb[0], kb[1], kb[2], kb[0], kb[2], kb[3], kb[0], kb[2], kb[1], kb[0], kb[3], kb[2]);
+          var tp = [kk[1], kb[1], kb[2], kk[2]]; o.i.push(tp[0], tp[1], tp[2], tp[0], tp[2], tp[3], tp[0], tp[2], tp[1], tp[0], tp[3], tp[2]); }   // its top, so it reads from above
+        pyramid(o, f, s, sd * (Wn / 2 + 0.1), 0.45, y + L.Hn, y + L.Hn + 4.5, Sl, 4);
+        lancet(f, s + 3.75, sd * (Wn / 2 + 0.06), nrm, y + L.Ha + Wa * 0.5 + 1.5, y + L.Hn - 3.5, 1.35);   // the clerestory
+        lancet(f, s + 3.75, sd * (Wn / 2 + Wa + 0.06), nrm, y + 2.5, y + L.Ha - 3, 1.15); } }   // the aisle's windows
+    /* the transept: its arms, steep roof, a great rose and a portal at each end */
+    if (L.tr) { var ts = -hl + L.L * L.tr[0], th2 = L.tr[1] / 2, RO = J.roof, cc2 = g.col(R), w2 = L.tr[2] / 2 + 0.6, rr = L.tr[2] * 1.0;
+      /* round 3: a cathedral she can fly into (L.inside) has its transept as two arms off the nave, roofed each: the crossing is the nave's own (one box across it stood inside the nave, a grey wall and a slate roof in the vault) */
+      var arms = L.inside ? [[-th2, -Wn / 2], [Wn / 2, th2]] : [[-th2, th2]];
+      arms.forEach(function (ar) { bx(o, f, ts, (ar[0] + ar[1]) / 2, L.tr[2] / 2, (ar[1] - ar[0]) / 2, y - 1, y + L.Hn, S, false);
+        var A = P_(f, ts, ar[0]), Bq = P_(f, ts, ar[1]), q1 = function (dsg) { return [A[0] + f.ux * w2 * dsg, A[1] + f.uz * w2 * dsg]; }, q2 = function (dsg) { return [Bq[0] + f.ux * w2 * dsg, Bq[1] + f.uz * w2 * dsg]; };
+        G.quadRoof(RO, [q1(-1)[0], y + L.Hn, q1(-1)[1]], [q2(-1)[0], y + L.Hn, q2(-1)[1]], [Bq[0], y + L.Hn + rr, Bq[1]], [A[0], y + L.Hn + rr, A[1]], cc2); G.quadRoof(RO, [q2(1)[0], y + L.Hn, q2(1)[1]], [q1(1)[0], y + L.Hn, q1(1)[1]], [A[0], y + L.Hn + rr, A[1]], [Bq[0], y + L.Hn + rr, Bq[1]], cc2); });
+      for (var e = -1; e <= 1; e += 2) { var fe = P_(f, ts, e * th2), en = [-f.uz * e, f.ux * e], ff = { x: fe[0], z: fe[1], ux: -f.uz, uz: f.ux };
+        gable(o, ff, 0, L.tr[2] / 2, y + L.Hn, rr, S, en); rose(o, { x: fe[0] - f.uz * e * 0.12, z: fe[1] + f.ux * e * 0.12, ux: f.uz, uz: -f.ux }, 0, 0, y + L.Hn * 0.64, L.tr[2] * 0.36, en);
+        flat(o, { x: fe[0] - f.uz * e * 0.1, z: fe[1] + f.ux * e * 0.1, ux: f.ux, uz: f.uz }, 0, 0, [0.2, 0.16, 0.14], en, y, y + 7, 2.6);
+        for (var cb = -1; cb <= 1; cb += 2) { var cbp = P_(f, ts + cb * (L.tr[2] / 2 + 0.6), e * (th2 + 0.6)); g.box(o, cbp[0], cbp[1], f.ux, f.uz, 1.2, 1.2, y - 1, y + L.Hn + 4, Sd); g.revolve(o, cbp[0], cbp[1], y + L.Hn + 4, [[1.6, 0], [0.02, 7]], Sl, 4); } } }
+    /* the apse: its wall, the steep conical roof, and the ring of buttresses with their arms (the chevet) */
+    var ap = P_(f, s1, 0); halfCyl(o, ap[0], ap[1], y - 1, y + L.Hn, Wn / 2, f.ux, f.uz, S, 10); g.half(o, ap[0], ap[1], y + L.Hn, Wn / 2 + 0.6, rise, f.ux, f.uz, R, 10);
+    halfCyl(o, ap[0], ap[1], y - 1, y + L.Ha, Wn / 2 + Wa, f.ux, f.uz, S, 12);
+    for (var ai = 0; ai < 7; ai++) { var aa = -1.35 + ai * 0.45, dx = f.ux * Math.cos(aa) - f.uz * Math.sin(aa), dz = f.uz * Math.cos(aa) + f.ux * Math.sin(aa), Rr = Wn / 2 + Wa + 1.8, ax = ap[0] + dx * Rr, az = ap[1] + dz * Rr;
+      g.box(o, ax, az, dx, dz, 1.6, 0.9, y - 1, y + L.Ha + 7, Sd); g.revolve(o, ax, az, y + L.Ha + 7, [[1.4, 0], [0.02, 7]], Sl, 4);
+      var bxx = ap[0] + dx * (Wn / 2 + 0.2), bzz = ap[1] + dz * (Wn / 2 + 0.2), cc3 = g.col(Sd), kk3 = [[ax, az, y + L.Ha + 3], [ax, az, y + L.Ha + 4.2], [bxx, bzz, y + L.Hn * 0.86 + 1.2], [bxx, bzz, y + L.Hn * 0.86]].map(function (q) { return G.V(o, q[0], q[2], q[1], 0, 1, 0, cc3, 0, 0, g.PLAIN, 0, 0); });
+      o.i.push(kk3[0], kk3[1], kk3[2], kk3[0], kk3[2], kk3[3], kk3[0], kk3[2], kk3[1], kk3[0], kk3[3], kk3[2]); }
+    /* the west front: the towers with their corner buttresses, string courses, tall belfry lancets on every face; the gallery between them; the rose; three portals */
+    var fs = -hl, wf = { x: P_(f, fs, 0)[0], z: P_(f, fs, 0)[1], ux: f.ux, uz: f.uz }, front = [-f.ux, -f.uz], across = { x: wf.x, z: wf.z, ux: -f.uz, uz: f.ux };
+    var tower = function (tt2, top) { bx(o, f, fs + Tw / 2, tt2, Tw / 2, Tw / 2, y - 1, y + top, S);
+      for (var c = 0; c < 4; c++) { var cs = [[1, 1], [1, -1], [-1, 1], [-1, -1]][c]; bx(o, f, fs + Tw / 2 + cs[0] * (Tw / 2 + 0.2), tt2 + cs[1] * (Tw / 2 + 0.2), 0.7, 0.7, y - 1, y + top - 4, Sd); }
+      for (var k = 1; k <= 3; k++) bx(o, f, fs + Tw / 2, tt2, Tw / 2 + 0.3, Tw / 2 + 0.3, y + top * k / 4 - 0.4, y + top * k / 4 + 0.4, Sl);
+      for (var d = 0; d < 4; d++) { var nd = [[-f.ux, -f.uz], [f.ux, f.uz], [-f.uz, f.ux], [f.uz, -f.ux]][d], tcx = P_(f, fs + Tw / 2, tt2), fc = { x: tcx[0] + nd[0] * (Tw / 2 + 0.05), z: tcx[1] + nd[1] * (Tw / 2 + 0.05), ux: -nd[1], uz: nd[0] };
+        for (var w = -1; w <= 1; w += 2) lancet(fc, w * Tw * 0.2, 0, nd, y + top * 0.76, y + top - 3, Tw * 0.1); } };
+    if (L.tw === 'twin' || L.tw === 'twinSpire') { for (sd = -1; sd <= 1; sd += 2) { var tt3 = sd * (L.W / 2 - Tw / 2); tower(tt3, L.Ht); var tp3 = P_(f, fs + Tw / 2, tt3);
+        if (L.tw === 'twinSpire') { g.revolve(o, tp3[0], tp3[1], y + L.Ht, [[Tw * 0.48, 0], [Tw * 0.4, (L.Hs - L.Ht) * 0.12], [Tw * 0.05, L.Hs - L.Ht], [0, L.Hs - L.Ht + 0.1]], Sl, 8); cross(o, tp3[0], tp3[1], y + L.Hs, Math.max(1, Tw / 8)); st.spires++;
+          for (var p2 = 0; p2 < 4; p2++) { var cp2 = [[1, 1], [1, -1], [-1, 1], [-1, -1]][p2]; pyramid(o, f, fs + Tw / 2 + cp2[0] * Tw * 0.45, tt3 + cp2[1] * Tw * 0.45, 0.7, y + L.Ht, y + L.Ht + Tw * 0.9, Sl, 4); } }
+        else { bx(o, f, fs + Tw / 2, tt3, Tw / 2 + 0.2, Tw / 2 + 0.2, y + L.Ht - 0.3, y + L.Ht + 1.2, Sl); for (var pc = 0; pc < 4; pc++) { var cs3 = [[1, 1], [1, -1], [-1, 1], [-1, -1]][pc]; pyramid(o, f, fs + Tw / 2 + cs3[0] * Tw * 0.44, tt3 + cs3[1] * Tw * 0.44, 0.8, y + L.Ht + 1.2, y + L.Ht + 6, Sl, 4); } } }
+      /* the gallery: an open arcade of colonnettes across the front between the towers, a balustrade on top */
+      var gy = y + L.Hn + 1.5; bx(o, f, fs - 0.1, 0, 0.6, L.W / 2 - 0.2, gy - 0.6, gy, Sl); bx(o, f, fs - 0.12, 0, 0.1, L.W / 2 - 0.6, gy + 0.3, gy + 6.5, [0.14, 0.13, 0.13]);
+      for (var cl = -L.W / 2 + 1; cl <= L.W / 2 - 1; cl += 1.6) { var cpt = P_(across, cl, 0.4); g.box(o, cpt[0], cpt[1], f.ux, f.uz, 0.2, 0.2, gy, gy + 7, Sl); } bx(o, f, fs - 0.2, 0, 0.7, L.W / 2, gy + 7, gy + 8.2, Sl); }
+    if (L.tw === 'oneSpire' || L.tw === 'westSpire') { var ot = L.tw === 'westSpire' ? 0 : -(L.W / 2 - Tw / 2); tower(ot, L.Ht); var op = P_(f, fs + Tw / 2, ot); g.revolve(o, op[0], op[1], y + L.Ht, [[Tw * 0.48, 0], [Tw * 0.32, (L.Hs - L.Ht) * 0.35], [Tw * 0.05, L.Hs - L.Ht], [0, L.Hs - L.Ht + 0.1]], Sl, 8); cross(o, op[0], op[1], y + L.Hs, Math.max(1, Tw / 8)); st.spires++;
+      if (L.tw === 'oneSpire') tower(-ot, L.Ht * 0.92); }
+    var scr = L.tw === 'none' ? L.W / 2 : L.W / 2 - Tw; if (scr > 1) bx(o, f, fs + 1.2, 0, 1.2, scr, y - 1, y + L.Hn + (L.tw === 'none' ? rise : 1), S);
+    if (L.tw === 'none') gable(o, f, fs, L.W / 2, y + L.Hn + 0.1, rise, S, front);
+    var rR = Math.min(Wn * 0.45, 7.5); bx(o, f, fs - 0.08, 0, 0.1, rR + 1.2, y + L.Hn * 0.6 - rR - 1.2, y + L.Hn * 0.6 + rR + 1.2, Sd);   // the rose in its square frame
+    rose(o, { x: wf.x - f.ux * 0.22, z: wf.z - f.uz * 0.22, ux: f.ux, uz: f.uz }, 0, 0, y + L.Hn * 0.6, rR, front);
+    for (var pt = -1; pt <= 1; pt++) { var pw = pt ? 2.4 : 3.2, ph = pt ? 7 : 9.5; flat(o, across, pt * (L.W / 3.4), 0.05, Sd, front, y, y + ph + 0.6, pw + 0.9); flat(o, across, pt * (L.W / 3.4), 0.1, [0.2, 0.16, 0.14], front, y, y + ph, pw); }   // the portals, each in its archivolt
+    for (var lt = -1; lt <= 1; lt += 2) lancet(across, lt * scr * 0.55, 0.06, front, y + L.Hn * 0.6 - 3, y + L.Hn * 0.6 + 4, 1.1);
+    /* the crossing: a lead spire with its pinnacles, or a tower; Seville's Giralda; Vienna's south tower */
+    if (L.cs || L.ct) { var cp = P_(f, L.tr ? -hl + L.L * L.tr[0] : 0, 0), cw = Wn * 0.42;
+      if (L.ct) { g.box(o, cp[0], cp[1], f.ux, f.uz, Wn * 0.55, Wn * 0.55, y + L.Hn - 2, y + L.ct, S); for (var cq = 0; cq < 4; cq++) { var cs4 = [[1, 1], [1, -1], [-1, 1], [-1, -1]][cq]; g.revolve(o, cp[0] + (f.ux * cs4[0] - f.uz * cs4[1]) * Wn * 0.5, cp[1] + (f.uz * cs4[0] + f.ux * cs4[1]) * Wn * 0.5, y + L.ct, [[0.9, 0], [0.02, 6]], Sl, 4); } }
+      if (L.cs) { var y0 = y + (L.ct || L.Hn + rise); g.revolve(o, cp[0], cp[1], y0 - 2, [[cw, 0], [cw, 3], [cw * 0.08, L.cs - (y0 - y)], [0, L.cs - (y0 - y) + 0.1]], L.pinn ? Sl : R, 8); cross(o, cp[0], cp[1], y + L.cs, Math.max(1, cw / 5)); st.spires++;
+        for (var cq2 = 0; cq2 < 4; cq2++) { var c5 = [[1, 1], [1, -1], [-1, 1], [-1, -1]][cq2]; g.revolve(o, cp[0] + (f.ux * c5[0] - f.uz * c5[1]) * cw * 0.9, cp[1] + (f.uz * c5[0] + f.ux * c5[1]) * cw * 0.9, y0 - 1, [[0.7, 0], [0.02, 8]], L.pinn ? Sl : R, 4); } } }
+    if (L.giralda) { var gp = P_(f, hl * 0.6, L.W / 2 + 9); g.box(o, gp[0], gp[1], 1, 0, 7, 7, y - 1, y + 70, [0.86, 0.66, 0.5]); g.box(o, gp[0], gp[1], 1, 0, 6.2, 6.2, y + 70, y + 86, [0.92, 0.88, 0.8]); g.box(o, gp[0], gp[1], 1, 0, 4.5, 4.5, y + 86, y + 96, [0.92, 0.88, 0.8]); g.revolve(o, gp[0], gp[1], y + 96, [[3.2, 0], [1.4, 6], [0.2, 8], [0, 8.1]], [0.92, 0.88, 0.8], 8); }
+    if (L.st) { var sp = P_(f, -hl * 0.1, L.W / 2 + 7); g.box(o, sp[0], sp[1], f.ux, f.uz, 7, 7, y - 1, y + L.st * 0.45, S); g.revolve(o, sp[0], sp[1], y + L.st * 0.45, [[7, 0], [5, L.st * 0.2], [0.4, L.st * 0.55], [0, L.st * 0.55 + 0.1]], Sl, 8); cross(o, sp[0], sp[1], y + L.st, 1.4); st.spires++; }
+    if (L.pinn) for (var pn = s0; pn < s1; pn += 5) for (sd = -1; sd <= 1; sd += 2) pyramid(o, f, pn, sd * (Wn / 2 + Wa), 0.4, y + L.Ha, y + L.Ha + 7, Sl, 4);
+    st.kinds.gothic = (st.kinds.gothic || 0) + 1;
+  }
+  function rockTop(J, K) {   // the Acropolis: its top 58 m over the lowest ground round its foot (the streamed ground is too coarse to hold the rock), never under the ground at its middle
+    if (J.rock831 != null) return J.rock831; var L = LM.filter(function (q) { return q.k === 'rock'; })[0], lo = 1e9, mid = K.fromLL(J, L.lat, L.lon);
+    L.ring.forEach(function (q) { var p = K.fromLL(J, q[0], q[1]); lo = Math.min(lo, Math.max(0, K.H(J, p[0], p[1]))); }); J.rock831 = Math.max(lo + L.up, Math.max(0, K.H(J, mid[0], mid[1])) + 6); return J.rock831; }
+  function rock(J, K, L, o, f, y) {   // the rock: its cliffs from the ground to the top, the top, the wall round its rim; and her feet stand on it (a footprint)
+    var top = rockTop(J, K), R = L.ring.map(function (q) { return K.fromLL(J, q[0], q[1]); }), n = R.length, cliff = g.col([0.66, 0.6, 0.5]), lip = g.col([0.6, 0.55, 0.46]), lo = 1e9, i;
+    for (i = 0; i < n; i++) { var a = R[i], b = R[(i + 1) % n], ga = Math.max(0, K.H(J, a[0], a[1])) - 3, gb = Math.max(0, K.H(J, b[0], b[1])) - 3, dx = b[0] - a[0], dz = b[1] - a[1], l = Math.hypot(dx, dz) || 1, nx = dz / l, nz = -dx / l; lo = Math.min(lo, ga, gb);
+      var mx = (a[0] + b[0]) / 2 + nx * 6, mz = (a[1] + b[1]) / 2 + nz * 6, gm = Math.max(0, K.H(J, mx, mz)) - 3;   // a buttress of rock bulging out halfway, so the cliff is not a flat wall
+      g.quad(o, [a[0], ga, a[1]], [mx, gm, mz], [mx, top - 4, mz], [a[0], top, a[1]], [nx, 0, nz], i % 2 ? cliff : lip); g.quad(o, [mx, gm, mz], [b[0], gb, b[1]], [b[0], top, b[1]], [mx, top - 4, mz], [nx, 0, nz], i % 2 ? lip : cliff);
+      g.box(o, (a[0] + b[0]) / 2, (a[1] + b[1]) / 2, dx / l, dz / l, l / 2, 0.9, top, top + 3.2, [0.8, 0.74, 0.62]); }
+    var TH = IX.THREE || window.THREE, faces = TH.ShapeUtils.triangulateShape(R.map(function (p) { return new TH.Vector2(p[0], p[1]); }), []), base = o.p.length / 3, tc = g.col([0.8, 0.75, 0.64]);
+    for (i = 0; i < n; i++) G.V(o, R[i][0], top + 0.05, R[i][1], 0, 1, 0, tc, 0, 0, g.PLAIN, 0, 0);
+    for (i = 0; i < faces.length; i++) { var t0 = faces[i]; o.i.push(base + t0[0], base + t0[1], base + t0[2], base + t0[0], base + t0[2], base + t0[1]); }
+    if (J.fp) { var flat2 = [], x0 = 1e9, x1 = -1e9, z0 = 1e9, z1 = -1e9; R.forEach(function (p) { flat2.push(p[0], p[1]); x0 = Math.min(x0, p[0]); x1 = Math.max(x1, p[0]); z0 = Math.min(z0, p[1]); z1 = Math.max(z1, p[1]); });
+      J.fp.push({ r: flat2, clip: new Uint8Array(n), x0: x0, x1: x1, z0: z0, z1: z1, bot: lo, top: top, gC: lo, cx: (x0 + x1) / 2, cz: (z0 + z1) / 2, rock831: true }); }
+    st.kinds.rock = 1; }
+  function temple(J, K, L, o, f, y) {   // stylobate, the colonnade, the entablature, pediments; a roof if it stands, a cella if it does
+    var hl = L.L / 2, hw = L.W / 2, S = L.stone, cy = y + L.pod, i, mi = 0;
+    bx(o, f, 0, 0, hl, hw, y - 1.5, y + L.pod, S); bx(o, f, 0, 0, hl + 1.2, hw + 1.2, y - 1.5, y + L.pod * 0.4, S);
+    var put = function (s, t) { var p = P_(f, s, t); if (L.ruinGap && hash(L.name + mi++) < L.ruinGap) return; column(o, p[0], p[1], cy, L.Hc, L.D, S); };
+    var fs = L.nf > 1 ? (L.W - L.D * 2) / (L.nf - 1) : 0, ss = L.ns > 1 ? (L.L - L.D * 2) / (L.ns - 1) : 0;
+    for (i = 0; i < L.nf; i++) { var tt = -hw + L.D + i * fs; put(-hl + L.D, tt); if (!L.front) put(hl - L.D, tt); }
+    for (i = 1; i < L.ns - 1; i++) { var s2 = -hl + L.D + i * ss; if (L.front && s2 > -hl + L.D + ss * 1.5) continue; put(s2, -hw + L.D); put(s2, hw - L.D); }
+    var ey = cy + L.Hc; if (L.front) { bx(o, f, -hl + L.D + ss * 0.75, 0, ss * 0.75 + L.D, hw, ey, ey + L.ent, S); }
+    else { bx(o, f, -hl + L.D, 0, L.D * 0.7, hw, ey, ey + L.ent, S); bx(o, f, hl - L.D, 0, L.D * 0.7, hw, ey, ey + L.ent, S); bx(o, f, 0, -hw + L.D, hl, L.D * 0.7, ey, ey + L.ent, S); bx(o, f, 0, hw - L.D, hl, L.D * 0.7, ey, ey + L.ent, S); }
+    if (L.cella) { var ch = L.cella === 'ruin' ? L.Hc * 0.25 : L.Hc; bx(o, f, L.front ? L.L * 0.12 : 0, 0, hl * (L.front ? 0.75 : 0.72), hw * 0.62, cy, cy + ch, S, L.roof !== true); }
+    var rise = L.W * 0.13, front = [-f.ux, -f.uz], backN = [f.ux, f.uz];
+    if (L.roof === true) { roofGable(J, f, -hl, hl, hw + 0.4, ey + L.ent, rise, [0.72, 0.4, 0.3]); gable(o, f, -hl, hw, ey + L.ent, rise, S, front); gable(o, f, hl, hw, ey + L.ent, rise, S, backN); }
+    else if (L.roof === 'attic') bx(o, f, 0, 0, hl * 0.82, hw * 0.78, ey + L.ent, ey + L.ent + 5, S);
+    else if (L.ped === 'frame') { gable(o, f, -hl, hw, ey + L.ent, rise, S, front); gable(o, f, hl, hw, ey + L.ent, rise, S, backN); }
+    st.kinds.temple = (st.kinds.temple || 0) + 1;
+  }
+  function pantheon(J, K, L, o, f, y) {   // the rotunda (brick, stepped rings), the dome (its oculus open), the portico of sixteen columns
+    var BR = [0.74, 0.62, 0.5], LEAD = [0.6, 0.62, 0.62], c = P_(f, 0, 0);   // the rotunda's middle is the map's point (the room inside is centred there too)
+    g.revolve(o, c[0], c[1], y - 1, [[29, 0], [29, 31], [27.5, 31.5], [27.5, 34], [26, 34.5], [26, 36]], BR, 32);
+    g.revolve(o, c[0], c[1], y + 35.8, [[26, 0], [23.5, 3.4], [19.5, 6.6], [14, 9.5], [8, 11.2], [4.6, 11.7], [4.6, 11.9]], LEAD, 32);
+    temple(J, K, { name: 'Pantheon portico', L: 15.5, W: 33, nf: 8, ns: 3, Hc: 11.9, D: 1.5, pod: 1.3, ent: 2.6, roof: true, cella: false, stone: [0.82, 0.78, 0.7] }, o, { x: P_(f, -47, 0)[0], z: P_(f, -47, 0)[1], ux: f.ux, uz: f.uz }, y);
+    bx(o, f, -34, 0, 5, 13, y - 1, y + 24, [0.8, 0.74, 0.64]); st.kinds.pantheon = 1;
+  }
+  function colosseum(J, K, L, o, f, y) {   // the ellipse of arches in four storeys (the outer ring's south side fallen: the inner ring stands there), the stands, the arena
+    var N = 80, A = L.A, B = L.B, cc = g.col(TRAV), dk = g.col([0.32, 0.27, 0.22]);
+    for (var i = 0; i < N; i++) { var a0 = i / N * 6.283, a1 = (i + 1) / N * 6.283, am = (a0 + a1) / 2, nx = Math.cos(am) / A, nz = Math.sin(am) / B, nl = Math.hypot(nx, nz), ns = [ (f.ux * nx / nl - f.uz * nz / nl), (f.uz * nx / nl + f.ux * nz / nl) ];
+      var north = -ns[1] > -0.25, k = north ? 1 : 0.86, H = north ? L.H : 32, p0 = P_(f, Math.cos(a0) * A * k, Math.sin(a0) * B * k), p1 = P_(f, Math.cos(a1) * A * k, Math.sin(a1) * B * k), n3 = [ns[0], ns[1]];
+      g.quad(o, [p0[0], y - 1, p0[1]], [p1[0], y - 1, p1[1]], [p1[0], y + H, p1[1]], [p0[0], y + H, p0[1]], [n3[0], 0, n3[1]], cc);
+      for (var lv = 0; lv < (north ? 3 : 2); lv++) { var ya = y + 1 + lv * 10.5, yb = ya + 7.5, m0 = [p0[0] + (p1[0] - p0[0]) * 0.2 + n3[0] * 0.08, p0[1] + (p1[1] - p0[1]) * 0.2 + n3[1] * 0.08], m1 = [p0[0] + (p1[0] - p0[0]) * 0.8 + n3[0] * 0.08, p0[1] + (p1[1] - p0[1]) * 0.8 + n3[1] * 0.08];
+        g.quad(o, [m0[0], ya, m0[1]], [m1[0], ya, m1[1]], [m1[0], yb, m1[1]], [m0[0], yb, m0[1]], [n3[0], 0, n3[1]], dk); }
+      var q0 = P_(f, Math.cos(a0) * A * 0.84, Math.sin(a0) * B * 0.84), q1 = P_(f, Math.cos(a1) * A * 0.84, Math.sin(a1) * B * 0.84), r0 = P_(f, Math.cos(a0) * A * 0.5, Math.sin(a0) * B * 0.53), r1 = P_(f, Math.cos(a1) * A * 0.5, Math.sin(a1) * B * 0.53);   // the stands, down to the arena wall
+      g.quad(o, [q0[0], y + 30, q0[1]], [q1[0], y + 30, q1[1]], [r1[0], y + 4, r1[1]], [r0[0], y + 4, r0[1]], [0, 1, 0], g.col([0.66, 0.58, 0.48])); }
+    var ar = P_(f, 0, 0); g.revolve(o, ar[0], ar[1], y + 0.3, [[0.01, 0], [B * 0.5, 0]], [0.36, 0.3, 0.24], 24); st.kinds.colosseum = 1;
+  }
+  function colrow(J, K, L, o, f, y) { var S = L.stone, w = (L.n - 1) * L.gap / 2; bx(o, f, 0, 0, w + L.D + 1, L.D + 1 + (L.side ? L.side * L.gap / 2 : 0), y - 1, y + L.pod, S);
+    for (var i = 0; i < L.n; i++) { var p = P_(f, 0, -w + i * L.gap); column(o, p[0], p[1], y + L.pod, L.Hc, L.D, S); } bx(o, f, 0, 0, L.D * 0.7, w + L.D * 0.6, y + L.pod + L.Hc, y + L.pod + L.Hc + L.ent, S);
+    if (L.side) for (i = 1; i < L.side; i++) { var q = P_(f, i * L.gap, -w); column(o, q[0], q[1], y + L.pod, L.Hc, L.D, S); } st.kinds.colrow = (st.kinds.colrow || 0) + 1; }
+  function arch(J, K, L, o, f, y) { var S = L.stone, dk = [0.3, 0.26, 0.22], hw = L.W / 2, hd = L.D / 2; bx(o, f, 0, 0, hd, hw, y - 1, y + L.H, S);
+    var nn = L.n === 4 ? 1 : L.n; for (var i = 0; i < nn; i++) { var t = nn === 1 ? 0 : (i - 1) * hw * 0.62, w = i === 1 || nn === 1 ? hw * 0.26 : hw * 0.13, hh = i === 1 || nn === 1 ? L.H * 0.6 : L.H * 0.4;
+      for (var sd = -1; sd <= 1; sd += 2) { var fc = { x: P_(f, sd * (hd + 0.06), 0)[0], z: P_(f, sd * (hd + 0.06), 0)[1], ux: -f.uz, uz: f.ux }; flat(o, fc, t, 0, dk, [f.ux * sd, f.uz * sd], y, y + hh - w * 1.5, w); }
+      var cl = P_(f, -hd - 0.8, t - w - 1.2), cr = P_(f, -hd - 0.8, t + w + 1.2); column(o, cl[0], cl[1], y + 3, L.H * 0.55, 1.1, S); column(o, cr[0], cr[1], y + 3, L.H * 0.55, 1.1, S); }
+    st.kinds.arch = (st.kinds.arch || 0) + 1; }
+  function facade(J, K, L, o, f, y) { var S = L.stone, hw = L.W / 2; bx(o, f, 2.5, 0, 1.5, hw, y - 1, y + L.H, S); bx(o, f, -0.5, 0, 1.5, hw + 1, y - 1, y + 1.2, S);
+    for (var lv = 0; lv < 2; lv++) for (var i = 0; i < 8; i++) { var t = -hw + 1.3 + Math.floor(i / 2) * (L.W - 2.6) / 3 + (i % 2) * 1.6 - 0.8, p = P_(f, -0.6, t), y0 = y + 1.2 + lv * 8.2; column(o, p[0], p[1], y0, 7, 0.75, S); bx(o, f, -0.6, t, 0.8, 0.8, y0 + 7, y0 + 8.2, S); }
+    st.kinds.facade = 1; }
+  function theatre(J, K, L, o, f, y) { var S = L.stone, cc = g.col(S), N = 20; for (var i = 0; i < N; i++) { var a0 = Math.PI * i / N, a1 = Math.PI * (i + 1) / N, P0 = P_(f, -Math.sin(a0) * L.R, Math.cos(a0) * L.R), P1 = P_(f, -Math.sin(a1) * L.R, Math.cos(a1) * L.R), Q0 = P_(f, -Math.sin(a0) * L.R * 0.35, Math.cos(a0) * L.R * 0.35), Q1 = P_(f, -Math.sin(a1) * L.R * 0.35, Math.cos(a1) * L.R * 0.35);
+      g.quad(o, [Q0[0], y, Q0[1]], [Q1[0], y, Q1[1]], [P1[0], y + L.H, P1[1]], [P0[0], y + L.H, P0[1]], [0, 1, 0], cc); g.quad(o, [P0[0], y - 1, P0[1]], [P1[0], y - 1, P1[1]], [P1[0], y + L.H, P1[1]], [P0[0], y + L.H, P0[1]], [-(f.ux) , 0, -(f.uz)], cc); }
+    bx(o, f, 4, 0, 1.2, L.R * 0.75, y - 1, y + 4, S); for (var c = 0; c < 12; c++) { var p = P_(f, 2.2, -L.R * 0.7 + c * L.R * 1.4 / 11); column(o, p[0], p[1], y + 4, 8, 0.8, S); } st.kinds.theatre = 1; }
+  function oval(J, K, L, o, f, y) { var S = L.stone; for (var i = 0; i < L.n; i++) { var a = i / L.n * 6.283; if (Math.abs(Math.sin(a)) < 0.12 && Math.cos(a) > 0) continue; var p = P_(f, Math.cos(a) * L.A, Math.sin(a) * L.B), gy = Math.max(0, K.H(J, p[0], p[1])); column(o, p[0], p[1], gy, L.Hc, 0.7, S); g.box(o, p[0], p[1], f.ux, f.uz, 1.1, 0.5, gy + L.Hc, gy + L.Hc + 0.8, S); } st.kinds.oval = 1; }
+  function cardo(J, K, L, o, f, y) { var S = L.stone; for (var s = -L.L / 2; s <= L.L / 2; s += L.gap) for (var sd = -1; sd <= 1; sd += 2) { if (hash(L.name + s + sd) < 0.3) continue; var p = P_(f, s, sd * L.w / 2), gy = Math.max(0, K.H(J, p[0], p[1])); column(o, p[0], p[1], gy, L.Hc, 0.65, S); if (hash(s + 'e' + sd) < 0.5) g.box(o, p[0] + f.ux * L.gap / 2, p[1] + f.uz * L.gap / 2, f.ux, f.uz, L.gap / 2, 0.4, gy + L.Hc, gy + L.Hc + 0.7, S); } st.kinds.cardo = 1; }
+  function gate(J, K, L, o, f, y) { var S = L.stone, hw = L.W / 2; bx(o, f, 0, -hw + 5, L.D / 2, 5, y - 1, y + L.Hc + 3, S); bx(o, f, 0, hw - 5, L.D / 2, 5, y - 1, y + L.Hc + 3, S);
+    for (var r = -1; r <= 1; r += 2) for (var i = 0; i < L.n; i++) { var p = P_(f, r * (L.D / 2 - 1), -12.5 + i * 5); column(o, p[0], p[1], y + 1, L.Hc, 1.7, S); }
+    bx(o, f, 0, 0, L.D / 2 + 0.5, 15, y + L.Hc + 1, y + L.Hc + 5, S); bx(o, f, 0, 0, L.D / 2 - 1, 9, y + L.Hc + 5, y + L.H - 4, S); st.kinds.gate = 1; }   /* no quadriga: no figures (house law) */
+  function rotunda(J, K, L, o, f, y) { var S = L.stone, c = P_(f, 0, 0); g.revolve(o, c[0], c[1], y - 1, [[L.R, 0], [L.R, L.H]], S, 24); g.dome(o, c[0], c[1], y + L.H - 0.5, L.R * 0.86, 'round', S, 24);
+    if (L.D > 40) { g.revolve(o, c[0], c[1], y + L.H, [[L.R * 0.7, 0], [L.R * 0.7, L.D - L.H - L.R * 0.6]], S, 20); g.dome(o, c[0], c[1], y + L.D - L.R * 0.6, L.R * 0.62, 'pointed', [0.6, 0.62, 0.63], 20); if (L.cross) cross(o, c[0], c[1], y + L.D + 1, 1.5); }
+    temple(J, K, { name: L.name + ' portico', L: 10, W: L.R * 1.2, nf: 6, ns: 3, Hc: L.H * 0.7, D: 1.4, pod: 1.5, ent: 2, roof: true, cella: false, stone: S }, o, { x: P_(f, -L.R - 4, 0)[0], z: P_(f, -L.R - 4, 0)[1], ux: f.ux, uz: f.uz }, y); st.kinds.rotunda = (st.kinds.rotunda || 0) + 1; }
+  function domeChurch(J, K, L, o, f, y) { var c = [f.x, f.z], hk = (L.top - L.drum) / L.r, prof = [], N = 8, i;
+    g.revolve(o, c[0], c[1], y - 1, [[L.r, 0], [L.r, L.drum - y + y + 1]], L.drumCol, L.seg);
+    for (i = 0; i <= N; i++) { var ph = i / N * Math.PI / 2; prof.push([Math.cos(ph) * L.r, Math.sin(ph) * L.r * hk]); } prof[N][0] = L.r * 0.12; g.revolve(o, c[0], c[1], y + L.drum, prof, L.col, L.seg);
+    for (var rb = 0; rb < L.seg; rb++) { var a = rb / L.seg * 6.283, cs = Math.cos(a), sn = Math.sin(a); for (i = 0; i < N; i++) { var p0 = prof[i], p1 = prof[i + 1], mx = (p0[0] + p1[0]) / 2 + 0.3; g.box(o, c[0] + cs * mx, c[1] + sn * mx, cs, sn, Math.abs(p0[0] - p1[0]) / 2 + 0.4, 0.5, y + L.drum + p0[1], y + L.drum + p1[1] + 0.3, L.ribs); } }
+    g.revolve(o, c[0], c[1], y + L.top - 0.5, [[L.r * 0.14, 0], [L.r * 0.14, (L.lan - L.top) * 0.6], [L.r * 0.04, L.lan - L.top], [0, L.lan - L.top + 0.1]], L.ribs, 8); cross(o, c[0], c[1], y + L.lan + 2, 1.6); st.kinds.domeChurch = (st.kinds.domeChurch || 0) + 1; }
+  function wall(J, K, L, o, f, y) { var cc = [L.stone, [0.82, 0.76, 0.6], [0.9, 0.85, 0.7]]; for (var c = 0; c < 14; c++) bx(o, f, 0, 0, L.L / 2, L.T / 2 - (c % 3) * 0.03, y - 1 + c * L.H / 14, y - 1 + (c + 1) * L.H / 14 - 0.12, cc[c % 3], c === 13); st.kinds.wall = 1; }   // courses of ashlar, each a little set back
+  function ruin(J, K, L, o, f, y) { var S = L.stone, hl = L.L / 2, hw = L.W / 2; bx(o, f, 0, 0, hl + 1, hw + 1, y - 1, y + 0.6, [0.25, 0.24, 0.24]); bx(o, f, -hl, 0, 0.6, hw, y, y + 4.5, S); bx(o, f, hl, 0, 0.6, hw, y, y + 2.5, S); bx(o, f, 0, -hw, hl, 0.6, y, y + 2.2, S); bx(o, f, 0, hw, hl, 0.6, y, y + 3, S);
+    for (var i = 0; i < 7; i++) { var p = P_(f, -hl + 4 + i * (L.L - 8) / 6, -hw + 4.5), q = P_(f, -hl + 4 + i * (L.L - 8) / 6, hw - 4.5); column(o, p[0], p[1], y + 0.5, 4.5, 0.7, S); if (i % 2 === 0) column(o, q[0], q[1], y + 0.5, 4.5, 0.7, S); }
+    bx(o, f, -hl + 4 + (L.L - 8) / 4, -hw + 4.5, (L.L - 8) / 4 + 0.6, 0.45, y + 5, y + 5.7, S); st.kinds.ruin = 1; }
+  function monastery(J, K, L, o, f, y) { var S = L.stone, hl = L.L / 2, hw = L.W / 2; bx(o, f, 0, -hw, hl, 1.5, y - 1, y + L.H, S); bx(o, f, 0, hw, hl, 1.5, y - 1, y + L.H + 4, S); bx(o, f, -hl, 0, 1.5, hw, y - 1, y + L.H + 2, S); bx(o, f, hl, 0, 1.5, hw, y - 1, y + L.H, S);
+    bx(o, f, 0, 0, 20, 9, y - 1, y + 12, [0.78, 0.7, 0.58]); roofGable(J, f, -20, 20, 9.5, y + 12, 5, [0.5, 0.52, 0.55]); var tp = P_(f, -23, 0); g.box(o, tp[0], tp[1], f.ux, f.uz, 3, 3, y - 1, y + 24, [0.84, 0.78, 0.66]); g.revolve(o, tp[0], tp[1], y + 24, [[4.2, 0], [0.02, 4]], [0.5, 0.52, 0.55], 4); cross(o, tp[0], tp[1], y + 28, 1);
+    var mp = P_(f, 14, 12); g.minaret(o, mp[0], mp[1], y - 0.5, 18, 'arab', g.PAL.arab, f.ux, f.uz, 0.2); st.kinds.monastery = 1; }   /* the small Fatimid mosque inside the walls is truly there */
+  function church(J, K, L, o, f, y, cur) {   // a church: walls (if the map has none), a pitched roof, a bell tower, a spire or a parapet, a plain cross
+    var hl = L.L / 2, hw = L.W / 2, S = L.walls || [0.84, 0.81, 0.74], R = L.roofC || SLATE;
+    if (cur) bx(o, f, 0, 0, hl, hw, y - 1, y + L.H, S, false);
+    roofGable(J, f, -hl, hl, hw + 0.4, y + L.H, Math.min(hw * 1.1, 9), R); gable(o, f, -hl, hw, y + L.H, Math.min(hw * 1.1, 9), S, [-f.ux, -f.uz]); gable(o, f, hl, hw, y + L.H, Math.min(hw * 1.1, 9), S, [f.ux, f.uz]);
+    if (L.tr) { bx(o, f, hl * 0.25, 0, hw * 0.9, L.tr / 2, y - 1, y + L.H, S, false); roofGable(J, { x: P_(f, hl * 0.25, 0)[0], z: P_(f, hl * 0.25, 0)[1], ux: -f.uz, uz: f.ux }, -L.tr / 2, L.tr / 2, hw * 0.9 + 0.4, y + L.H, Math.min(hw, 8), R); }
+    if (L.tower) { var tw = Math.max(2.4, Math.min(hw * 0.75, 6)), ts = cur ? -hl - tw + 0.5 : -hl + tw, tp = P_(f, ts, 0); bx(o, f, ts, 0, tw, tw, y - 1, y + L.tower, S); st.towers++;
+      for (var d = 0; d < 4; d++) { var nd = [[-f.ux, -f.uz], [f.uz, -f.ux], [-f.uz, f.ux], [f.ux, f.uz]][d], fc = { x: tp[0] + nd[0] * (tw + 0.05), z: tp[1] + nd[1] * (tw + 0.05), ux: -nd[1], uz: nd[0] }; flat(o, fc, 0, 0, [0.15, 0.14, 0.13], nd, y + L.tower - 5.5, y + L.tower - 2.2, tw * 0.28); }
+      if (L.top === 'parapet') { for (var c = 0; c < 4; c++) { var cs = [[1, 1], [1, -1], [-1, 1], [-1, -1]][c]; bx(o, f, ts + cs[0] * tw * 0.82, cs[1] * tw * 0.82, tw * 0.18, tw * 0.18, y + L.tower, y + L.tower + 1.8, S); } cross(o, tp[0], tp[1], y + L.tower, Math.max(0.8, tw / 4)); }
+      else if (L.top === 'onion') { g.dome(o, tp[0], tp[1], y + L.tower, tw * 0.9, 'onion', L.domeC || GOLD, 10); cross(o, tp[0], tp[1], y + L.tower + tw * 1.4, Math.max(0.8, tw / 4)); }
+      else if (L.top === 'dome') { g.dome(o, tp[0], tp[1], y + L.tower, tw * 0.95, 'round', L.domeC || [0.3, 0.46, 0.7], 10); cross(o, tp[0], tp[1], y + L.tower + tw * 0.9, Math.max(0.8, tw / 4)); }
+      else { var sh = L.spire ? L.spire - L.tower : tw * 3.2; g.revolve(o, tp[0], tp[1], y + L.tower, [[tw * 1.25, 0], [0.04, sh], [0, sh + 0.05]], L.spireC || (L.spire ? WHITE : SLATE), L.spire ? 8 : 4); cross(o, tp[0], tp[1], y + L.tower + sh, Math.max(0.8, tw / 4)); st.spires++; } }
+  }
+  function synagogue(J, K, L, o, f, y, cur) {   // its walls (if the map has none), its roof, the Star of David on its front
+    var hl = L.L / 2, hw = L.W / 2, S = L.walls || [0.88, 0.85, 0.78];
+    if (cur) bx(o, f, 0, 0, hl, hw, y - 1, y + L.H, S, !L.hip);
+    if (L.hip) { var RO = J.roof, cc = g.col([0.36, 0.3, 0.28]), e = 0.3, a = P_(f, -hl - e, -hw - e), b = P_(f, hl + e, -hw - e), c = P_(f, hl + e, hw + e), d = P_(f, -hl - e, hw + e), r0 = P_(f, -hl * 0.3, 0), r1 = P_(f, hl * 0.3, 0), yy = y + L.H, ry = yy + hw * 0.7;
+      G.quadRoof(RO, [a[0], yy, a[1]], [b[0], yy, b[1]], [r1[0], ry, r1[1]], [r0[0], ry, r0[1]], cc); G.quadRoof(RO, [c[0], yy, c[1]], [d[0], yy, d[1]], [r0[0], ry, r0[1]], [r1[0], ry, r1[1]], cc); G.triRoof(RO, [b[0], yy, b[1]], [c[0], yy, c[1]], [r1[0], ry, r1[1]], cc); G.triRoof(RO, [d[0], yy, d[1]], [a[0], yy, a[1]], [r0[0], ry, r0[1]], cc); }
+    if (L.portico) { for (var i = 0; i < L.portico; i++) { var p = P_(f, -hl - 2.2, -hw * 0.6 + i * hw * 1.2 / (L.portico - 1)); column(o, p[0], p[1], y, L.H * 0.72, 0.7, S); } bx(o, f, -hl - 1.4, 0, 1.6, hw * 0.75, y + L.H * 0.72, y + L.H * 0.8, S); gable(o, f, -hl - 1.4 - 1.6, hw * 0.75, y + L.H * 0.8, 2.4, S, [-f.ux, -f.uz]); }
+    if (L.towers) for (var sd = -1; sd <= 1; sd += 2) { var tp = P_(f, -hl + 3.5, sd * (hw - 3.5)); g.revolve(o, tp[0], tp[1], y - 1, [[3.4, 0], [3.4, L.towers - 6 + 1]], [0.82, 0.62, 0.5], 8); g.dome(o, tp[0], tp[1], y + L.towers - 6, 3.6, 'onion', GOLD, 8); }
+    star(o, f, -hl - (L.portico ? 3 : 0) - 0.2, y + L.H + (L.portico ? -0.8 : 0.6) + 1.6, Math.max(0.9, Math.min(hw * 0.18, 2.2)));
+    st.synagogues++;
+  }
+  function star(o, f, s, y, r) {   // a Star of David: two triangles of thin bars, standing on the front, facing out
+    var p = P_(f, s, 0), px = -f.uz, pz = f.ux; for (var tr = 0; tr < 2; tr++) for (var i = 0; i < 3; i++) { var a0 = (tr ? Math.PI : 0) + Math.PI / 2 + i * 2.0944, a1 = a0 + 2.0944, x0 = Math.cos(a0) * r, y0 = Math.sin(a0) * r, x1 = Math.cos(a1) * r, y1 = Math.sin(a1) * r, mx = (x0 + x1) / 2, my = (y0 + y1) / 2, L2 = Math.hypot(x1 - x0, y1 - y0) / 2, ang = Math.atan2(y1 - y0, x1 - x0);
+      var cc = g.col(GOLD), nn = [-f.ux, -f.uz], th = 0.09 * r, ca = Math.cos(ang), sa = Math.sin(ang), Q = function (u, v) { return [p[0] + px * (mx + ca * u - sa * v), y + my + sa * u + ca * v, p[1] + pz * (mx + ca * u - sa * v)]; };
+      var k = [Q(-L2, -th), Q(L2, -th), Q(L2, th), Q(-L2, th)].map(function (q) { return G.V(o, q[0], q[1], q[2], nn[0], 0, nn[1], cc, 0, 0, g.PLAIN, 0, 0); }); o.i.push(k[0], k[1], k[2], k[0], k[2], k[3], k[0], k[2], k[1], k[0], k[3], k[2]); }
+    st.stars++; }
+
+  /* ---------- the doors 830's step calls ---------- */
+  var ORTHO_RU = [[44, 70, 22, 180]], ORTHO_GR = [[34.8, 41.8, 19.3, 28.3], [41.8, 46.2, 18.8, 23.0], [41.2, 44.2, 22.3, 28.6], [43.6, 48.3, 20.2, 29.7], [41.0, 43.6, 40.0, 46.7], [38.8, 41.3, 43.4, 46.6], [3.4, 14.9, 33.0, 43.0]];
+  function inBx(B, la, lo) { for (var i = 0; i < B.length; i++) { var b = B[i]; if (la >= b[0] && la <= b[1] && lo >= b[2] && lo <= b[3]) return true; } return false; }
+  function churchStyle(lat, lon) { if (lat > 9.5 && lat < 27.5 && lon > -90 && lon < -59) return 'carib'; if (inBx([[53.8, 59.7, 20.9, 28.2], [49, 54.9, 14.1, 24.2]], lat, lon)) return 'west'; if (inBx(ORTHO_RU, lat, lon) && !(lon < 30 && lat > 54)) return 'onion'; if (inBx(ORTHO_GR, lat, lon)) return 'dome'; return 'west'; }
+  function dress(J, K, T, Gv, GEO) {
+    G = Gv; g = GEO; var o = J.wallX || (J.wallX = new J.Out830()); if (!o.f) { o.f = []; o.m = []; }
+    if (T.k === 'lm831') { var L = T.L, f = frameOf(J, K, L.lat, L.lon, L.b || 0), y = Math.max(0, K.H(J, f.x, f.z)), hosted = null;
+      if ((L.k === 'church' || L.k === 'synagogue') && !L.own) { hosted = g.hostOf(J, f.x, f.z, 8); if (hosted) { var ob = G.obb(hosted.r); if (ob) { f = { x: ob.cx, z: ob.cz, ux: ob.ux, uz: ob.uz }; L = Object.assign({}, L, { L: ob.L * 2, W: ob.W * 2, H: Math.max(4, hosted.top - hosted.gC) }); y = hosted.gC; } } }
+      if (L.on === 'acropolis') y = rockTop(J, K);
+      var B = { rock: rock, gothic: gothic, temple: temple, pantheon: pantheon, colosseum: colosseum, colrow: colrow, arch: arch, facade: facade, theatre: theatre, oval: oval, cardo: cardo, gate: gate, rotunda: rotunda, domeChurch: domeChurch, wall: wall, ruin: ruin, monastery: monastery, church: church, synagogue: synagogue }[L.k];
+      if (!B) return null; B(J, K, L, o, f, y, !hosted); st.landmarks++;
+      if (!hosted && L.own && J.feed && J.feed.buildings) { var ring = new Float64Array(10), cn = [[-1, -1], [1, -1], [1, 1], [-1, 1], [-1, -1]]; cn.forEach(function (q, ci) { var pp = P_(f, q[0] * L.L / 2, q[1] * L.W / 2), g2 = K.toLL(J, pp[0], pp[1]); ring[ci * 2] = g2.lon; ring[ci * 2 + 1] = g2.lat; }); J.feed.buildings.push({ h: L.H, minH: 0, id: 0, rings: [ring] }); }   /* a building of its own: the grass, the trees and the walkers keep out of it as out of the map's */ var ll = K.toLL(J, f.x, f.z); st.built.push(L.name); if (st.built.length > 40) st.built.shift();
+      return { k: 'lm', name: L.name, kind: L.k, lat: +ll.lat.toFixed(5), lon: +ll.lon.toFixed(5), hosted: !!hosted }; }
+    var p = T.p, i; for (i = 0; i < LM.length; i++) if (Math.hypot((LM[i].lat - p.ll.lat) * 111320, (LM[i].lon - p.ll.lon) * 111320 * Math.cos(p.ll.lat * D2R)) < 130) return null;   // a hand-built place stands here
+    var host = g.hostOf(J, p.x, p.z, 12); if (!host) return null; var A = g.fpArea(host), hH = host.top - host.gC; if (A < 50 || A > 9000) return null; var ob2 = G.obb(host.r); if (!ob2) return null;
+    var f2 = { x: ob2.cx, z: ob2.cz, ux: ob2.ux, uz: ob2.uz }, rnd = hash(p.name + Math.round(p.x)); if (rnd < 0.5) { f2.ux = -f2.ux; f2.uz = -f2.uz; }
+    if (p.k === 'synagogue') { star(o, f2, -ob2.L - 0.15, host.top + 1.8, Math.max(0.9, Math.min(ob2.W * 0.25, 2.2))); st.synagogues++; return { k: 'synagogue', name: p.name, lat: +p.ll.lat.toFixed(5), lon: +p.ll.lon.toFixed(5), area: Math.round(A) }; }
+    /* a church: the map's tower crowned, the map's round parts domed, else a tower of its own; a pitched roof on a low rectangular hall */
+    var F = J.fp || [], cx = (host.x0 + host.x1) / 2, cz = (host.z0 + host.z1) / 2, towers = [], rounds = [], sty = churchStyle(p.ll.lat, p.ll.lon);
+    for (i = 0; i < F.length; i++) { var q = F[i], qx = (q.x0 + q.x1) / 2, qz = (q.z0 + q.z1) / 2, w = q.x1 - q.x0, d = q.z1 - q.z0, hh = q.top - q.gC; if (q === host || Math.hypot(qx - cx, qz - cz) > Math.max(30, Math.sqrt(A))) continue;
+      if (w < 16 && d < 16 && hh > Math.max(12, hH * 1.25)) { if (!towers.some(function (u) { return Math.hypot((u.x0 + u.x1) / 2 - qx, (u.z0 + u.z1) / 2 - qz) < 3 && u.top >= q.top; })) towers = towers.filter(function (u) { return Math.hypot((u.x0 + u.x1) / 2 - qx, (u.z0 + u.z1) / 2 - qz) >= 3; }).concat([q]); }
+      else if (q.r.length / 2 >= 10 && w > 4 && Math.abs(w - d) < 0.2 * Math.max(w, d) && g.fpArea(q) / (Math.PI * w * d / 4) > 0.85 && g.fpArea(q) / (Math.PI * w * d / 4) < 1.08) rounds.push(q); }
+    var out = { k: 'church', name: p.name, lat: +p.ll.lat.toFixed(5), lon: +p.ll.lon.toFixed(5), style: sty, area: Math.round(A), mapped: towers.length + rounds.length };
+    for (i = 0; i < towers.length && i < 3; i++) { var tq = towers[i], tx = (tq.x0 + tq.x1) / 2, tz = (tq.z0 + tq.z1) / 2, tr2 = Math.min(tq.x1 - tq.x0, tq.z1 - tq.z0) / 2;
+      if (sty === 'onion') { g.dome(o, tx, tz, tq.top, tr2 * 0.9, 'onion', GOLD, 10); cross(o, tx, tz, tq.top + tr2 * 1.4, Math.max(0.8, tr2 / 4)); } else if (sty === 'carib') cross(o, tx, tz, tq.top, Math.max(0.8, tr2 / 4));
+      else { g.revolve(o, tx, tz, tq.top, [[tr2 * 1.2, 0], [0.04, tr2 * 3], [0, tr2 * 3 + 0.05]], SLATE, 4); cross(o, tx, tz, tq.top + tr2 * 3, Math.max(0.8, tr2 / 4)); st.spires++; } st.towers++; }
+    for (i = 0; i < rounds.length && i < 6; i++) { var rq = rounds[i], rr = Math.min(rq.x1 - rq.x0, rq.z1 - rq.z0) / 2 * 0.98; g.dome(o, (rq.x0 + rq.x1) / 2, (rq.z0 + rq.z1) / 2, rq.top, rr, sty === 'onion' ? 'onion' : 'round', sty === 'onion' ? GOLD : [0.6, 0.62, 0.64], 12); cross(o, (rq.x0 + rq.x1) / 2, (rq.z0 + rq.z1) / 2, rq.top + rr * (sty === 'onion' ? 1.55 : 0.92), Math.max(0.8, rr / 5)); }
+    var fill = A / (ob2.L * ob2.W * 4);
+    if (!towers.length && !rounds.length && hH < 30 && fill > 0.72 && ob2.W > 2.5) {
+      church(J, K, { L: ob2.L * 2, W: ob2.W * 2, H: hH, tower: hH + Math.max(7, Math.min(28, ob2.L * 1.1)), top: sty === 'carib' ? 'parapet' : sty === 'onion' ? 'onion' : sty === 'dome' ? 'dome' : 'spire', roofC: sty === 'carib' ? [0.62, 0.28, 0.22] : sty === 'dome' ? [0.7, 0.38, 0.28] : SLATE }, o, f2, host.gC, false);
+      if (sty === 'onion' || sty === 'dome') { g.dome(o, ob2.cx, ob2.cz, host.top + Math.min(ob2.W * 1.1, 9) * 0.5, Math.min(ob2.W * 0.6, 7), sty === 'onion' ? 'onion' : 'round', sty === 'onion' ? GOLD : [0.3, 0.46, 0.7], 10); }
+      out.tower = 1; }
+    else if (!towers.length && !rounds.length) { cross(o, ob2.cx, ob2.cz, host.top, Math.max(1, Math.min(ob2.W / 6, 2.5))); out.cross = 1; }
+    st.churches++; return out;
+  }
+
+  /* ---------- the interiors: made at load, each a group of meshes wearing the roofs' program with a painted map; hidden till she is near ---------- */
+  var IX = { THREE: null, T: null, group: null, rooms: [], mats: null, made: false };
+  function cnv(w, h, paint) { var c = document.createElement('canvas'); c.width = w; c.height = h; var x = c.getContext('2d'); paint(x, w, h); var t = new IX.THREE.CanvasTexture(c); t.anisotropy = 4; if (IX.THREE.sRGBEncoding && window.WFR_REALISM) t.encoding = IX.THREE.sRGBEncoding; return t; }
+  function mat(tex, rep) { var m = IX.T.makeMaterial(IX.THREE, IX.T.u, 'feat'); m.map = tex; if (m.emissive) m.emissive.setRGB(0.2, 0.15, 0.1);   /* round 2: a warm glow inside, whatever side the sun is on (a uniform: the same program) */ if (rep) { tex.wrapS = tex.wrapT = IX.THREE.RepeatWrapping; } m.name = 'sacred831:room'; return m; }
+  /* the paintings (canvas, at load): only patterns, colour and light; ornament bands drawn as ornament (never readable script); no figure of any kind */
+  function polar(x, w, cb) { x.save(); x.translate(w / 2, w / 2); cb(w / 2); x.restore(); }
+  /* round 3: Notre-Dame's painters. stoneC: a stone colour at 1/K (the nave's walls wear vertex colour K); lancetPath: a pointed window; glassIn: coloured
+     glass in small panes on lead, inside a path (b: its bounds, px), dim darkens it (a window far away); GLASS831: Notre-Dame's blues, ruby, gold, green, violet */
+  var GLASS831 = ['#1f4fb8', '#2a64d0', '#16378a', '#b8202a', '#e8b23a', '#2f8a4a', '#6a3a9a', '#d8e4f2', '#1f4fb8', '#b8202a', '#2a64d0'];
+  function stoneC(r, g, b) { var k = 1 / 1.9; return 'rgb(' + Math.round(r * k) + ',' + Math.round(g * k) + ',' + Math.round(b * k) + ')'; }
+  function stone831(x, w, h, m) { x.fillStyle = stoneC(214, 205, 188); x.fillRect(0, 0, w, h); for (var j = 0; j < m / 0.55; j++) { x.fillStyle = stoneC(192, 183, 166); x.fillRect(0, h * j * 0.55 / m, w, 1.2); } }   /* ashlar courses, 55 cm */
+  function lancetPath(x, cx, hw, yb, yt) { var ys = yt + hw * 1.7; x.beginPath(); x.moveTo(cx - hw, yb); x.lineTo(cx - hw, ys); x.quadraticCurveTo(cx - hw, yt + hw * 0.3, cx, yt); x.quadraticCurveTo(cx + hw, yt + hw * 0.3, cx + hw, ys); x.lineTo(cx + hw, yb); x.closePath(); }
+  function glassIn(x, path, b, cell, dim) { x.save(); path(); x.clip(); x.fillStyle = '#14100c'; x.fillRect(b[0] - 2, b[1] - 2, b[2] - b[0] + 4, b[3] - b[1] + 4); var ch = cell * 1.3;
+    for (var yy = b[1]; yy < b[3]; yy += ch) for (var xx = b[0]; xx < b[2]; xx += cell) { var q = Math.abs(Math.sin(xx * 12.9898 + yy * 78.233) * 43758.5453) % 1; x.fillStyle = GLASS831[Math.floor(q * GLASS831.length)]; x.fillRect(xx + 0.8, yy + 0.8, cell - 1.6, ch - 1.6); }
+    if (dim) { x.fillStyle = 'rgba(16,12,9,' + dim + ')'; x.fillRect(b[0], b[1], b[2] - b[0], b[3] - b[1]); } x.restore(); }
+  var PAINT = {
+    pantheon: { dome: function (x, w) { polar(x, w, function (R) { x.fillStyle = '#b9ab95'; x.fillRect(-R, -R, 2 * R, 2 * R); for (var ring = 0; ring < 5; ring++) { var r0 = R * (0.95 - ring * 0.13), r1 = r0 - R * 0.105; for (var i = 0; i < 28; i++) { var a0 = i / 28 * 6.283 + 0.02, a1 = (i + 1) / 28 * 6.283 - 0.02;
+          for (var st2 = 0; st2 < 3; st2++) { var k = st2 * 0.18; x.beginPath(); x.arc(0, 0, r0 - (r0 - r1) * k * 0.5, a0 + k * 0.05, a1 - k * 0.05); x.arc(0, 0, r1 + (r0 - r1) * k * 0.5, a1 - k * 0.05, a0 + k * 0.05, true); x.closePath(); x.fillStyle = ['#a39580', '#8f816c', '#7b6e5b'][st2]; x.fill(); } } }
+        var gr = x.createRadialGradient(0, 0, R * 0.1, 0, 0, R * 0.32); gr.addColorStop(0, '#fff8e8'); gr.addColorStop(1, 'rgba(255,248,232,0)'); x.fillStyle = gr; x.beginPath(); x.arc(0, 0, R * 0.32, 0, 6.283); x.fill(); x.fillStyle = '#cfe4f4'; x.beginPath(); x.arc(0, 0, R * 0.19, 0, 6.283); x.fill(); }); },
+      drum: function (x, w, h) { x.fillStyle = '#d8ccb4'; x.fillRect(0, 0, w, h); x.fillStyle = '#c9b48a'; x.fillRect(0, h * 0.42, w, h * 0.06); x.fillStyle = '#e8dfcf'; x.fillRect(0, h * 0.48, w, h * 0.5); for (var i = 0; i < 8; i++) { var cx = (i + 0.5) / 8 * w; x.fillStyle = '#6e5f4e'; x.fillRect(cx - w * 0.035, h * 0.52, w * 0.07, h * 0.42); x.fillStyle = '#b34a3a'; x.fillRect(cx - w * 0.05, h * 0.5, w * 0.008, h * 0.46); x.fillRect(cx + w * 0.042, h * 0.5, w * 0.008, h * 0.46); }
+        for (var j = 0; j < 16; j++) { x.fillStyle = '#9d8b74'; x.fillRect((j + 0.3) / 16 * w, h * 0.1, w / 40, h * 0.22); } var sp = x.createRadialGradient(w * 0.3, h * 0.7, 2, w * 0.3, h * 0.7, h * 0.35); sp.addColorStop(0, 'rgba(255,246,220,0.85)'); sp.addColorStop(1, 'rgba(255,246,220,0)'); x.fillStyle = sp; x.fillRect(0, 0, w, h); },
+      floor: function (x, w) { x.fillStyle = '#cfc6b6'; x.fillRect(0, 0, w, w); var n = 12, s = w / n; for (var i = 0; i < n; i++) for (var j = 0; j < n; j++) { x.fillStyle = (i + j) % 2 ? '#8f8a84' : '#d9cfbd'; x.fillRect(i * s + 3, j * s + 3, s - 6, s - 6); x.fillStyle = (i + j) % 2 ? '#9a3b30' : '#c9a253'; x.beginPath(); x.arc(i * s + s / 2, j * s + s / 2, s * 0.3, 0, 6.283); x.fill(); }
+        var sun = x.createRadialGradient(w * 0.42, w * 0.5, 4, w * 0.42, w * 0.5, w * 0.14); sun.addColorStop(0, 'rgba(255,250,228,0.95)'); sun.addColorStop(0.7, 'rgba(255,246,215,0.6)'); sun.addColorStop(1, 'rgba(255,246,215,0)'); x.fillStyle = sun; x.beginPath(); x.ellipse(w * 0.42, w * 0.5, w * 0.14, w * 0.11, 0, 0, 6.283); x.fill(); } },   /* the oculus' light on the floor */
+    florence: { dome: function (x, w) { polar(x, w, function (R) { x.fillStyle = '#4f7fc0'; x.fillRect(-R, -R, 2 * R, 2 * R); for (var t = 0; t < 7; t++) { var r = R * (0.95 - t * 0.12); x.strokeStyle = t % 2 ? '#e3c36a' : '#f1e6c8'; x.lineWidth = R * 0.03; x.beginPath(); x.arc(0, 0, r, 0, 6.283); x.stroke(); }
+        for (var s = 0; s < 220; s++) { var a = s * 2.39996, rr = R * (0.18 + 0.75 * ((s * 0.618) % 1)); x.fillStyle = '#f5df8a'; x.beginPath(); x.arc(Math.cos(a) * rr, Math.sin(a) * rr, R * 0.008, 0, 6.283); x.fill(); }
+        for (var i = 0; i < 8; i++) { var aa = i / 8 * 6.283; x.strokeStyle = '#ece6d6'; x.lineWidth = R * 0.035; x.beginPath(); x.moveTo(Math.cos(aa) * R * 0.12, Math.sin(aa) * R * 0.12); x.lineTo(Math.cos(aa) * R, Math.sin(aa) * R); x.stroke(); }
+        var gr = x.createRadialGradient(0, 0, 0, 0, 0, R * 0.2); gr.addColorStop(0, '#fffbe9'); gr.addColorStop(1, 'rgba(255,240,200,0)'); x.fillStyle = gr; x.beginPath(); x.arc(0, 0, R * 0.2, 0, 6.283); x.fill(); }); },
+      drum: function (x, w, h) { for (var b = 0; b < 16; b++) { x.fillStyle = b % 2 ? '#e9e4d8' : '#5d7d62'; x.fillRect(0, b * h / 16, w, h / 16); } for (var i = 0; i < 8; i++) { var cx = (i + 0.5) / 8 * w, cy = h * 0.22; var gg = x.createRadialGradient(cx, cy, 2, cx, cy, h * 0.12); gg.addColorStop(0, '#ffe9a8'); gg.addColorStop(0.5, '#c0443a'); gg.addColorStop(1, '#27408b'); x.fillStyle = gg; x.beginPath(); x.arc(cx, cy, h * 0.12, 0, 6.283); x.fill(); x.strokeStyle = '#efe8d8'; x.lineWidth = 4; x.stroke(); } },
+      floor: function (x, w) { x.fillStyle = '#e4ddcf'; x.fillRect(0, 0, w, w); x.strokeStyle = '#7c2f2a'; x.lineWidth = w / 60; for (var r = 1; r < 8; r++) { x.beginPath(); x.arc(w / 2, w / 2, r * w / 17, 0, 6.283); x.stroke(); } } },
+    stpeter: { dome: function (x, w) { polar(x, w, function (R) { x.fillStyle = '#2f5a9e'; x.fillRect(-R, -R, 2 * R, 2 * R); for (var t = 0; t < 6; t++) { var r = R * (0.9 - t * 0.13); x.strokeStyle = '#e1c15e'; x.lineWidth = R * 0.045; x.beginPath(); x.arc(0, 0, r, 0, 6.283); x.stroke(); }
+        for (var s = 0; s < 300; s++) { var a = s * 2.39996, rr = R * (0.16 + 0.8 * ((s * 0.618) % 1)); x.fillStyle = '#f2d777'; x.fillRect(Math.cos(a) * rr - 2, Math.sin(a) * rr - 2, 4, 4); }
+        for (var i = 0; i < 16; i++) { var aa = i / 16 * 6.283; x.strokeStyle = '#e8c766'; x.lineWidth = R * 0.03; x.beginPath(); x.moveTo(Math.cos(aa) * R * 0.14, Math.sin(aa) * R * 0.14); x.lineTo(Math.cos(aa) * R, Math.sin(aa) * R); x.stroke(); }
+        var gr = x.createRadialGradient(0, 0, 0, 0, 0, R * 0.16); gr.addColorStop(0, '#fffdf0'); gr.addColorStop(1, 'rgba(255,240,190,0)'); x.fillStyle = gr; x.beginPath(); x.arc(0, 0, R * 0.16, 0, 6.283); x.fill(); }); },
+      drum: function (x, w, h) { x.fillStyle = '#d8cfbb'; x.fillRect(0, 0, w, h); x.fillStyle = '#c9a84f'; x.fillRect(0, h * 0.1, w, h * 0.05); for (var k = 0; k < 120; k++) { x.fillStyle = '#1f3d72'; x.fillRect(k / 120 * w + 1, h * 0.108, w / 200, h * 0.034); }   /* the band of ornament (no letters) */
+        for (var i = 0; i < 16; i++) { var cx = (i + 0.5) / 16 * w; x.fillStyle = '#fff6dc'; x.fillRect(cx - w * 0.012, h * 0.25, w * 0.024, h * 0.22); x.fillStyle = '#b8a888'; x.fillRect(cx + w * 0.022, h * 0.2, w * 0.006, h * 0.6); x.fillRect(cx - w * 0.028, h * 0.2, w * 0.006, h * 0.6); } },
+      floor: function (x, w) { x.fillStyle = '#d6d0c4'; x.fillRect(0, 0, w, w); x.strokeStyle = '#8a3b33'; x.lineWidth = w / 50; x.beginPath(); x.arc(w / 2, w / 2, w * 0.2, 0, 6.283); x.stroke(); x.strokeStyle = '#59605a'; x.beginPath(); x.arc(w / 2, w / 2, w * 0.36, 0, 6.283); x.stroke(); } },
+    bluemosque: { dome: function (x, w) { polar(x, w, function (R) { x.fillStyle = '#f4f1ea'; x.fillRect(-R, -R, 2 * R, 2 * R); for (var ring = 0; ring < 4; ring++) { var r0 = R * (0.95 - ring * 0.2); x.fillStyle = ['#2357a6', '#f4f1ea', '#1f8a9e', '#f4f1ea'][ring]; x.beginPath(); x.arc(0, 0, r0, 0, 6.283); x.fill(); }
+        for (var i = 0; i < 48; i++) { var a = i / 48 * 6.283, r = R * 0.86; x.fillStyle = i % 2 ? '#c8352d' : '#f2f0e6'; x.beginPath(); x.arc(Math.cos(a) * r, Math.sin(a) * r, R * 0.04, 0, 6.283); x.fill(); }
+        for (var j = 0; j < 12; j++) { var b = j / 12 * 6.283; x.strokeStyle = '#1b4f99'; x.lineWidth = R * 0.012; x.beginPath(); for (var k = 0; k <= 20; k++) { var rr = R * (0.2 + k * 0.012), aa = b + Math.sin(k * 0.6) * 0.18; if (!k) x.moveTo(Math.cos(aa) * rr, Math.sin(aa) * rr); else x.lineTo(Math.cos(aa) * rr, Math.sin(aa) * rr); } x.stroke(); }   /* swirls of ornament at the crown (no letters) */
+        for (var s = 0; s < 8; s++) { var c = s / 8 * 6.283; x.save(); x.rotate(c); x.fillStyle = '#e1b84c'; x.beginPath(); x.moveTo(0, R * 0.08); x.lineTo(R * 0.02, R * 0.16); x.lineTo(0, R * 0.24); x.lineTo(-R * 0.02, R * 0.16); x.fill(); x.restore(); } }); },
+      drum: function (x, w, h) { x.fillStyle = '#e9eef2'; x.fillRect(0, 0, w, h); for (var i = 0; i < 64; i++) for (var j = 0; j < 10; j++) { x.fillStyle = (i + j) % 3 ? '#2a62ad' : '#1c8f9c'; x.beginPath(); x.arc((i + 0.5) / 64 * w, h * (0.35 + j * 0.06), w / 220, 0, 6.283); x.fill(); }
+        for (var k = 0; k < 24; k++) { x.fillStyle = '#fff4d6'; x.fillRect((k + 0.3) / 24 * w, h * 0.08, w / 80, h * 0.16); } x.fillStyle = '#18407e'; x.fillRect(0, h * 0.28, w, h * 0.03); },
+      floor: function (x, w) { x.fillStyle = '#a3262b'; x.fillRect(0, 0, w, w); x.strokeStyle = '#d7b35a'; x.lineWidth = 3; for (var i = 0; i < 12; i++) { x.beginPath(); x.moveTo(0, i * w / 12); x.lineTo(w, i * w / 12); x.stroke(); } } },
+    notredame: { K: 1.9, wallSize: [256, 1024], endSize: [256, 840],   /* round 3: one bay a repeat (7.33 m x 33 m); the stone painted at 1/K and the walls' vertex colour K, so the stone reads as stone and the glass glows */
+      wall: function (x, w, h) { var Y = function (m) { return h * (1 - m / 33); };
+        stone831(x, w, h, 33);
+        lancetPath(x, w / 2, w * 0.4, Y(1.1), Y(13.2)); x.fillStyle = '#17120d'; x.fill();   /* the arcade into the aisle (its 3D arch stands in front) */
+        var ga = x.createLinearGradient(0, Y(13.2), 0, Y(1.1)); ga.addColorStop(0, 'rgba(60,48,36,0.9)'); ga.addColorStop(1, 'rgba(10,8,6,0.2)'); lancetPath(x, w / 2, w * 0.4, Y(1.1), Y(13.2)); x.fillStyle = ga; x.fill();
+        glassIn(x, function () { lancetPath(x, w / 2, w * 0.12, Y(3.4), Y(9.6)); }, [w * 0.38, Y(9.6), w * 0.62, Y(3.4)], 7, 0.4);   /* the aisle's own window, deep inside */
+        x.fillStyle = stoneC(232, 224, 208); x.fillRect(0, Y(14), w, Y(13.5) - Y(14));   /* string course */
+        for (var t = 0; t < 2; t++) { lancetPath(x, w * (0.3 + t * 0.4), w * 0.13, Y(14.4), Y(19.2)); x.fillStyle = '#1d1813'; x.fill(); }   /* the tribune's twin openings */
+        x.strokeStyle = stoneC(165, 155, 140); x.lineWidth = 4; lancetPath(x, w / 2, w * 0.4, Y(14.2), Y(19.9)); x.stroke();
+        x.fillStyle = stoneC(232, 224, 208); x.fillRect(0, Y(20.6), w, Y(20.1) - Y(20.6));   /* string course */
+        for (var c = 0; c < 2; c++) { var cx = w * (0.31 + c * 0.38); glassIn(x, function () { lancetPath(x, cx, w * 0.13, Y(21.2), Y(29.4)); }, [cx - w * 0.13, Y(29.4), cx + w * 0.13, Y(21.2)], 9, 0);   /* the clerestory: a pair of tall lancets */
+          x.strokeStyle = stoneC(150, 140, 126); x.lineWidth = 5; lancetPath(x, cx, w * 0.13, Y(21.2), Y(29.4)); x.stroke(); }
+        glassIn(x, function () { x.beginPath(); x.arc(w / 2, Y(30.9), w * 0.1, 0, 6.283); }, [w * 0.4, Y(30.9) - w * 0.1, w * 0.6, Y(30.9) + w * 0.1], 6, 0); x.strokeStyle = stoneC(150, 140, 126); x.lineWidth = 5; x.beginPath(); x.arc(w / 2, Y(30.9), w * 0.1, 0, 6.283); x.stroke();   /* the oculus over them */
+        for (var sp = 0; sp < 6; sp++) { var aa = sp / 6 * 6.283; x.beginPath(); x.moveTo(w / 2, Y(30.9)); x.lineTo(w / 2 + Math.cos(aa) * w * 0.1, Y(30.9) + Math.sin(aa) * w * 0.1); x.stroke(); } },
+      end: function (x, w, h) { var Y = function (m) { return h * (1 - m / 41); }, M = w / 12.5, cx = w / 2, cy = Y(23.6), R = 5 * M;   /* the rose from inside: rings of coloured glass in stone tracery, no figure */
+        stone831(x, w, h, 41);
+        var gl = x.createRadialGradient(cx, cy, R, cx, cy, R * 1.5); gl.addColorStop(0, 'rgba(255,236,200,0.35)'); gl.addColorStop(1, 'rgba(255,236,200,0)'); x.fillStyle = gl; x.fillRect(0, 0, w, h);
+        x.save(); x.beginPath(); x.arc(cx, cy, R, 0, 6.283); x.clip(); x.fillStyle = '#120e0a'; x.fillRect(cx - R, cy - R, 2 * R, 2 * R);
+        for (var ring = 3; ring >= 0; ring--) { var r1 = R * (0.3 + ring * 0.235), r0 = r1 - R * 0.2, n = ring < 2 ? 12 : 24; for (var i = 0; i < n; i++) { var a0 = i / n * 6.283 + 0.035, a1 = (i + 1) / n * 6.283 - 0.035;
+            x.beginPath(); x.arc(cx, cy, r1, a0, a1); x.arc(cx, cy, r0, a1, a0, true); x.closePath(); x.fillStyle = GLASS831[(i * 3 + ring * 5) % GLASS831.length]; x.fill();
+            var am = (a0 + a1) / 2, rm = (r0 + r1) / 2; x.beginPath(); x.arc(cx + Math.cos(am) * rm, cy + Math.sin(am) * rm, (r1 - r0) * 0.3, 0, 6.283); x.fillStyle = ring % 2 ? '#e8b23a' : '#b8202a'; x.fill(); } }
+        x.beginPath(); x.arc(cx, cy, R * 0.1, 0, 6.283); x.fillStyle = '#2a64d0'; x.fill(); x.restore();
+        x.strokeStyle = stoneC(150, 140, 126); x.lineWidth = 4; for (var r2 = 0; r2 < 4; r2++) { x.beginPath(); x.arc(cx, cy, R * (0.1 + r2 * 0.235), 0, 6.283); x.stroke(); } x.lineWidth = 7; x.beginPath(); x.arc(cx, cy, R, 0, 6.283); x.stroke();
+        x.lineWidth = 3; for (var s = 0; s < 24; s++) { var as = s / 24 * 6.283; x.beginPath(); x.moveTo(cx + Math.cos(as) * R * 0.1, cy + Math.sin(as) * R * 0.1); x.lineTo(cx + Math.cos(as) * R, cy + Math.sin(as) * R); x.stroke(); }
+        for (var l2 = 0; l2 < 6; l2++) { var lx = w * (0.13 + l2 * 0.148); glassIn(x, function () { lancetPath(x, lx, w * 0.052, Y(12.4), Y(17.8)); }, [lx - w * 0.052, Y(17.8), lx + w * 0.052, Y(12.4)], 5, 0); x.strokeStyle = stoneC(150, 140, 126); x.lineWidth = 3; lancetPath(x, lx, w * 0.052, Y(12.4), Y(17.8)); x.stroke(); }   /* the gallery of lancets under it */
+        x.fillStyle = stoneC(232, 224, 208); x.fillRect(0, Y(11.6), w, Y(11) - Y(11.6));
+        lancetPath(x, cx, 3 * M, Y(1.1), Y(10.4)); x.fillStyle = '#0f0b08'; x.fill(); x.strokeStyle = stoneC(160, 150, 135); x.lineWidth = 6; x.stroke(); },   /* the portal: open (her way in) */
+      vault: function (x, w, h) { x.fillStyle = '#e4dccd'; x.fillRect(0, 0, w, h); for (var j = 0; j < 14; j++) { x.fillStyle = 'rgba(150,138,118,0.18)'; x.fillRect(0, j / 14 * h, w, 1.5); }   /* the webs between the ribs (the ribs themselves are built), one bay a repeat */
+        var g = x.createLinearGradient(0, 0, w, 0); g.addColorStop(0, 'rgba(120,108,90,0.28)'); g.addColorStop(0.5, 'rgba(255,250,240,0)'); g.addColorStop(1, 'rgba(120,108,90,0.28)'); x.fillStyle = g; x.fillRect(0, 0, w, h); },
+      floor: function (x, w) { var n = 16, s = w / n; for (var i = 0; i < n; i++) for (var j = 0; j < n; j++) { x.fillStyle = (i + j) % 2 ? '#5d5a55' : '#e3ddd0'; x.fillRect(i * s, j * s, s, s); } } },
+    shaare: { wall: function (x, w, h) { x.fillStyle = '#f3efe6'; x.fillRect(0, 0, w, h); x.fillStyle = '#5a2f1d'; x.fillRect(0, h * 0.78, w, h * 0.22); for (var i = 0; i < 10; i++) { var cx = (i + 0.5) / 10 * w; x.fillStyle = '#e9f2f6'; x.fillRect(cx - w * 0.02, h * 0.22, w * 0.04, h * 0.44); x.beginPath(); x.arc(cx, h * 0.22, w * 0.02, Math.PI, 0); x.fill(); } },
+      ceil: function (x, w, h) { x.fillStyle = '#f7f4ee'; x.fillRect(0, 0, w, h); x.fillStyle = '#5a2f1d'; for (var i = 0; i <= 8; i++) x.fillRect(i * w / 8 - 7, 0, 14, h); x.fillRect(0, 0, w, 12); x.fillRect(0, h - 12, w, 12); x.fillRect(0, h / 2 - 6, w, 12); x.fillStyle = '#d9b45a'; for (var j = 0; j < 8; j++) { x.beginPath(); x.arc((j + 0.5) * w / 8, h / 2, 9, 0, 6.283); x.fill(); } },   /* a white ceiling between mahogany beams, brass roses */
+      floor: function (x, w) { x.fillStyle = '#e3cf9c'; x.fillRect(0, 0, w, w); x.strokeStyle = 'rgba(190,160,105,0.55)'; x.lineWidth = 3; for (var rp = 0; rp < 40; rp++) { x.beginPath(); x.arc(w * ((rp * 0.37) % 1), w * ((rp * 0.61) % 1), 30 + (rp % 5) * 14, 0.4, 2.6); x.stroke(); } for (var i = 0; i < 4000; i++) { x.fillStyle = i % 3 ? 'rgba(160,140,100,0.35)' : 'rgba(250,240,215,0.45)'; x.fillRect((i * 97.13) % w, (i * 57.71) % w, 2, 2); } } } };   /* the sand floor: the sand of the desert years, kept as the old Caribbean congregations kept it */
+  function shellRotunda(I, P) {   // a drum and a dome, faces in; uv: the drum round and up, the dome polar; a floor disc
+    var THREE = IX.THREE, N = Math.max(16, I.seg === 8 ? 8 : 32), grp = new THREE.Group(), pos = [], nrm = [], col = [], uv = [], idx = [], i, k;
+    for (k = 0; k <= N; k++) { var a = k / N * 6.283, c = Math.cos(a), s = Math.sin(a); for (var v = 0; v <= 1; v++) { pos.push(c * I.r, v * I.h, s * I.r); nrm.push(-c, 0, -s); var b = 0.85 + 0.2 * v; col.push(b, b * 0.93, b * 0.84); uv.push(k / N * (I.seg === 8 ? 1 : 2), v); } }
+    for (k = 0; k < N; k++) { var o = k * 2; idx.push(o, o + 2, o + 1, o + 1, o + 2, o + 3); }
+    grp.add(meshOf(pos, nrm, col, uv, idx, mat(cnv(1024, 256, P.drum), true)));
+    pos = []; nrm = []; col = []; uv = []; idx = []; var RN = 10, eye = I.eye / I.r;
+    for (i = 0; i <= RN; i++) { var ph = i / RN * (Math.PI / 2 - Math.asin(Math.min(0.99, eye || 0.01))), cr = Math.cos(ph), sr = Math.sin(ph); for (k = 0; k <= N; k++) { var a2 = k / N * 6.283; pos.push(Math.cos(a2) * cr * I.r, I.h + sr * I.dh, Math.sin(a2) * cr * I.r); nrm.push(-Math.cos(a2) * cr, -sr, -Math.sin(a2) * cr); var bb = 0.9 + 0.25 * (i / RN); col.push(bb, bb * 0.94, bb * 0.86); var rr = 0.5 * cr; uv.push(0.5 + Math.cos(a2) * rr, 0.5 + Math.sin(a2) * rr); } }
+    for (i = 0; i < RN; i++) for (k = 0; k < N; k++) { var a0 = i * (N + 1) + k, b0 = a0 + N + 1; idx.push(a0, a0 + 1, b0, a0 + 1, b0 + 1, b0); }
+    grp.add(meshOf(pos, nrm, col, uv, idx, mat(cnv(512, 512, P.dome))));
+    pos = [0, 1.1, 0]; nrm = [0, 1, 0]; col = [1, 1, 1]; uv = [0.5, 0.5]; idx = []; for (k = 0; k <= N; k++) { var a3 = k / N * 6.283; pos.push(Math.cos(a3) * I.r, 1.1, Math.sin(a3) * I.r); nrm.push(0, 1, 0); col.push(0.95, 0.95, 0.95); uv.push(0.5 + Math.cos(a3) * 0.5, 0.5 + Math.sin(a3) * 0.5); if (k) idx.push(0, k + 1, k); }
+    grp.add(meshOf(pos, nrm, col, uv, idx, mat(cnv(512, 512, P.floor)))); return grp; }
+  function shellBox(I, P, vault) {   // a long room, faces in: four walls, a pointed vault (or a flat ceiling), a floor; its long axis on x
+    var THREE = IX.THREE, grp = new THREE.Group(), hl = I.L / 2, hw = I.W / 2, h = I.h;
+    var rep = I.bay || 12, W = function (ax, az, bx2, bz, nx, nz, len) { return quadIn([ax, 0, az], [bx2, 0, bz], [bx2, h, bz], [ax, h, az], [nx, 0, nz], [0, 0, len / rep, 1]); };   /* round 3: a nave's wall repeats once a bay */
+    var walls = [W(-hl, -hw, hl, -hw, 0, 1, I.L), W(hl, hw, -hl, hw, 0, -1, I.L), W(hl, -hw, hl, hw, -1, 0, I.W), W(-hl, hw, -hl, -hw, 1, 0, I.W)];
+    if (I.endH) [2, 3].forEach(function (wi) { var q = walls[wi]; q.p[7] = q.p[10] = I.endH; });   /* round 3: the ends rise into the vault (its webs hide what stands over their arch) */
+    var ws = P.wallSize || [1024, 256], es = P.endSize || [512, 512], wm = mat(cnv(ws[0], ws[1], P.wall), true), em = P.end ? mat(cnv(es[0], es[1], P.end)) : wm;
+    walls.forEach(function (q, wi) { if (wi > 1 && P.end) q.u = [0, 0, 1, 0, 1, 1, 0, 1]; if (P.K) q.c = q.c.map(function () { return P.K; });   /* round 3: the glass glows (the stone is painted at 1/K) */ grp.add(meshOf(q.p, q.n, q.c, q.u, q.i, wi > 1 ? em : wm)); });
+    if (vault) { var pos = [], nrm = [], col = [], uv = [], idx = [], N = 8, i, k; for (i = 0; i <= N; i++) { var a = i / N, t = -hw + a * I.W, y = h + Math.sin(Math.min(a, 1 - a) * Math.PI) * hw * 0.9 + (1 - Math.abs(a - 0.5) * 2) * hw * 0.35, ny = -1, nz = (0.5 - a) * 1.4; for (k = 0; k <= 1; k++) { pos.push(k ? hl : -hl, y, t); nrm.push(0, ny, nz); col.push(1.35, 1.32, 1.26); uv.push(k * I.L / rep, a); } }   /* round 3: the vault lit (its light comes up from the glass), one bay a repeat */
+        for (i = 0; i < N; i++) { var o = i * 2; idx.push(o, o + 1, o + 2, o + 1, o + 3, o + 2); } grp.add(meshOf(pos, nrm, col, uv, idx, mat(cnv(1024, 256, P.vault), true))); }
+    else { var cq = quadIn([-hl, h, hw], [hl, h, hw], [hl, h, -hw], [-hl, h, -hw], [0, -1, 0], [0, 0, 1, 1]); grp.add(meshOf(cq.p, cq.n, cq.c, cq.u, cq.i, mat(cnv(512, 256, P.ceil)))); }
+    var fq = quadIn([-hl, 1.1, -hw], [hl, 1.1, -hw], [hl, 1.1, hw], [-hl, 1.1, hw], [0, 1, 0], [0, 0, I.L / 24, I.W / 24]); grp.add(meshOf(fq.p, fq.n, fq.c, fq.u, fq.i, mat(cnv(512, 512, P.floor), true)));
+    if (vault) kit(grp, I);   /* round 3: the nave in the round */
+    return grp; }
+  function vaultY(I, a) { var hw = I.W / 2; return I.h + Math.sin(Math.min(a, 1 - a) * Math.PI) * hw * 0.9 + (1 - Math.abs(a - 0.5) * 2) * hw * 0.35; }   // the vault's section (a: 0..1 across), as its mesh draws it (eight chords)
+  function kit(grp, I) {   // round 3: Notre-Dame's nave in the round: round piers with capitals, the pointed arcades, the shafts to the vault, its ribs and bosses, the chairs, the altar (the props' program; no figure)
+    var THREE = IX.THREE, P = [], N2 = [], C2 = [], ID = [], hl = I.L / 2, hw = I.W / 2, F = 1.1, B = I.bay, nb = Math.round(I.L / B), SPR = 9.6, APX = 13.2, k, sd, q8;
+    var ST = [0.86, 0.82, 0.74], CAP = [0.93, 0.89, 0.8], RIB = [0.8, 0.75, 0.66], GB = [0.92, 0.72, 0.3], WD = [0.4, 0.26, 0.15], WH = [0.95, 0.94, 0.9];
+    var sub = function (a, b) { return [a[0] - b[0], a[1] - b[1], a[2] - b[2]]; }, crs = function (a, b) { return [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]]; }, nrm = function (a) { var l = Math.hypot(a[0], a[1], a[2]) || 1; return [a[0] / l, a[1] / l, a[2] / l]; };
+    var face = function (a, b, c, d, n, col) { var o = P.length / 3, f = crs(sub(b, a), sub(c, a)), q = f[0] * n[0] + f[1] * n[1] + f[2] * n[2] >= 0 ? [a, b, c, d] : [a, d, c, b];   /* wound to face along n */
+      q.forEach(function (v) { P.push(v[0], v[1], v[2]); N2.push(n[0], n[1], n[2]); C2.push(col[0], col[1], col[2]); }); ID.push(o, o + 1, o + 2, o, o + 2, o + 3); };
+    var box = function (x0, x1, y0, y1, z0, z1, col) { face([x0, y0, z0], [x1, y0, z0], [x1, y1, z0], [x0, y1, z0], [0, 0, -1], col); face([x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1], [0, 0, 1], col);
+      face([x0, y0, z0], [x0, y0, z1], [x0, y1, z1], [x0, y1, z0], [-1, 0, 0], col); face([x1, y0, z0], [x1, y0, z1], [x1, y1, z1], [x1, y1, z0], [1, 0, 0], col); face([x0, y1, z0], [x1, y1, z0], [x1, y1, z1], [x0, y1, z1], [0, 1, 0], col); face([x0, y0, z0], [x1, y0, z0], [x1, y0, z1], [x0, y0, z1], [0, -1, 0], col); };
+    var prism = function (cx, cz, y0, y1, r, n, col, top) { for (var j = 0; j < n; j++) { var a0 = j / n * 6.2832, a1 = (j + 1) / n * 6.2832, am = (a0 + a1) / 2;
+        face([cx + Math.cos(a0) * r, y0, cz + Math.sin(a0) * r], [cx + Math.cos(a1) * r, y0, cz + Math.sin(a1) * r], [cx + Math.cos(a1) * r, y1, cz + Math.sin(a1) * r], [cx + Math.cos(a0) * r, y1, cz + Math.sin(a0) * r], [Math.cos(am), 0, Math.sin(am)], col);
+        if (top) face([cx, y1, cz], [cx + Math.cos(a0) * r, y1, cz + Math.sin(a0) * r], [cx + Math.cos(a1) * r, y1, cz + Math.sin(a1) * r], [cx, y1, cz], [0, 1, 0], col); } };
+    var beam = function (A, Bp, t, col) { var d = nrm(sub(Bp, A)), up = Math.abs(d[1]) > 0.9 ? [1, 0, 0] : [0, 1, 0], s = nrm(crs(d, up)), u = crs(s, d), e = t / 2;
+      var cr = function (Q, i, j) { return [Q[0] + (s[0] * i + u[0] * j) * e, Q[1] + (s[1] * i + u[1] * j) * e, Q[2] + (s[2] * i + u[2] * j) * e]; };
+      var a0 = cr(A, -1, -1), a1 = cr(A, 1, -1), a2 = cr(A, 1, 1), a3 = cr(A, -1, 1), b0 = cr(Bp, -1, -1), b1 = cr(Bp, 1, -1), b2 = cr(Bp, 1, 1), b3 = cr(Bp, -1, 1);
+      face(a0, a1, b1, b0, [-u[0], -u[1], -u[2]], col); face(a1, a2, b2, b1, s, col); face(a2, a3, b3, b2, u, col); face(a3, a0, b0, b3, [-s[0], -s[1], -s[2]], col); };
+    var chain = function (pts, t, col) { for (var i = 0; i + 1 < pts.length; i++) beam(pts[i], pts[i + 1], t, col); };
+    var arch = function (xa, xb, z) { var half = (xb - xa) / 2, rs = APX - SPR, rad = (half * half + rs * rs) / (2 * half), a1 = Math.atan2(rs, half - rad), pts = [], i;   /* a two-centred pointed arch from xa to xb, springing at SPR, its point at APX */
+      for (i = 0; i <= 6; i++) { var a = Math.PI + (a1 - Math.PI) * i / 6; pts.push([xa + rad + Math.cos(a) * rad, SPR + Math.sin(a) * rad, z]); }
+      var right = pts.slice(0, 6).reverse().map(function (q) { return [xa + xb - q[0], q[1], z]; }); chain(pts.concat(right), 0.62, ST); };
+    for (k = 0; k <= nb; k++) { var x = -hl + k * B, inner = k > 0 && k < nb;
+      for (sd = -1; sd <= 1; sd += 2) { var z = sd * (hw - 0.85), zs = sd * (hw - 0.3);
+        if (inner) { box(x - 1.05, x + 1.05, F, F + 0.55, z - 1.05, z + 1.05, CAP); prism(x, z, F + 0.55, SPR - 1, 0.78, 12, ST); prism(x, z, SPR - 1, SPR - 0.25, 1.05, 12, CAP, true); box(x - 1.15, x + 1.15, SPR - 0.25, SPR, z - 1.15, z + 1.15, CAP);   /* the round pier, its capital and abacus */
+          for (var c = -1; c <= 1; c++) prism(x + c * 0.36, zs, SPR, I.h, 0.17, 6, ST); prism(x, zs, I.h - 0.6, I.h, 0.6, 8, CAP, true); }   /* the three shafts up to the vault, a capital where they spring */
+        if (k < nb) arch(x + (k > 0 ? 0.95 : 0.2), x + B - (k + 1 < nb ? 0.95 : 0.2), sd * (hw - 0.45)); } }   /* the arcade */
+    var prof = function (a) { return vaultY(I, a) - 0.4; }, N8 = 8;
+    for (k = 0; k <= nb; k++) { var xk = -hl + k * B, tr = []; for (q8 = 0; q8 <= N8; q8++) tr.push([Math.max(-hl + 0.3, Math.min(hl - 0.3, xk)), prof(q8 / N8), -hw + q8 / N8 * I.W]); chain(tr, 0.55, RIB);   /* the transverse rib */
+      if (k < nb) { var d1 = [], d2 = []; for (q8 = 0; q8 <= N8; q8++) { var a8 = q8 / N8; d1.push([xk + a8 * B, prof(a8), -hw + a8 * I.W]); d2.push([xk + a8 * B, prof(a8), hw - a8 * I.W]); } chain(d1, 0.42, RIB); chain(d2, 0.42, RIB);   /* the diagonals */
+        box(xk + B / 2 - 0.5, xk + B / 2 + 0.5, prof(0.5) - 0.55, prof(0.5) + 0.2, -0.5, 0.5, GB); } }   /* the boss where they cross */
+    chain([[-hl + 0.3, prof(0.5), 0], [hl - 0.3, prof(0.5), 0]], 0.36, RIB);   /* the ridge */
+    for (var xr = -hl + 14; xr < hl - 22; xr += 1.25) for (sd = -1; sd <= 1; sd += 2) { var z0 = sd * 1.7, z1 = sd * (hw - 2.1), za = Math.min(z0, z1), zb = Math.max(z0, z1);   /* the chairs, in rows facing east, an aisle down the middle */
+      box(xr - 0.22, xr + 0.22, F + 0.42, F + 0.5, za, zb, WD); box(xr - 0.26, xr - 0.2, F + 0.5, F + 0.98, za, zb, WD); box(xr - 0.22, xr + 0.22, F, F + 0.42, za + 0.05, za + 0.12, WD); box(xr - 0.22, xr + 0.22, F, F + 0.42, zb - 0.12, zb - 0.05, WD); }
+    box(hl - 16, hl - 0.2, F, F + 0.5, -hw + 1.8, hw - 1.8, CAP); box(hl - 14.5, hl - 0.2, F + 0.5, F + 0.95, -hw + 2.4, hw - 2.4, CAP);   /* the choir's steps */
+    box(hl - 9, hl - 7.4, F + 0.95, F + 2, -1.8, 1.8, WH); box(hl - 9.1, hl - 7.3, F + 2, F + 2.08, -1.9, 1.9, GB);   /* the altar, plain */
+    var m = propMat();
+    grp.add(meshOf(P, N2, C2, P.map(function () { return 0; }).slice(0, P.length / 3 * 2), ID, m)); st.kit = { verts: P.length / 3, tris: ID.length / 3 }; }
+  function quadIn(a, b, c, d, n, u) { return { p: a.concat(b, c, d), n: n.concat(n, n, n), c: [1, 0.93, 0.84, 1, 0.93, 0.84, 1, 0.93, 0.84, 1, 0.93, 0.84], u: [u[0], u[1], u[2], u[1], u[2], u[3], u[0], u[3]], i: (function () { var ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2], vx = d[0] - a[0], vy = d[1] - a[1], vz = d[2] - a[2], fx = uy * vz - uz * vy, fy = uz * vx - ux * vz, fz = ux * vy - uy * vx; return fx * n[0] + fy * n[1] + fz * n[2] > 0 ? [0, 1, 2, 0, 2, 3] : [0, 2, 1, 0, 3, 2]; })() }; }
+  function meshOf(pos, nrm, col, uv, idx, m) { var THREE = IX.THREE, gm = new THREE.BufferGeometry(); gm.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3)); gm.setAttribute('normal', new THREE.Float32BufferAttribute(nrm, 3)); gm.setAttribute('color', new THREE.Float32BufferAttribute(col, 3)); gm.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2)); gm.setIndex(idx);
+    var me = new THREE.Mesh(gm, m); me.frustumCulled = false; me.matrixAutoUpdate = false; me.updateMatrix(); me.layers.set(7); me.renderOrder = -9.385; me.castShadow = me.receiveShadow = false; return me; }
+  function propMat() {   // round 3: the built parts wear the rooms' own program over a white map (the ground's program painted their tops as grass: the pews' green stripes)
+    var m = mat(IX.white || (IX.white = cnv(4, 4, function (x, w, h) { x.fillStyle = '#ffffff'; x.fillRect(0, 0, w, h); }))); m.name = 'sacred831:props'; if (m.emissive) m.emissive.setRGB(0.12, 0.08, 0.05); return m; }
+  function props(grp, I) {   // Shaare Shalom: pews facing the middle, the bimah, the ark on the east wall (mahogany), brass lamps (the ground's own vertex-coloured program)
+    var THREE = IX.THREE, P = [], C2 = [], N2 = [], ID = [], m = propMat();
+    var B2 = function (x0, x1, y0, y1, z0, z1, c) { var v = [[x0, y0, z0], [x1, y0, z0], [x1, y1, z0], [x0, y1, z0], [x0, y0, z1], [x1, y0, z1], [x1, y1, z1], [x0, y1, z1]], F = [[0, 3, 2, 1, 0, 0, -1], [4, 5, 6, 7, 0, 0, 1], [0, 4, 7, 3, -1, 0, 0], [1, 2, 6, 5, 1, 0, 0], [3, 7, 6, 2, 0, 1, 0], [0, 1, 5, 4, 0, -1, 0]];
+      F.forEach(function (f) { var b = P.length / 3; for (var q = 0; q < 4; q++) { P.push.apply(P, v[f[q]]); N2.push(f[4], f[5], f[6]); C2.push(c[0], c[1], c[2]); } ID.push(b, b + 1, b + 2, b, b + 2, b + 3); }); };
+    var MA = [0.36, 0.17, 0.1], hl = I.L / 2, hw = I.W / 2, B0 = B2; B2 = function (x0, x1, y0, y1, z0, z1, c) { B0(x0, x1, y0 + 0.95, y1 + 0.95, z0, z1, c); };   /* on the sand floor (1.1 m: over the ground's grass) */
+    for (var r = 0; r < 6; r++) for (var sd = -1; sd <= 1; sd += 2) { var z0 = sd * (hw - 1.2 - r * 0.9); B2(-hl * 0.55, hl * 0.4, 0.15, 0.6, Math.min(z0, z0 - sd * 0.5), Math.max(z0, z0 - sd * 0.5), MA); B2(-hl * 0.55, hl * 0.4, 0.6, 1.05, sd > 0 ? z0 : z0 - 0.08, sd > 0 ? z0 + 0.08 : z0, MA); }
+    B2(-2.2, 2.2, 0.15, 1.0, -1.6, 1.6, MA); B2(-2.2, 2.2, 1.0, 1.9, -1.6, -1.5, MA); B2(-2.2, 2.2, 1.0, 1.9, 1.5, 1.6, MA);   /* the bimah */
+    B2(hl - 1.0, hl - 0.2, 0.15, 5.2, -2.2, 2.2, MA); B2(hl - 1.05, hl - 0.95, 0.9, 4.6, -1.4, 1.4, [0.48, 0.1, 0.12]);   /* the ark and its curtain */
+    for (var lmp = -2; lmp <= 2; lmp++) B2(lmp * 4 - 0.4, lmp * 4 + 0.4, I.h - 2.6, I.h - 2.3, -0.4, 0.4, [0.85, 0.68, 0.3]);
+    for (var gs = -1; gs <= 1; gs += 2) { var zi = gs * (hw - 2.4), zo = gs * hw; B2(-hl, hl * 0.62, 3.8, 4.1, Math.min(zi, zo), Math.max(zi, zo), MA); B2(-hl, hl * 0.62, 4.1, 5.0, Math.min(zi, zi + gs * 0.1), Math.max(zi, zi + gs * 0.1), MA);   /* the gallery on three sides, its balustrade and columns */
+      for (var gc = -hl + 2; gc < hl * 0.62; gc += 3.2) B2(gc - 0.15, gc + 0.15, 0.15, 3.8, zi - 0.15, zi + 0.15, [0.92, 0.9, 0.85]); }
+    B2(-hl, -hl + 2.4, 3.8, 4.1, -hw, hw, MA); B2(-hl + 2.4, -hl + 2.5, 4.1, 5.0, -hw + 2.4, hw - 2.4, MA);
+    grp.add(meshOf(P, N2, C2, P.map(function () { return 0; }).slice(0, P.length / 3 * 2), ID, m)); }
+  function attach(THREE, T, group) {
+    var mk = (window.WFR_TRAVEL712 && WFR_TRAVEL712.makeMaterial) || (T && T.makeMaterial); if (IX.made || !on() || !T || !T.u || !mk) { st.why = 'attach: ' + (!on() ? 'off' : !T ? 'no travel' : !T.u ? 'no uniforms' : 'no makeMaterial'); return; }
+    IX.THREE = THREE; IX.T = { makeMaterial: mk, u: T.u }; IX.group = group; IX.made = true;
+    var t0 = performance.now();
+    try { for (var k in IN) { var I = IN[k], P = PAINT[k], grp = I.kind === 'rotunda' ? shellRotunda(I, P) : shellBox(I, P, I.kind === 'nave'); if (k === 'shaare') props(grp, I);
+        grp.name = 'sacred831:' + k; grp.visible = false; grp.matrixAutoUpdate = false; group.add(grp); IX.rooms.push({ id: k, I: I, g: grp }); st.interiors++; }
+      var wg = new THREE.BufferGeometry(); wg.setAttribute('position', new THREE.BufferAttribute(new Float32Array(9), 3)); wg.setAttribute('normal', new THREE.BufferAttribute(new Float32Array([0, 1, 0, 0, 1, 0, 0, 1, 0]), 3)); wg.setAttribute('color', new THREE.BufferAttribute(new Float32Array(9), 3)); wg.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(6), 2));
+      var warm = new THREE.Mesh(wg, IX.rooms[0].g.children[0].material); warm.name = 'sacred831:warm'; warm.frustumCulled = false; warm.layers.set(7); group.add(warm); }   /* the rooms' program (the roofs': 'feat' with a map) compiled at the gate */
+    catch (e) { fault('attach', e); }
+    st.attachMs = Math.round(performance.now() - t0); }
+  var LT = new Map();
+  function update(TR, her) {   // each travel frame: a room is placed at its true spot and shown within 600 m of her
+    if (!IX.made || !TR || !TR.f) return; var W = window.WFR_WORLD, shown = [];
+    for (var i = 0; i < IX.rooms.length; i++) { var R = IX.rooms[i], I = R.I, p = W.toLocal(TR.f, I.lat, I.lon), d = her ? Math.hypot(her.x - p.x, her.z - p.z) : 1e9, vis = d < 600;
+      if (vis) { if (R.f !== TR.f || (R.seatN = (R.seatN || 0) + 1) % 30 === 0) { var q = W.toLocal(TR.f, I.lat + Math.cos((I.b || 90) * D2R) * 1e-4, I.lon + Math.sin((I.b || 90) * D2R) * 1e-4 / Math.cos(I.lat * D2R)), rot = -Math.atan2(q.z - p.z, q.x - p.x), gy = seat(I, TR.st.H, p, rot);
+          if (R.f !== TR.f || Math.abs(gy - R.g.position.y) > 0.05) { R.g.position.set(p.x, gy, p.z); R.g.rotation.set(0, rot, 0); R.g.updateMatrix(); R.f = TR.f; R.y = gy; } }   /* round 3: seated again every 30 frames (the finer ground arrives after the room is shown) */
+        shown.push(R.id); }
+      if (R.g.visible !== vis) R.g.visible = vis; }
+    st.shown = shown; if (her && IX.her && lensIn(her, IX.her) && IX.T && IX.T.u && IX.T.u.uEye) IX.T.u.uEye.value.copy(her); }   /* the lens kept inside a room again here, after the camera has followed her this frame (her: the camera's position) */
+  function seat(I, H, p, rot) {   // round 3: the room's base so its floor (1.1 m up) is 0.7 m over the HIGHEST ground under it: no grass through the floor anywhere in it
+    var ca = Math.cos(rot), sa = Math.sin(rot), ex = I.kind === 'rotunda' ? I.r : I.L / 2, ez = I.kind === 'rotunda' ? I.r : I.W / 2, m = -1e9;
+    for (var i = -6; i <= 6; i++) for (var j = -2; j <= 2; j++) { var lx = ex * i / 6, lz = ez * j / 2; if (I.kind === 'rotunda' && Math.hypot(lx, lz) > I.r) continue; var h = H(p.x + lx * ca + lz * sa, p.z - lx * sa + lz * ca); if (h > m) m = h; }
+    return Math.max(0, m) - 0.4; }
+  function inRL(I, l, m) { if (l[1] < -1 || l[1] > (I.kind === 'rotunda' ? I.h + I.dh * 0.9 : I.h) - m) return false; return I.kind === 'rotunda' ? Math.hypot(l[0], l[2]) < I.r - m : Math.abs(l[0]) < I.L / 2 - m && Math.abs(l[2]) < I.W / 2 - (I.kind === 'nave' && l[1] < 13.6 ? 1.9 : 0) - m; }   // the lens' room: inside by m (under the vault's spring, the dome's 90%)
+  function lensIn(cam, her) {   // she is inside a room: the lens is drawn in along its arm until it is inside the walls (and under the vault) too
+    for (var i = 0; i < IX.rooms.length; i++) { var R = IX.rooms[i]; if (!R.g.visible) continue; var I = R.I, P = R.g.position, a = -R.g.rotation.y, ca = Math.cos(a), sa = Math.sin(a);
+      var loc = function (q) { var dx = q.x - P.x, dz = q.z - P.z; return [dx * ca + dz * sa, q.y - P.y, -dx * sa + dz * ca]; };
+      var inR = function (l, m) { return inRL(I, l, m); };
+      if (!inR(loc(her), 0.3)) continue; if (inR(loc(cam), 0.6)) return false;
+      var hx = her.x, hy = her.y + 0.5, hz = her.z; for (var k = 1; k >= 0; k -= 0.05) { var q = { x: hx + (cam.x - hx) * k, y: hy + (cam.y - hy) * k, z: hz + (cam.z - hz) * k }; if (inR(loc(q), 0.6) || k <= 0.06) { cam.set(q.x, q.y, q.z); st.lensIn = (st.lensIn || 0) + 1; return true; } } }
+    return false; }
+  /* round 2: THE ROOMS HAVE WALLS. She goes in and out only by the door (and the Pantheon's oculus): a crossing anywhere else is set back to the side she came from */
+  var DOOR = { pantheon: -Math.PI / 2 };   // the room's door in its own frame: the Pantheon's bronze doors face north (local -z); every other room's west end (local -x)
+  function roomLoc(R, q) { var P = R.g.position, a = -R.g.rotation.y, ca = Math.cos(a), sa = Math.sin(a), dx = q.x - P.x, dz = q.z - P.z; return [dx * ca + dz * sa, q.y - P.y, -dx * sa + dz * ca]; }
+  function roomWorld(R, l) { var P = R.g.position, a = R.g.rotation.y, ca = Math.cos(a), sa = Math.sin(a); return { x: P.x + l[0] * ca + l[2] * sa, y: P.y + l[1], z: P.z - l[0] * sa + l[2] * ca }; }
+  function domeY(I, rr) { var u = Math.min(1, rr / I.r); return I.h + I.dh * Math.sqrt(Math.max(0, 1 - u * u)); }
+  function inRoom(I, l) { if (l[1] < -1) return false; if (I.kind === 'rotunda') { var rr = Math.hypot(l[0], l[2]); return rr < I.r && l[1] < domeY(I, rr); } return Math.abs(l[0]) < I.L / 2 && Math.abs(l[2]) < I.W / 2 && l[1] < I.h + (I.kind === 'nave' ? I.W * 0.45 : 0); }
+  function passage(id, I, l) {   // is this point in the door (or the oculus)?
+    if (I.kind === 'rotunda') { var rr = Math.hypot(l[0], l[2]); if (I.eye && rr < I.eye && l[1] > I.h) return true; var dA = DOOR[id] != null ? DOOR[id] : Math.PI, ang = Math.atan2(l[2], l[0]), da = Math.abs(Math.atan2(Math.sin(ang - dA), Math.cos(ang - dA)));
+      return da * I.r < 3.5 && l[1] < Math.min(11, I.h * 0.6); }
+    return Math.abs(l[2]) < (I.dw || 1.8) && l[1] < (I.dy || 4.5) && l[0] < 0; }   /* round 3: each room's own door (Notre-Dame's west portal is tall) */
+  /* round 3: SHE FLIES IN. The travel zone holds her 30 m over the ground (world712-travel.js C.FLOOR, eased up at 1.5/s: what lifted her to ~28 m over a
+     room's floor every frame). floor(her, ground, base): her flight floor over that ground: inside a room, the room's own floor (FLOOR_IN over it); in
+     front of its door (or over the Pantheon's oculus) it comes down to the doorstep, blended back to the travel floor (base) over APP m; else null. */
+  var FLOOR_IN = 1.4, APP = 40;
+  function sm(t) { t = Math.max(0, Math.min(1, t)); return t * t * (3 - 2 * t); }
+  function floor(her, g, base) {
+    if (!IX.made || !her) return null; base = base == null ? 30 : base; var best = null;
+    for (var i = 0; i < IX.rooms.length; i++) { var R = IX.rooms[i]; if (!R.g.visible) continue; var I = R.I, l = roomLoc(R, her), low = R.g.position.y + 1.1 + FLOOR_IN - g, d, side;
+      if (inRoom(I, l) || R.wasIn === true) { st.floorIn = (st.floorIn || 0) + 1; return low; }   /* wasIn: pressed into a wall she is a step out of it until the wall law sets her back (the travel floor would lift her up the wall) */
+      if (I.kind === 'rotunda') { var dA = DOOR[R.id] != null ? DOOR[R.id] : Math.PI, ux = Math.cos(dA), uz = Math.sin(dA), along = l[0] * ux + l[2] * uz; side = Math.abs(l[0] * uz - l[2] * ux); d = along - I.r;
+        if (I.eye && Math.hypot(l[0], l[2]) < I.eye + 3) { d = 0; side = 0; } }   /* over the oculus: the floor opens down through it */
+      else { side = Math.abs(l[2]) - (I.dw || 1.8); d = -I.L / 2 - l[0]; }
+      if (d < -0.5 || d > APP || side > 6) continue; var f = low + (base - low) * sm((d - 8) / (APP - 8)); if (best == null || f < best) best = f; }
+    return best; }
+  /* round 3: THE ROOM'S OWN SHOT. While she is inside, the lens rides a short arm behind her (827's spring arm: brought in short of the walls and the vault)
+     and looks at the room's best part: Notre-Dame's vault and its rose ahead (low, looking up the nave); Shaare Shalom's sand floor, pews and bimah (from
+     over her shoulder, looking down: walls, floor and ceiling all round, never the sky); the Pantheon's coffers and its oculus (low, looking up). */
+  var LZ = { R: null, p: null, t: null, n: 0, ax: 0 };
+  function shot(R, l, f) {   // the wanted lens and its aim, in the room's frame (l: her, f: her heading, level)
+    var I = R.I, F = 1.1, c, t;
+    if (I.kind === 'nave') { if (!LZ.ax || f[0] * LZ.ax < -0.35) LZ.ax = f[0] < 0 ? -1 : 1; var ax = LZ.ax;   /* down the nave's axis, the way she is going (a hysteresis: a turn across it does not swing the lens) */
+      var dEnd = I.L / 2 - l[0] * ax, wR = Math.max(0, Math.min(1, (28 - dEnd) / 22));   /* near the end she flies at, the aim rises onto its rose */
+      c = [l[0] - ax * 7, l[1] - 1.2, l[2] * 0.6]; t = [(l[0] + ax * 20) * (1 - wR) + ax * I.L / 2 * wR, (l[1] + 9) * (1 - wR) + 25 * wR, l[2] * 0.3 * (1 - wR)]; }   /* low, near the middle line, looking up the nave: the ribs going away, the rose at its end */
+    else if (I.kind === 'hall') {   /* from the high corner farthest from her (it changes only for one 3 m farther): the whole room under the ceiling, her, the pews, the bimah and the sand */
+      var best = LZ.cn, bd = -1, cd = -1; for (var cn = 0; cn < 4; cn++) { var px = (cn & 1 ? 1 : -1) * (I.L / 2 - 2.9), pz = (cn & 2 ? 1 : -1) * (I.W / 2 - 2.9), dd = Math.hypot(px - l[0], pz - l[2]); if (cn === LZ.cn) cd = dd; if (dd > bd) { bd = dd; best = cn; } }
+      if (LZ.cn == null || bd > cd + 3) LZ.cn = best; c = [(LZ.cn & 1 ? 1 : -1) * (I.L / 2 - 2.9), I.h - 2.4, (LZ.cn & 2 ? 1 : -1) * (I.W / 2 - 2.9)];   /* inside the gallery's line, 2.4 m under the ceiling (the lens' near plane is 1 m: closer, it cut the ceiling open and the sky showed) */ t = aim(c, [l[0], l[1], l[2]], [0, F + 1, 0]); }
+    else { var rr = Math.hypot(l[0], l[2]), ox = l[0], oz = l[2], ol = rr; if (ol < 3) { ox = -f[0]; oz = -f[2]; ol = 1; }   /* under the dome: on the line from the middle out through her, past her (at most to the wall), low; aimed between her and the oculus (so they stand one over the other in a tall frame) */
+      var rc = Math.min(Math.max(rr + 6, 10), I.r - 1.2); c = [ox / ol * rc, l[1] - (rc - rr < 4 ? 3 : 2.5), oz / ol * rc]; t = aim(c, [l[0], l[1] + 0.3, l[2]], [0, I.h + I.dh, 0]); }
+    var top = I.kind === 'rotunda' ? I.h + I.dh * 0.9 : I.h; c[1] = Math.max(F + 1.6, Math.min(top - 2.2, c[1])); return { c: c, t: t }; }   /* the lens 1.6 m and more off every surface: its near plane (1 m) never cuts one open */
+  function aim(c, a, b) {   // a point straight ahead of c on the line half way between the directions to a and to b (both kept in frame)
+    var da = [a[0] - c[0], a[1] - c[1], a[2] - c[2]], db = [b[0] - c[0], b[1] - c[1], b[2] - c[2]], la = Math.hypot(da[0], da[1], da[2]) || 1, lb = Math.hypot(db[0], db[1], db[2]) || 1;
+    return [c[0] + (da[0] / la + db[0] / lb) * 10, c[1] + (da[1] / la + db[1] / lb) * 10, c[2] + (da[2] / la + db[2] / lb) * 10]; }
+  function lens(cam, her, yaw, dt) {   // the page's flight camera, after its own lookAt: true when the room's shot holds the lens this frame
+    if (!IX.made || !cam || !her) return false; var R = null, l = null;
+    for (var i = 0; i < IX.rooms.length; i++) { var Q = IX.rooms[i]; if (!Q.g.visible) continue; var lq = roomLoc(Q, her); if (inRoom(Q.I, lq) || Q.wasIn === true) { R = Q; l = lq; break; } }
+    if (!R) { LZ.R = null; LZ.ax = 0; LZ.cn = null; return false; }
+    var I0 = R.I; if (I0.kind === 'rotunda') { var rr0 = Math.hypot(l[0], l[2]); if (rr0 > I0.r - 0.7) { l[0] *= (I0.r - 0.7) / rr0; l[2] *= (I0.r - 0.7) / rr0; } } else { l[0] = Math.max(-I0.L / 2 + 0.7, Math.min(I0.L / 2 - 0.7, l[0])); var zl = I0.W / 2 - (I0.kind === 'nave' && l[1] < 13.6 ? 2.2 : 0.7); l[2] = Math.max(-zl, Math.min(zl, l[2])); }
+    l[1] = Math.max(1.6, Math.min((I0.kind === 'rotunda' ? I0.h + I0.dh * 0.9 : I0.h) - 1.2, l[1]));   /* pressed into a wall this frame (the wall law sets her back after): the shot is taken from where she will be, inside */
+    var eye = roomWorld(R, [l[0], l[1] + 0.5, l[2]]);
+    var a = -R.g.rotation.y, wx = Math.sin(yaw), wz = Math.cos(yaw), f = [wx * Math.cos(a) + wz * Math.sin(a), 0, -wx * Math.sin(a) + wz * Math.cos(a)], S0 = shot(R, l, f), cw = roomWorld(R, S0.c), tw = roomWorld(R, S0.t), k = 1 - Math.exp(-(dt || 0.016) * 5);
+    if (LZ.R !== R) { LZ.R = R; LZ.p = { x: cam.position.x, y: cam.position.y, z: cam.position.z }; LZ.t = tw; LZ.n++; }   /* she has just come in: the lens eases from where it was */
+    LZ.p.x += (cw.x - LZ.p.x) * k; LZ.p.y += (cw.y - LZ.p.y) * k; LZ.p.z += (cw.z - LZ.p.z) * k; LZ.t = { x: LZ.t.x + (tw.x - LZ.t.x) * k, y: LZ.t.y + (tw.y - LZ.t.y) * k, z: LZ.t.z + (tw.z - LZ.t.z) * k };
+    var hx = eye.x, hy = eye.y, hz = eye.z, q = null;
+    for (var s = 1; s >= 0; s -= 0.04) { q = { x: hx + (LZ.p.x - hx) * s, y: hy + (LZ.p.y - hy) * s, z: hz + (LZ.p.z - hz) * s }; if (inRL(R.I, roomLoc(R, q), 1.4)) break; }   /* 827's spring arm: in from the lens toward her eyes until it is 1.4 m inside the room (clear of the near plane) */
+    var lx = LZ.t.x - q.x, ly = LZ.t.y - q.y, lz = LZ.t.z - q.z, lh = Math.hypot(lx, lz), mx = Math.tan(72 * D2R) * Math.max(lh, 1e-3); if (ly > mx) ly = mx; if (lh < 1e-3) { lx = Math.sin(yaw) * 0.3; lz = Math.cos(yaw) * 0.3; }   /* never steeper than 72 degrees (straight up the lens would turn over) */
+    cam.position.set(q.x, q.y, q.z); cam.up.set(0, 1, 0); cam.lookAt(q.x + lx, q.y + ly, q.z + lz); if (IX.T && IX.T.u && IX.T.u.uEye) IX.T.u.uEye.value.copy(cam.position); st.lens = R.id; st.lensN = (st.lensN || 0) + 1; return true; }
+  function wall(p, pad, body) {
+    var moved = false; pad = pad || 0.5;
+    for (var i = 0; i < IX.rooms.length; i++) { var R = IX.rooms[i], I = R.I; if (!R.g.visible) { R.wasIn = undefined; continue; } var l = roomLoc(R, p), inn = inRoom(I, l), jump = R.lp ? Math.hypot(p.x - R.lp[0], p.y - R.lp[1], p.z - R.lp[2]) > 8 : true; R.lp = [p.x, p.y, p.z];   /* a jump of 8 m in a frame is a teleport (a save, a respawn): taken as it lands */
+      if (R.wasIn === undefined || jump || inn === R.wasIn) { R.wasIn = inn; continue; }
+      if (passage(R.id, I, l)) { R.wasIn = inn; st.passages = (st.passages || 0) + 1; continue; }
+      var q = l.slice();
+      if (R.wasIn) {   // she tried to leave through a wall or the vault: back inside
+        if (I.kind === 'rotunda') { var rr = Math.hypot(q[0], q[2]); if (rr > I.r - pad) { q[0] *= (I.r - pad) / rr; q[2] *= (I.r - pad) / rr; } q[1] = Math.min(q[1], domeY(I, Math.hypot(q[0], q[2])) - pad); }
+        else { q[0] = Math.max(-I.L / 2 + pad, Math.min(I.L / 2 - pad, q[0])); q[2] = Math.max(-I.W / 2 + pad, Math.min(I.W / 2 - pad, q[2])); q[1] = Math.min(q[1], I.h - pad); } }
+      else {   // she tried to come in through a wall or the vault: back outside
+        if (I.kind === 'rotunda') { var r2 = Math.hypot(q[0], q[2]) || 1e-3, overTop = q[1] > I.h; if (overTop) q[1] = domeY(I, r2) + pad; else { q[0] *= (I.r + pad) / r2; q[2] *= (I.r + pad) / r2; } }
+        else { var ex = I.L / 2 - Math.abs(q[0]), ez = I.W / 2 - Math.abs(q[2]), ey = I.h - q[1]; if (ey < ex && ey < ez) q[1] = I.h + pad; else if (ex < ez) q[0] = (q[0] < 0 ? -1 : 1) * (I.L / 2 + pad); else q[2] = (q[2] < 0 ? -1 : 1) * (I.W / 2 + pad); } }
+      var w = roomWorld(R, q), dx = w.x - p.x, dy = w.y - p.y, dz = w.z - p.z; p.x = w.x; p.y = w.y; p.z = w.z; R.lp = [p.x, p.y, p.z]; if (body && body.position) { body.position.x += dx; body.position.y += dy; body.position.z += dz; }
+      moved = true; st.walls = (st.walls || 0) + 1; }
+    return moved; }
+  function aisle(p, body) {   // round 3: in Notre-Dame's nave the piers and arcades stand 1.9 m in from the walls (the aisles behind are painted): under the arcades' points she keeps inside them
+    for (var i = 0; i < IX.rooms.length; i++) { var R = IX.rooms[i], I = R.I; if (I.kind !== 'nave' || !R.g.visible || R.wasIn !== true) continue; var l = roomLoc(R, p), lim = I.W / 2 - 1.9;
+      if (l[1] > 13.6 || Math.abs(l[2]) <= lim || Math.abs(l[0]) > I.L / 2) continue; l[2] = (l[2] < 0 ? -1 : 1) * lim; var w = roomWorld(R, l), dx = w.x - p.x, dz = w.z - p.z; p.x = w.x; p.z = w.z; R.lp = [p.x, p.y, p.z]; if (body && body.position) { body.position.x += dx; body.position.z += dz; } st.aisle = (st.aisle || 0) + 1; } }
+  function her(pos, body, cam) {   // each travel frame (world-vegetation's tick, at any height): the rooms' walls for her, then the lens inside them
+    if (!IX.made || !pos) return; wall(pos, 0.5, body); aisle(pos, body); IX.her = pos; if (cam && lensIn(cam, pos) && IX.T && IX.T.u && IX.T.u.uEye) IX.T.u.uEye.value.copy(cam); }
+  function crossLaw(id, a, b) {   // the bench's read: from frame point a to b, may she pass? (the same law, without moving anyone)
+    var R = IX.rooms.find(function (q) { return q.id === id; }); if (!R) return null; var la = roomLoc(R, a), lb = roomLoc(R, b), ia = inRoom(R.I, la), ib = inRoom(R.I, lb); return ia === ib || passage(id, R.I, lb); }
+  function room(id) { var R = IX.rooms.find(function (q) { return q.id === id; }); if (!R) return null; R.g.updateMatrixWorld(true); var e = R.g.matrixWorld.elements; return { x: e[12], y: e[13], z: e[14], rot: R.g.rotation.y, visible: R.g.visible, meshes: R.g.children.length, I: R.I }; }
+  function peek() { var o = JSON.parse(JSON.stringify(st)); o.on = on(); o.rooms = IX.rooms.map(function (R) { return R.id; }); o.LM = LM.length; o.K = IX.T && IX.T.u && IX.T.u.uInvK ? +(1 / IX.T.u.uInvK.value).toFixed(3) : null; return o; }
+  var K1 = { k1: true };
+  function k1(p) {   // round 3: the travel ground's update option while she is in a room or at its door: true scale (729's K1). The shrink (K = half her height, 4.6 at 9 m) put every wall, the ceiling and the piers within K m behind the 1 m near plane: the sky through Shaare Shalom's ceiling
+    if (!IX.made || !p) return null; for (var i = 0; i < IX.rooms.length; i++) { var R = IX.rooms[i]; if (!R.g.visible) continue; if (R.wasIn === true) return K1; var l = roomLoc(R, p), I = R.I, e = I.kind === 'rotunda' ? I.r + 14 : null;
+      if (e ? Math.hypot(l[0], l[2]) < e && l[1] < I.h + I.dh + 6 : Math.abs(l[0]) < I.L / 2 + 14 && Math.abs(l[2]) < I.W / 2 + 14 && l[1] < I.h + 12) { st.k1 = (st.k1 || 0) + 1; return K1; } } return null; }
+  function inside(p) { if (!IX.made || !p) return false; for (var i = 0; i < IX.rooms.length; i++) { var R = IX.rooms[i]; if (R.g.visible && (R.wasIn === true || inRoom(R.I, roomLoc(R, p)))) return true; } return false; }   // round 3: is she in a room (the vegetation's lens steps stand aside)
+  return { on: on, LM: LM, IN: IN, skips: skips, tasks: tasks, want: want, dress: dress, attach: attach, update: update, room: room, lensIn: lensIn, wall: wall, her: her, cross: crossLaw, peek: peek, floor: floor, lens: lens, inside: inside, k1: k1, version: 1 };
 })();

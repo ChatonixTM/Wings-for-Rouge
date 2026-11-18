@@ -101,6 +101,7 @@ window.WFR_WORLDANIMALS = (function () {
     ostrich: { name: 'Common ostrich', make: 'ostrich', sp: 'mongoose', realm: 'land', temper: 'passive', v: 1.8, stride: 2.6, spread: 10, region: 'africa' },
     bison: { name: 'American bison', make: 'bison', sp: 'mongoose', realm: 'land', temper: 'sometimes', v: 1.0, stride: 2.0, spread: 7, region: 'americas' },
     alligator: { name: 'American alligator', make: 'alligator', sp: 'mongoose', realm: 'land', temper: 'sometimes', v: 0.35, stride: 0.8, spread: 10, rest: 0.85, region: 'americas' },
+    oldgator: { name: 'The old gator', make: 'oldgator', sp: 'mongoose', realm: 'land', temper: 'malicious', v: 0.5, stride: 1.6, spread: 1, rest: 0.9, region: 'americas', fixed: true },   /* 829 link 3: the strong one of the Everglades; never in a cell's roster, only ever the one chain829.js lays down (fixed829) */
     jaguar: { name: 'Jaguar', make: 'jaguar', sp: 'mongoose', realm: 'land', temper: 'malicious', v: 1.0, stride: 1.4, spread: 30, rest: 0.65, region: 'americas' },
     llama: { name: 'Llama', make: 'llama', sp: 'mongoose', realm: 'land', temper: 'curious', v: 1.0, stride: 1.6, spread: 6, region: 'americas' },
     polarbear: { name: 'Polar bear', make: 'polarbear', sp: 'mongoose', realm: 'land', temper: 'malicious', v: 1.0, stride: 1.6, spread: 20, rest: 0.6, coast: true, region: 'arctic' },
@@ -347,6 +348,7 @@ window.WFR_WORLDANIMALS = (function () {
       bill: 0xd8a890, neckC: 0xcfa4a0, tail: [0.25, 0.16, 0.08, 0.2], tailC: 0xf2f0ea, pat: function (c, nx, ny, nz, x, y, z) { return Math.abs(x) > 0.27 && z < 0.1 ? [0.95, 0.94, 0.9] : c; } }); },
     saltcroc: function () { return croc('saltcroc', 1, 0x56603e, 0xd2c8a2); },
     alligator: function () { return croc('alligator', 0.78, 0x2b3026, 0xbcb59a); },
+    oldgator: function () { return croc('oldgator', 1.75, 0x262b1f, 0xa79f83); },   /* 829 link 3: the alligator's own body, at a big old bull's size (about 5 m), darker and mossier */
     panda: function () { return bear('panda', 0xf3f1ea, 0xf3f1ea, { earC: 0x141414, legPat: function () { return [0.08, 0.08, 0.09]; },
       pat: function (c, nx, ny, nz, x, y, z) { return z > 0.18 && z < 0.42 && y > 0.45 ? [0.08, 0.08, 0.09] : c; },
       headPat: function (c, nx, ny, nz, x, y, z) { return nz > 0.3 && Math.abs(x) > 0.05 && Math.abs(x) < 0.13 && y > 0.85 && y < 0.95 ? [0.08, 0.08, 0.09] : c; } }); },
@@ -870,6 +872,26 @@ window.WFR_WORLDANIMALS = (function () {
     if (act !== 'escort' && act !== 'circle') { var el = Math.hypot(m.ex, m.ez); if (el > 0) { var k3 = Math.max(0, el - 2.5 * dt) / el; m.ex *= k3; m.ez *= k3; } }
     m.act = act;
   }
+  /* 829 LINK 3: A STRONG ONE ACROSS THE EARTH (chain829.js). One fixed animal outside the cells: its module lays it down by lat/lon and moves it each
+     frame (drive); here it is drawn with its kind's own instanced body and pose, and it is in each748, so her swoop, her peck and sweep, fall748's hit
+     points, its hit motion, its white fade and its drop (craft787) are every animal's own. Nothing else of the world animals changes. */
+  var FIX829 = [], FIXC829 = { key: 'fix829', n: 0, d: 0, groups: FIX829, biomes: null, sig: 0 }, FO829 = { ox: 0, oz: 0, up: 0, sink: 0, yaw: 0, pitch: 0, roll: 0, mv: false, hide: false };
+  function fixPlace829(gr, m, R2, f, S) {   /* where its module says, on the ground (or the water) the game draws; fall748's hit and fade as every animal's */
+    var o = FO829; o.ox = 0; o.oz = 0; o.up = 0; o.sink = 0; o.yaw = 0; o.pitch = 0; o.roll = 0; o.mv = false; o.hide = false;
+    try { gr.drive(o, m); } catch (e) { o.hide = true; st.fault829 = String(e && e.message || e); }
+    if (o.hide) return;
+    homeOf(gr, m, f, HO); var x = HO.x + o.ox, z = HO.z + o.oz, h = H(x, z), wet = h < 0.4, base = Math.max(h, 0), y = base - (wet ? o.sink : 0) + o.up, yaw = o.yaw, pitch = o.pitch, roll = o.roll, v7 = o.mv ? 0 : 1;
+    var dd = Math.hypot(x - S.pos.x, z - S.pos.z); if (dd > C.R_DROP) return;
+    if (m.gone748) { if (st.t - m.fall748 >= WFR_FALL748.C.WHITE) return; var p7 = WFR_WORLD.toLocal(f, m.fl.lat, m.fl.lon); x = p7.x; z = p7.z; y = m.fl.y; yaw = m.fl.yaw; pitch = m.fl.p; roll = m.fl.r; v7 = R2.v[2] ? 2 : 1; }   /* at zero it stops where it lay */
+    else if (m.h748) { var h7 = m.h748, hu = (st.t - h7.t) / h7.len; if (hu >= 1) m.h748 = null; else { var hb = WFR_FALL748.body(m.k, hu, h7.how, (R2.v[0].m.radius || 2) * 0.4); y += hb.l; yaw += hb.y; pitch += hb.p; roll += hb.r; if (R2.v[2]) v7 = 2; } }   /* the body's share of the hit (a strong one is hardly thrown: its module keeps its place) */
+    put(R2, v7, gr.id + ':0', x, y, z, yaw, pitch, roll, m.s, wet ? 0 : -1e4, 'land'); m.wx = x; m.wy = y; m.wz = z; m.wyaw = yaw; m.wp = pitch; m.wr = roll; m.pf = st.placeN; m.base = base; m.wet = wet; if (dd < R2.near) R2.near = dd;
+  }
+  function fixed829(o) {   /* o: { k, lat, lon, s, drive(out, m) }; returns its member (hp748, wx wy wz, gone748: fall748's, as any animal's) */
+    var gr = { k: o.k, kind: 'fixed', realm: 'land', id: 'fix829:' + o.k, lat: o.lat, lon: o.lon, drive: o.drive, m: [] };
+    var m = { k: o.k, g: gr, lat: o.lat, lon: o.lon, R: 0, ph: 0, th: 0, dir: 1, s: o.s || 1, fx: 0, fz: 0, ex: 0, ez: 0, yaw: 0, wx: 0, wy: 0, wz: 0, v: 0, id: gr.id + ':0', pf: -9 };
+    gr.m.push(m); FIX829.push(gr); FIXC829.n = FIX829.length; return m; }
+  function unfix829(m) { var i = FIX829.indexOf(m && m.g); if (i >= 0) FIX829.splice(i, 1); FIXC829.n = FIX829.length; return i >= 0; }
+  function prebuild829(k) { if (!st.inited || !K[k]) return false; var R = st.kinds[k] || buildKind(k); if (R.ok) actorOf(R); return !!R.ok; }   /* at load: its bodies and its struck body made before play (the cost law: nothing joins the scene while she plays) */
   /* the scene's onBeforeRender: every drawn animal placed in the frame the picture is drawn in (after the travel zone's re-centre), on the ground the game draws */
   function place() {
     if (!st.inited || !st.enabled) return; var t0 = performance.now();
@@ -877,7 +899,7 @@ window.WFR_WORLDANIMALS = (function () {
       for (var k in st.kinds) { var R = st.kinds[k]; R.n[0] = 0; R.n[1] = 0; R.n[2] = 0; R.near = 1e9; }
       var on = st.mode === 'travel' && X.TR && X.TR.on && X.TR.f, f = on ? X.TR.f : null, S = X.S;
       if (on) for (var c = 0; c < st.act.length; c++) { var G = st.act[c].groups; for (var g = 0; g < G.length; g++) { var gr = G[g], d = K[gr.k], R2 = st.kinds[gr.k]; if (!R2 || !R2.ok) continue;
-        for (var i = 0; i < gr.m.length; i++) { var m = gr.m[i], rl801 = null, dry = 0, wet = 0; motion(m, d, gr, st.t, MO); homeOf(gr, m, f, HO); var x = HO.x + MO.ox + m.fx + m.ex, z = HO.z + MO.oz + m.fz + m.ez, y, wat = -1e4, pitch = MO.pitch, roll = MO.roll, yaw = m.act ? m.yaw2 : MO.yaw, mv = MO.mv || !!m.act;
+        for (var i = 0; i < gr.m.length; i++) { var m = gr.m[i], rl801 = null, dry = 0, wet = 0; if (gr.kind === 'fixed') { fixPlace829(gr, m, R2, f, S); continue; } motion(m, d, gr, st.t, MO); homeOf(gr, m, f, HO); var x = HO.x + MO.ox + m.fx + m.ex, z = HO.z + MO.oz + m.fz + m.ez, y, wat = -1e4, pitch = MO.pitch, roll = MO.roll, yaw = m.act ? m.yaw2 : MO.yaw, mv = MO.mv || !!m.act;
           var dd = Math.hypot(x - S.pos.x, z - S.pos.z); if (dd > C.R_DROP) continue;   // despawned past 2.4 km (its cell keeps it for her return)
           var fz7 = false; if (m.gone748) { var F7 = WFR_FALL748.C; if (st.t >= m.gone748 && dd > F7.BACK_R) { m.gone748 = 0; m.fall748 = 0; m.hp748 = null; } else if (st.t - m.fall748 >= F7.WHITE) continue; else fz7 = true; } else if (m.hp748 != null && dd > WFR_FALL748.C.BACK_R) m.hp748 = null;   // 748: gone from the picture once it has turned white; whole again when she has left
           if (gr.realm === 'land' && (wet = wet801(m, d, x, z))) { if (wet < 2 || (!SHORE801[d.make] && !SHORE801[gr.k])) continue; y = MO.y > 0.3 ? 0 : MO.y; wat = 0; rl801 = 'sea'; if (d.make === 'penguin') pitch += Math.PI / 2 * 0.92; }   /* 801: a herd the sharper sheet puts in the sea: a penguin or a seal swims there; any other kind is not drawn */
@@ -959,8 +981,8 @@ window.WFR_WORLDANIMALS = (function () {
       if (!st.featHooked && (st.featPoll -= dt) <= 0) { st.featPoll = 2; hookFeatures(); }
       var T = X.TR, on = !!(T && T.on && T.f && T.st && X.S && X.S.pos), agl = on ? X.S.pos.y - Math.max(0, H(X.S.pos.x, X.S.pos.z)) : 0;
       st.mode = on && agl < C.AGL_MAX ? 'travel' : 'off';
-      if (st.mode === 'travel') { cellsTick(dt); var her = st.her, f = T.f;
-        for (var c = 0; c < st.act.length; c++) { var G = st.act[c].groups; for (var g = 0; g < G.length; g++) { var gr = G[g], d = K[gr.k]; if (!st.kinds[gr.k]) { if (st.buildN !== st.frame) { st.buildN = st.frame; buildKind(gr.k); } }
+      if (st.mode === 'travel') { cellsTick(dt); var her = st.her, f = T.f; if (FIX829.length) st.act.push(FIXC829);   /* 829: the fixed strong ones, as one more cell (each748, place) */
+        for (var c = 0; c < st.act.length; c++) { var G = st.act[c].groups; for (var g = 0; g < G.length; g++) { var gr = G[g], d = K[gr.k]; if (!st.kinds[gr.k]) { if (st.buildN !== st.frame) { st.buildN = st.frame; buildKind(gr.k); } } if (gr.kind === 'fixed') continue;   /* 829: its own module moves it */
           for (var i = 0; i < gr.m.length; i++) { var m = gr.m[i]; motion(m, d, gr, st.t, MO); react(m, d, gr, f, her, dt, MO); } } } }
       else st.act = [];
       var D = X.D; if (D && D.group && (D.group.parent === X.scene || (D.hold && D.group.parent === D.hold)) && X.dData && X.dData()) { if (!st.dunns) { st.dunns = dunnsBuild(); } if (st.dunns) st.dunns.G.forEach(function (gr) { if (!st.kinds[gr.k] && st.buildN !== st.frame) { st.buildN = st.frame; buildKind(gr.k); } }); }
@@ -1019,6 +1041,7 @@ window.WFR_WORLDANIMALS = (function () {
       fall748: { blows: st.blows748 || 0, falls: st.falls748 || 0 }, reacts: { flees: st.flees, escorts: st.escorts, faces: st.faces, circles: st.circles }, featTiles: st.featTiles, featFault: st.featFault, hook: st.hook, placeN: st.placeN, her: st.her };
   }
   return { hogRange: hogRange, aim748: aim748, reach748: reach748, where748: where748, blow748: blow748, C: C, KINDS: K, init: init, tick: tick, peek: peek, drawn: drawn, biomeAt: biomeAt, roster: roster,
+    fixed829: fixed829, unfix829: unfix829, prebuild829: prebuild829, fixFault829: function () { return st.fault829 || null; }, rawAt829: function (x, z) { return rawAt(x, z); },   /* 829 link 3 (chain829.js) */
     resetMs: function () { st.ms = []; st.msMax = 0; }, forget: function () { st.cells.clear(); st.act = []; },   // the bench's revisit: every cell generated again from its key
     cell: function (key) { var c = st.cells.get(key); return c ? { key: c.key, n: c.n, sig: c.sig, b: c.biomes } : null; },
     ground801: function (x, z) { var f = X && X.TR && X.TR.f, ll = f ? WFR_WORLD.toLatLon(f, x, z) : null; return { h: H(x, z), raw: rawAt(x, z), feat: ll ? featAt(ll.lat, ll.lon) : null }; },   // 801 (bench only): what the sheet says under a spot

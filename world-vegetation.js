@@ -483,7 +483,8 @@ window.WFR_VEG = (function () {
       return out;
     }
     function tick(cam, dt, her, body) {   // each travel frame, after the streamer's update (the frame and the ground are this frame's)
-      if (her) { if (her.y - (TR.st ? Math.max(0, TR.st.H(her.x, her.z)) : 0) < F798.K.LOW) { pushOut798(her, body); solid808(her, body); lensOut798(cam, her); lens808(cam, her); } her798(her); }   /* 798: she out of any trunk, then the lens; where she is, every travel frame and every mode (flying, landing, on foot): the leaves between the lens and her thin out */
+      if (her && window.WFR_SACRED831 && WFR_SACRED831.her) WFR_SACRED831.her(her, body, cam);   /* 831: the rooms she can fly into have walls at any height; she goes in by the door (or the Pantheon's oculus) */
+      if (her) { if (her.y - (TR.st ? Math.max(0, TR.st.H(her.x, her.z)) : 0) < F798.K.LOW) { var in831 = !!(window.WFR_SACRED831 && WFR_SACRED831.inside && WFR_SACRED831.inside(her)); pushOut798(her, body); solid808(her, body); if (!in831) { lensOut798(cam, her); lens808(cam, her); } } her798(her); }   /* 831: inside a room its own lens holds the camera (a crown or a block outside its walls pulled it onto her) */   /* 798: she out of any trunk, then the lens; where she is, every travel frame and every mode (flying, landing, on foot): the leaves between the lens and her thin out */
       var t0 = performance.now();
       try {
         subscribe(); var stt = TR.st; if (!stt || !TR.on) return; st.clock += dt || 0; grassClock(dt);

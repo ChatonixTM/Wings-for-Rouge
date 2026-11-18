@@ -38,11 +38,13 @@ window.WFR_CRAFT787 = (function () {
     feather: { name: 'long feather', many: 'long feathers', e: '\u{1FAB6}' },
     scale: { name: 'silver scale', many: 'silver scales', e: '\u{1F41F}' },
     tooth: { name: 'shark tooth', many: 'shark teeth', e: '\u{1F988}' },
-    pearl: { name: 'Deep Pearl', many: 'Deep Pearls', e: '\u{1F9AA}' }
+    pearl: { name: 'Deep Pearl', many: 'Deep Pearls', e: '\u{1F9AA}' },
+    scute: { name: 'gator scute', many: 'gator scutes', e: '\u{1F40A}' }   /* 829 link 3: a bony plate off an alligator's back (the old gator of the Everglades leaves two) */
   };
   /* what each kind leaves, and how often (a boa and a shark always: they are the long fights). The world's kinds by name, then by family below */
   var DROP = { boa: ['snakeskin', 1], crab: ['shell', 0.7], gull: ['feather', 0.6], pelican: ['feather', 0.7], barracuda: ['scale', 1], shark: ['tooth', 1],
     hammerhead: ['tooth', 1], greatwhite: ['tooth', 1], moray: ['scale', 0.6],
+    oldgator: ['scute', 1, 2], alligator: ['scute', 0.25], saltcroc: ['scute', 0.3],   /* 829 link 3: [what, chance, how many]: the old gator always two */
     yellowboa: ['snakeskin', 1], rattlesnake: ['snakeskin', 1], gartersnake: ['snakeskin', 1], grasssnake: ['snakeskin', 1], python: ['snakeskin', 1], anaconda: ['snakeskin', 1], carpetpython: ['snakeskin', 1], cobra: ['snakeskin', 1], ratsnake: ['snakeskin', 1] };
   var BIRDS = ['egret', 'eagle', 'stork', 'crane', 'flamingo', 'toucan', 'macaw', 'condor'], FISH = ['reeffish', 'trout', 'poolfish', 'minnow', 'salmon', 'pacsalmon', 'seatrout', 'bass', 'tuna', 'swordfish'];
   function dropOf(k) { if (DROP[k]) return DROP[k]; if (BIRDS.indexOf(k) >= 0) return ['feather', 0.5]; if (FISH.indexOf(k) >= 0) return ['scale', 0.4]; if (/snake|boa|python|viper|adder/.test(String(k))) return ['snakeskin', 1]; return null; }
@@ -52,8 +54,12 @@ window.WFR_CRAFT787 = (function () {
     { id: 'spur', e: '\u{1F41A}', name: 'Shell spur', need: { shell: 3, feather: 2 }, coins: 0, runes: 15,
       does: 'A shell tip for your beak: peck and sweep under water. Drive off barracuda and sharks, and ring what sleeps on the sea floor.' },
     { id: 'fins', e: '\u{1F30A}', name: 'Scale fins', need: { scale: 4, tooth: 1, pearl: 1 }, coins: 30, runes: 0,
-      does: 'Silver scales on your wings: swim a third faster, everywhere.' }
+      does: 'Silver scales on your wings: swim a third faster, everywhere.' },
+    { id: 'shield', e: '\u{1F6E1}\u{FE0F}', name: 'Scute shield', need: { scute: 2, tooth: 4 }, coins: 0, runes: 20, late: 'scute',   /* 829 link 3 (DRAFT, his pen): shown once she has ever had a scute */
+      does: 'The old gator’s scutes, bound with shark teeth: the first hit of every fight costs you no runes.' }
   ];
+  /* 829: a late recipe (late: a material) is shown, and keeps its drops from Beandie, only once she has ever had that material (S.seen.craft787) */
+  function shown(r, c) { if (!r.late) return true; c = c || {}; return !!((c.bag && c.bag[r.late] > 0) || (c.made && c.made[r.id]) || (c.told && c.told['m_' + r.late])); }
   var WORDS = {   /* DRAFT, his pen */
     first: 'Open your pouch and tap Craft to see what it makes.',
     heavy: 'The water down there is cold and heavy, and your feathers soak through. A waterproof cloak would keep you dry: five shed snake skins (the boas leave them), in your pouch’s Craft.',
@@ -199,10 +205,10 @@ window.WFR_CRAFT787 = (function () {
       try {
         if (!q || !q.k) return null; var d = dropOf(q.k); if (!d) return null; var c = st(); c.n++; stat.rolls++;
         var lucky = d[1] >= 1 || hash(q.k + ':' + c.n) / 4294967296 < d[1]; if (!lucky) { o.save(); return null; }
-        var m = d[0]; c.bag[m] = (c.bag[m] | 0) + 1; stat.drops++; stat.last = { k: q.k, m: m };
+        var m = d[0], cnt = d[2] || 1; c.bag[m] = (c.bag[m] | 0) + cnt; stat.drops++; stat.last = { k: q.k, m: m, n: cnt };   /* 829: the old gator leaves two */
         if (!q.ll && home()) flyDrop(m, q.cx, q.cy + 0.4, q.cz);
         try { o.tone(1180, 0, 0.06, 'triangle', 0.04); o.tone(1570, 0.07, 0.1, 'triangle', 0.04); } catch (e) { /* fine */ }
-        var R = RECIPES.filter(function (r) { return r.need[m] && !made(r.id); })[0], n = c.bag[m], line = MATS[m].e + ' ' + (q.k === 'boa' || m === 'snakeskin' ? 'A shed ' : 'A ') + MATS[m].name + (R ? ' (' + Math.min(n, R.need[m]) + ' of ' + R.need[m] + ' for a ' + R.name.toLowerCase() + ')' : ' (' + n + ' in your bag)') + '.';
+        var R = RECIPES.filter(function (r) { return r.need[m] && !made(r.id) && shown(r, c); })[0], n = c.bag[m], line = MATS[m].e + ' ' + (cnt > 1 ? cnt + ' ' + MATS[m].many : (q.k === 'boa' || m === 'snakeskin' ? 'A shed ' : 'A ') + MATS[m].name) + (R ? ' (' + Math.min(n, R.need[m]) + ' of ' + R.need[m] + ' for a ' + R.name.toLowerCase() + ')' : ' (' + n + ' in your bag)') + '.';
         if (!c.told['m_' + m]) { c.told['m_' + m] = 1; line += ' ' + WORDS.first; }
         o.save(); hint('drop', line, 3800, 0); return m;
       } catch (e) { API.error = 'fell: ' + (e && e.message); return null; }
@@ -233,7 +239,7 @@ window.WFR_CRAFT787 = (function () {
     function costLine(r) { var parts = [], k; for (k in r.need) parts.push(MATS[k].e + ' ' + Math.min(have(k), r.need[k]) + '/' + r.need[k]); if (r.coins) parts.push('\u{1FA99} ' + Math.min(S().coins || 0, r.coins) + '/' + r.coins); if (r.runes) parts.push('✦ ' + Math.min(S().runes || 0, r.runes) + '/' + r.runes); return parts.join(' · '); }
     function panelHtml() {
       var bag = Object.keys(MATS).map(function (m) { return '<span class="' + (have(m) ? '' : 'dim') + '">' + MATS[m].e + ' ' + have(m) + ' ' + (have(m) === 1 ? MATS[m].name : MATS[m].many) + '</span>'; }).join('');
-      var rows = RECIPES.map(function (r) { var dn = made(r.id), lk = dn ? [] : lacks(r);
+      var rows = RECIPES.filter(function (r) { return shown(r, st()); }).map(function (r) { var dn = made(r.id), lk = dn ? [] : lacks(r);
         return '<div class="row' + (dn ? ' done' : '') + '" data-r="' + r.id + '"><div class="e">' + r.e + '</div><div class="t"><b>' + r.name + '</b><small>' + r.does + '</small>' +
           (dn ? '<div class="cost">Yours.</div>' : '<div class="cost' + (lk.length ? ' no' : '') + '">' + costLine(r) + (lk.length ? '<br>Still to find: ' + lk.join(', ') : '') + '</div>') + '</div>' +
           '<button data-c787="make" data-id="' + r.id + '"' + (dn || lk.length ? ' disabled' : '') + '>' + (dn ? '✓' : 'Make') + '</button></div>'; }).join('');
@@ -253,7 +259,7 @@ window.WFR_CRAFT787 = (function () {
       var w = t.getAttribute('data-c787'); if (w === 'open') open(); else if (w === 'close') close(); else if (w === 'make') { if (!craft(t.getAttribute('data-id')) && PANEL) PANEL.innerHTML = panelHtml(); }
     }, true);
     function pouch() {   /* the pouch's own row: her bag and the Craft button (the pouch's slot look) */
-      css(); var li = Object.keys(MATS).filter(function (m) { return m !== 'pearl' || have(m); }).map(function (m) { var n = have(m); return '<li class="slot' + (n > 0 ? '' : ' dim') + '"><i>' + MATS[m].e + '</i><em>' + MATS[m].many.replace('long ', '').replace('silver ', '') + '</em><b>' + n + '</b></li>'; });
+      css(); var li = Object.keys(MATS).filter(function (m) { return (m !== 'pearl' && m !== 'scute') || have(m); }).map(function (m) { var n = have(m); return '<li class="slot' + (n > 0 ? '' : ' dim') + '"><i>' + MATS[m].e + '</i><em>' + MATS[m].many.replace('long ', '').replace('silver ', '') + '</em><b>' + n + '</b></li>'; });
       var gear = RECIPES.filter(function (r) { return made(r.id); }).map(function (r) { return r.e + ' ' + r.name; });
       return '<h3>Crafting<button class="c787b" data-c787="open">Craft</button></h3><ul class="slots">' + li.join('') + '</ul>' + (gear.length ? '<div class="line">' + gear.join(' · ') + '</div>' : '');
     }
@@ -317,7 +323,7 @@ window.WFR_CRAFT787 = (function () {
     var bench = { give: function (m, n) { var c = st(); c.bag[m] = Math.max(0, (c.bag[m] | 0) + (n == null ? 1 : n)); o.save(); return c.bag[m]; }, made: function (id, on) { var c = st(); if (on === false) delete c.made[id]; else c.made[id] = Date.now(); if (id === 'spur' && o.words) o.words.hurt = on === false ? o.words.hurt0 || o.words.hurt : WORDS.hurt; o.save(); return made(id); },
       reset: function () { var s = S(); s.seen = s.seen || {}; delete s.seen.craft787; hintAt = {}; o.save(); }, ring: function (i) { return ring(BELLS[i]); }, hintsClear: function () { hintAt = {}; } };
     if (made('spur') && o.words) o.words.hurt = WORDS.hurt;
-    return { fell: fell, tick: tick, swim: swim, swimK: swimK, breathK: breathK, spur: spur, hit: hit, pouch: pouch, open: open, close: close, isOpen: isOpen, craft: craft, peek: peek, bench: bench, group: G };
+    return { fell: fell, tick: tick, swim: swim, swimK: swimK, breathK: breathK, spur: spur, hit: hit, pouch: pouch, open: open, close: close, isOpen: isOpen, craft: craft, peek: peek, bench: bench, group: G, has: made };   /* 829: has(id), the shield's read */
   }
-  return { HOLE: HOLE, STONE: STONE, K: K, MATS: MATS, RECIPES: RECIPES, WORDS: WORDS, DROP: DROP, dropOf: dropOf, hole: hole, create: create, classic: CLASSIC };
+  return { HOLE: HOLE, STONE: STONE, K: K, MATS: MATS, RECIPES: RECIPES, WORDS: WORDS, DROP: DROP, dropOf: dropOf, hole: hole, create: create, classic: CLASSIC, shown: shown };
 }());
