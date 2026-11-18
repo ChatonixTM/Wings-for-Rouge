@@ -534,6 +534,7 @@
 
   /* ---------- the ship log, newest first: a bold title and one plain sentence a player cares about (DRAFTS for Marth's pen) ---------- */
   var SHIPS = [
+    { n: 157, title: 'Real clouds', line: 'The clouds have real volume now: sunlit tops, soft grey bellies seen from below, torn edges and no outlines. Fly into one and the world goes soft and white. At dusk their tops turn peach, in a storm they darken, and under the water they stay above.' },
     { n: 156, title: 'Clean shores', line: 'The shore is clean now: a thin line of surf at the water’s edge, even sand and a crisp edge where the grass begins. Rain rings reach as far as you can see. Storms turn the sea dark grey-green, the deep open sea is a deeper teal, rivers run downstream, and the open sea rolls in waves of every size.' },
     { n: 155, title: 'Fly far', line: 'The stamina bar only starts once you have beaten the Doctor Bird, so the flight to Jamaica is free. After that, flaps cost much less, high up a flight costs no more than a glide, and an empty bar up high never takes your hearts.' },
     { n: 154, title: 'Indoors', line: 'Inside Notre-Dame, the Pantheon and the other rooms you can fly into, the sun and the moon no longer shine through the walls.' },
