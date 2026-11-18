@@ -19,7 +19,7 @@
 window.WFR_STAM832 = (function () {
   'use strict';
   /* THE NUMBERS (per second of play unless said; the bar is 0-100) */
-  var C = { MAX: 100, GLIDE: 0.12, DIVE: 0.05, FF: 0.05, HOLD: 0.6, HOVER: 1.5, FLAP: 0.5, CLIMB: 0.5, FLUT: 2.0, STAND: 0.55, WALK: 0.25, REST_TO: 0.5,
+  var C = { MAX: 100, GLIDE: 0.12, DIVE: 0.05, FF: 0.05, HOLD: 0.6, HOVER: 1.5, FLAP: 0.15, CLIMB: 0.25, FLUT: 2.0, HIGH: 300, FLAP_HIGH: 0.03, STAND: 0.55, WALK: 0.25, REST_TO: 0.5,
     WARN: 25, GRACE: 10, EVERY: 20, KEEP: 2, FRUIT: 40, BREAD: 25, HUNGRY: 0.75, SAVE_S: 5, POP_T: 1.4, ARENA_BACK: 30, ARENA_R: 3.5,
     WF_EVERY: 37, WF_N: 4, WF_MAX: 240, WF_FAR: 480, WF_R: 6, WF_DY: 10, WF_BACK: 120, WF_SCAN: 1.0, WF_SIZE: 4.8, GL_SIZE: 1.4, GL_UP: 3.2, GL_BEAM_W: 2.5, GL_NEAR: 70, GL_FAR: 420, GL_MAX: 3.2 };   /* GL: the glimmer over a fruiting tree (missions788's own), scaled with her distance so it reads from 150-400 m up */
   var WORDS = {
@@ -29,6 +29,7 @@ window.WFR_STAM832 = (function () {
     last: '🪽 Too tired to fly well. Land and rest: your last heart is safe.',
     ate: function (name, n, heart) { return '😋 You ate ' + name + ': stamina +' + n + (heart ? ', and a heart back' : '') + '. Fruit trees fill your wings.'; },
     wild: function (name, n, heart) { return '😋 A wild ' + name + '! Stamina +' + n + (heart ? ', and a heart back' : '') + '. Trees with fruit fill your wings.'; },
+    high: '🪽 Your wings are spent, but up here you can glide on. Eat fruit, or land, to rest them.',
     rested: '🪽 Rested to half. Fruit and bread fill your wings the rest of the way.', label: 'Stamina'
   };
   var SETS = [{ id: 'tropic', e: '🥭', name: 'mango' }, { id: 'mid', e: '🍎', name: 'apple' }, { id: 'north', e: '🫐', name: 'handful of blueberries' }];
@@ -43,6 +44,7 @@ window.WFR_STAM832 = (function () {
     if (o.ff) return -C.FF;
     if (o.dive) return -C.DIVE;
     var r = C.GLIDE;
+    if (o.high) return -(C.GLIDE + (o.flut ? C.FLUT : 0));   /* Marth, Nov 18 (his flight home to Jamaica at 1,427 ft): high up (over HIGH m) she cruises: flaps, holds and climbs cost what a glide does */
     if (!o.travel && o.hold) r = o.hover ? C.HOVER : C.HOLD;
     else if (o.mode === 'hover') r = C.HOVER;
     if (o.pitch > 0.12) r += C.CLIMB * Math.min(1, o.pitch / 0.5);
@@ -58,7 +60,7 @@ window.WFR_STAM832 = (function () {
     var flapWas = 0, emptyT = 0, costT = 0, saveT = 0, tired = false, lastRate = 0, plant = null, px = null, pz = null;
     function S() { return io.S(); }
     function MX() { var k = 1; try { k = io.maxK ? Math.max(1, +io.maxK() || 1) : 1; } catch (e) { k = 1; } return C.MAX * k; }   /* 829 link 1: Bigger wings */
-    function on() { var s = S(); return !!(s && s.hearts && s.hearts.max > 0); }
+    function on() { var s = S(); return !!(s && s.hearts && s.hearts.max > 0 && s.seen && s.seen.doctor766 && s.seen.doctor766.won > 0); }   /* Marth, Nov 18: "the bar shouldn't even be a thing until the doctor bird race" (his pick: that AND a lighter drain) */
     function rec(make) { var s = S(); var r = s.stam832; if (!r || typeof r !== 'object') { if (!make) return null; r = s.stam832 = { v: MX(), ate: 0 }; } r.v = clamp(isFinite(+r.v) ? +r.v : MX(), 0, MX()); r.ate = r.ate | 0; return r; }
     function v() { var r = rec(false); return r ? r.v : MX(); }
     function put(x) { var r = rec(x < MX()); if (!r) return; r.v = clamp(x, 0, MX()); }
@@ -144,10 +146,11 @@ window.WFR_STAM832 = (function () {
       try {
         if (!on()) { draw(t || 0); wildHide(); return; }
         var s = S(), fl = flying(), busy = io.busy();
-        var flapNow = s.flapT || 0; if (fl && !busy && flapNow > flapWas + 0.1) { put(v() - C.FLAP); st.flaps++; } flapWas = flapNow;
-        var P = io.me(), mv = px == null || !(dt > 0) ? 0 : Math.hypot(P.x - px, P.z - pz) / dt; px = P.x; pz = P.z;
+        var P = io.me(), agl = 0; try { agl = P.y - Math.max(0, +io.ground(P.x, P.z) || 0); } catch (e) { agl = 0; } var high = agl > C.HIGH;
+        var flapNow = s.flapT || 0; if (fl && !busy && flapNow > flapWas + 0.1) { put(v() - (high ? C.FLAP_HIGH : C.FLAP)); st.flaps++; } flapWas = flapNow;
+        var mv = px == null || !(dt > 0) ? 0 : Math.hypot(P.x - px, P.z - pz) / dt; px = P.x; pz = P.z;
         var o = { mode: s.mode, still: mv < 0.4, hold: !!s.hold, hover: (s.hoverK || 0) > 0.5, pitch: s.pitch || 0, dive: (s.pitch || 0) < -0.35, flut: (s.flutT || 0) > 0,
-          ff: io.ff(), travel: io.travel(), inside: !!(s.inside || s.insideTH), busy: busy || !!s.talking || s.mode === 'paused' || s.mode === 'menu' || s.mode === 'event' };
+          ff: io.ff(), travel: io.travel(), high: high, inside: !!(s.inside || s.insideTH), busy: busy || !!s.talking || s.mode === 'paused' || s.mode === 'menu' || s.mode === 'event' };
         var r = plant === 'nodrain' ? 0 : rate(o); if (r < 0 && io.wx) { var wk = 1; try { wk = +io.wx() || 1; } catch (e) { wk = 1; } r *= clamp(wk, 0.5, 2); }   /* 805 piece 2: the weather's share of a flight's cost (headwind, wet wings); it only scales a drain, so the hearts' own rule (KEEP) still guards her last */
         lastRate = r; var x0 = v();
         var half = MX() * C.REST_TO;   /* resting fills her only to half, slowly: fruit and bread are the real refill */
@@ -156,12 +159,13 @@ window.WFR_STAM832 = (function () {
         var x = v();
         if (x > C.WARN + 5) tired = false;
         if (fl && !o.busy && x <= C.WARN && x > 0 && !tired) { tired = true; st.warned++; toast(WORDS.tiring, 4200); }
-        if (fl && !o.busy && x <= 0) {
+        if (fl && !o.busy && x <= 0 && high) { if (!st.highSaid) { st.highSaid = true; toast(WORDS.high, 4600); } emptyT = 0; costT = 0; }   /* Marth, Nov 18 ("I almost died trying to go to Jam"): up high an empty bar never costs hearts */
+        else if (fl && !o.busy && x <= 0) {
           if (emptyT === 0) { st.empties++; toast(WORDS.empty, 5200); }
           emptyT += dt;
           if (emptyT >= C.GRACE) { costT -= dt; if (costT <= 0) { costT = C.EVERY; var h = io.halves();   /* the first half at GRACE, then one every EVERY s */
               if (h != null && h > C.KEEP) { io.setHalves(h - 1); st.costs++; toast(WORDS.cost, 3200); io.save(); } else if (h != null && !st.lastSaid) { st.lastSaid = true; toast(WORDS.last, 4200); } } }
-        } else if (!fl) { emptyT = 0; costT = 0; st.lastSaid = false; }
+        } else if (!fl) { emptyT = 0; costT = 0; st.lastSaid = false; st.highSaid = false; }
         saveT += dt; if (saveT >= C.SAVE_S && rec(false)) { saveT = 0; io.save(); }
         wildTick(dt); spotTick(dt); draw(t || 0);
       } catch (e) { err = 'tick: ' + (e && e.message || e); }
