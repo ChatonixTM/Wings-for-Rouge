@@ -378,6 +378,7 @@ window.WFR_MISSIONS788 = (function () {
     var KEEP788 = (function () { try { var k = [spark(0xffd166, 0.001, true), ring(0.001), emojiSprite('✨', 0.001)]; k.forEach(function (g) { g.position.set(0, -80, 0); }); return k; } catch (e) { return null; } }());
     return {
       tick: tick, goal: goal, peek: peek, start: start, openCard: openCard, closeCard: closeCard, closeRes: closeRes, end: function (why) { if (A.run) end(false, why || 'stopped'); },
+      spark: function (col, size, beam) { return spark(col, size, beam); },   /* 832: its glimmer lent (the same programs, kept by KEEP788); the caller makes them at load */
       running: function () { return !!A.run; }, noArrow: function () { return !!(A.run && A.run.kid === 'hidden'); }, holds: function () { return !!(A.card || A.res); }, here: function () { return A.here; }
     };
   }

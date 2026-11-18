@@ -330,6 +330,7 @@ window.WFR_HERMITS = (function () {
       if (nr.who === 'item') return '✦ ' + nr.it.price + ' · Buy ' + nr.it.emoji;
       if (nr.who === 'beanda') { var cd = coldOf(); if (cd) return '✦ ' + (cd.stage >= 2 ? PRICES.mend2 : PRICES.mend1) + ' · Mend';
         if (API.healHer && API.healHer.need && API.healHer.need()) return '✦ ' + API.healHer.price() + ' · Heal'; if (weaveable()) return '🪶 3 · Weave'; return '💬 Talk'; }
+      if (nr.who === 'beandie' && API.upgrades && !late().classic()) return API.upgrades.label;   /* 829: his upgrades */
       return '💬 Talk';
     }
     function button(el) {   /* signTick's first word: the game's Talk button says what a press here does */
@@ -369,7 +370,8 @@ window.WFR_HERMITS = (function () {
           else if (API.healHer && API.healHer.need && API.healHer.need()) { var hp = API.healHer.price(); if (runes() < hp) say(LINES.mendPoor(hp, runes())); else { pay(hp); API.healHer.heal(); Lt.save(); Lt.hud(); say([['Beanda', API.healHer.line || 'There. You are mended.']]); } }
           else if (weaveable()) weave();   /* 697 */
           else say(!(S.nestDone && Lt.chick()) ? LINES.beandaNoChick : chickCloaked() ? LINES.beandaWell : LINES.beandaCloak(S.huethers || 0));
-        } else { S.seen = S.seen || {}; S.seen.beandie632 = true; Lt.save(); say(LINES.beandie(runes(), !Lt.classic() && !!(S.world && S.world.hawk && (S.world.hawk.won === 1 || (S.world.hawk.call && S.world.hawk.call.arena === 2))))); }   /* 786 */
+        } else if (API.upgrades && !Lt.classic() && (S.seen && S.seen.beandie632)) { API.upgrades.open(); }   /* 829: after his hello, his counter opens Beandie's upgrades */
+        else { S.seen = S.seen || {}; S.seen.beandie632 = true; Lt.save(); say(LINES.beandie(runes(), !Lt.classic() && !!(S.world && S.world.hawk && (S.world.hawk.won === 1 || (S.world.hawk.call && S.world.hawk.call.arena === 2))))); }   /* 786 */
         return true;
       } catch (e) { fail(e); return false; }
     }

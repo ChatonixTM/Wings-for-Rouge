@@ -99,8 +99,9 @@ window.WFR_BREAD818 = (function () {
     /* from the bag: one piece, half a heart back (never past full; with no hearts yet it is kept) */
     function eat() {
       try { var r = rec(false); if (!r || r.n <= 0) { toast(WORDS.none, 2000); return 'none'; }
-        var h = io.heal(C.HEAL); if (h === 'nohearts') { stat.refused++; toast(WORDS.noHearts, 2400); return h; } if (h !== true) { stat.refused++; toast(WORDS.whole, 2400); return 'whole'; }
-        r.n--; r.ate++; stat.eaten++; try { io.sound('eat'); } catch (e) { /* fine */ } toast(WORDS.ate, 2400); save(); try { io.changed(); } catch (e) { /* fine */ } return true;
+        var h = io.heal(C.HEAL), sg = 0; try { sg = io.stam ? +io.stam() || 0 : 0; } catch (e) { sg = 0; }   /* 832: a piece fills her wings too (stamina832.js) */
+        if (h === 'nohearts' && !sg) { stat.refused++; toast(WORDS.noHearts, 2400); return h; } if (h !== true && !sg) { stat.refused++; toast(WORDS.whole, 2400); return 'whole'; }
+        r.n--; r.ate++; stat.eaten++; try { io.sound('eat'); } catch (e) { /* fine */ } toast(h === true ? WORDS.ate + (sg ? ' Stamina +' + sg + '.' : '') : '🍞 Mm, bread. Stamina +' + sg + '.', 2400); save(); try { io.changed(); } catch (e) { /* fine */ } return true;
       } catch (e) { err = 'eat: ' + (e && e.message || e); return false; }
     }
     function pouch() {   /* the pouch's own row: the bread and its Eat button (only once she has had a piece) */

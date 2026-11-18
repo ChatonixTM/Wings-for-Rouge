@@ -245,7 +245,7 @@
   }
 
   /* ---------- the guest's save: its own fields only (799: a reload mid-visit keeps what she earned there; before, only a clean leave did) ---------- */
-  const LIVE = ['level', 'xp', 'hearts', 'chick', 'inv', 'toolIn', 'kind', 'coins', 'runes', 'huethers', 'race782'];   /* what the guest keeps from the host's world: its bird (his words: "you still level up") and, 799, what she earns there: her pouch (the sheet: "your levels and your pouch come home with you") and the Race's cups that paid it */
+  const LIVE = ['level', 'xp', 'hearts', 'chick', 'inv', 'toolIn', 'kind', 'coins', 'runes', 'huethers', 'race782', 'stam832', 'up829'];   /* 832: her stamina, as her hearts */   /* what the guest keeps from the host's world: its bird (his words: "you still level up") and, 799, what she earns there: her pouch (the sheet: "your levels and your pouch come home with you") and the Race's cups that paid it */
   const LIVE_SEEN = ['arrive783', 'arrive821', 'ledger817', 'craft787', 'coin39'];   /* 799: and the seen-keys that are hers alone: the countries she reached and the places she saw (their ledger), her craft bag and what she made (bought with the coins above), her first coin */
   function ownSave(s_) {   /* 799: S is always HER bird (net721Apply sets only world, choices, dawns, clock), so a live value is hers, never the host's: taken whole, never added, so a clean leave (restoreOwn, then a full save) counts nothing twice */
     let live = null; try { live = JSON.parse(s_); } catch (e) { return s_; }
