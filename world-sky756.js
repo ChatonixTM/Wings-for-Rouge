@@ -28,6 +28,7 @@ window.WFR_SKY756 = (function () {
     RING_R: 10, RING_GAP: 55, RING_N: 8, RING_CAP: 48, LINES: 6, LINE_R: 26000, RING_FAR0: 700, RING_FARK: 1100, RING_FOG: 0.5, BONUS: 5, PICK: 1.2, JUMP: 2500, SEEN_M: 1800,
     STEP_KM: 8, LINK_MIN: 25, LINK_MAX: 260, LINKS: 2, P_LINE: 0.6, SPOKES: 6, SPOKE_KM: 900, SPOKE_SEP: 0.87, SPOKE_FROM: 4, LINE_ALT: [[120, 320, 0.6, 1], [900, 1500, 0.25, 2], [3000, 4000, 0.15, 5]] };
   var D2R = Math.PI / 180, M_DEG = 111200, NL = String.fromCharCode(10);
+  var TONE836 = 'float tone836( float r ) { return smoothstep( 0.1, 0.65, r ); }';   // 836: the ONE tone curve every cloud family shares (see the seam note by the deck)
   var X = null, st = { inited: false, enabled: true, fault: null, mode: 'off', t: 0, acc: 0, zone: 0, cells: new Map(), banks: [], lines: [], cache: new Map(), spokes: [], ports: null, links: new Map(), day: null, cover: 0, force: { cover: null }, veil: 0, veilEl: null, inK: 0, prev: null, got: 0, lineDone: 0, ms: [], msMax: 0, placeMs: 0, U: null, seenOn: false };
 
   /* ---------- seeds (world-traffic.js's: the same place, the same sky, on every visit and every phone) ---------- */
@@ -142,18 +143,18 @@ window.WFR_SKY756 = (function () {
   var FS_CLOUD_756 = ['uniform sampler2D uMap; uniform vec3 uLit; uniform vec3 uShade; uniform vec3 uFogC;', 'varying vec2 vUv; varying vec2 vL; varying vec2 vS; varying float vA; varying float vH; varying float vFog; varying float vB;',
     'void main() {', '  vec4 t = texture2D( uMap, vUv ); float a = smoothstep( 0.04, 0.8, t.a ) * vA; if ( a < 0.004 ) discard;', '  float l = 0.34 + 0.62 * vH + 0.34 * vL.y + 0.24 * dot( vL, vS ) + 0.22 * ( t.r - 0.8 );',
     '  vec3 col = mix( uShade, uLit, clamp( l, 0.0, 1.0 ) ); gl_FragColor = vec4( mix( col, uFogC, vFog ), a );', '}'].join(NL);   // the 756 smoke, kept only as the guard's control ('nopaint')
-  var SW790 = (function () { try { return localStorage.getItem('wfr.sky790') || ''; } catch (e) { return ''; } })();   // the guard's switches (sky790.js): 'nodome', 'nopaint', 'noskyink'
+  var SW790 = (function () { try { return localStorage.getItem('wfr.sky790') || ''; } catch (e) { return ''; } })();   // the guard's switches: 'nodome' (sky790 P1), 'nopaint' (clouds836's control: the banks' old smoke shader); 'noskyink' removed by 836 (no ink is drawn anywhere)
   /* 836 (Trunks, Nov 18 2026; Marth: "Learn and adapt please", on a Fable-made game's cumulus): CLOUDS WITH REAL VOLUME. The painted puff (two flat tones and
      an ink rim, 790 A2) gives way to a soft one: each puff is Kenney's own smoke (its alpha is its density), lit per pixel as a small ball facing the eye
      (the impostor-puff method: Harris and Lastra's real-time clouds, as mr.doob's three.js clouds use it), the light wrapped so the far side is grey, never
      black; high in the heap and high in the puff is brighter (sunlit tops, grey bellies); a puff's thin rim glows when the sun is behind it (the silver
      lining); the floor is soft (no cut line); no ink. Same program count, same draw, the same light (L806). */
-  var FS_CLOUD = ['uniform sampler2D uMap; uniform vec3 uLit; uniform vec3 uShade; uniform vec3 uFogC;', 'varying vec2 vUv; varying vec2 vL; varying vec2 vS; varying float vA; varying float vH; varying float vFog; varying float vB; varying float vSz;',
+  var FS_CLOUD = [TONE836, 'uniform sampler2D uMap; uniform vec3 uLit; uniform vec3 uShade; uniform vec3 uFogC; uniform float uTone;', 'varying vec2 vUv; varying vec2 vL; varying vec2 vS; varying float vA; varying float vH; varying float vFog; varying float vB; varying float vSz;',
     'void main() {', '  vec4 t = texture2D( uMap, vUv ); float r = length( vL ), den = t.a * ( 1.0 - smoothstep( 0.72, 1.0, r ) );',
     '  float a = smoothstep( 0.04, 0.7, den ) * smoothstep( -0.45, 0.35, vB ) * vA; if ( a < 0.004 ) discard;',
     '  vec3 n = vec3( vL, 0.0 ); n.z = sqrt( max( 0.0, 1.0 - min( 1.0, dot( n.xy, n.xy ) ) ) ); vec3 s = normalize( vec3( vS.xy, vSz ) );',
     '  float sunK = dot( n, s ) * 0.5 + 0.5, h = clamp( vH * 0.78 + 0.22 * smoothstep( -0.9, 0.9, vL.y ), 0.0, 1.0 );',
-    '  float l = clamp( pow( sunK, 1.5 ) * ( 0.32 + 0.68 * h ) + 0.14 * h, 0.0, 1.0 ) * smoothstep( -0.6, 0.5, vB ) * ( 0.86 + 0.14 * den );',
+    '  float l = clamp( mix( pow( sunK, 1.5 ) * ( 0.32 + 0.68 * h ) + 0.14 * h, sunK * ( 0.5 + 0.7 * h ) + 0.15 * h, uTone ), 0.0, 1.0 ) * smoothstep( -0.6, 0.5, vB ) * ( 0.86 + 0.14 * den ); l = mix( l, tone836( l ), uTone );',
     '  vec3 col = mix( uShade, uLit, l ) + uLit * ( 0.55 * max( 0.0, - s.z ) * ( 1.0 - den ) * ( 1.0 - den ) );',
     '  gl_FragColor = vec4( mix( col, uFogC, vFog ), a );', '}'].join(NL);   // soft volume: no ink, no flat tones
   var VS_RING = ['attribute vec3 color; attribute float aSpin; attribute vec3 aC; attribute vec4 aD;', 'uniform vec3 uEye; uniform float uInvK; uniform float uR; uniform float uT;', 'varying vec3 vC; varying float vA; varying float vFog;',
@@ -200,6 +201,44 @@ window.WFR_SKY756 = (function () {
     st.placeMs = performance.now() - t0;
   }
   function expo(hf, side, hs) { var s = Math.max(-1, Math.min(1, side)); return Math.max(0, Math.min(1, hf * (1 - 0.6 * hs) + 0.95 * hs * (0.5 + 0.5 * s))); }   // 836: how exposed a puff is: high in the heap, and on the side toward a low sun (the heap shades its own far side)
+  /* ========== 836 b (Trunks, Nov 18 2026; Su 40, from g3.jpg: the ceiling over her island "still read as soap bubbles: glossy lobes with light rims"). THE CEILING AS
+     PUFFS: the 9 ceiling clouds (heavenLayer, 6 lobes each) drawn as the banks are drawn: Kenney's puffs, the same program (the same shader source, a material
+     of its own), the same light, and the shared tone curve (uTone 1) so the family still matches the deck (seams806 A1). 4 puffs a lobe (216), sorted far to
+     near each frame, following the groups (climb712's parting moves them); the lobes themselves hidden, shown again on any fault (the residue law). Their
+     material's opacity (0.85, the weather's) is the puffs' cover. Standard only (the page hands the groups only there); never out in the world (layer 0
+     only), never under the water. 1 draw. ========== */
+  var CE = { groups: null, src: null, P: null, n: 0, made: false, fault: null, mesh: null, mat: null, U: null, tmp: null, key: null, ord: [], lobes: [] };
+  function ceiling836(groups, m) { try { if (!groups || !groups.length || !m || localStorage.getItem('wfr.look') === 'classic') return false; } catch (e) { return false; } CE.groups = groups; CE.src = m; return true; }
+  function ceInit(THREE) {
+    if (!CE.groups || CE.made || (X.classic && X.classic())) return; try {
+      var r = rng(hash('ceiling836')), out = [];
+      CE.groups.forEach(function (g, gi) { g.children.forEach(function (b) { var geo = b.geometry; if (!geo.boundingSphere) geo.computeBoundingSphere(); var R = geo.boundingSphere.radius * 0.95, p = b.position, sy = b.scale.y || 1, fl = p.y - R * sy * 0.7;
+        [[0, 0, 0, 0.82, 0.6], [0.42, 0.22, 0.1, 0.6, 1], [-0.4, 0.2, -0.12, 0.58, 1], [0.05, -0.12, 0.3, 0.7, 0.25]].forEach(function (q) { var a = r() * 6.283, c = Math.cos(a), sn = Math.sin(a), ox = (q[0] * c - q[2] * sn) * R, oz = (q[0] * sn + q[2] * c) * R, oy = q[1] * R * sy * 2.2;
+          out.push([gi, p.x + ox, p.y + oy, p.z + oz, R * q[3], q[4], r() * 6.283, Math.floor(r() * 4), p.y + oy - fl]); }); CE.lobes.push(b); }); });
+      CE.P = out; CE.n = out.length; CE.tmp = new Float32Array(CE.n * 9); CE.key = new Float32Array(CE.n);
+      var gc = new THREE.InstancedBufferGeometry(); gc.setAttribute('position', new THREE.BufferAttribute(new Float32Array([-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0]), 3)); gc.setIndex([0, 1, 2, 0, 2, 3]);
+      CE.aC = inst(THREE, gc, 'aC', CE.n, 3); CE.aP = inst(THREE, gc, 'aP', CE.n, 4); CE.aQ = inst(THREE, gc, 'aQ', CE.n, 3); gc.instanceCount = 0; CE.gc = gc;
+      var U = st.U; CE.U = { eye: { value: new THREE.Vector3() }, invK: { value: 1 }, R: { value: 1e30 } };
+      CE.mat = new THREE.ShaderMaterial({ name: 'sky836:ceiling', vertexShader: VS_CLOUD, fragmentShader: FS_CLOUD, uniforms: { uEye: CE.U.eye, uSun: U.sun, uInvK: CE.U.invK, uR: CE.U.R, uMap: U.map, uLit: U.lit, uShade: U.shade, uFogC: U.fogC, uTone: { value: 1 } }, transparent: true, depthWrite: false, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.SrcAlphaFactor, blendDst: THREE.OneMinusSrcAlphaFactor });
+      CE.mesh = new THREE.Mesh(gc, CE.mat); CE.mesh.name = 'sky836:ceiling'; CE.mesh.frustumCulled = false; CE.mesh.renderOrder = 0.5; CE.mesh.matrixAutoUpdate = false; X.scene.add(CE.mesh);
+      CE.lobes.forEach(function (b) { b.visible = false; }); CE.made = true;
+    } catch (e) { ceFail('init', e); }
+  }
+  function ceFail(where, e) { CE.fault = where + ': ' + (e && e.message || e); CE.made = false; if (CE.mesh) CE.mesh.visible = false; CE.lobes.forEach(function (b) { b.visible = true; }); }
+  var ceBy = function (a, b) { return CE.key[b] - CE.key[a]; };
+  function cePlace(cam) {   // cam: the camera this render is drawn with (a guard may draw with its own)
+    if (!CE.made) return; try {
+      var under = !!(X.under && X.under()), op = CE.src.opacity, show = !under && op > 0.01 && !(X.classic && X.classic()); if (!show) { CE.gc.instanceCount = 0; return; }   // hidden by drawing none: its .visible is whoever draws the frame's (a guard drawing one family alone hides it)
+      var L = light806(), U = st.U; U.lit.value.copy(L.lit.value); U.shade.value.copy(L.shade.value); U.sun.value.copy(X.sun.position).sub(X.sun.target.position).normalize(); if (X.scene.fog) U.fogC.value.copy(X.scene.fog.color);
+      var e = (cam && cam.isCamera ? cam : X.camera).position, sv = U.sun.value, hs = Math.min(1, Math.hypot(sv.x, sv.z)), snx = hs > 1e-4 ? sv.x / hs : 0, snz = hs > 1e-4 ? sv.z / hs : 0, T = CE.tmp, n = 0, i; CE.U.eye.value.copy(e);
+      for (i = 0; i < CE.n; i++) { var q = CE.P[i], g = CE.groups[q[0]]; if (!g.visible) continue; var x = g.position.x + q[1], y = g.position.y + q[2], z = g.position.z + q[3], o = n * 9, dx = x - e.x, dy = y - e.y, dz = z - e.z;
+        T[o] = x; T[o + 1] = y; T[o + 2] = z; T[o + 3] = q[4]; T[o + 4] = op / 0.85; T[o + 5] = expo(q[5], (q[1] * snx + q[3] * snz) / 30, hs); T[o + 6] = q[6]; T[o + 7] = q[7]; T[o + 8] = q[8]; CE.key[n] = dx * dx + dy * dy + dz * dz; n++; }
+      CE.ord.length = n; for (i = 0; i < n; i++) CE.ord[i] = i; CE.ord.sort(ceBy);
+      var aC = CE.aC.array, aP = CE.aP.array, aQ = CE.aQ.array; for (i = 0; i < n; i++) { var s = CE.ord[i] * 9, t = T[s + 7]; aC[i * 3] = T[s]; aC[i * 3 + 1] = T[s + 1]; aC[i * 3 + 2] = T[s + 2]; aP[i * 4] = T[s + 3]; aP[i * 4 + 1] = Math.min(1, T[s + 4]); aP[i * 4 + 2] = T[s + 5]; aP[i * 4 + 3] = T[s + 6]; aQ[i * 3] = t % 2; aQ[i * 3 + 1] = t >= 2 ? 1 : 0; aQ[i * 3 + 2] = T[s + 8]; }
+      CE.gc.instanceCount = n; CE.aC.needsUpdate = CE.aP.needsUpdate = CE.aQ.needsUpdate = true;
+    } catch (e) { ceFail('place', e); }
+  }
+  function cePeek() { return { made: CE.made, fault: CE.fault, puffs: CE.n, drawn: CE.gc ? CE.gc.instanceCount : 0, visible: !!(CE.mesh && CE.mesh.visible && CE.gc.instanceCount > 0), lobesHidden: CE.lobes.length && CE.lobes.every(function (b) { return !b.visible; }) }; }
   function fail(where, e) { st.fault = where + ': ' + (e && e.message || e); st.enabled = false; clearAll(); if (st.veilEl) st.veilEl.style.opacity = '0'; }   // a fault takes the sky away, never the game
 
   /* ========== 790 A2 (Su, Nov 13 2026): THE PAINTED SKY. Marth, verbatim, on #137's side-by-side: "even the clouds first layer looks so much better on the COO
@@ -212,7 +251,7 @@ window.WFR_SKY756 = (function () {
      ink is a constant ~1.5 px line on the shape's edge (fwidth), fading out where the shapes get too small to draw; the lit/shade split is the shape
      sampled a step toward the sun. Light from the game's own sun: cream by day, gold at dusk, faint and blue at night, greyer in weather.
      COST: 1 draw, 1 program, 3 texture reads a sky pixel, one 256 px texture. Standard only (Classic is frozen); hides when the dome hides (under water). ========== */
-  var DOME = { R: 700, ORDER: -9.8, SCALE: 0.22, WIND: [0.004, 0.0015], MIN: 0.4, INK: SW790 === 'noskyink' ? 0 : 0.8, HD: 2600, Y0: 50, NEAR_MAX: 4, FADE: [1500, 2400] };   // 836: HD the deck's height (m); above FADE[0] it thins, gone by FADE[1]   // 'noskyink': the guard's control
+  var DOME = { R: 700, ORDER: -9.8, SCALE: 0.22, WIND: [0.004, 0.0015], MIN: 0.4, INK: 0, HD: 2600, Y0: 50, NEAR_MAX: 4, FADE: [1500, 2400] };   // 836: HD the deck's height (m); above FADE[0] it thins, gone by FADE[1]; INK 0: no cloud draws ink since 836
   var dm = { on: false, made: false, fault: null, bakeMs: 0, cover: 0, thr: 0.5, dome: null, mesh: null, U: null, t: 0 };
   function domeBake(THREE) {   // a tileable fbm, 256 x 256: four octaves of value noise on wrapping lattices (8, 16, 32, 64 cells)
     var t0 = performance.now(), N = 256, D = new Uint8Array(N * N * 4), O = [[8, 0.5], [16, 0.27], [32, 0.15], [64, 0.08]], G = O.map(function (o, k) { var g = new Float32Array(o[0] * o[0]), r = rng(hash('deck790/' + k)); for (var i = 0; i < g.length; i++) g[i] = r(); return g; });
@@ -233,7 +272,6 @@ window.WFR_SKY756 = (function () {
      works out its own raw light (0 shade .. 1 sunlit); this one curve turns it into the mix of the shared shade and lit colours (L806). It saturates, so
      each family's sunlit quarter reaches the same lit colour (as the old two-tone step did) and everything below stays soft. Defined once, used by the
      deck and by cloud806 (the island's clouds and the ceiling). */
-  var TONE836 = 'float tone836( float r ) { return smoothstep( 0.1, 0.65, r ); }';
   var FS_DOME = [TONE836, 'uniform sampler2D uMap; uniform vec3 uLit; uniform vec3 uShade; uniform vec3 uInk; uniform vec3 uFogC; uniform vec3 uSun; uniform vec2 uOff; uniform float uThr; uniform float uScale; uniform float uA; uniform float uInkK; uniform float uNear;', 'varying vec3 vD;',
     'float dens( vec2 p ) { return texture2D( uMap, p ).r * 0.8 + texture2D( uMap, p * 2.3 + vec2( 0.37, 0.71 ) ).r * 0.2; }',
     'void main() {', '  vec3 d = normalize( vD ); if ( d.y < 0.004 ) discard;',
@@ -242,7 +280,7 @@ window.WFR_SKY756 = (function () {
     '  float a = smoothstep( uThr - 0.03, uThr + 0.07, vv ) * far; if ( a < 0.004 ) discard;',
     '  float th = smoothstep( uThr + 0.03, uThr + 0.25, v ); vec2 sd = normalize( uSun.xz + vec2( 1e-4 ) ) * 0.03;',
     '  float sunl = clamp( 0.5 + ( v - dens( p + sd ) ) * 7.0, 0.0, 1.0 ), up = smoothstep( -0.1, 0.5, uSun.y );',
-    '  float l = tone836( ( 1.0 - 0.72 * th ) * ( 0.7 + 0.3 * sunl ) + 0.1 * fr * ( 1.0 - th ) );',
+    '  float l = min( 1.0, tone836( ( 1.0 - 0.72 * th ) * ( 0.7 + 0.3 * sunl ) + 0.1 * fr * ( 1.0 - th ) ) * ( 0.62 + 0.5 * fr ) );',   // its inner billows (the fine octave, after the shared curve): no flat lit plateau, no shade cluster (Semiu: two tones joined by a blend)
     '  float back = smoothstep( 0.55, 0.97, dot( d, normalize( uSun ) ) ) * ( 1.0 - smoothstep( 0.2, 0.6, normalize( uSun ).y ) ); l *= 1.0 - 0.55 * back * ( 0.35 + 0.65 * th );',   // toward a low sun a cloud is lit from behind: its thick body goes dark, only its thin rim glows (the silver term below)
     '  vec3 col = mix( uShade, uLit, l ) + uLit * ( pow( max( dot( d, normalize( uSun ) ), 0.0 ), 24.0 ) * ( 1.0 - th ) * 0.5 * up * ( 1.0 - 0.85 * smoothstep( 0.35, 0.8, normalize( uSun ).y ) ) );',   // the silver rim is a low sun's (a high one would wash the lit tone white)
     '  float hz = ( 1.0 - smoothstep( 0.03, 0.22, d.y ) ) * 0.55; col = mix( col, uFogC, 0.25 * hz ); gl_FragColor = vec4( col, a * uA * ( 1.0 - 0.8 * hz ) );', '}'].join(NL);   // 836: toward the horizon a cloud thins into the haze (its cover), not tinted white (its colour stays the family's: seams806 A1)   // a body is solid white (the reference's cumulus); only its rim is see-through
@@ -310,13 +348,14 @@ window.WFR_SKY756 = (function () {
       st.U = { eye: { value: new THREE.Vector3() }, invK: { value: 1 }, R: { value: 1e30 }, t: { value: 0 }, sun: { value: new THREE.Vector3(0, 1, 0) }, lit: { value: new THREE.Color(1, 1, 1) }, shade: { value: new THREE.Color(0.5, 0.6, 0.76) }, fogC: { value: new THREE.Color(0.8, 0.9, 1) }, dim: { value: 1 }, map: { value: null } };
       var tex = new THREE.TextureLoader().load('assets/sky756/puffs.png', undefined, undefined, function () { st.texFault = 'assets/sky756/puffs.png did not load'; st.enabled = false; clearAll(); }); st.U.map.value = tex;
       var U = st.U, gc = new THREE.InstancedBufferGeometry(); gc.setAttribute('position', new THREE.BufferAttribute(new Float32Array([-1, -1, 0, 1, -1, 0, 1, 1, 0, -1, 1, 0]), 3)); gc.setIndex([0, 1, 2, 0, 2, 3]); st.aC = inst(THREE, gc, 'aC', C.CAP, 3); st.aP = inst(THREE, gc, 'aP', C.CAP, 4); st.aQ = inst(THREE, gc, 'aQ', C.CAP, 3); gc.instanceCount = 0; st.gc = gc;
-      st.matC = new THREE.ShaderMaterial({ name: 'sky756:cloud', vertexShader: VS_CLOUD, fragmentShader: SW790 === 'nopaint' ? FS_CLOUD_756 : FS_CLOUD, uniforms: { uEye: U.eye, uSun: U.sun, uInvK: U.invK, uR: U.R, uMap: U.map, uLit: U.lit, uShade: U.shade, uFogC: U.fogC }, transparent: true, depthWrite: false, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.SrcAlphaFactor, blendDst: THREE.OneMinusSrcAlphaFactor });
+      st.matC = new THREE.ShaderMaterial({ name: 'sky756:cloud', vertexShader: VS_CLOUD, fragmentShader: SW790 === 'nopaint' ? FS_CLOUD_756 : FS_CLOUD, uniforms: { uEye: U.eye, uSun: U.sun, uInvK: U.invK, uR: U.R, uMap: U.map, uLit: U.lit, uShade: U.shade, uFogC: U.fogC, uTone: { value: 0 } }, transparent: true, depthWrite: false, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.SrcAlphaFactor, blendDst: THREE.OneMinusSrcAlphaFactor });
       st.meshC = new THREE.Mesh(gc, st.matC); st.meshC.name = 'sky756:clouds'; st.meshC.frustumCulled = false; st.meshC.renderOrder = C.ORDER_HOME; st.meshC.layers.enable(C.LAYER); st.meshC.onAfterRender = function (r) { r.state.buffers.depth.setMask(true); };   // the next thing drawn past the gate is the depth clearer, and gl.clear does nothing to depth while the write mask is off: left off, the shrunk sea stayed in the depth and hid her
       var gr = ringGeo(THREE); st.rC = inst(THREE, gr, 'aC', C.RING_CAP, 3); st.rD = inst(THREE, gr, 'aD', C.RING_CAP, 4); gr.instanceCount = 0; st.gr = gr;
       st.matR = new THREE.ShaderMaterial({ name: 'sky756:rings', vertexShader: VS_RING, fragmentShader: FS_RING, uniforms: { uEye: U.eye, uInvK: U.invK, uR: U.R, uT: U.t, uFogC: U.fogC, uDim: U.dim }, transparent: true, depthWrite: false });
       st.meshR = new THREE.Mesh(gr, st.matR); st.meshR.name = 'sky756:rings'; st.meshR.frustumCulled = false; st.meshR.renderOrder = 7; st.meshR.layers.enable(C.LAYER);
       st.root = new THREE.Group(); st.root.name = 'sky756'; st.root.matrixAutoUpdate = false; st.root.add(st.meshC); st.root.add(st.meshR); X.scene.add(st.root); st.root.updateMatrixWorld(true);
-      var prev = X.scene.onBeforeRender; X.scene.onBeforeRender = function () { if (typeof prev === 'function') prev.apply(this, arguments); place(); domePlace(); };
+      var prev = X.scene.onBeforeRender; X.scene.onBeforeRender = function () { if (typeof prev === 'function') prev.apply(this, arguments); place(); domePlace(); cePlace(arguments[2]); };
+      ceInit(THREE);   /* 836 b: the ceiling over her island as puffs */
       if (SW790 !== 'nodome') domeInit(THREE);   /* 790 A2: the painted dome layer */
       st.inited = true; return true;
     } catch (e) { st.fault = 'init: ' + (e && e.message || e); return false; }
@@ -342,6 +381,6 @@ window.WFR_SKY756 = (function () {
   function banksNear() { var f = X.TR.on ? X.TR.f : WFR_WORLD.HOMEF; return st.banks.map(function (b) { var p = WFR_WORLD.toLocal(f, b.lat, b.lon); return { id: b.id, lat: b.lat, lon: b.lon, x: p.x, z: p.z, y: b.base + b.H * 0.45, base: b.base, W: b.W, H: b.H, a: b.a, d: b.d, want: b.want }; }); }
   function ringsNear() { var f = X.TR.on ? X.TR.f : WFR_WORLD.HOMEF, out = []; st.lines.forEach(function (L) { var F = lineFrame(L, f), o = { x: 0, y: 0, z: 0 }, r = []; for (var n = 0; n < C.RING_N; n++) { ringAt(L, n, F, o); r.push({ x: o.x, y: o.y, z: o.z, alive: !!L.alive[n] }); } out.push({ id: L.id, lat: L.lat, lon: L.lon, alt: L.alt, R: L.R, g: L.g, d: L.d, got: L.got, rings: r }); }); return out; }
   function drawnAt(x, y, z) { var U = st.U; if (!U) return null; var e = U.eye.value, k = U.invK.value; return { x: e.x + (x - e.x) * k, y: e.y + (y - e.y) * k, z: e.z + (z - e.z) * k, k: k }; }   // where a world point is drawn this frame (past the gate the far is shrunk toward the eye): the guard's camera aims there
-  return { C: C, init: init, tick: tick, peek: peek, dome: domePeek, cloud806: cloud806, light806: function () { return l806(); }, DOME: DOME, drawnAt: drawnAt, banksNear: banksNear, ringsNear: ringsNear, force: st.force, resetMs: function () { st.ms = []; st.msMax = 0; }, coverOfDay: function (w) { return dayCover(w); }, warmth: warmth,
+  return { C: C, init: init, tick: tick, peek: peek, dome: domePeek, cloud806: cloud806, ceiling836: ceiling836, ceiling: cePeek, light806: function () { return l806(); }, DOME: DOME, drawnAt: drawnAt, banksNear: banksNear, ringsNear: ringsNear, force: st.force, resetMs: function () { st.ms = []; st.msMax = 0; }, coverOfDay: function (w) { return dayCover(w); }, warmth: warmth,
     set enabled(v) { st.enabled = !!v; if (!v) { clearAll(); st.veil = 0; if (st.veilEl) st.veilEl.style.opacity = '0'; } }, get enabled() { return st.enabled; } };
 })();

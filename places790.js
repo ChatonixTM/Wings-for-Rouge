@@ -233,6 +233,7 @@ window.WFR_PLACES790 = (function () {
       var T = X.T, S = X.S;
       if (X.classic()) { st.why = 'classic'; cardHide(); return; }
       if (!T || !T.on || !T.ll) { st.why = 'home'; cardHide(); return; }
+      if (X.under && X.under()) { st.why = 'under'; cardHide(); return; }   /* 837: under the water no place card rises, and one already up goes (no name from the world above in the water) */
       if (X.busy && X.busy()) { st.why = 'busy'; return; }
       var ll = T.ll, gh = 0; try { gh = Math.max(0, X.H(S.pos.x, S.pos.z)); } catch (e) { gh = 0; } var agl = S.pos.y - gh, fast = !!(X.fast && X.fast());
       var L = near(ll.lat, ll.lon, agl, CAND); st.near = [];
