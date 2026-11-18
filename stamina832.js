@@ -148,7 +148,8 @@ window.WFR_STAM832 = (function () {
         var P = io.me(), mv = px == null || !(dt > 0) ? 0 : Math.hypot(P.x - px, P.z - pz) / dt; px = P.x; pz = P.z;
         var o = { mode: s.mode, still: mv < 0.4, hold: !!s.hold, hover: (s.hoverK || 0) > 0.5, pitch: s.pitch || 0, dive: (s.pitch || 0) < -0.35, flut: (s.flutT || 0) > 0,
           ff: io.ff(), travel: io.travel(), inside: !!(s.inside || s.insideTH), busy: busy || !!s.talking || s.mode === 'paused' || s.mode === 'menu' || s.mode === 'event' };
-        var r = plant === 'nodrain' ? 0 : rate(o); lastRate = r; var x0 = v();
+        var r = plant === 'nodrain' ? 0 : rate(o); if (r < 0 && io.wx) { var wk = 1; try { wk = +io.wx() || 1; } catch (e) { wk = 1; } r *= clamp(wk, 0.5, 2); }   /* 805 piece 2: the weather's share of a flight's cost (headwind, wet wings); it only scales a drain, so the hearts' own rule (KEEP) still guards her last */
+        lastRate = r; var x0 = v();
         var half = MX() * C.REST_TO;   /* resting fills her only to half, slowly: fruit and bread are the real refill */
         if (r < 0) { put(x0 + r * dt); st.drained += -r * dt; } else if (r > 0 && x0 < half) { var x1 = Math.min(half, x0 + r * dt); put(x1); st.rested += x1 - x0; if (x1 >= half && x0 < half && !st.restSaid) { st.restSaid = true; toast(WORDS.rested, 3200); } }
         if (x0 < half - 10) st.restSaid = false;

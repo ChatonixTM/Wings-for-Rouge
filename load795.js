@@ -35,7 +35,7 @@
       files: ['sounds.js', 'cine.js', 'haven781.js', 'race782.js', 'school782.js', 'arrive783.js', 'arrive821.js', 'ocarina781.js', 'after786.js', 'doctor766.js', 'interact790.js', 'craft787.js', 'bread818.js', 'strike819.js', 'stamina832.js', 'night833.js', 'up829.js', 'chain829.js', 'ledger817.js', 'hud795.js', 'missions788.js', 'show795.js',
         'music.js', 'battle703-song.js', 'music-orchestra.js', 'rhythm.js', 'pictograms.js', 'chick-wear.js', 'hedgehogs.js', 'opening.js'] },
     { id: 'weather', chip: 'Weather', name: 'Mixing the weather', say: 'Hanging the clouds. Some of them are soft and wet.',
-      files: ['skypiea.js', 'pirate.js', 'atmo.js', 'world-realism.js', 'boat.js', 'weather.js', 'seasons.js', 'village-build.js', 'runes.js', 'fall748.js', 'fx760.js', 'hearts714.js'] },
+      files: ['skypiea.js', 'pirate.js', 'atmo.js', 'world-realism.js', 'light834.js', 'boat.js', 'weather.js', 'seasons.js', 'village-build.js', 'runes.js', 'fall748.js', 'fx760.js', 'hearts714.js'] },
     { id: 'world', chip: 'World', name: 'Unrolling the world', say: 'Painting Jamaica. The Blue Mountains take a second coat.',
       files: ['world712-frame.js', 'creative712.js', 'world712-carib.js', 'world712-dunns.js', 'world712-travel.js', 'world-look755b.js', 'world-surfaces732.js', 'world-terrain.js',
         'world-features.js', 'climate802.js', 'species802.js', 'world-vegetation.js', 'world-bar761.js', 'world725d-fast.js', 'world-chicks.js', 'world-imagery.js', 'world-landclass772.js', 'world712-photo.js', 'place-gibb825.js',
