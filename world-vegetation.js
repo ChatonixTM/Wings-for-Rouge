@@ -44,6 +44,8 @@ window.WFR_VEG = (function () {
   var DENS_MID = [0, 0, 0, 0.12, 0.3, 0.2, 0.5, 0.8, 0.9, 0.05, 0, 0];   // the mid grid (22 m): no lone field trees out there
   var TINT = [null, [168, 166, 98, 0.28], [104, 150, 70, 0.45], [78, 110, 78, 0.3], [112, 122, 72, 0.32], [84, 136, 62, 0.5], [92, 132, 62, 0.35], [40, 80, 50, 0.6], [42, 80, 40, 0.6]];   // [r, g, b (0..255 like the streamer's tint), mix]
   var PINE = 0, FIR = 1, KRUMM = 2, OAK = 3, BIRCH = 4, SNAG = 5, KINDS = ['pine', 'fir', 'krumm', 'oak', 'birch', 'snag'];
+  var SP802 = (function () { try { if (window.WFR_DOOR && window.WFR_DOOR.classic) return null; if (localStorage.getItem('wfr.sp802') === 'off') return null; } catch (e) { /* no storage: on */ } return window.WFR_SP802 && window.WFR_KG802 ? window.WFR_SP802 : null; })();   /* 802 TREES OF THE REAL PLACE (species802.js): the species by the real climate (climate802.js, Koppen-Geiger, Beck et al. 2018, CC BY 4.0) and setting; the new shapes after trees.js's six */
+  var KN802 = SP802 ? KINDS.concat(SP802.GEOS) : KINDS, MN802 = SP802 ? ['cone', 'crown'].concat(SP802.MIDS) : ['cone', 'crown'], ONE802 = [[1, 1, 1]], CC802 = [1, 1, 1];
 
   function hash3(a, b, s) { var h = Math.imul(a | 0, 0x27d4eb2d) ^ Math.imul(b | 0, 0x165667b1) ^ Math.imul((s | 0) + 1, 0x9e3779b1); h = Math.imul(h ^ (h >>> 15), 0x85ebca6b); h = Math.imul(h ^ (h >>> 13), 0xc2b2ae35); return (h ^ (h >>> 16)) >>> 0; }
   /* the feed's tiles are web-map tiles in either world mode: their y is read through THE ONE DOOR (725b), never written here. W.tileAt at zoom 30
@@ -175,15 +177,15 @@ window.WFR_VEG = (function () {
           var hk = ((h0 >>> 20) & 4095) / 4096; if (hk >= 0.9) continue;   // no class keeps a point past the forest's own density: skip the lookup
           J.cand++; var cls = zooms.length ? classAtXY((lon + 180) / 360, Yc + dY * (lat - latC)) : NONE, p = null, viaBm = false;
           if (cls === BLK) continue;
-          var f772 = 0, lf772 = 0, hf772 = 1; if (cls === NONE) { var L772 = window.WFR_LANDCLASS, v772 = L772 ? L772.tree((lon + 180) / 360, Yc + dY * (lat - latC), r, c) : 0; if (v772) { if (hk >= Dn[v772] * L772.k) continue; cls = v772; f772 = L772.last; lf772 = L772.leaf; hf772 = L772.h; } }   // 772a: where the map is silent, NASA's yearly land cover class decides (world-landclass772.js); the map still wins wherever it speaks
+          var f772 = 0, lf772 = 0, hf772 = 1; if (cls === NONE) { var L772 = window.WFR_LANDCLASS, v772 = L772 ? L772.tree((lon + 180) / 360, Yc + dY * (lat - latC), r, c) : 0; if (v772) { if (hk >= (SP802 ? SP802.dens(Dn[v772] * L772.k, lat, lon, v772, J.hll802 || (J.hll802 = function (la, lo) { var q802 = W.toLocal(f, la, lo); return o.H(q802.x, q802.z); })) : Dn[v772] * L772.k)) continue;   /* 802: the same where the land cover map speaks */ cls = v772; f772 = L772.last; lf772 = L772.leaf; hf772 = L772.h; } }   // 772a: where the map is silent, NASA's yearly land cover class decides (world-landclass772.js); the map still wins wherever it speaks
           if (cls === NONE) {   // no class here: a detailed map (z14) means nothing grows; else the real colour decides
             if ((zooms.length && hitZ >= 14) || !o.bm) continue;
             p = W.toLocal(f, lat, lon); var fr = o.bm(p.x, p.z); if (!fr || hk >= fr * C.BM_D * (J.near ? 1 : 0.9)) continue; cls = FOREST; viaBm = true;
-          } else if (hk >= Dn[cls]) continue;
+          } else if (hk >= (SP802 ? SP802.dens(Dn[cls], lat, lon, cls, J.hll802 || (J.hll802 = function (la, lo) { var q802 = W.toLocal(f, la, lo); return o.H(q802.x, q802.z); })) : Dn[cls])) continue;   /* 802 */
           if (!p) p = W.toLocal(f, lat, lon); var gy = o.H(p.x, p.z); if (gy < C.SEA) continue;   // the coarse ground says sea here: no tree on the water
-          var h1 = hash3(r, c, salt + 7), u = (h1 & 65535) / 65536, kind = kindFor(cls, lat, gy, u); if (kind < 0) continue;
-          var ht = heightFor(cls, lat, gy) * (0.75 + ((h1 >>> 16) & 255) / 255 * 0.45), yaw = ((h1 >>> 24) & 255) / 256 * Math.PI * 2;
-          if (f772) { var M772 = window.WFR_LANDCLASS; if (lf772) kind = M772.kind(kind, lf772, u, lat); ht *= hf772; M772.kept(f772); }   // 772a: the leaf the land cover names (needle or broad), its height, and the count the guard reads
+          var h1 = hash3(r, c, salt + 7), u = (h1 & 65535) / 65536, kind = SP802 ? SP802.pick(lat, lon, gy, cls, SP802.needsSea(lat, lon, gy) ? SP802.seaDist(lat, lon, J.hll802 || (J.hll802 = function (la, lo) { var q802 = W.toLocal(f, la, lo); return o.H(q802.x, q802.z); })) : Infinity, u, lf772) : kindFor(cls, lat, gy, u); if (kind < 0) continue;   /* 802 */
+          var ht = (SP802 ? SP802.height(kind, cls, lat, gy) : heightFor(cls, lat, gy)) * (0.75 + ((h1 >>> 16) & 255) / 255 * 0.45), yaw = ((h1 >>> 24) & 255) / 256 * Math.PI * 2;
+          if (f772) { var M772 = window.WFR_LANDCLASS; if (lf772 && !SP802) kind = M772.kind(kind, lf772, u, lat); ht *= hf772; M772.kept(f772); }   // 772a: the leaf the land cover names (needle or broad), its height, and the count the guard reads
           o.put(kind, p.x, gy - C.SINK, p.z, yaw, ht, h0, h1, lat, cls, sz, bnd);
           if (viaBm) J.bm++;
           if (bnd) J.nb++; else J.total++; if (J.total >= J.cap && (!J.near || J.nb >= J.capB)) { J.done = true; return true; }
@@ -218,6 +220,7 @@ window.WFR_VEG = (function () {
     var B = function (k) { var c = srgb(THREE, bark[k], lin); if (BAR761 && k !== 'birch' && k !== 'snag') { c.r *= 0.58; c.g *= 0.64; c.b *= 0.74; } return c; }, K = function (i) { return srgb(THREE, CROWN[i], lin); };
     var out = [merge(THREE, [[G.woodStraight, B('pine')], [G.pine, K(PINE)]]), merge(THREE, [[G.woodStraight, B('pine')], [G.fir, K(FIR)]]), merge(THREE, [[G.woodBent, B('krumm')], [G.krumm, K(KRUMM)]]),
       merge(THREE, [[G.woodOak, B('oak')], [G.oak, K(OAK)]]), merge(THREE, [[G.woodBirch, B('birch')], [G.birch, K(BIRCH)]]), merge(THREE, [[G.woodSnag, B('snag')]])];
+    if (SP802) out = out.concat(SP802.build(THREE, lin).geos);   /* 802: the new shapes (species802.js), in its GEOS order after the six */
     var tops = out.map(function (g) { return g.boundingBox.max.y; });   // trap 115: a declared size is not the geometry; the top is read from the built box
     return { geos: out, tops: tops, tris: out.map(function (g) { return g.attributes.position.count / 3; }) };
   }
@@ -226,7 +229,8 @@ window.WFR_VEG = (function () {
     var blob = shaded(THREE, new THREE.IcosahedronGeometry(1, 0).scale(2.8, 2.2, 2.8).translate(0, 5.0, 0), 2.8, 7.2, 0.45, 1.05), trunk = shaded(THREE, new THREE.CylinderGeometry(0.26, 0.42, 3.2, 5, 1, true).translate(0, 1.6, 0), 0, 3.2, 0.6, 0.85);
     if (BAR761) { var pb = blob.attributes.position, nb = blob.attributes.normal; for (var ib = 0; ib < pb.count; ib++) { var qx = pb.getX(ib), qy = pb.getY(ib) - 5.0, qz = pb.getZ(ib), ql = Math.hypot(qx, qy, qz) || 1; nb.setXYZ(ib, qx / ql, qy / ql, qz / ql); } }   // 761b: rounded light on the same 20 triangles
     var g0 = merge(THREE, [[stem, srgb(THREE, 0x7a5638, lin)], [cone, srgb(THREE, CROWN[PINE], lin)]]), g1 = merge(THREE, [[trunk, srgb(THREE, 0x6f4c32, lin)], [blob, srgb(THREE, CROWN[OAK], lin)]]);
-    return { geos: [g0, g1], tops: [g0.boundingBox.max.y, g1.boundingBox.max.y] };
+    var mg802 = [g0, g1]; if (SP802) mg802 = mg802.concat(SP802.buildMid(THREE, lin, shaded, merge).geos);   /* 802 */
+    return { geos: mg802, tops: mg802.map(function (g) { return g.boundingBox.max.y; }) };
   }
   var U798 = { her: { value: null }, near: { value: null } };   /* 798: her place (w 1: low among the trees) and the lens's dissolve (from, to metres); filled at attach */
   function makeMaterial(THREE, u) {   // the travel zone's far pass for INSTANCES: its shrink toward the eye, the Earth's curve, the Dunn's hole, the haze at true distance
@@ -316,28 +320,31 @@ window.WFR_VEG = (function () {
     U798.her.value = new THREE.Vector4(0, 0, 0, 0); U798.near.value = new THREE.Vector2(0.6, 2.8);   /* 798 */
     var sp = speciesGeos(THREE, renderer, lin), md = midGeos(THREE, lin), mat = makeMaterial(THREE, u), group = new THREE.Group(); group.name = 'veg712';
     function mk(geo, cap, name) { var im = new THREE.InstancedMesh(geo, mat, cap); im.instanceMatrix.setUsage(THREE.DynamicDrawUsage); im.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(cap * 3), 3); im.instanceColor.setUsage(THREE.DynamicDrawUsage);
-      im.count = 0; im.frustumCulled = false; im.renderOrder = C.ORDER; im.layers.set(C.LAYER); im.name = name; im.castShadow = false; im.receiveShadow = false; group.add(im); return im; }
-    var near = sp.geos.map(function (g, i) { return mk(g, C.NEAR_MAX, 'veg:near:' + KINDS[i]); }), mid = md.geos.map(function (g, i) { return mk(g, C.MID_MAX, 'veg:mid:' + (i ? 'crown' : 'cone')); }), band = md.geos.map(function (g, i) { return mk(g, C.BAND_MAX, 'veg:band:' + (i ? 'crown' : 'cone')); });
+      im.count0802 = cap; im.count = 0; im.frustumCulled = false; im.renderOrder = C.ORDER; im.layers.set(C.LAYER); im.name = name; im.castShadow = false; im.receiveShadow = false; group.add(im); return im; }
+    var near = sp.geos.map(function (g, i) { return mk(g, i < 6 ? C.NEAR_MAX : Math.round(C.NEAR_MAX * 0.72), 'veg:near:' + KN802[i]); }), mid = md.geos.map(function (g, i) { return mk(g, i < 2 ? C.MID_MAX : Math.round(C.MID_MAX * 0.6), 'veg:mid:' + MN802[i]); }), band = md.geos.map(function (g, i) { return mk(g, i < 2 ? C.BAND_MAX : Math.round(C.BAND_MAX * 0.6), 'veg:band:' + MN802[i]); });   /* 802: the new shapes' own caps (put() drops a tree past a cap) */
     scene.add(group);   // in the scene from load (always visible, counts 0): the island's camera never sees layer 7, and renderer.compile reaches it with everything else
     /* instance colours: a near-white variation per tree, the tropics a deeper green, the palettes of trees.js as ratios to each species' base */
     var PAL = WFR_TREES.palettes || {}, ratios = KINDS.map(function (k, i) { var base = CROWN[i] ? srgb(THREE, CROWN[i], lin) : null, list = (PAL[k] || []).map(function (h) { var c = srgb(THREE, h, lin); return base ? [c.r / base.r, c.g / base.g, c.b / base.b] : [1, 1, 1]; });
       return list.length ? list.map(function (r) { return [Math.min(1.6, r[0]), Math.min(1.6, r[1]), Math.min(1.6, r[2])]; }) : [[1, 1, 1]]; });
     var TROP = lin ? [0.62, 0.85, 0.55] : [0.8, 0.92, 0.75];
-    var stage = [near.map(function () { return { m: new Float32Array(C.NEAR_MAX * 16), c: new Float32Array(C.NEAR_MAX * 3) }; }), mid.map(function () { return { m: new Float32Array(C.MID_MAX * 16), c: new Float32Array(C.MID_MAX * 3) }; }), band.map(function () { return { m: new Float32Array(C.BAND_MAX * 16), c: new Float32Array(C.BAND_MAX * 3) }; })];
+    var stage = [near, mid, band].map(function (L) { return L.map(function (m) { return { m: new Float32Array(m.count0802 * 16), c: new Float32Array(m.count0802 * 3) }; }); });   /* 802: each mesh's own cap */
     var st = { near: near, mid: mid, n: [0, 0, 0, 0, 0, 0], nm: [0, 0], nb: [0, 0], at: [null, null], sn: [[0, 0, 0, 0, 0, 0], [0, 0], [0, 0]], jobs: [null, null], lastF: null, nc: null, mc: null, lastKey: null, dirty: false, tDirty: -9, clock: 0, sub: null, subs: 0, tick: [], selMs: [0, 0], selMax: [0, 0], sels: [0, 0], fault: null, tintQ: new Map(), tinted: 0, tintMs: 0, cand: [0, 0], bm: [0, 0], agl: null, onTiles: 0, shifts: 0, tImz: 0, frames: [0, 0], wind: 0 };
+    st.n = near.map(function () { return 0; }); st.nm = mid.map(function () { return 0; }); st.nb = band.map(function () { return 0; }); st.sn = [st.n.slice(), st.nm.slice(), st.nb.slice()];   /* 802: one count per mesh */
     function put(level0) { return function (kind, x, y, z, yaw, ht, h0, h1, lat, cls, sz, bnd) { var level = bnd ? 2 : level0;   // 2: the band, drawn as the mid shapes
-      var mi = level === 0 ? kind : (kind === PINE || kind === FIR || kind === KRUMM ? 0 : 1), sg = stage[level][mi], cnt = st.sn[level], k = cnt[mi]++;
-      var top = level === 0 ? sp.tops[mi] : md.tops[mi], s = ht / top, w = s * (0.9 + ((h0 >>> 8) & 255) / 255 * 0.25) * (level !== 0 ? C.MID_FAT : cls === FOREST ? 1.12 : 1) * (sz || 1), c = Math.cos(yaw), sn = Math.sin(yaw), a = sg.m, o = k * 16;
+      var spc = kind; if (SP802) kind = SP802.GEO[spc];   /* 802: kind is the species; its shape */
+      var mi = level === 0 ? kind : SP802 ? SP802.MID[spc] : (kind === PINE || kind === FIR || kind === KRUMM ? 0 : 1), sg = stage[level][mi], cnt = st.sn[level], k = cnt[mi]++; if (k * 3 >= sg.c.length) { cnt[mi]--; return; }
+      var top = level === 0 ? sp.tops[mi] : md.tops[mi], s = ht / top, w = s * (0.9 + ((h0 >>> 8) & 255) / 255 * 0.25) * (level !== 0 ? C.MID_FAT : cls === FOREST ? 1.12 : 1) * (sz || 1) * (SP802 ? SP802.W[spc] : 1), c = Math.cos(yaw), sn = Math.sin(yaw), a = sg.m, o = k * 16;
       a[o] = c * w; a[o + 1] = 0; a[o + 2] = -sn * w; a[o + 3] = 0; a[o + 4] = 0; a[o + 5] = s; a[o + 6] = 0; a[o + 7] = 0; a[o + 8] = sn * w; a[o + 9] = 0; a[o + 10] = c * w; a[o + 11] = 0; a[o + 12] = x; a[o + 13] = y; a[o + 14] = z; a[o + 15] = 1;
-      var R = ratios[kind], rr = R[(h1 >>> 3) % R.length], b = 0.88 + ((h0 >>> 4) & 255) / 255 * 0.24, tr = Math.abs(lat) < 23.5 && kind !== SNAG ? TROP : null, ic = sg.c, oc = k * 3;
+      var R = ratios[kind] || ONE802, rr = R[(h1 >>> 3) % R.length], b = 0.88 + ((h0 >>> 4) & 255) / 255 * 0.24, tr = Math.abs(lat) < 23.5 && kind !== SNAG ? TROP : null, ic = sg.c, oc = k * 3;
       ic[oc] = rr[0] * b * (tr ? tr[0] : 1); ic[oc + 1] = rr[1] * b * (tr ? tr[1] : 1); ic[oc + 2] = rr[2] * b * (tr ? tr[2] : 1);
+      if (SP802 && spc >= 6) { SP802.colour(spc, h0, h1, CC802, level); ic[oc] = CC802[0] * rr[0]; ic[oc + 1] = CC802[1] * rr[1]; ic[oc + 2] = CC802[2] * rr[2]; }   /* 802: the species' own colour (its shape carries its painted colours) */
     }; }
     function flush(list, counts) { for (var i = 0; i < list.length; i++) { var m = list[i], n = counts[i]; m.count = n; m.instanceMatrix.updateRange.offset = 0; m.instanceMatrix.updateRange.count = n * 16; m.instanceMatrix.needsUpdate = true; m.instanceColor.updateRange.offset = 0; m.instanceColor.updateRange.count = n * 3; m.instanceColor.needsUpdate = true; } }
     function commit(level) { var list = level === 0 ? near : level === 1 ? mid : band, cnt = level === 0 ? st.n : level === 1 ? st.nm : st.nb; for (var i = 0; i < list.length; i++) { var n = st.sn[level][i]; cnt[i] = n; list[i].instanceMatrix.array.set(stage[level][i].m.subarray(0, n * 16)); list[i].instanceColor.array.set(stage[level][i].c.subarray(0, n * 3)); } flush(list, cnt); if (level === 0) commit(2); }
-    function start(level, cam, f, H, R0) { for (var i = 0; i < st.sn[level].length; i++) st.sn[level][i] = 0; if (level === 0) st.sn[2][0] = st.sn[2][1] = 0; st.jobs[level] = { J: core.begin({ level: level, cam: { x: cam.x, z: cam.z }, frame: f, H: H, R0: R0, put: put(level), bm: bmForest }), ms: 0, frames: 0 }; }
+    function start(level, cam, f, H, R0) { for (var i = 0; i < st.sn[level].length; i++) st.sn[level][i] = 0; if (level === 0) st.sn[2].fill(0);   /* 802 */ st.jobs[level] = { J: core.begin({ level: level, cam: { x: cam.x, z: cam.z }, frame: f, H: H, R0: R0, put: put(level), bm: bmForest }), ms: 0, frames: 0 }; }
     function work(level, ms) { var jb = st.jobs[level]; if (!jb) return 0; var t0 = performance.now(); core.step(jb.J, ms); var dt = performance.now() - t0; jb.ms += dt; jb.frames++;
       if (jb.J.done) { commit(level); st.at[level] = { x: jb.J.o.cam.x, z: jb.J.o.cam.z }; st.cand[level] = jb.J.cand; st.bm[level] = jb.J.bm; st.selMs[level] = jb.ms; if (jb.ms > st.selMax[level]) st.selMax[level] = jb.ms; st.sels[level]++; st.frames[level] = jb.frames; st.jobs[level] = null; } return dt; }
-    function clear(level) { st.jobs[level] = null; if (level === 0) { for (var i = 0; i < 6; i++) st.n[i] = 0; flush(near, st.n); st.nb[0] = st.nb[1] = 0; flush(band, st.nb); } else { st.nm[0] = st.nm[1] = 0; flush(mid, st.nm); } }
+    function clear(level) { st.jobs[level] = null; if (level === 0) { for (var i = 0; i < st.n.length; i++) st.n[i] = 0; flush(near, st.n); st.nb.fill(0); flush(band, st.nb); } else { st.nm.fill(0); flush(mid, st.nm); }   /* 802 */ }
     function shift(list, cnt, dx, dz) { for (var i = 0; i < list.length; i++) { var a = list[i].instanceMatrix.array; for (var k = 0; k < cnt[i]; k++) { a[k * 16 + 12] += dx; a[k * 16 + 14] += dz; } } flush(list, cnt); }
 
     /* the real colour under a point (world-imagery.js's drape on the streamed sheet): null where it is not painted yet or is the sea */
@@ -530,7 +537,7 @@ window.WFR_VEG = (function () {
     function quant(a) { var c = (a || []).slice().sort(function (x, y) { return x - y; }), qq = function (p) { return c.length ? c[Math.min(c.length - 1, Math.floor(c.length * p))] : null; }; return { n: c.length, med: qq(0.5), p90: qq(0.9), p99: qq(0.99), max: c.length ? c[c.length - 1] : null }; }
     function peek(o) {
       var sum = function (a) { return a.reduce(function (x, y) { return x + y; }, 0); }, gf = function (F) { return { n: F.n, chunks: F.chunks.size, want: F.want.length, built: F.built, rebuilt: F.rebuilt, buildMax: +F.buildMax.toFixed(2), asm: F.asm }; };
-      var out = Object.assign({ near: sum(st.n), mid: sum(st.nm), band: sum(st.nb), bandShapes: st.nb.slice(), midTris: md.geos.map(function (g) { return g.attributes.position.count / 3; }), perKind: KINDS.reduce(function (acc, k, i) { acc[k] = st.n[i]; return acc; }, {}), midShapes: st.nm.slice(),
+      var out = Object.assign({ near: sum(st.n), mid: sum(st.nm), band: sum(st.nb), bandShapes: st.nb.slice(), midTris: md.geos.map(function (g) { return g.attributes.position.count / 3; }), drawn802: near.concat(mid, band).filter(function (m) { return m.count > 0; }).length, sp802: !!SP802, perKind: KN802.reduce(function (acc, k, i) { acc[k] = st.n[i]; return acc; }, {}), perMid802: MN802.reduce(function (acc, k, i) { acc[k] = st.nm[i] + st.nb[i]; return acc; }, {}), midShapes: st.nm.slice(),
         masks: core.masks.size, zooms: core.zooms(), core: Object.assign({}, core.stats), subs: st.subs, sels: st.sels.slice(), selMs: st.selMs.map(function (x) { return +x.toFixed(2); }), selMax: st.selMax.map(function (x) { return +x.toFixed(2); }), selFrames: st.frames.slice(),
         cand: st.cand.slice(), bm: st.bm.slice(), fault: st.fault, tinted: st.tinted, tintMs: +st.tintMs.toFixed(2), tintQ: st.tintQ.size, onTiles: st.onTiles, agl: st.agl == null ? null : +st.agl.toFixed(1), drawCalls: near.length + mid.length + band.length, tris: sp.tris, material: mat.uuid, inScene: group.parent === scene, shifts: st.shifts,
         grass: { far39: GFI ? { n: GFI.n, built: GFI.built, of: GFI.chunks.length, buildMs: +GFI.buildMs.toFixed(1), asm: GFI.asm, asmMs: +GFI.asmMs.toFixed(2) } : null, travel: gf(GT), island: gf(GI), t: +GU.uGrassT.value.toFixed(3), w: +GU.uGrassW.value.toFixed(3), wind: st.wind, tris: gGeo.attributes.position.count / 3 } }, progs());   // the bench's read: the page keeps its renderer to itself
@@ -545,14 +552,14 @@ window.WFR_VEG = (function () {
     }
     subscribe();   // at load when the features unit is already there: it reads landcover / landuse only for a listener, so the first tiles carry them too
     function cover761(cb) { var F = TR.on ? GT : GI, full = Math.max(1, Math.pow(GC.CH / GC.SP / 4, 2) * 0.55); for (var i = 0; i < F.want.length; i++) { var c = F.want[i]; if (c.cv) cb(c, 16, Math.max(1, full * (c.cut == null ? 1 : c.cut))); } }   // 761b: where the grass stands (a chunk built part-deep is counted against that depth)
-    function nearTrees761(cb) { var RK = [0.24, 0.24, 0.3, 0.46, 0.3, 0.1]; for (var i = 0; i < near.length; i++) { var a = near[i].instanceMatrix.array, top = sp.tops[i]; for (var k = 0; k < st.n[i]; k++) { var ht = a[k * 16 + 5] * top; cb(a[k * 16 + 12], a[k * 16 + 14], ht, ht * RK[i]); } } }   // 761b: every full tree: x, z, height, crown radius
+    function nearTrees761(cb) { var RK = [0.24, 0.24, 0.3, 0.46, 0.3, 0.1].concat(SP802 ? SP802.RK : []);   /* 802 */ for (var i = 0; i < near.length; i++) { var a = near[i].instanceMatrix.array, top = sp.tops[i]; for (var k = 0; k < st.n[i]; k++) { var ht = a[k * 16 + 5] * top; cb(a[k * 16 + 12], a[k * 16 + 14], ht, ht * RK[i]); } } }   // 761b: every full tree: x, z, height, crown radius
     /* 798 DOWN THROUGH THE TREES (Marth, Nov 13 2026, verbatim: "you can't descend past the tree line"). The near trees as she meets them: each species'
        crown from its own built shape (the lowest green vertex over its height; the radius 761b's), a crown an upright cylinder from there to the top.
        canopy798: round a point, the highest top of the trees whose crowns reach within r, whether the point is inside a crown, the nearest trunk.
        fly798 (the travel flight asks it each frame): under the canopy the camera's arm comes in (arm, up: factors on it), in a crown she slows (slow:
        a factor on her cruise) and the leaves rustle as she goes in (sounds.js rustle); her place goes to the trees' shader, which thins the leaves
        between the lens and her. Every number a DRAFT for his thumb. */
-    var RK798 = [0.24, 0.24, 0.3, 0.46, 0.3, 0.1], CB798 = sp.geos.map(function (g) { var P = g.attributes.position, Cc = g.attributes.color, lo = 1e9, top = g.boundingBox ? g.boundingBox.max.y : 1;
+    var RK798 = [0.24, 0.24, 0.3, 0.46, 0.3, 0.1].concat(SP802 ? SP802.RK : []), CB798 = sp.geos.map(function (g) { var P = g.attributes.position, Cc = g.attributes.color, lo = 1e9, top = g.boundingBox ? g.boundingBox.max.y : 1;
       if (!Cc) return 0.35; for (var i = 0; i < P.count; i++) if (Cc.getY(i) > Cc.getX(i) * 1.08) lo = Math.min(lo, P.getY(i)); return lo < 1e9 && top > 0 ? Math.max(0.05, Math.min(0.9, lo / top)) : 0.35; });
     var RT798 = sp.geos.map(function (g) { var P = g.attributes.position, Cc = g.attributes.color, top = g.boundingBox ? g.boundingBox.max.y : 1, r = 0;   // each species' trunk: its widest bark at its foot (the lowest 8%), a radius
       for (var i = 0; i < P.count; i++) if (P.getY(i) <= top * 0.08 && !(Cc && Cc.getY(i) > Cc.getX(i) * 1.08)) r = Math.max(r, Math.hypot(P.getX(i), P.getZ(i))); return r || top * 0.02; });

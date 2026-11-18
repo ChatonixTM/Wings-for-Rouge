@@ -87,6 +87,24 @@ window.WFR_TRAVEL712 = (function () {
      the Ganges delta's channels -3: they wore sand by height alone; Kingston's shallows reach the deep 2-3 km off the Palisadoes). A distance band from the
      z10 shore was tried first: it traced the z10 pixels' squares, and a z9 tile (which never reads z10) set it off at its edge */
   var C822 = { ZC: 10, AGREE: 2.5, ZS: 8, DEEP: -8, SEA: 3000, ON: !(function () { try { return localStorage.getItem('wfr.look') === 'classic'; } catch (e) { return false; } })() };
+  /* 825 (Nov 14 2026; Marth, verbatim: "This is Maurice Gibbs?"): BISCAYNE BAY DREW AS GREEN LAND. Its heights are the sea (z9-z10 -2 to -3 m, the fine
+     survey from z11 0 to -1 m), but the ground's colour is NASA's (Blue Marble: the photo layer and the drape), and a shallow bay's pixel there is sea-grass
+     olive (44,46,6 to 56,64,23): green over blue, so 754's water test by colour (blue over green and red) calls it land, and it is too bright (luminance
+     0.16-0.22) for 755b's dark-water rule (under 0.1-0.2); 755b then painted it grass. Height alone cannot judge (the Dutch polders, New Orleans and the
+     Ganges delta lie at or under 0 too, and NASA's polder green is the bay's olive), and NASA's land cover map alone cannot either (MODIS, IGBP, z8: a
+     500 m pixel; it calls the 500 m of bay beside the park 'urban'). So the two together: a vertex is WATER where its height says sea (0 or under) AND
+     the land cover has water or wetland (17, 11) within a pixel of it (its 3 x 3); 'sea' is LOW m or under, or a face under SHALLOW m whose four grid
+     neighbours are too (the fine survey's bay face reads 0.1-0.3 m in places; a beach at that height climbs to land beside it, so Miami Beach's strip,
+     the Palisadoes and Negril keep their sand, and the fine tile's coast meets its coarse neighbour's): the coast is the height's (the fine survey's, from z11), the land
+     cover only says the low ground is a bay and not a polder's middle (a polder's or New Orleans' edge within ~500 m of real water wears water; DRAFT).
+     THE BAY'S FILLED FACE: the terrain flattens much of the bay to a plateau at exactly 2.0 m (z10 everywhere, z11 too, z12+ on its east half), and to z10
+     the islands smear over the rest (2-10 m), so ground under HMAX m is water too deep inside the land cover's water: its pixel and all eight round it
+     water (over SHALLOW m; at most SHALLOW m, its four nearest pixels). A coast's mixed pixel never is, so a beach, Kingston's Palisadoes (its airport's
+     pixels are town) and Negril keep their sand, and the Venetian Islands (their pixels wetland and town) stand.
+     One float a vertex (aW825), filled at the build and again when a land cover tile arrives (an attribute's bytes: nothing compiled or added);
+     world-look755b.js takes it as the sea. Tiles under ZMIN keep the colour rules (far, and a z7 tile would ask for 4 x 4 land cover tiles). Off in Classic
+     (frozen) and with the land cover switched off ('wfr.landclass' off). */
+  var C825 = { ON: C822.ON, ZMIN: 8, WATER: 17, WET: 11, Z: 8, HMAX: 12, LOW: 0, SHALLOW: 0.35 };
   var GREY821 = [720, 360], G821 = { tex: null, frame: null };   /* 821 U2: the discovered mask's size (half a degree a byte, the whole world) and the one mask */
   function makeMaterial(THREE, u, tag) {
     if (!G821.tex) { var g821 = new THREE.DataTexture(new Uint8Array(GREY821[0] * GREY821[1]), GREY821[0], GREY821[1], THREE.LuminanceFormat, THREE.UnsignedByteType); g821.magFilter = g821.minFilter = THREE.LinearFilter; g821.generateMipmaps = false; g821.needsUpdate = true; G821.tex = { value: g821 }; G821.frame = { value: new THREE.Vector4(0, 0, 1, 0) }; }
@@ -181,6 +199,29 @@ window.WFR_TRAVEL712 = (function () {
       return function (u, v) { var x = Math.floor(f(u)) - x0, y = Math.floor(g(v)) - y0; return x >= 0 && y >= 0 && x < w && y < h ? out[y * w + x] : 0; };
     }
     function anc822(rec, z) { var dz = rec.z - z; if (dz < 0) return null; var r = dz ? tiles.get(keyOf(z, rec.x >> dz, rec.y >> dz)) : rec; return r && r.field ? { r: r, n: 1 << dz, x: rec.x >> dz, y: rec.y >> dz } : null; }
+    /* 825: the water by land cover, a vertex at a time (the tile's own web-map fraction: the data tiles are web-map tiles in both frames); 0 on land by
+       height, and 0 while the land cover tile is on its way (asked for by the read; painted when it comes, below) */
+    var LC825 = C825.ON && window.WFR_LANDCLASS && WFR_LANDCLASS.rawAt && WFR_LANDCLASS.enabled() ? WFR_LANDCLASS : null, SP825 = 256 << C825.Z;
+    function water825(rec, w, hv, N) {
+      var n = 1 << rec.z, any = 0, L = LC825;
+      for (var j = 0; j <= N; j++) for (var i = 0; i <= N; i++) { var q = j * (N + 1) + i, h = hv[q]; w[q] = 0; if (h >= C825.HMAX) continue;
+        var gx = (rec.x + i / N) / n * SP825, gy = (rec.y + j / N) / n * SP825, c, dx, dy;
+        if (h <= C825.LOW || (h <= C825.SHALLOW && nbMax825(hv, N, i, j) <= C825.SHALLOW)) { var px = Math.floor(gx), py = Math.floor(gy);   // the sea by height: water when the land cover has water or wetland within a pixel
+          for (dy = -1; dy <= 1 && !w[q]; dy++) for (dx = -1; dx <= 1; dx++) { c = L.rawAt((px + dx + 0.5) / SP825, (py + dy + 0.5) / SP825); if (c === C825.WATER || c === C825.WET) { w[q] = 1; break; } } }
+        else { var px2 = Math.floor(gx), py2 = Math.floor(gy), x0 = Math.floor(gx - 0.5), y0 = Math.floor(gy - 0.5), all = 1, deep = h > C825.SHALLOW;   // low ground over the sea's face: water only inside the land cover's water
+          if (deep) { for (dy = -1; dy <= 1 && all; dy++) for (dx = -1; dx <= 1 && all; dx++) { c = L.rawAt((px2 + dx + 0.5) / SP825, (py2 + dy + 0.5) / SP825); if (c !== C825.WATER) all = 0; } }   // its pixel and all eight round it (a spit, a beach, an airport's pixel is never all water)
+          else for (var b = 0; b < 4 && all; b++) { c = L.rawAt((x0 + (b & 1) + 0.5) / SP825, (y0 + (b >> 1) + 0.5) / SP825); if (c !== C825.WATER) all = 0; }   // its four nearest pixels
+          w[q] = all; }
+        if (w[q]) any = 1; }
+      return any;
+    }
+    function nbMax825(hv, N, i, j) { return Math.max(i > 0 ? hv[j * (N + 1) + i - 1] : -1e9, i < N ? hv[j * (N + 1) + i + 1] : -1e9, j > 0 ? hv[(j - 1) * (N + 1) + i] : -1e9, j < N ? hv[(j + 1) * (N + 1) + i] : -1e9); }   // the highest of its four grid neighbours
+    function paint825(rec) { var a = rec.mesh && rec.mesh.geometry.getAttribute('aW825'); if (!a || !rec.hv) return; var N = Math.round(Math.sqrt(rec.hv.length)) - 1, w = a.array, V = (N + 1) * (N + 1);
+      water825(rec, w, rec.hv, N); var vs = V; for (var e = 0; e < 4; e++) for (var g = 0; g <= N; g++) { var ii = e < 2 ? g : (e === 2 ? 0 : N), jj = e === 0 ? 0 : e === 1 ? N : g; w[vs++] = w[jj * (N + 1) + ii]; }   // the skirt, in the streamer's order
+      a.needsUpdate = true; stats.w825 = (stats.w825 || 0) + 1; }
+    if (LC825 && LC825.onArrive) LC825.onArrive(function (x, y) {   // a land cover tile came: every built tile it lies under (or over) is painted again
+      var t0 = performance.now(); tiles.forEach(function (r) { if (!r.mesh || r.z < C825.ZMIN || !r.lo825) return; var dz = r.z - C825.Z; if (Math.abs((r.x >> dz) - x) <= 1 && Math.abs((r.y >> dz) - y) <= 1) paint825(r); });   // its neighbours too (a vertex reads a pixel either side); only tiles with low ground
+      var ms = performance.now() - t0; if (!(stats.p825Max >= ms)) stats.p825Max = +ms.toFixed(2); });
     function depth737(rec, u, v) { for (var dz = 1; dz <= 6 && dz <= rec.z; dz++) { var n = 1 << dz, x = rec.x >> dz, y = rec.y >> dz, r = tiles.get(keyOf(rec.z - dz, x, y)); if (r && r.field) { var h = sampleField(r.field, r.u0 + (rec.x - x * n + u) / n * r.s, r.v0 + (rec.y - y * n + v) / n * r.s); if (h < 0) return h; } } return -30; }   // 737: the remote terrain has no sea floor past z10 (its sea is exactly 0): the depth comes from the nearest ancestor that has one; none says land is beside her, so shallow
     function build(rec) {   // one tile: a GRID x GRID sheet in the tile's own mercator metres (scaled by the frame's k), plus a skirt round its edge
       var N = C.GRID, V = (N + 1) * (N + 1), E = 4 * (N + 1), s = WORLD / Math.pow(2, rec.z), b = boundsOf(f, rec.z, rec.x, rec.y), skirt = Math.max(30, b.size * 0.04);
@@ -208,6 +249,7 @@ window.WFR_TRAVEL712 = (function () {
         for (i = 0; i < e.length - 1; i++) { var ea = e[i], eb = e[i + 1], sa = first + i, sb = first + i + 1; if (outA) idx.push(ea, eb, sa, eb, sb, sa); else idx.push(ea, sa, eb, eb, sa, sb); } }
       var geo = new THREE.BufferGeometry();
       geo.setAttribute('position', new THREE.BufferAttribute(pos, 3)); geo.setAttribute('color', new THREE.BufferAttribute(col, 3)); geo.setAttribute('aB822', new THREE.BufferAttribute(bch, 1));   /* 822 follow-up: the beach's leave (world-look755b.js) */
+      if (LC825 && rec.z >= C825.ZMIN) { var w825 = new Float32Array(V + E); for (q = 0; q < V && !rec.lo825; q++) if (hv[q] < C825.HMAX) rec.lo825 = 1; if (water825(rec, w825, hv, N)) { vs = V; for (ei = 0; ei < 4; ei++) for (g = 0; g < edges[ei].length; g++) w825[vs++] = w825[edges[ei][g]]; } geo.setAttribute('aW825', new THREE.BufferAttribute(w825, 1)); }   /* 825: the water by land cover (always made at z8+, so a tile whose land cover comes later is painted in place) */
       geo.setIndex(idx.slice(0, gridFaces)); geo.computeVertexNormals();   // the sheet's normals alone; the skirt copies its edge's
       var nrm = geo.getAttribute('normal').array; vs = V; for (ei = 0; ei < 4; ei++) for (g = 0; g < edges[ei].length; g++) { nrm[vs * 3] = nrm[edges[ei][g] * 3]; nrm[vs * 3 + 1] = nrm[edges[ei][g] * 3 + 1]; nrm[vs * 3 + 2] = nrm[edges[ei][g] * 3 + 2]; vs++; }
       geo.setIndex(idx);
@@ -331,5 +373,5 @@ window.WFR_TRAVEL712 = (function () {
   }
 
   return { C: C, speedAt: speedAt, horizon: horizon, farOf: farOf, keyOf: keyOf, childrenOf: childrenOf, sampleField: sampleField, fieldOf: fieldOf, boundsOf: boundsOf, tint: tint,
-    makeMaterial: makeMaterial, makeStreamer: makeStreamer, makeClearer: makeClearer, version: 1, grey821: function () { return G821; }, C822: C822 };
+    makeMaterial: makeMaterial, makeStreamer: makeStreamer, makeClearer: makeClearer, version: 1, grey821: function () { return G821; }, C822: C822, C825: C825 };
 })();

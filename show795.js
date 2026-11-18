@@ -116,6 +116,7 @@ window.WFR_SHOW795 = (function () {
   /* ---------- THE LOOK: the house style (Bait & Nuke and the Face, his own two apps): night glass with a 1 px glow, Rouge red the hero, signal mint for go,
      gold for rewards; Space Grotesk headlines, Space Mono data lines, letter-spaced eyebrows, outlined pills, ringed badges, glow-in motion. No paper, no stripes. ---------- */
   var G_SANS = "'U795 Display','Space Grotesk',-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif", G_MONO = "'U795 Mono','Space Mono',ui-monospace,'SF Mono',Menlo,Consolas,monospace";
+  var CSS811 = 'html.s7att #s7title{opacity:0!important;transition:opacity .45s ease}';   /* 811: the title's cards step aside while the camera flies */
   var CSS =
     ':root{--g-void:#05060c;--g-panel:rgba(12,16,26,.84);--g-panel2:rgba(16,21,34,.9);--g-line:rgba(120,140,210,.2);--g-ink:#e9edf8;--g-dim:#95a0bd;--g-muted:#5f6a86;' +
       '--g-red:#ff3b42;--g-rouge:#e2384d;--g-mint:#4de8c9;--g-mint2:#235952;--g-gold:#ffd45c;--g-violet:#b48cff;--g-sans:var(--u7-head,' + G_SANS + ');--g-mono:var(--u7-mono,' + G_MONO + ');' +
@@ -302,7 +303,7 @@ window.WFR_SHOW795 = (function () {
   function create(o) {
     var U = window.UI795, THREE = o.THREE; if (!U || !THREE) { API.error = 'no kit'; return null; }
     if (o.classic && o.classic()) return null;
-    U.css(CSS); document.documentElement.classList.add('s795');
+    U.css(CSS); U.css(CSS811); document.documentElement.classList.add('s795');
     var setDirty = false; function keepSet() { if (setDirty) { setDirty = false; storeSet(set); } }   /* #140: the title counter is written as the page is left or hidden, never mid-flow */
     try { addEventListener('pagehide', keepSet); document.addEventListener('visibilitychange', function () { if (document.visibilityState === 'hidden') keepSet(); }); } catch (e) { /* no page events: the counter stays this visit's */ }
     var S = o.S, camera = o.camera, set = loadSet(), V = new THREE.Vector3(), V2 = new THREE.Vector3(), V3 = new THREE.Vector3();
@@ -758,10 +759,46 @@ window.WFR_SHOW795 = (function () {
       try {
         real = real || dt || 0;
         var tOn = titleOn() && !st.photo; if (tOn) { st.titleT += real; if (!st.title && st.titleT > 0.25) showTitle(); if (st.title) goPlace(); } else { st.titleT = 0; if (st.title) leaveTitle(); }
-        veilTick(real); dropWatch(real); cardWatch(); fxWatch(real);
+        veilTick(real); dropWatch(real); cardWatch(); fxWatch(real); attractTick(real);   /* 811 */
         if (st.picQ.length) snap(st.picQ.shift());
         if ((st.tick += real) > 0.5) { st.tick = 0; pauseButtons(); if (st.m && st.m.view === 'place' && st.m.fromCard && !document.getElementById('m788card')) closeM('gone'); }
       } catch (e) { hurt('tick', e); }
+    }
+    /* ---------- 811 THE TITLE FLIES OVER HER WORLD WHILE SHE WAITS (Marth, Nov 14 2026, verbatim: "right after the title screen I was kinda bummed not
+       seeing a new cinematic for the island fly over. You could include the ocean and some parts of the world if she doesn't immediately press start ;)").
+       Left alone on the title for ATT.IDLE seconds, the camera leaves her perch and flies over her island (each landmark framed and named: the village,
+       the lake, the highest peak, the lighthouse), then out over the ocean on the true bearing of a place she has found (its name, how far, which way),
+       or of Jamaica if she has found none yet ("the first land"). The cinematic kit's grammar (cine.js: the bars, the name cards, its blend in and out);
+       the island's own clock and weather; any tap goes back to the title at once (the kit's own tap, its 0.5 s blend). Only the camera moves: nothing
+       joins the scene, no shader is compiled (made at load: the tour's points are the page's own; the cards are the kit's). Every word a DRAFT. */
+    var ATT = { IDLE: 12, LEG: 5.2, OUT: 8, R: [58, 62, 75, 48], H: [30, 22, 26, 24] };
+    st.att = null; st.attN = 0; st.idle = 0; st.attTaps = 0;
+    try { ['pointerdown', 'keydown', 'wheel', 'touchstart'].forEach(function (k) { addEventListener(k, function () { st.idle = 0; if (st.att) st.attTaps++; }, true); }); } catch (e) { /* no input events: never idle-started */ }
+    function compass(yaw) { var b = ((Math.PI - yaw) * 180 / Math.PI % 360 + 360) % 360; return ['north', 'north-east', 'east', 'south-east', 'south', 'south-west', 'west', 'north-west'][Math.round(b / 45) % 8]; }
+    function attractStart() {
+      if (st.att || !st.title || st.drop || st.m || st.photo || !o.cine || !o.tour) return false; if (o.quiet && o.quiet()) return false;
+      var T = null; try { T = o.tour(); } catch (e) { hurt('tour', e); return false; } if (!T || !T.island || !T.island.length) return false;
+      var legs = T.island.map(function (q, i) { return { name: q.name, area: q.area, at: q.at, R: ATT.R[i % ATT.R.length], H: ATT.H[i % ATT.H.length], a0: i * 1.9 + 0.6 }; });
+      var F = (T.found || []).filter(function (f) { return f.seen; }), go = F[0] || (T.found || [])[0] || null, ctr = T.centre || { x: 0, z: 0 };
+      if (go) go.line = (go.km != null ? go.km + ' km to the ' + compass(go.yaw) : 'Over the sea to the ' + compass(go.yaw)) + (go.seen ? ' · where she has flown' : ' · the first land, waiting for her');
+      var dur = legs.length * ATT.LEG + (go ? ATT.OUT : 0), A = { legs: legs, go: go, ctr: ctr, dur: dur, i: -1, prevP: null, prevL: null, card: null, cards: [], t0: now() };
+      var pose = function (k, u, P, L) { var g = legs[k], a = g.a0 + 0.55 * u, r = g.R * (1 - 0.12 * u); P.set(g.at.x + Math.sin(a) * r, g.at.y + g.H * (1 - 0.15 * u), g.at.z + Math.cos(a) * r); if (o.ground) P.y = Math.max(P.y, o.ground(P.x, P.z) + 6); L.set(g.at.x, g.at.y + 2, g.at.z); };
+      var out = function (u, P, L) { var y = go.yaw, dx = Math.sin(y), dz = Math.cos(y), d = 260 + 520 * u; P.set(ctr.x + dx * d, 34 + 30 * u, ctr.z + dz * d); L.set(P.x + dx * 600, 6, P.z + dz * 600); };
+      var ok = o.cine.play({ name: 'attract811', dur: dur, skip: 0, freeze: false, bars: true,
+        start: function () { document.documentElement.classList.add('s7att'); st.attN++; },
+        tick: function (t) { var k = Math.min(legs.length, Math.floor(t / ATT.LEG)), c = k < legs.length ? legs[k] : null;
+          if (k !== A.i) { A.i = k; var nm = c ? c.name : go ? go.name : null, ar = c ? c.area : go ? go.line : null; if (nm) { try { o.cine.nameCard(nm, ar, (c ? ATT.LEG : ATT.OUT) * 1000 - 400); } catch (e) { /* the card is a nicety */ } A.cards.push(nm); } } },
+        shot: function (t, u, P, L) { var k = Math.floor(t / ATT.LEG), lu = (t - k * ATT.LEG) / ATT.LEG, inLeg = k < legs.length;
+          if (inLeg) pose(k, lu, P, L); else out(Math.min(1, (t - legs.length * ATT.LEG) / ATT.OUT), P, L);
+          var bu = inLeg ? lu : Math.min(1, (t - legs.length * ATT.LEG) / ATT.OUT);   /* each leg eases in from where the last one ended (a glide, never a cut) */
+          if (k > 0 && bu < 0.35) { var pk = Math.min(k, legs.length) - 1, P0 = V3.set(0, 0, 0), L0 = new THREE.Vector3(); pose(pk, 1, P0, L0); var e = bu / 0.35; e = e * e * (3 - 2 * e); P.lerpVectors(P0, P.clone(), e); L.lerpVectors(L0, L.clone(), e); }
+          A.cam = [P.x, P.y, P.z]; return inLeg ? 50 : 56; },
+        end: function (how) { document.documentElement.classList.remove('s7att'); st.attLast = A.cards.slice(); st.att = null; st.idle = 0; st.attEnd = how || 'end'; } });
+      if (!ok) return false; st.att = A; return true;
+    }
+    function attractTick(real) {
+      if (st.att) return; if (!st.title || st.drop || st.m || st.photo) { st.idle = 0; return; }
+      st.idle += real; if (st.idle >= ATT.IDLE) { st.idle = 0; attractStart(); }
     }
     function pre() { try { if (st.title && !st.drop) titleCam(true); } catch (e) { hurt('pre', e); } }
     function post() { try { titleCam(false); } catch (e) { hurt('post', e); } }
@@ -774,10 +811,12 @@ window.WFR_SHOW795 = (function () {
         m: st.m ? { view: st.m.view, pid: st.m.pid || null, kid: st.m.kid || null, cards: st.m.root.querySelectorAll('.u7-mission').length, locked: st.m.root.querySelectorAll('.u7-mission.locked').length, text: st.m.root.innerText.replace(/\s+/g, ' ').slice(0, 2400) } : null,
         mOpens: st.mOpens, briefs: st.briefs, cases: st.cases, gos: st.gos, pics: Object.keys(st.pics).filter(function (k) { return !!st.pics[k]; }),
         photo: st.photo ? { kind: st.photo.kind, w: st.photo.cv ? st.photo.cv.width : 0, h: st.photo.cv ? st.photo.cv.height : 0 } : null, photos: st.photos, saves: st.saves,
-        words: set.words, fx: st.fx, fxN: Object.assign({}, st.fxN), err: st.err };
+        words: set.words, fx: st.fx, fxN: Object.assign({}, st.fxN), err: st.err,
+        attract: { on: !!st.att, n: st.attN, idle: +st.idle.toFixed(2), taps: st.attTaps, end: st.attEnd || null, cards: st.att ? st.att.cards.slice() : (st.attLast || []), cam: st.att && st.att.cam ? st.att.cam.map(function (v) { return +v.toFixed(1); }) : null, dur: st.att ? +st.att.dur.toFixed(1) : null, go: st.att && st.att.go ? st.att.go.name : null } };   /* 811 */
     }
     var api = { tick: tick, pre: pre, post: post, fx: fx, lane: lane, peek: peek, dropIn: dropIn, openBoard: openBoard, openPlace: openPlace, photo: photo, closePhoto: closePhoto, setWords: setWords,
-      busy: function () { return !!(st.drop || st.m || st.photo); }, titleUp: function () { return !!st.title; }, closeShow: function () { closeM(); } };
+      busy: function () { return !!(st.drop || st.m || st.photo); }, titleUp: function () { return !!st.title; }, closeShow: function () { closeM(); },
+      attract: function () { st.idle = 0; return attractStart(); }, attractOn: function () { return !!st.att; } };   /* 811 */
     return api;
   }
   API.create = create; API.WORDS = WORDS; API.LETTERS = LETTERS; API.VOICE = VOICE; API.TIPS = TIPS; API.clock = clock; API.dayName = dayName; API.weather = weather; API.boardOrder = boardOrder; API.fmtLL = fmtLL;

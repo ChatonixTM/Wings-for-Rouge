@@ -398,6 +398,7 @@ window.WFR_QUESTS720 = (function () {
   function lmPeek(id) { var L = LMB[id]; if (!L || !st.inited) return null; var h = lmHere(L); return { id: id, d: h ? +h.d.toFixed(1) : null, agl: h && h.agl != null ? +h.agl.toFixed(1) : null, ok: h ? h.ok : null, where: h ? h.where : null, done: !!Q.lm[id] }; }
 
   return { C: C, WORDS: WORDS, LANDMARKS: LANDMARKS, place: place, inside: function (id) { return inside729(id); }, init: init, tick: tick, draw: draw, travelHud: travelHud, talk: talk, goal: goal, pill: pill, peek: peek, lmPeek: lmPeek, pinLm: pinLm,
-    lmDone: function (id) { return !!(st.inited && Q && Q.lm[id]); }, pinned: function () { var a = pinned(); return a ? a.id : null; },
+    lmDone: function (id) { return !!(st.inited && Q && Q.lm[id]); },
+    spots: function () { var out = []; if (!st.inited || !Q) return out; for (var i = 0; i < Q.active.length; i++) { var a = Q.active[i], g = a.legs[a.leg]; if (!g || g.k !== 'spot') continue; var p = spotOf(g, { x: 0, y: 0, z: 0 }); if (p) out.push({ x: p.x, y: p.y, z: p.z, e: a.e, id: a.id, n: a.item || null }); } return out; },   /* 833: the lost things where they lie now */ pinned: function () { var a = pinned(); return a ? a.id : null; },
     offers: function (pid) { return st.inited ? offers(pid) : false; }, open: function (on) { openBoard(on); } };
 })();

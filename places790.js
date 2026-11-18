@@ -158,11 +158,46 @@ window.WFR_PLACES790 = (function () {
     var e = document.createElement('div'); e.id = 'place790'; e.setAttribute('role', 'status'); e.setAttribute('aria-live', 'polite'); document.body.appendChild(e); return (st.cardEl = e);
   }
   function cardShow(R) {
-    var e = cardMake(), K = KIND[R.k] || KIND.landmark; e.innerHTML = '';
+    var K = KIND[R.k] || KIND.landmark, top825 = place825(R, K), e = cardMake(); e.innerHTML = '';   /* #150 B5: the card's place is worked out BEFORE its DOM is written (nothing dirty yet) */
     var add = function (c, t) { if (!t) return; var d = document.createElement('div'); d.className = c; d.textContent = t; e.appendChild(d); };
     add('o', K[0]); add('n', R.n); if (R.t <= 2) add('u', R.u);
     e.className = 't' + Math.max(2, R.t); st.cardOn = true; st.cardUntil = now() + (C.SHOW[Math.max(2, R.t)] || 3000) / 1000;
+    if (top825 !== undefined) e.style.top = top825;
     requestAnimationFrame(function () { requestAnimationFrame(function () { if (st.cardOn && st.cardEl === e) e.classList.add('on'); }); }); watch();   /* risen two frames later: no forced layout (the gate measured 9 ms on the heavier #138 page) */
+  }
+  /* 825 (Marth, Nov 14, his picture at Miami Beach: "Maurice Gibb Memorial Park" lay under the fast-forward button): the card keeps clear of the play
+     screen's buttons. Its box is worked out, never read (its width from a 2D canvas's measure, its lines from the width it has), and the buttons' boxes
+     are world-features.js's own cached read (twice a second at most, the same list the town names keep clear of, the fast-forward button and its dots
+     in it). Over a button, the card steps down under the lowest one it meets (at most MAXK of the screen down), else up over the highest; at rest it
+     sits where it always did. Standard only (Classic is frozen: no style is set there). */
+  var C825 = { MAXK: 0.62, GAP: 6 }, cx825 = null;
+  /* #150 B5 (Su 40, measured: clear825 was 12.4 of say()'s 12.7 ms): a page canvas's font, set just after the card's DOM write, made the browser restyle the whole
+     page first. Now the widths are measured on an OffscreenCanvas (no document, no style pass; a page canvas only where there is none), its font set only when it
+     changes, and every width kept (a name is measured once). */
+  /* Then measured again (Su 40): the place still cost 6.4 ms, all of it the measuring: one canvas switched between the card's three fonts, and every switch
+     parsed and looked the font up again. So each font has its own canvas, its font set once, ever: a new name costs only its measure. */
+  var w825 = new Map(); cx825 = {};
+  function ctx825(font) { var c = cx825[font]; if (c) return c;
+    try { c = typeof OffscreenCanvas === 'function' ? new OffscreenCanvas(1, 1).getContext('2d') : null; } catch (e) { c = null; } if (!c) c = document.createElement('canvas').getContext('2d');   /* an older Safari has no 2D OffscreenCanvas */
+    c.font = font; return (cx825[font] = c); }
+  function textW825(s, font) { var k = font + '|' + s, w = w825.get(k); if (w != null) return w;
+    w = ctx825(font).measureText(s).width; if (w825.size > 600) w825.clear(); w825.set(k, w); return w; }
+  function box825(R, K, top) {
+    var W0 = window.innerWidth, H0 = window.innerHeight, port = H0 > W0 && document.documentElement.classList.contains('ui716'), L = port ? 70 : 16, av = W0 - 2 * L, t3 = R.t >= 3;
+    var nPx = t3 ? 19 : 24, nW = textW825(R.n, '500 ' + nPx + 'px Georgia,"Times New Roman",serif') + R.n.length * nPx * 0.03, nL = Math.max(1, Math.ceil(nW / Math.max(40, av - 32)));
+    var h = (t3 ? 13 : 14.3) + 4 + nL * nPx * 1.15, w = Math.min(av, nW + 32), u = R.t <= 2 && R.u ? R.u : '';
+    if (u) { var uw = Math.min(av, 330), uW = textW825(u, '500 12.5px system-ui,-apple-system,sans-serif'); h += 6 + Math.max(1, Math.ceil(uW / uw)) * 16.9; w = Math.max(w, Math.min(uw, uW)); }
+    w = Math.max(w, textW825(K[0].toUpperCase(), '600 11px system-ui,sans-serif') * 1.3);
+    return [W0 / 2 - w / 2, top, W0 / 2 + w / 2, top + h];
+  }
+  function place825(R, K) {   /* the card's top (a px string, '' at rest), or undefined: leave it as it is */
+    var F = window.WFR_FEATURES; if (!X || (X.classic && X.classic()) || !F || !F.hud825) return; var hud = null; try { hud = F.hud825().filter(function (b) { return b[4] !== 'place790'; }); } catch (err) { return undefined; }
+    var H0 = window.innerHeight, top0 = Math.round(H0 * 0.24), top = top0, b = box825(R, K, top), n = 0, hits;
+    function over(bx) { return hud.filter(function (o) { return bx[0] < o[2] && bx[2] > o[0] && bx[1] < o[3] && bx[3] > o[1]; }); }
+    while ((hits = over(b)).length && n++ < 4) { var lo = Math.max.apply(null, hits.map(function (o) { return o[3]; })) + C825.GAP; if (lo + (b[3] - b[1]) > H0 * C825.MAXK) break; top = lo; b = box825(R, K, top); }
+    if (over(b).length) { top = top0; b = box825(R, K, top); hits = over(b); if (hits.length) { var hi = Math.min.apply(null, hits.map(function (o) { return o[1]; })) - C825.GAP - (b[3] - b[1]); if (hi > 0 && !over(box825(R, K, hi)).length) top = hi; } }
+    st.clear825 = { top: top, moved: top !== top0, box: box825(R, K, top).map(Math.round), n: (st.clear825 ? st.clear825.n : 0) + (top !== top0 ? 1 : 0) };
+    return top !== top0 ? top + 'px' : '';
   }
   function cardHide(now0) {   /* now0: at once (a title is coming into the lane), else its own soft fade */
     var e = st.cardEl, was = st.cardOn || (e && e.classList.contains('on')); st.cardOn = false; if (!e) return; if (now0) { e.style.transition = 'none'; e.classList.remove('on'); requestAnimationFrame(function () { e.style.transition = ''; }); st.cardGone = 0; } else if (was) { e.classList.remove('on'); st.cardGone = now() + 0.85; } }
@@ -225,6 +260,7 @@ window.WFR_PLACES790 = (function () {
     try {
       if (!D) { st.fault = 'no data (places790-data.js)'; return false; }
       if (window.WFR_FEATURES && WFR_FEATURES.setFetch) { WFR_FEATURES.setFetch(fetch790); st.osm.on = true; }
+      try { ['500 24px Georgia,"Times New Roman",serif', '500 19px Georgia,"Times New Roman",serif', '500 12.5px system-ui,-apple-system,sans-serif', '600 11px system-ui,sans-serif'].forEach(function (f) { ctx825(f).measureText('Aa'); }); } catch (e) { /* the card measures on its first rise instead */ }   /* #150 B5: the card's four fonts set up at load, never mid-flight */
       st.iv = setInterval(tick, C.TICK_MS); st.inited = true; return true;
     } catch (e) { st.fault = 'init: ' + (e && e.message || e); return false; }
   }
@@ -232,9 +268,20 @@ window.WFR_PLACES790 = (function () {
     return { inited: st.inited, fault: st.fault, ticks: st.ticks, why: st.why, held: st.held, last: st.last, shown: st.shown.slice(), cardOn: st.cardOn, yielded: st.yielded || 0,
       near: st.near.slice(0, 24), chunks: Object.keys(st.chunks), tickMs: +st.tickMs.toFixed(3), tickMax: +st.tickMax.toFixed(3), qMax: +(st.qMax || 0).toFixed(3), sayMax: +(st.sayMax || 0).toFixed(3), titleMax: +(st.titleMax || 0).toFixed(3), landmarks: LANDMARKS.length,
       osm: { on: st.osm.on, tiles: st.osm.tiles.size, decoded: st.osm.decoded, names: st.osm.names, queue: st.osm.queue.length, errors: st.osm.errors, lastErr: st.osm.lastErr, msMax: +st.osm.ms.toFixed(2), slices: st.osm.slices || 0 },
-      counts: D && D.stats ? D.stats : null };
+      counts: D && D.stats ? D.stats : null, clear825: st.clear825 || null };
+  }
+  function around(la, lo, km) {   /* 833: the named places within km of a point (hand-written, Natural Earth's chunks already read, the street map's names), each with its own lat/lon; a big place by its box or line */
+    var out = [], m = km * 1000, dg = km / 100 + 0.02, i, j, R, d, near1 = function (R) { if (R.line) { var b = 1e9; for (var q = 0; q + 3 < R.line.length; q += 2) b = Math.min(b, segDist(la, lo, R.line[q], R.line[q + 1], R.line[q + 2], R.line[q + 3])); return b; } if (R.box && inBox(R.box, la, lo, 0)) return 0; return dist(la, lo, R.la, R.lo); };
+    var push = function (R) { d = near1(R); if (d <= m) out.push({ n: R.n, k: R.k, t: R.t, la: R.la, lo: R.lo, d: Math.round(d), src: R.src }); };
+    var cur = curated(); for (i = 0; i < cur.length; i++) { R = cur[i]; if (Math.abs(R.la - la) <= dg + 0.1) push(R); }
+    var ka = Math.floor(la / 10), ko = Math.floor(lo / 10);
+    for (var da = -1; da <= 1; da++) for (var dO = -1; dO <= 1; dO++) { var key = (ka + da) + ',' + (((ko + dO + 18) % 36 + 36) % 36 - 18), ch = st.chunks[key]; if (!ch) continue;
+      for (var ca = Math.floor(la - dg); ca <= Math.floor(la + dg); ca++) for (var co = Math.floor(lo - dg); co <= Math.floor(lo + dg); co++) { var L = ch.cells[ca + ',' + co]; if (L) for (j = 0; j < L.length; j++) push(L[j]); }
+      for (j = 0; j < ch.big.length; j++) { R = ch.big[j]; if (inBox(R.bb, la, lo, dg)) push(R); } }
+    st.osm.tiles.forEach(function (T) { if (!inBox(T.bb, la, lo, dg)) return; for (var q = 0; q < T.recs.length; q++) push(T.recs[q]); });
+    return out.sort(function (a, b) { return a.d - b.d; });
   }
   function osmNear(la, lo, km) { var out = []; st.osm.tiles.forEach(function (T) { for (var i = 0; i < T.recs.length; i++) { var R = T.recs[i]; if (dist(la, lo, R.la, R.lo) <= km * 1000) out.push([R.k, R.n]); } }); return out; }
   return { C: C, KIND: KIND, LANDMARKS: LANDMARKS, init: init, tick: tick, peek: peek, near: function (la, lo, agl) { return near(la, lo, agl, []).map(function (c) { return { n: c.R.n, k: c.R.k, t: c.R.t, src: c.R.src, d: Math.round(c.d), s: +c.s.toFixed(2), u: c.R.u }; }).sort(function (a, b) { return b.s - a.s; }); },
-    osmNear: osmNear, resetCool: function () { st.cool = {}; st.lastAt = -1e9; }, cardEl: function () { return st.cardEl; } };
+    osmNear: osmNear, around: around, resetCool: function () { st.cool = {}; st.lastAt = -1e9; }, cardEl: function () { return st.cardEl; } };
 })();

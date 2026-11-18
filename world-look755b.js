@@ -78,15 +78,18 @@ window.WFR_LOOK755B = (function () {
   var n = function (x) { return (+x).toFixed(5); }, v3 = function (c) { return 'vec3( ' + n(c[0] / 255) + ', ' + n(c[1] / 255) + ', ' + n(c[2] / 255) + ' )'; };
   function ramp(p, g) { return 'mix( ' + v3(p[0]) + ', ' + v3(p[1]) + ', ' + g + ' )'; }
   function uvOf(i, o) { var r = S755.R[i]; return 'vec2( ' + n(r[0]) + ' * q755.x + ' + n(r[1]) + ' * q755.y, ' + n(-r[1]) + ' * q755.x + ' + n(r[0]) + ' * q755.y ) * ' + n(1 / S755.L[i]) + ' + ' + o; }
-  function head() { return ON ? 'uniform sampler2D uGa755; uniform sampler2D uGb755; uniform float uK755; uniform float uDet755; uniform vec4 uO755a; uniform vec4 uO755b; uniform vec2 uO755c; varying vec2 vH755; varying float vB822; uniform sampler2D uOc779; uniform float uOcK779; uniform vec4 uOcA779; uniform vec4 uOcB779;\n' : ''; }
-  function headV() { return ON ? 'varying vec2 vH755; varying float vB822;\n' : ''; }
-  function vert() { return ON ? ' vH755 = vec2( wp712t.y, normal.y ); vB822 = aB822;' : ''; }   /* 822 follow-up: vB822, 1 where the low land may be a beach (world712-travel.js) */
+  function head() { return ON ? 'uniform sampler2D uGa755; uniform sampler2D uGb755; uniform float uK755; uniform float uDet755; uniform vec4 uO755a; uniform vec4 uO755b; uniform vec2 uO755c; varying vec2 vH755; varying float vB822; varying float vW825; uniform sampler2D uOc779; uniform float uOcK779; uniform vec4 uOcA779; uniform vec4 uOcB779;\n' : ''; }
+  function headV() { return ON ? 'varying vec2 vH755; varying float vB822; attribute float aW825; varying float vW825;\n' : ''; }   /* 825: aW825 the water by land cover (world712-travel.js) */
+  function vert() { return ON ? ' vH755 = vec2( wp712t.y, normal.y ); vB822 = aB822; vW825 = aW825;' : ''; }   /* 822 follow-up: vB822, 1 where the low land may be a beach (world712-travel.js) */
   /* the GLSL, after 754's sea mask: m the sea (m754), det 1 on the ground and 0 on the roads and water laid over it, eye the true camera, d the true distance. Writes diffuseColor */
   function text(m, det, eye, d) {
     if (!ON) return ''; var c = S755.SEA;
     return [
       /* THE HARBOURS: the height data has Kingston Harbour at 0 to 1 m, so the far colours call it land; NASA's dark pixel on ground that low says water, and the mask takes it */
       m + ' = max( ' + m + ', uK755 * ( ' + det + ' ) * ( 1.0 - smoothstep( ' + n(S755.HARB[0]) + ', ' + n(S755.HARB[1]) + ', vH755.x ) ) * ( 1.0 - smoothstep( 0.1, 0.2, dot( diffuseColor.rgb, vec3( 0.3, 0.59, 0.11 ) ) ) ) );',
+      /* 825: THE BAYS NASA DRAWS OLIVE (Biscayne Bay: shallow sea-grass, green over blue and too bright for the line above): water where the height says sea
+         and NASA's land cover says water (vW825: world712-travel.js; 0 on a mesh without it) */
+      m + ' = max( ' + m + ', uK755 * ( ' + det + ' ) * smoothstep( 0.3, 0.6, vW825 ) );',
       /* THE SEA: the far sea's depth, read back off its own ramp (blue climbs as it shoals), in the main sea's colours; where NASA drew a shelf over it, how pale says how shallow */
       '{ float w755 = ( ' + m + ' ) * uK755;',
       '  if ( w755 > 0.002 ) { float b755 = vColor.b, p755 = clamp( ( diffuseColor.g - vColor.g ) * 2.5, 0.0, 1.0 );',

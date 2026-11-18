@@ -451,7 +451,7 @@ window.WFR_FEATURES = (function () {
     return false;
   }
   function update(cam, travel) {   // every travel frame, before the render; off the travel zone it hides what it shows (labels, credit)
-    if (!mats) return; var t0 = now(); frameNo++;
+    if (!mats) return; hudTick820(); var t0 = now(); frameNo++;
     try {
       T = travel || T; if (!T || !T.on || !T.st || !T.f) { hideAll(); return; }
       if (group.parent !== T.st.group) T.st.group.add(group);
@@ -516,12 +516,18 @@ window.WFR_FEATURES = (function () {
      buttons, read twice a second at most (never per name, never per frame), each with a margin; an action button's paper tag counted in (its own box
      does not hold it). A name's width comes from a 2D canvas's measure, kept per name and size. */
   var HUD820 = ['cmp795', 'lvPill', 'mapBtn705', 'wordsTop735', 'dist', 'place790', 'hint', 'toast', 'xpPop', 'mute', 'muteTop', 'birdsBtn', 'quickBtn', 'emoBtn633', 'questsBtn720', 'journalBtn', 'petBtn', 'feedBtn',
-    'flap', 'flutter', 'jump', 'atkBtn', 'land', 'read', 'zoom', 'nightBtn', 'home', 'thBtn', 'sing'], TAG820 = { flap: 1, flutter: 1, jump: 1, atkBtn: 1, land: 1, read: 1, zoom: 1, nightBtn: 1, home: 1, thBtn: 1, sing: 1 };
+    'flap', 'flutter', 'jump', 'atkBtn', 'land', 'read', 'zoom', 'nightBtn', 'home', 'thBtn', 'sing', 'ff757'], PIP825 = { ff757: 16 }, TAG820 = { flap: 1, flutter: 1, jump: 1, atkBtn: 1, land: 1, read: 1, zoom: 1, nightBtn: 1, home: 1, thBtn: 1, sing: 1 };
   var hudC820 = { at: -1e9, w: 0, h: 0, r: [] }, wC820 = new Map(), cx820 = null, cover820 = null;   /* cover820: the page's "a sheet or a card is open" (WFR_FEATURES.cover) */
+  /* #150 (the coordinator: "make hud820's box cache refresh on the tick ... so clear825() inside say() only reads cached boxes and never forces a layout"):
+     places790 B5 measured 11.6-11.8 ms in its card's DOM: 825's clear825 asked hud825() inside say(), just after the card's own DOM write, and a stale cache
+     there read 29 boxes and styles from a dirty layout. Now the frame refreshes the cache every 400 ms at its top (before this module's own timed work, the
+     layout clean), so a reader within 500 ms always finds it fresh. Its own cost is kept apart (stats.hud820Max, hud820N). Standard only. */
+  function hudTick820() { if (window.WFR_DOOR && window.WFR_DOOR.classic) return; var t = now(), W0 = window.innerWidth, H0 = window.innerHeight;
+    if (t - hudC820.at < 400 && hudC820.w === W0 && hudC820.h === H0) return; hudC820.at = -1e9; hud820(W0, H0); var ms = now() - t; stats.hud820Max = Math.max(stats.hud820Max || 0, +ms.toFixed(2)); stats.hud820N = (stats.hud820N || 0) + 1; }
   function hud820(W0, H0) { var t = now(); if (t - hudC820.at < 500 && hudC820.w === W0 && hudC820.h === H0) return hudC820.r; hudC820.at = t; hudC820.w = W0; hudC820.h = H0; var r = hudC820.r = [];
     for (var i = 0; i < HUD820.length; i++) { var e = document.getElementById(HUD820[i]); if (!e || e.hidden || e.closest('[hidden]')) continue; var q = e.getBoundingClientRect(); if (q.width < 2 || q.height < 2) continue;
       var cs = getComputedStyle(e); if (cs.visibility === 'hidden' || +cs.opacity < 0.05) continue; var tg = TAG820[HUD820[i]] ? 1 : 0;
-      r.push([q.left - 6 - tg * q.width * 0.5, q.top - 6, q.right + 6 + tg * q.width * 0.5, q.bottom + 6 + tg * 20]); }
+      r.push([q.left - 6 - tg * q.width * 0.5 - (PIP825[HUD820[i]] || 0), q.top - 6, q.right + 6 + tg * q.width * 0.5, q.bottom + 6 + tg * 20, HUD820[i]]); }   /* 825: the fast-forward button (757) joined, its three use-dots left of it counted in; each box keeps its id (the place card skips its own) */
     stats.hudBoxes820 = r.length; return r; }
   function hit820(b, list) { for (var i = 0; i < list.length; i++) { var o = list[i]; if (b[0] < o[2] && b[2] > o[0] && b[1] < o[3] && b[3] > o[1]) return true; } return false; }
   function textW820(s, px) { var k = px + '|' + s, w = wC820.get(k); if (w != null) return w; if (!cx820) cx820 = document.createElement('canvas').getContext('2d');
@@ -540,8 +546,10 @@ window.WFR_FEATURES = (function () {
     var geo = 0; tiles.forEach(function (t) { for (var i = 0; i < t.meshes.length; i++) { var g = t.meshes[i].geometry; for (var a in g.attributes) geo += g.attributes[a].array.byteLength; if (g.index) geo += g.index.array.byteLength; } }); s.geoMB = +(geo / 1048576).toFixed(2);
     var raw = 0; tiles.forEach(function (t) { if (t.raw) raw += t.raw.byteLength; }); s.rawMB = +(raw / 1048576).toFixed(2); s.template = template; s.photos = Object.assign({}, tex); s.lakeLv = []; lakeLv.forEach(function (v, k) { if (s.lakeLv.length < 12) s.lakeLv.push([k, v.z, +v.h.toFixed(2)]); }); s.lakeReads = stats.lakeReads.slice(); s.lakeOf = function (id) { var b = lakeLv.get(id), pcs = []; tiles.forEach(function (t) { if (t.lakes) t.lakes.forEach(function (L) { if (L.id === id) pcs.push([t.key, t.state, !!t.stale, L.z, L.lv, L.rd, L.lo, L.ns]); }); }); return { best: b ? [b.z, +b.h.toFixed(2)] : null, pieces: pcs }; }; return s; }
   function meshes() { var out = []; tiles.forEach(function (t) { for (var i = 0; i < t.meshes.length; i++) out.push({ key: t.key, z: t.z, mesh: t.meshes[i] }); }); return out; }
-  var api = { C: C, attach: attach, update: update, peek: peek, meshes: meshes, decodeTile: decodeTile, feature: feature, polygons: polygons, llOf: llOf,
+  var api = { C: C, attach: attach, update: update, peek: peek, meshes: meshes, hud825: function () { return hud820(window.innerWidth, window.innerHeight); }, hit825: hit820,   /* 825: the play screen's buttons (the same cached read), for the place card (places790.js) */
+    decodeTile: decodeTile, feature: feature, polygons: polygons, llOf: llOf,
     surface798: surface798, solid808: solid808, lensOut808: lensOut808, fp808: function (x, y, z) { var out = []; tiles.forEach(function (t) { if (t.z !== 14) return; var m = t.meshes[0]; out.push({ key: t.key, st: t.state, fp: t.fp ? t.fp.length : null, box: t.box ? [Math.round(t.box.x0), Math.round(t.box.z0), Math.round(t.box.x1), Math.round(t.box.z1)] : null, m: m ? [Math.round(m.position.x), Math.round(m.position.z)] : null }); }); var hits = []; tiles.forEach(function (t) { if (t.z !== 14 || !t.fp || !t.meshes.length) return; var m = t.meshes[0], k = m.scale.x, lx = (x - m.position.x) / k, lz = (z - m.position.z) / k; t.fp.forEach(function (f) { if (lx < f.x0 - 8 || lx > f.x1 + 8 || lz < f.z0 - 8 || lz > f.z1 + 8) return; var e = nearEdge(f.r, lx, lz, f.clip); hits.push({ key: t.key, in: inPoly(f.r, lx, lz), d: e ? +e.d.toFixed(2) : null, bot: +f.bot.toFixed(1), top: +f.top.toFixed(1), y: +y.toFixed(1), n: f.r.length / 2, clip: f.clip ? Array.prototype.reduce.call(f.clip, function (a, b) { return a + b; }, 0) : null }); }); }); return { tiles: out, hits: hits }; },   /* 808 bench read */ onTile: function (cb) { listeners.push(cb); }, cover: function (fn) { cover820 = typeof fn === 'function' ? fn : null; }, wantPoi: function (fn) { poiWant = fn; }, onDrop: function (cb) { droppers.push(cb); }, setFetch: function (fn) { fetchFn = fn; }, group: function () { return group; }, materials: function () { return mats; }, attached: function () { return { T: T, scene: scene, warm: warm }; }, version: 1 };   // attached(): what the page handed attach() (the game's script is scoped; the guard reads it here)
+  api.hud833 = function () { return hud820(window.innerWidth, window.innerHeight); };   /* 833: Night Vision's names keep clear of the same cards and buttons (820's cached read) */
   return api;
 })();
 

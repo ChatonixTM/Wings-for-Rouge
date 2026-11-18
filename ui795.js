@@ -534,6 +534,7 @@
 
   /* ---------- the ship log, newest first: a bold title and one plain sentence a player cares about (DRAFTS for Marth's pen) ---------- */
   var SHIPS = [
+    { n: 150, title: 'Real places', line: 'Trees match the real place now: palms on tropical coasts, acacias on the savanna, pines up north, saguaro in the desert. Left alone, the title flies over your island and out toward a place you have found. Night Vision works out in the world, with names, and a tap on a glow marks it. Biscayne Bay is water, with Maurice Gibb park on its shore.' },
     { n: 149, title: 'Wings and buttons', line: 'Your grown chick has real feathered wings in its own colour that fold at rest and open when it hops; the camera stays out of the Eagle and the Hawk; and the buttons sit where Marth drew them, with Attack above Flap and Land and Zoom lower on the left.' },
     { n: 148, title: 'Marks and the Doctor Bird', line: 'Hold anywhere on either map, or on the compass strip, to drop a marker; place cards have Mark it; the marker you follow glows on the top compass with its distance. At Dunn\'s River Falls a tiny Doctor Bird races you, and winning teaches fast forward for good. Animals no longer float or swim on land.' },
     { n: 147, title: 'Home shores', line: 'The beaches look like one place now, with no squares or pale patches; Kingston\'s Palisadoes and Negril have their sand; Dunn\'s River Falls stands on the north coast with people climbing it; and the place name at the top no longer sits on the round compass.' },
