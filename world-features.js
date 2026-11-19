@@ -162,14 +162,26 @@ window.WFR_FEATURES = (function () {
     var J = t.job; if (J.f !== T.f) { startJob(t); J = t.job; }   // re-centred mid-build: start again in the new frame (rare: every 10 km)
     var cnt = 0;
     while (J.li < J.lays.length) { var L = J.lays[J.li], n = L.feats.length / 2;
-      while (J.fi < n) { if (J.bq && !drainB(t, J, deadline)) return false; var ft = feature(L, J.fi++), e0 = now(); try { emit(t, J, L, ft); } catch (e) { stats.lastError = 'feature: ' + (e && e.message || e); } var em = now() - e0; if (em > ((stats.emitMax || (stats.emitMax = {}))[L.name] || 0)) { stats.emitMax[L.name] = +em.toFixed(1); if (L.name === 'building') stats.emitBig = [ft.rings.length, ft.rings.reduce(function (q, r) { return q + r.length / 2; }, 0), t.key]; }
+      while (J.fi < n) { if (J.bq && !drainB(t, J, deadline)) return false; var ft = feature(L, J.fi++), e0 = now(); try { emit(t, J, L, ft); } catch (e) { stats.lastError = 'feature: ' + (e && e.message || e); } var em = now() - e0; if (t.ph) t.ph.e += em; if (em > ((stats.emitMax || (stats.emitMax = {}))[L.name] || 0)) { stats.emitMax[L.name] = +em.toFixed(1); if (L.name === 'building') stats.emitBig = [ft.rings.length, ft.rings.reduce(function (q, r) { return q + r.length / 2; }, 0), t.key]; }
         if ((++cnt & (J.city ? 1 : 7)) === 0 && now() > deadline) return false; }   /* 790: a dressed building weighs more: the clock asked every second one */
       if (J.bq && !drainB(t, J, deadline)) return false; J.li++; J.fi = 0; }
-    if (J.city && !WFR_CITY790.stepRoads(J, deadline, H, now)) return false;   /* 790 A: the streets, after the buildings, a slice at a time */
-    if (J.s830 && !WFR_SACRED830.step(t, J, KIT830, deadline)) return false;   /* 830: the mosques, the golf, the drive-thrus, a task at a time, before the meshes are made */
-    finish(t); return true;
+    var r0 = now(), rd = J.city ? WFR_CITY790.stepRoads(J, deadline, H, now) : true; if (t.ph) t.ph.r += now() - r0; if (!rd) return false;   /* 790 A: the streets, after the buildings, a slice at a time */
+    var s0 = now(), sd = J.s830 ? WFR_SACRED830.step(t, J, KIT830, deadline) : true; if (t.ph) t.ph.s += now() - s0; if (!sd) return false;   /* 830: the mosques, the golf, the drive-thrus, a task at a time, before the meshes are made */
+    if (now() > deadline && !J.fin838) { J.fin838 = 1; return false; }   /* 838: the meshes made at the start of a fresh slice, never piled onto one already spent (the worst slice was the last buildings plus finish(); roofs838 F1, city790 F1) */
+    var f0 = now(); finish(t); if (t.ph) t.ph.f += now() - f0; return true;
   }
-  function drainB(t, J, deadline) { var q = J.bq; while (q.i < q.ps.length) { building(t, J, q.ps[q.i], q.P, q.id, q.E, q.i); q.i++; if ((q.i & 3) === 0 && now() > deadline) return false; } J.bq = null; return true; }   /* 790 */
+  var feedQ = [];   /* 838: built tiles whose feed the listeners have not heard yet, oldest first */
+  function deliverFeed() {   // a tile's feed to the listeners, one listener after another until the slice's time is spent (at least one a frame); a tile dropped or rebuilt since is skipped (its newer build queues its own)
+    var d0 = now(), any = false;
+    while (feedQ.length) { var q = feedQ[0], t = q.t; if (tiles.get(t.key) !== t || t.state !== 'built' || t.feedGen !== q.gen) { feedQ.shift(); continue; }
+      var i = q.li || 0, l0 = now(); try { listeners[i](t.z, t.x, t.y, q.feed); } catch (e) { stats.lastError = 'listener: ' + (e && e.message || e); } any = true;
+      var lt = now() - l0, le = stats.lisEach || (stats.lisEach = []); le[i] = Math.max(le[i] || 0, +lt.toFixed(1)); stats.lisMax = Math.max(stats.lisMax || 0, lt);
+      q.li = i + 1; if (q.li >= listeners.length) feedQ.shift();
+      if (now() - d0 > C.SLICE_MS) break; }
+    if (any) { var sl = now() - d0; if (sl > stats.sliceMax) stats.sliceWorst = { ms: +sl.toFixed(1), key: feedQ.length ? feedQ[0].t.key : null, lis: +sl.toFixed(1) }; stats.sliceMax = Math.max(stats.sliceMax, sl); }
+    return any;
+  }
+  function drainB(t, J, deadline) { var q = J.bq; while (q.i < q.ps.length) { var b0 = now(); building(t, J, q.ps[q.i], q.P, q.id, q.E, q.i); if (t.ph) { t.ph.b += now() - b0; t.ph.nb++; } q.i++; if ((q.i & 1) === 0 && now() > deadline) return false; } J.bq = null; return true; }   /* 790; 838: the clock asked every 2nd building (was 4th: a roofed building weighs more) */
   function locRing(t, J, r, E, ll) {   // tile units to the frame's metres, relative to the tile's north-west corner (and, for the listeners, lat/lon)
     var n = r.length / 2, out = new Array(r.length), z = t.z, x = t.x, y = t.y, f = J.f;
     for (var i = 0; i < n; i++) { var g = llOf(z, x, y, r[2 * i], r[2 * i + 1], E), p = W.toLocal(f, g.lat, g.lon); out[2 * i] = p.x - J.ax; out[2 * i + 1] = p.z - J.az; if (ll) { ll[2 * i] = g.lon; ll[2 * i + 1] = g.lat; } }
@@ -324,8 +336,7 @@ window.WFR_FEATURES = (function () {
     t.tris = 0; for (var i = 0; i < t.meshes.length; i++) { var m = t.meshes[i]; m.position.set(J.ax, 0, J.az); m.updateMatrix(); m.visible = false; group.add(m); t.tris += m.userData.tris; }
     stats.finMax = Math.max(stats.finMax || 0, now() - f0);   /* 790: the one step a slice cannot cut (the meshes made at once) */
     t.job = null; t.state = 'built'; t.stale = false; stats.built++; stats.buildings += J.nB; stats.roads += J.nR; stats.waters += J.nW;
-    var l0 = now(); if (J.feed) for (i = 0; i < listeners.length; i++) try { listeners[i](t.z, t.x, t.y, J.feed); } catch (e) { stats.lastError = 'listener: ' + (e && e.message || e); }
-    stats.lisMax = Math.max(stats.lisMax || 0, now() - l0);
+    if (J.feed && listeners.length) { t.feedGen = (t.feedGen || 0) + 1; feedQ.push({ t: t, feed: J.feed, gen: t.feedGen }); }   /* 838: the listeners are told in a slice of their own, the next frame's (deliverFeed): with the meshes in one slice they made the worst slice (downtown Toronto: meshes 10-20 ms + listeners 33 ms) */
   }
   /* ---------- one zoom per place (Nov 4, after the guard's first run: the z9 and z12 lakes and roads lay OVER the z14 ones under her, the coarse
      shore spilling onto the land). A coarse tile's ground triangles are sorted by the finer ring's tile each one falls in (its centre, through the
@@ -483,10 +494,11 @@ window.WFR_FEATURES = (function () {
         if (t.state === 'built' && !t.stale && t.raw && window.WFR_CITY790 && WFR_CITY790.restale(t)) t.stale = true;   /* 790 A: a far-built tile she nears is rebuilt with its rooftop detail */
         if (t.state === 'want' && inflight < C.LOADS) load(t); }
       /* one tile's work a frame, a few milliseconds of it: the nearest first (a stale one is rebuilt from its kept bytes, its old meshes standing until then) */
-      var deadline = t0 + C.SLICE_MS, job = null, best = 1e18;
-      tiles.forEach(function (t) { if (t.used !== frameNo) return; var ready = t.job || t.state === 'raw' || (t.state === 'built' && t.stale && t.raw); if (!ready) return; var sc = t.job ? -1 : t.d / t.show + (t.z === 14 ? 0 : 0.01); if (sc < best) { best = sc; job = t; } });
+      var deadline = t0 + C.SLICE_MS, job = null, best = 1e18, fed = (frameNo & 1) ? deliverFeed() : false;   /* 838: the listeners take the odd frames (a frame that tells them builds nothing else), the build the even ones: run back to back, the listeners starved the build and the drape (city790 S1 red, Kingston's roads) */
+      tiles.forEach(function (t) { if (fed || t.used !== frameNo) return; var ready = t.job || t.state === 'raw' || (t.state === 'built' && t.stale && t.raw); if (!ready) return; var sc = t.job ? -1 : t.d / t.show + (t.z === 14 ? 0 : 0.01); if (sc < best) { best = sc; job = t; } });
+      if (!fed && !job && feedQ.length) fed = deliverFeed();   /* 838: nothing to build this frame: the listeners take it */
       if (job) { if (!job.job) { if (job.z === 14 && st.loadingUnder(cam.x, cam.z) && now() - (job.since || 0) < C.WAIT_MS) { stats.waits++; job = null; } else { if (job.stale) stats.restale++; startJob(job); } }
-        if (job) { var a = now(); stepJob(job, deadline); stats.sliceMax = Math.max(stats.sliceMax, now() - a); } }
+        if (job) { var a = now(); job.ph = { b: 0, nb: 0, e: 0, r: 0, s: 0, f: 0 }; stepJob(job, deadline); var sl = now() - a; if (sl > stats.sliceMax) { var ph = job.ph; stats.sliceWorst = { ms: +sl.toFixed(1), key: job.key, b: +ph.b.toFixed(1), nb: ph.nb, e: +ph.e.toFixed(1), r: +ph.r.toFixed(1), s: +ph.s.toFixed(1), f: +ph.f.toFixed(1) }; } stats.sliceMax = Math.max(stats.sliceMax, sl); } }   /* 838: what the worst slice spent (b buildings, nb how many, e other features, r roads, s 830, f the meshes) */
       /* who shows: built, wanted, within its ring's sight; over the triangle budget the farthest go first */
       var vis = [], tris = 0; tiles.forEach(function (t) { if (t.state !== 'built' || !t.meshes.length) return; var on = t.used === frameNo && t.d <= t.show; if (on) vis.push(t); else setVis(t, false); });
       vis.sort(function (a, b) { return a.d - b.d; }); var shown = 0;
@@ -562,7 +574,7 @@ window.WFR_FEATURES = (function () {
   }
 
   /* ---------- the bench's read, and the doors for the other units ---------- */
-  function peek() { var s = Object.assign({}, stats); delete s.upd; var u = stats.upd.slice().sort(function (a, b) { return a - b; }); s.updP99 = u.length ? u[Math.floor(u.length * 0.99)] : 0; s.updMed = u.length ? u[Math.floor(u.length / 2)] : 0; s.frames = u.length;
+  function peek() { var s = Object.assign({}, stats); delete s.upd; s.lisNames = listeners.map(function (f) { return String(f).replace(/\s+/g, ' ').slice(0, 70); });   /* 838: which listener is which (lisEach's order) */ var u = stats.upd.slice().sort(function (a, b) { return a - b; }); s.updP99 = u.length ? u[Math.floor(u.length * 0.99)] : 0; s.updMed = u.length ? u[Math.floor(u.length / 2)] : 0; s.frames = u.length;
     s.tiles = []; tiles.forEach(function (t) { s.tiles.push({ key: t.key, state: t.state, d: Math.round(t.d), vis: !!(t.meshes[0] && t.meshes[0].visible), nB: t.nB || 0, nR: t.nR || 0, nW: t.nW || 0, tris: t.tris || 0, terrZ: t.terrZ, stale: !!t.stale, places: t.places ? t.places.length : 0 }); });
     var geo = 0; tiles.forEach(function (t) { for (var i = 0; i < t.meshes.length; i++) { var g = t.meshes[i].geometry; for (var a in g.attributes) geo += g.attributes[a].array.byteLength; if (g.index) geo += g.index.array.byteLength; } }); s.geoMB = +(geo / 1048576).toFixed(2);
     var raw = 0; tiles.forEach(function (t) { if (t.raw) raw += t.raw.byteLength; }); s.rawMB = +(raw / 1048576).toFixed(2); s.template = template; s.photos = Object.assign({}, tex); s.lakeLv = []; lakeLv.forEach(function (v, k) { if (s.lakeLv.length < 12) s.lakeLv.push([k, v.z, +v.h.toFixed(2)]); }); s.lakeReads = stats.lakeReads.slice(); s.lakeOf = function (id) { var b = lakeLv.get(id), pcs = []; tiles.forEach(function (t) { if (t.lakes) t.lakes.forEach(function (L) { if (L.id === id) pcs.push([t.key, t.state, !!t.stale, L.z, L.lv, L.rd, L.lo, L.ns]); }); }); return { best: b ? [b.z, +b.h.toFixed(2)] : null, pieces: pcs }; }; return s; }
@@ -570,6 +582,7 @@ window.WFR_FEATURES = (function () {
   var api = { C: C, attach: attach, update: update, peek: peek, meshes: meshes, hud825: function () { return hud820(window.innerWidth, window.innerHeight); }, hit825: hit820,   /* 825: the play screen's buttons (the same cached read), for the place card (places790.js) */
     decodeTile: decodeTile, feature: feature, polygons: polygons, llOf: llOf,
     surface798: surface798, solid808: solid808, lensOut808: lensOut808, fp808: function (x, y, z) { var out = []; tiles.forEach(function (t) { if (t.z !== 14) return; var m = t.meshes[0]; out.push({ key: t.key, st: t.state, fp: t.fp ? t.fp.length : null, box: t.box ? [Math.round(t.box.x0), Math.round(t.box.z0), Math.round(t.box.x1), Math.round(t.box.z1)] : null, m: m ? [Math.round(m.position.x), Math.round(m.position.z)] : null }); }); var hits = []; tiles.forEach(function (t) { if (t.z !== 14 || !t.fp || !t.meshes.length) return; var m = t.meshes[0], k = m.scale.x, lx = (x - m.position.x) / k, lz = (z - m.position.z) / k; t.fp.forEach(function (f) { if (lx < f.x0 - 8 || lx > f.x1 + 8 || lz < f.z0 - 8 || lz > f.z1 + 8) return; var e = nearEdge(f.r, lx, lz, f.clip); hits.push({ key: t.key, in: inPoly(f.r, lx, lz), d: e ? +e.d.toFixed(2) : null, bot: +f.bot.toFixed(1), top: +f.top.toFixed(1), y: +y.toFixed(1), n: f.r.length / 2, clip: f.clip ? Array.prototype.reduce.call(f.clip, function (a, b) { return a + b; }, 0) : null }); }); }); return { tiles: out, hits: hits }; },   /* 808 bench read */ onTile: function (cb) { listeners.push(cb); }, cover: function (fn) { cover820 = typeof fn === 'function' ? fn : null; }, under: function (fn) { under837 = typeof fn === 'function' ? fn : null; }, wantPoi: function (fn) { poiWant = fn; }, onDrop: function (cb) { droppers.push(cb); }, setFetch: function (fn) { fetchFn = fn; }, group: function () { return group; }, materials: function () { return mats; }, attached: function () { return { T: T, scene: scene, warm: warm }; }, version: 1 };   // attached(): what the page handed attach() (the game's script is scoped; the guard reads it here)
+  api.fp838 = function (key) { var t = tiles.get(key); return t && t.fp ? t.fp : null; };   /* 838: a built z14 tile's footprints (tile-local, as its meshes), for the roofs guard (tests/roofs838.js); read only */
   api.hud833 = function () { return hud820(window.innerWidth, window.innerHeight); };   /* 833: Night Vision's names keep clear of the same cards and buttons (820's cached read) */
   return api;
 })();
@@ -614,7 +627,8 @@ window.WFR_CITY790 = (function () {
   /* the guard's controls (localStorage 'wfr.city790'): 'off' the game before this unit; 'noroof' no pitched roofs; 'nofacade' plain walls (no windows, no
      night glow); 'nostreet' the old road ribbons (no paint, sidewalks, crossings or furniture); 'nofurn' no trees, lamps or benches; 'force' even in Classic */
   var st = { mode: MODE, built: 0, houses: 0, gables: 0, hips: 0, chimneys: 0, parapets: 0, boxes: 0, shops: 0, flat: 0, tagged: 0, seeded: 0, styles: [0, 0, 0, 0, 0, 0, 0],
-    roads: 0, sidewalks: 0, xings: 0, cuts: 0, trees: 0, lamps: 0, benches: 0, signs: 0, gathers: 0, gatherMs: 0, gatherMax: 0, shown: { tree: 0, lamp: 0, bench: 0, sign: 0 }, night: 0, faults: [], season: null, lin: null };
+    roads: 0, sidewalks: 0, xings: 0, cuts: 0, trees: 0, lamps: 0, benches: 0, signs: 0, gathers: 0, gatherMs: 0, gatherMax: 0, shown: { tree: 0, lamp: 0, bench: 0, sign: 0 }, night: 0, faults: [], season: null, lin: null,
+    r838: { n: 0, pitched: 0, multi: 0, mansard: 0, hipblock: 0, detailed: 0, parapet: 0, bare: 0, items: 0 } };   /* 838: the near buildings' roofs, by kind */
   var THREE = null, U = { night: { value: 0 } }, lin = false;
   function fault(w, e) { if (st.faults.length < 12) st.faults.push(w + ': ' + (e && e.message || e)); }
   function hash(n) { n = (n ^ 61) ^ (n >>> 16); n = (n + (n << 3)) | 0; n ^= n >>> 4; n = Math.imul(n, 0x27d4eb2d); n ^= n >>> 15; return (n >>> 0) / 4294967296; }
@@ -788,20 +802,34 @@ window.WFR_CITY790 = (function () {
       if (J.city) { J.city.addB(cx, cz, area, shop); J.city.occupy(outer); }
       /* the flat parts first decided: a parapet raises the outer walls */
       var pitched = null; if (house && !mh && rings.length === 1 && !HAS('noroof')) { var o = obb(outer); if (o && area / o.area >= C.FILL && o.W * 2 <= C.SHORT_MAX && o.L * 2 <= C.LONG_MAX && o.W >= 2.2) pitched = o; }
-      var par = J.detail && !pitched && !mh && h >= C.PAR_H && n <= 48 ? C.PAR : 0, wtop = top + par;
+      var R8 = J.reg838 || null, plan = null, r4 = hash((B.id | 0) ^ 0x3a8b1c5);   /* 838: the region's roofs (null when 838 is off or the city is) */
+      if (R8 && !pitched && !mh && rings.length === 1 && n <= 64 && !B.sacredCol && !HAS('noroof')) try { plan = plan838(outer, area, h, house, tall, big, R8, r4); } catch (e8) { plan = null; fault('plan838', e8); }
+      var par = J.detail && !pitched && !plan && !mh && h >= C.PAR_H && n <= 48 ? C.PAR : 0, wtop = top + par;
+      var kF = 1; if (R8 && style >= 1 && style <= 5 && top - gC > 1) { var nF = Math.max(1, Math.round((top - gC) / FL838[style])); kF = FL838[style] * nF / (top - gC); if (kF < 0.8 || kF > 1.25) kF = 1; }   /* 838: the wall ends on a whole floor */
       var W2 = mh > 0 ? outOf(J, 'wallUp', Out) : J.wall;
       for (var r = 0; r < rings.length; r++) { var Rr = rings[r], m = Rr.length / 2, A = 0, j; for (i = 0; i < m; i++) { j = (i + 1) % m; A += Rr[2 * i] * Rr[2 * j + 1] - Rr[2 * j] * Rr[2 * i + 1]; }
         var s = (r > 0 ? 1 : -1) * (A > 0 ? 1 : -1), run = 0;
         for (i = 0; i < m; i++) { j = (i + 1) % m; var ax = Rr[2 * i], az = Rr[2 * i + 1], bx = Rr[2 * j], bz = Rr[2 * j + 1], dx = bx - ax, dz = bz - az, len = Math.hypot(dx, dz); if (len < 0.05) continue;
           var nx = (s > 0 ? -dz : dz) / len, nz = (s > 0 ? dx : -dx) / len, u0 = run / 6, u1 = (run + len) / 6, vt = (wtop - bot) / 6, c0 = [col[0] * 0.78, col[1] * 0.78, col[2] * 0.78];
           var m0 = run, m1 = run + len; run += len + 1.3;
-          var k0 = V(W2, ax, bot, az, nx, 0, nz, c0, u0, 0, F, m0, bot - gC, 0, 0), k1 = V(W2, bx, bot, bz, nx, 0, nz, c0, u1, 0, F, m1, bot - gC, 1, 0);
-          var k2 = V(W2, ax, wtop, az, nx, 0, nz, col, u0, vt, F, m0, wtop - gC, 0, 1), k3 = V(W2, bx, wtop, bz, nx, 0, nz, col, u1, vt, F, m1, wtop - gC, 1, 1);
+          var k0 = V(W2, ax, bot, az, nx, 0, nz, c0, u0, 0, F, m0, (bot - gC) * kF, 0, 0), k1 = V(W2, bx, bot, bz, nx, 0, nz, c0, u1, 0, F, m1, (bot - gC) * kF, 1, 0);
+          var k2 = V(W2, ax, wtop, az, nx, 0, nz, col, u0, vt, F, m0, (wtop - gC) * kF, 0, 1), k3 = V(W2, bx, wtop, bz, nx, 0, nz, col, u1, vt, F, m1, (wtop - gC) * kF, 1, 1);
           if (s > 0) W2.i.push(k0, k1, k3, k0, k3, k2); else W2.i.push(k0, k3, k1, k0, k2, k3); } }
-      var X = outOf(J, 'wallX', Out);
-      if (pitched) { roofPitched(J, X, pitched, top, col, r1, r2, r3); st.houses++; }
+      var X = outOf(J, 'wallX', Out), kind838 = null, items = 0;
+      if (pitched) { roofPitched(J, X, pitched, top, col, r1, r2, r3, R8); st.houses++; kind838 = 'pitched'; }
+      else if (plan) {   /* 838: the L-shapes, the walk-ups' mansards and hips */
+        var rc8 = toLin(pick(R8.pit, r2));
+        if (plan.kind === 'mansard') { roofMansard838(J, X, plan.o, top, rc8, col, r3); kind838 = 'mansard'; }
+        else { var mW = 0, big8 = 0, pp; for (var q8 = 0; q8 < plan.parts.length; q8++) { pp = plan.parts[q8]; mW = Math.max(mW, pp.W); if (pp.L * pp.W > plan.parts[big8].L * plan.parts[big8].W) big8 = q8; }
+          var hb = plan.kind === 'hipblock', RM8 = hb ? 7 : 5.5, hi8 = Math.min(hb ? 27 : 42, Math.atan(RM8 / (mW + C.EAVE)) * 180 / Math.PI), lo8 = Math.max(hb ? 14 : 22, hi8 - (hb ? 9 : 12)), tanA = Math.tan((lo8 + r1 * (hi8 - lo8)) * Math.PI / 180), hip8 = plan.parts.length === 1 && (hb || r3 < 0.38), yr8 = 0;   /* two parts side by side would lay their hip ends on one plane, overlapping by both eaves (the guard's Z0): parts gable */
+          /* the pitch drawn from a range that never needs a cap: a width-made cap gave neighbours of one width one plane, and four set pitches matched one terrace house in four (the guard's Z0, London, runs 4-5) */
+          for (q8 = 0; q8 < plan.parts.length; q8++) { var y8 = roofRect838(J, X, plan.parts[q8], top, tanA, hip8, rc8, col); if (q8 === big8) yr8 = y8; }
+          if (plan.flats.length) { var FO = outOf(J, 'roofFlat', Out), fc = toLin(pick(R8.flat, r3)); for (q8 = 0; q8 < plan.flats.length; q8++) { var fq = plan.flats[q8], fb = FO.p.length / 3; for (var v8 = 0; v8 < 4; v8++) V(FO, fq[v8][0], top, fq[v8][1], 0, 1, 0, fc, fq[v8][0] / 10, fq[v8][1] / 10, FLATF, 0, 0); B.tri(FO, fb, fb + 1, fb + 2); B.tri(FO, fb, fb + 2, fb + 3); } }
+          if (!hb && J.detail && r2 < 0.45) { pp = plan.parts[big8]; var cs8 = (r3 - 0.5) * pp.L * 1.2, ct8 = (r1 < 0.5 ? -1 : 1) * pp.W * 0.45; box(X, pp.cx + pp.ux * cs8 - pp.uz * ct8, pp.cz + pp.uz * cs8 + pp.ux * ct8, pp.ux, pp.uz, 0.55, 0.45, top - 0.4, yr8 + 0.45, toLin(r1 < 0.6 ? [0.58, 0.30, 0.24] : [0.55, 0.53, 0.50]), PLAIN); st.chimneys++; }
+          kind838 = hb ? 'hipblock' : 'multi'; }
+      }
       else {   /* a flat roof (in the walls' mesh, plain), its parapet's inner face, its rooftop boxes */
-        var faces = B.faces, RO = outOf(J, 'roofFlat', Out), base = RO.p.length / 3, rc = toLin(house ? pick(PAL_ROOF, r3) : pick(PAL_FLAT, r3));
+        var faces = B.faces, RO = outOf(J, 'roofFlat', Out), base = RO.p.length / 3, rc = toLin(R8 ? pick(house ? R8.pit : R8.flat, r3) : house ? pick(PAL_ROOF, r3) : pick(PAL_FLAT, r3));
         for (r = 0; r < rings.length; r++) for (i = 0; i < rings[r].length; i += 2) V(RO, rings[r][i], top, rings[r][i + 1], 0, 1, 0, rc, rings[r][i] / 10, rings[r][i + 1] / 10, FLATF, 0, 0);
         for (i = 0; i < faces.length; i++) B.tri(RO, base + faces[i][0], base + faces[i][1], base + faces[i][2]);
         st.flat++;
@@ -812,15 +840,18 @@ window.WFR_CITY790 = (function () {
         if (J.detail && !house && area >= C.BOX_A && h >= C.BOX_H) { var o2 = obb(outer); if (o2) { var nbx = 1 + Math.floor(r3 * 3);
           for (var q = 0; q < nbx; q++) { var rq = hash((B.id | 0) * 31 + q), rs = hash((B.id | 0) * 17 + q * 7), hl = 1.2 + rq * Math.min(4, o2.L * 0.2), hw = 1 + rs * Math.min(3, o2.W * 0.25), so = (rq - 0.5) * o2.L * 0.9, to = (rs - 0.5) * o2.W * 0.9;
             var bxc = o2.cx + o2.ux * so - o2.uz * to, bzc = o2.cz + o2.uz * so + o2.ux * to; if (!inPoly(outer, bxc, bzc)) continue;
-            box(X, bxc, bzc, o2.ux, o2.uz, hl, hw, top - 0.2, top + 1.4 + rq * 2.2, toLin([0.72, 0.71, 0.69]), PLAIN); st.boxes++; } } }
+            box(X, bxc, bzc, o2.ux, o2.uz, hl, hw, top - 0.2, top + 1.4 + rq * 2.2, toLin([0.72, 0.71, 0.69]), PLAIN); st.boxes++; items++; } } }
+        if (J.detail && R8 && !house && !mh && rings.length === 1 && n <= 64 && area >= 60 && h >= 5 && !B.sacredCol) { var k8 = items838(J, X, outer, area, h, top, R8, B.id); items += k8; st.r838.items += k8; }   /* 838: the rooftop */
+        kind838 = items ? 'detailed' : par ? 'parapet' : 'bare';
       }
+      if (J.detail) { st.r838.n++; st.r838[kind838]++; }   /* 838: what each near building's roof became (790's and 838's alike, counted on or off: the guard's before and after) */
       st.built++;
     } catch (e) { fault('building', e); }
     st.bMax = Math.max(st.bMax || 0, performance.now() - b0);
   }
-  function roofPitched(J, X, o, top, wcol, r1, r2, r3) {
+  function roofPitched(J, X, o, top, wcol, r1, r2, r3, R8) {
     var e = C.EAVE, L = o.L + e, Wd = o.W + e, ux = o.ux, uz = o.uz, px = -uz, pz = ux, cx = o.cx, cz = o.cz, ang = (30 + r1 * 12) * Math.PI / 180, rise = Math.min(5.5, Math.max(1.2, Wd * Math.tan(ang))), ye = top - 0.12, yr = ye + rise;
-    var P = function (s, t, y) { return [cx + ux * s + px * t, y, cz + uz * s + pz * t]; }, rc = toLin(pick(PAL_ROOF, r2)), RO = J.roof, hip = r3 < 0.38 || o.L < o.W * 1.25;
+    var P = function (s, t, y) { return [cx + ux * s + px * t, y, cz + uz * s + pz * t]; }, rc = toLin(pick(R8 ? R8.pit : PAL_ROOF, r2)), RO = J.roof, hip = r3 < 0.38 || o.L < o.W * 1.25;   /* 838: the region's palette */
     var rf = function (a, b, c, d) { quadRoof(RO, a, b, c, d, rc); };
     var A = P(-L, -Wd, ye), Bq = P(L, -Wd, ye), Cq = P(L, Wd, ye), D = P(-L, Wd, ye);
     if (!hip) { var R0 = P(-L, 0, yr), R1 = P(L, 0, yr); rf(A, Bq, R1, R0); rf(Cq, D, R0, R1);
@@ -841,6 +872,130 @@ window.WFR_CITY790 = (function () {
     var dn = ny < 0; if (dn) { nx = -nx; ny = -ny; nz = -nz; } var lu = Math.hypot(ux, uy, uz) || 1, ex = ux / lu, ey = uy / lu, ez = uz / lu;
     function uv(p) { var rx = p[0] - a[0], ry = p[1] - a[1], rz = p[2] - a[2], s = rx * ex + ry * ey + rz * ez; return [s / 2, Math.hypot(rx - s * ex, ry - s * ey, rz - s * ez) / 2]; }
     var k = [a, b, c].map(function (p) { var t = uv(p); return o.v(p[0], p[1], p[2], nx, ny, nz, col[0], col[1], col[2], t[0], t[1]); }); if (dn) o.i.push(k[0], k[2], k[1]); else o.i.push(k[0], k[1], k[2]); }
+
+  /* ---------- 838 STEP 1, EVERY HOUSE GETS A ROOF (Marth, Nov 18 2026: "The guy on twitter who has the pale avatar in orange - his world building is better
+     than ours and the houses and word are more 1-1"). Trunks, Nov 18 2026. Every number DRAFT (unmeasured on her phone). The bar is worldcraft.gg's city
+     blocks from above (refs-1118-su40 sheets 03-04): studied, never copied (their standard, never their blocks).
+     WHAT IT ADDS, on the buildings 790 left as plain flat boxes:
+       L-SHAPES    a house whose footprint is near-orthogonal but not one rectangle (an L, a T, a U, a stepped plan) is cut into rectangles on the grid of
+                   its own corners (at most 4 parts, slivers under 2 m kept flat) and each part roofed; where a narrower wing meets a wider part (gabled: hips on parts side by side would share a plane) its ridge
+                   runs on into the wider roof and dies there (a cross-gable), else the part ends in a gable wall on the shared line (no overlapping eaves)
+       WALK-UPS    a 7-24 m block (not a house, not a tower, not a big shed): by region a MANSARD (a steep 2.5-3 m slope, a low hip on top, dormers near
+                   her; a footprint 92%+ its rectangle) or a low HIP (14-27 degrees; cut like the L-shapes, cross-gabled when in parts), the rest flat
+       FIT         the parts must cover the footprint within 8% (a looser fit hung roofs over the neighbours); every pitch drawn from a range that needs
+                   no cap (a cap made neighbours of one width one plane); 64 outline points at most (the oriented rectangle's cost is n squared)
+       ROOFTOPS    a flat roof near her gets a stair housing (9 m and up), air-conditioning units, and by region a water tank (Kingston's black tanks)
+       COLOUR      a roof palette per region, seeded by the building's own id (never flickers on a rebuild): the Caribbean painted zinc (red, green,
+                   blue), galvanised and terracotta; Florida barrel tile and white; the Mediterranean (and coastal California) terracotta; the north
+                   of Europe slate and red clay; the US asphalt greys and browns
+       FLOORS      the facade's floor lines meet the wall top (its metres scaled by up to 20% so the wall ends on a whole floor, never mid-window)
+     BORROWED (the idea only, credited): Streets GL (StrandedKitty, MIT, github.com/StrandedKitty/streets-gl) gives a building with no roof tag a roof by
+     its kind and its footprint's shape, and builds gabled and hipped roofs on a simple footprint by plain maths over its oriented rectangle; that rule
+     is the one used here (by height, size and region, as the tiles carry no roof tag). Its hipped/skeleton builder wraps CGAL (GPL-3): NOT borrowed,
+     nothing of its code is here. Everything else is this file's own (790's obb, quadRoof, triRoof, box, quad). Adds TRIANGLES to the meshes a tile
+     already makes (the roofs mesh, the walls mesh), never a draw call or a program. Off: localStorage 'wfr.city790' = 'no838' (the guard's control). */
+  var ON838 = !HAS('no838');
+  var REG838 = {   /* pit: pitched roof colours; flat: flat roof colours; mix: [mansard share, hip share] of the walk-ups; tank: the share of flat roofs with a water tank, its colour */
+    carib: { pit: [[0.60, 0.22, 0.18], [0.26, 0.46, 0.34], [0.26, 0.40, 0.60], [0.66, 0.67, 0.66], [0.52, 0.30, 0.20], [0.72, 0.38, 0.25], [0.62, 0.62, 0.60]], flat: [[0.78, 0.77, 0.73], [0.70, 0.69, 0.66], [0.86, 0.85, 0.82], [0.62, 0.33, 0.27]], mix: [0, 0.35], tank: 0.55, tc: [0.11, 0.11, 0.12] },
+    florida: { pit: [[0.76, 0.44, 0.30], [0.70, 0.38, 0.26], [0.80, 0.52, 0.36], [0.88, 0.87, 0.84], [0.62, 0.62, 0.60], [0.50, 0.50, 0.50]], flat: [[0.88, 0.88, 0.85], [0.80, 0.80, 0.78], [0.68, 0.68, 0.66]], mix: [0, 0.25], tank: 0, tc: [0.85, 0.85, 0.82] },
+    med: { pit: [[0.72, 0.38, 0.24], [0.66, 0.34, 0.22], [0.78, 0.46, 0.30], [0.60, 0.32, 0.22], [0.70, 0.42, 0.30]], flat: [[0.80, 0.76, 0.68], [0.72, 0.70, 0.66], [0.84, 0.82, 0.78]], mix: [0.05, 0.5], tank: 0.3, tc: [0.86, 0.86, 0.84] },
+    north: { pit: [[0.30, 0.32, 0.36], [0.26, 0.27, 0.30], [0.36, 0.38, 0.42], [0.58, 0.30, 0.22], [0.50, 0.28, 0.22], [0.40, 0.40, 0.42]], flat: [[0.50, 0.50, 0.50], [0.42, 0.43, 0.45], [0.58, 0.57, 0.55]], mix: [0.4, 0.25], tank: 0.05, tc: [0.55, 0.55, 0.56] },
+    us: { pit: [[0.36, 0.36, 0.37], [0.28, 0.28, 0.30], [0.44, 0.36, 0.30], [0.50, 0.46, 0.42], [0.40, 0.42, 0.44], [0.34, 0.30, 0.27]], flat: [[0.56, 0.56, 0.55], [0.48, 0.48, 0.49], [0.62, 0.60, 0.56]], mix: [0.12, 0.2], tank: 0.12, tc: [0.45, 0.33, 0.22] },
+    other: { pit: PAL_ROOF, flat: PAL_FLAT, mix: [0.15, 0.3], tank: 0.15, tc: [0.60, 0.60, 0.60] } };
+  function region838(lat, lon) {   // DRAFT boxes, coarse on purpose (a roof palette, not a border)
+    if (lat > 24.4 && lat < 31.5 && lon > -87.7 && lon < -79.8) return 'florida';
+    if (lat > 9 && lat < 27.5 && lon > -90 && lon < -59) return 'carib';
+    if ((lat > 30 && lat < 46.5 && lon > -10 && lon < 37) || (lat > 32 && lat < 38.5 && lon > -123.5 && lon < -116)) return 'med';
+    if (lat >= 46.5 && lat < 72 && lon > -11 && lon < 45) return 'north';
+    if (lat > 24 && lat < 50 && lon > -125 && lon < -66) return 'us';
+    return 'other';
+  }
+  var FL838 = [0, 2.9, 3.2, 3.4, 3.7, 4.5];   // the facade shader's own floor heights by style (FACADE_MAIN 'fl'): the wall's metres are scaled so its top meets one
+  function clus838(a) { var s = a.slice().sort(function (p, q) { return p - q; }), out = [], g = [s[0]]; for (var i = 1; i < s.length; i++) { if (s[i] - g[g.length - 1] < 0.8) g.push(s[i]); else { out.push(g.reduce(function (p, q) { return p + q; }, 0) / g.length); g = [s[i]]; } } out.push(g.reduce(function (p, q) { return p + q; }, 0) / g.length); return out; }
+  /* a near-orthogonal footprint cut into rectangles: { parts: [{ cx, cz, ux, uz, L, W, mA, mB, ext }], flats: [[x, z] x4] } or null */
+  function split838(R, area, o) {
+    var n = R.length / 2, S = new Array(n), T = new Array(n), RS = new Array(R.length), per = 0, off = 0, i, j;
+    for (i = 0; i < n; i++) { var dx = R[2 * i] - o.cx, dz = R[2 * i + 1] - o.cz; S[i] = dx * o.ux + dz * o.uz; T[i] = -dx * o.uz + dz * o.ux; RS[2 * i] = S[i]; RS[2 * i + 1] = T[i]; }
+    for (i = 0; i < n; i++) { j = (i + 1) % n; var ds = S[j] - S[i], dt = T[j] - T[i], l = Math.hypot(ds, dt); per += l; if (l > 0.01 && Math.min(Math.abs(ds), Math.abs(dt)) / l > 0.2) off += l; }
+    if (off > per * 0.1) return null;   // more than a tenth of the outline off the two axes (a curve, a wedge): not this
+    var xs = clus838(S), ts = clus838(T), ns = xs.length - 1, nt = ts.length - 1; if (ns < 1 || nt < 1 || ns > 8 || nt > 8) return null;
+    var fill = new Uint8Array(ns * nt), own = new Int8Array(ns * nt), cov = 0; for (i = 0; i < ns; i++) for (j = 0; j < nt; j++) { if (inPoly(RS, (xs[i] + xs[i + 1]) / 2, (ts[j] + ts[j + 1]) / 2)) { fill[i * nt + j] = 1; cov += (xs[i + 1] - xs[i]) * (ts[j + 1] - ts[j]); } own[i * nt + j] = -1; }
+    if (Math.abs(cov - area) > area * 0.08) return null;   // the parts must BE the footprint: a looser fit hung roofs over the neighbours (the guard's R0, London)
+    var rs = [], P = new Int16Array((ns + 1) * (nt + 1)), it, a, b, c, d;
+    for (it = 0; it < 7; it++) {   // the largest free rectangle of cells, then the next (a 2D prefix count makes each test one step)
+      for (i = 0; i <= ns; i++) for (j = 0; j <= nt; j++) P[i * (nt + 1) + j] = i && j ? P[(i - 1) * (nt + 1) + j] + P[i * (nt + 1) + j - 1] - P[(i - 1) * (nt + 1) + j - 1] + (fill[(i - 1) * nt + j - 1] && own[(i - 1) * nt + j - 1] < 0 ? 1 : 0) : 0;
+      var best = null, bA = 0;
+      for (a = 0; a < ns; a++) for (b = a + 1; b <= ns; b++) for (c = 0; c < nt; c++) for (d = c + 1; d <= nt; d++) { var cnt = P[b * (nt + 1) + d] - P[a * (nt + 1) + d] - P[b * (nt + 1) + c] + P[a * (nt + 1) + c]; if (cnt !== (b - a) * (d - c)) continue; var ar = (xs[b] - xs[a]) * (ts[d] - ts[c]); if (ar > bA) { bA = ar; best = [a, b, c, d]; } }
+      if (!best) break; for (i = best[0]; i < best[1]; i++) for (j = best[2]; j < best[3]; j++) own[i * nt + j] = rs.length; rs.push(best);
+    }
+    for (i = 0; i < ns * nt; i++) if (fill[i] && own[i] < 0) return null;
+    var parts = [], flats = [], flatA = 0, Q = [];
+    for (i = 0; i < rs.length; i++) { var r = rs[i], w = xs[r[1]] - xs[r[0]], h = ts[r[3]] - ts[r[2]], sc = (xs[r[0]] + xs[r[1]]) / 2, tc = (ts[r[2]] + ts[r[3]]) / 2, alS = w >= h;
+      Q.push({ r: r, w: w, h: h, flat: Math.min(w, h) < 2, alS: alS, W: Math.min(w, h) / 2, L: Math.max(w, h) / 2, sc: sc, tc: tc }); }
+    function P2(s, t) { return [o.cx + o.ux * s - o.uz * t, o.cz + o.uz * s + o.ux * t]; }
+    function endMode(q, cells) {   // the cells just past one end of a part: none filled 'eave'; all one wider crossing part 'bury'; else 'abut'
+      var ow = -2, all = true, any = false; for (var k = 0; k < cells.length; k++) { var ci = cells[k][0], cj = cells[k][1]; if (ci < 0 || cj < 0 || ci >= ns || cj >= nt || !fill[ci * nt + cj]) { all = false; continue; } any = true; var w2 = own[ci * nt + cj]; if (ow === -2) ow = w2; else if (ow !== w2) ow = -1; }
+      if (!any) return 'eave'; if (!all || ow < 0) return 'abut'; var Qo = Q[ow]; return !Qo.flat && Qo.alS !== q.alS && Qo.W >= q.W - 0.05 ? 'bury' : 'abut';
+    }
+    for (i = 0; i < Q.length; i++) { var q = Q[i], rr = q.r, cA = [], cB = [], k;
+      if (q.flat) { flatA += q.w * q.h; flats.push([P2(xs[rr[0]], ts[rr[2]]), P2(xs[rr[1]], ts[rr[2]]), P2(xs[rr[1]], ts[rr[3]]), P2(xs[rr[0]], ts[rr[3]])]); continue; }
+      if (q.alS) { for (k = rr[2]; k < rr[3]; k++) { cA.push([rr[0] - 1, k]); cB.push([rr[1], k]); } } else { for (k = rr[0]; k < rr[1]; k++) { cA.push([k, rr[2] - 1]); cB.push([k, rr[3]]); } }
+      var c2 = P2(q.sc, q.tc), ux = q.alS ? o.ux : -o.uz, uz = q.alS ? o.uz : o.ux;
+      parts.push({ cx: c2[0], cz: c2[1], ux: ux, uz: uz, L: q.L, W: q.W, mA: endMode(q, cA), mB: endMode(q, cB) }); }
+    if (!parts.length || parts.length > 4 || flatA > area * 0.25) return null;
+    return { parts: parts, flats: flats };
+  }
+  /* which roof a building gets (null: 790's flat roof stands) */
+  function plan838(outer, area, h, house, tall, big, R, r4) {
+    if (tall || big) return null; var walk = !house && h >= 7 && h <= 24; if (!house && !walk) return null;
+    var want = house ? 'pitch' : r4 < R.mix[0] ? 'mansard' : r4 < R.mix[0] + R.mix[1] ? 'hip' : null; if (!want) return null;
+    var o = obb(outer); if (!o) return null;
+    if (want === 'mansard') { if (area / o.area >= 0.92 && o.W >= 3.6 && o.L >= 4 && o.W <= 20) return { kind: 'mansard', o: o }; want = 'hip'; }
+    var sp = split838(outer, area, o); if (!sp) return null;
+    for (var i = 0; i < sp.parts.length; i++) if (sp.parts[i].W * 2 > (house ? C.SHORT_MAX : 22)) return null;
+    return { kind: house ? 'multi' : 'hipblock', parts: sp.parts, flats: sp.flats };
+  }
+  /* one rectangle of a roof: a ridge on its long axis; an end is an eave (gable wall or hip), buried in a wider crossing part, or abutting (a gable wall on the shared line) */
+  function roofRect838(J, X, q, top, tanA, hip, rc, wcol) {
+    var e = C.EAVE, ux = q.ux, uz = q.uz, px = -uz, pz = ux, Wd = q.W + e, ye = top - 0.12, yr = ye + Wd * tanA, RO = J.roof;
+    var P = function (s, t, y) { return [q.cx + ux * s + px * t, y, q.cz + uz * s + pz * t]; };
+    var xA = q.mA === 'eave' ? e : q.mA === 'bury' ? q.W : 0, xB = q.mB === 'eave' ? e : q.mB === 'bury' ? q.W : 0, sA = -q.L - xA, sB = q.L + xB;
+    var hA = hip && q.mA === 'eave', hB = hip && q.mB === 'eave', rA = hA ? sA + Wd : sA, rB = hB ? sB - Wd : sB; if (rA > rB) rA = rB = (rA + rB) / 2;
+    var a = P(sA, -Wd, ye), b = P(sB, -Wd, ye), c = P(sB, Wd, ye), d = P(sA, Wd, ye), R0 = P(rA, 0, yr), R1 = P(rB, 0, yr);
+    quadRoof(RO, a, b, R1, R0, rc); quadRoof(RO, c, d, R0, R1, rc); if (hA) triRoof(RO, d, a, R0, rc); if (hB) triRoof(RO, b, c, R1, rc);
+    if (!hA && q.mA !== 'bury') tri3(X, P(-q.L, -q.W, top), P(-q.L, q.W, top), P(-q.L, 0, yr - 0.05), wcol, PLAIN, [-ux, 0, -uz]);
+    if (!hB && q.mB !== 'bury') tri3(X, P(q.L, q.W, top), P(q.L, -q.W, top), P(q.L, 0, yr - 0.05), wcol, PLAIN, [ux, 0, uz]);
+    return yr;
+  }
+  function roofMansard838(J, X, o, top, rc, wcol, r) {   // a steep lower slope (about 68 degrees), a low hip on top; dormers near her
+    var e = 0.3, ins = Math.min(1.1 + r * 0.3, o.W * 0.35), mr = 2.5 + r * 0.5, ye = top - 0.12, ym = ye + mr, L = o.L, W = o.W, ux = o.ux, uz = o.uz, px = -uz, pz = ux, RO = J.roof;
+    var P = function (s, t, y) { return [o.cx + ux * s + px * t, y, o.cz + uz * s + pz * t]; };
+    var a = P(-L - e, -W - e, ye), b = P(L + e, -W - e, ye), c = P(L + e, W + e, ye), d = P(-L - e, W + e, ye), A = P(-L + ins, -W + ins, ym), B = P(L - ins, -W + ins, ym), Cc = P(L - ins, W - ins, ym), D = P(-L + ins, W - ins, ym);
+    quadRoof(RO, a, b, B, A, rc); quadRoof(RO, b, c, Cc, B, rc); quadRoof(RO, c, d, D, Cc, rc); quadRoof(RO, d, a, A, D, rc);
+    var Wi = W - ins, Li = L - ins, yt = ym + Math.min(1.4, Wi * 0.21), ri = Math.max(0, Li - Wi), H0 = P(-ri, 0, yt), H1 = P(ri, 0, yt), tc = [rc[0] * 0.86, rc[1] * 0.86, rc[2] * 0.86];
+    quadRoof(RO, A, B, H1, H0, tc); quadRoof(RO, Cc, D, H0, H1, tc); triRoof(RO, B, Cc, H1, tc); triRoof(RO, D, A, H0, tc);
+    if (J.detail) { var nd = Math.min(4, Math.floor(2 * Li / 3.6)), dc = toLin([0.90, 0.89, 0.86]);
+      for (var k = 0; k < nd; k++) { var s = -Li + (k + 0.5) * (2 * Li / nd); for (var sd = -1; sd <= 1; sd += 2) { var tt = sd * (W - ins * 0.55), p0 = P(s, tt, 0); box(X, p0[0], p0[2], ux, uz, 0.55, ins * 0.5, ye + 0.45, ye + mr * 0.8, dc, PLAIN); } } }
+  }
+  function tank838(X, cx, cz, r, y0, y1, col) {   // an octagonal tank with a low cone lid (24 triangles)
+    var N = 8, k, lid = [col[0] * 1.15, col[1] * 1.15, col[2] * 1.15], c = [cx, y1 + r * 0.25, cz];
+    for (k = 0; k < N; k++) { var a0 = k / N * Math.PI * 2, a1 = (k + 1) / N * Math.PI * 2, x0 = cx + Math.cos(a0) * r, z0 = cz + Math.sin(a0) * r, x1 = cx + Math.cos(a1) * r, z1 = cz + Math.sin(a1) * r, am = (a0 + a1) / 2;
+      quad(X, [x0, y0, z0], [x1, y0, z1], [x1, y1, z1], [x0, y1, z0], col, PLAIN, [Math.cos(am), 0, Math.sin(am)]); tri3(X, [x0, y1, z0], [x1, y1, z1], c, lid, PLAIN, [0, 1, 0]); }
+  }
+  function items838(J, X, outer, area, h, top, R, id) {   // a flat roof's rooftop: a stair housing, air-conditioning units, a water tank; each one wholly on the roof
+    var o = obb(outer); if (!o) return 0; var rnd = rng(((id | 0) ^ 0x838e5) >>> 0), put = [], k = 0, yb = top - 0.1;
+    function spot(hl, hw) { var mL = o.L - hl - 0.7, mW = o.W - hw - 0.7; if (mL < 0 || mW < 0) return null;
+      for (var t = 0; t < 6; t++) { var s = (rnd() * 2 - 1) * mL, w = (rnd() * 2 - 1) * mW, x = o.cx + o.ux * s - o.uz * w, z = o.cz + o.uz * s + o.ux * w, ok = true;
+        for (var c = 0; c < 4 && ok; c++) { var cs = (c & 1 ? 1 : -1) * (hl + 0.4), cw = (c & 2 ? 1 : -1) * (hw + 0.4); if (!inPoly(outer, x + o.ux * cs - o.uz * cw, z + o.uz * cs + o.ux * cw)) ok = false; }
+        for (var p = 0; p < put.length && ok; p++) if (Math.hypot(put[p][0] - x, put[p][1] - z) < put[p][2] + Math.hypot(hl, hw) + 0.4) ok = false;
+        if (ok) { put.push([x, z, Math.hypot(hl, hw)]); return [x, z]; } } return null; }
+    var q;
+    if (h >= 9 && area >= 120) { var sl = 1.3 + rnd() * 0.4, sw = 1.0 + rnd() * 0.3; q = spot(sl, sw); if (q) { box(X, q[0], q[1], o.ux, o.uz, sl, sw, yb, top + 2.6 + rnd() * 0.5, toLin([0.70, 0.69, 0.66]), PLAIN); k++; } }
+    var nAC = area < 120 ? (rnd() < 0.5 ? 1 : 0) : Math.min(6, 1 + Math.floor(rnd() * 2 + area / 500));
+    for (var i = 0; i < nAC; i++) { q = spot(0.5, 0.4); if (q) { box(X, q[0], q[1], o.ux, o.uz, 0.5, 0.4, yb, top + 0.9, toLin([0.82, 0.82, 0.80]), PLAIN); k++; } }
+    if (rnd() < R.tank) { var tr = 0.6 + rnd() * 0.25; q = spot(tr, tr); if (q) { tank838(X, q[0], q[1], tr, yb, top + 1.5 + rnd() * 0.4, toLin(R.tc)); k++; } }
+    return k;
+  }
 
   /* ---------- the tile's city state: the main roads (for the shopfronts), the buildings (for the sidewalks and the trees) ---------- */
   var MAJOR = { primary: 1, secondary: 1, tertiary: 1, trunk: 1 }, URBAN = { minor: 1, tertiary: 1, secondary: 1, primary: 1, service: 1, busway: 1 }, DRAWN = { motorway: 1, trunk: 1, primary: 1, secondary: 1, tertiary: 1, minor: 1, service: 1, busway: 1, raceway: 1 };
@@ -865,7 +1020,7 @@ window.WFR_CITY790 = (function () {
       ri: 0, phase: 0 };
     return S;
   }
-  function begin(J, t) { if (!on() || !mats) return null; J.city = cityState(); J.tk = [t.x, t.y]; J.detail = !(t.d > C.DETAIL_D); t.detail790 = J.detail; J.wall.f = []; J.wall.m = []; return J.city; }
+  function begin(J, t) { if (!on() || !mats) return null; J.city = cityState(); J.tk = [t.x, t.y]; J.detail = !(t.d > C.DETAIL_D); t.detail790 = J.detail; J.wall.f = []; J.wall.m = []; J.reg838 = ON838 && t.nw && t.se ? REG838[region838((t.nw.lat + t.se.lat) / 2, (t.nw.lon + t.se.lon) / 2)] : null; return J.city; }   /* 838: the roofs' region, once a tile (its centre) */
   function road(J, cls, pts) { if (!J.city || !DRAWN[cls] || HAS('nostreet')) return false; J.city.addLine(cls, pts); return true; }
 
   /* ---------- the roads, after the buildings (a slice at a time): junctions, paint that stops short of them, zebras, sidewalks, the furniture ---------- */
@@ -994,7 +1149,7 @@ window.WFR_CITY790 = (function () {
   function changed() { ver++; }
   function restale(t) { return !!(mats && on() && t.z === 14 && t.detail790 === false && t.d < C.DETAIL_UP); }   /* world-features asks: a far-built tile she now nears is rebuilt with its detail */
   function peek() { var o = JSON.parse(JSON.stringify(st)); o.on = on(); o.ink = INK; o.mats = !!mats; o.pool = pool ? { tris: pool.tris, counts: pool.meshes.map(function (m) { return m.count; }) } : null; return o; }
-  return { C: C, on: on, materials: materials, begin: begin, building: building, road: road, stepRoads: stepRoads, finishTile: finishTile, tick: tick, changed: changed, restale: restale, peek: peek, tagColour: tagColour, obb: obb, U: U, version: 1,
+  return { C: C, on: on, materials: materials, begin: begin, building: building, road: road, stepRoads: stepRoads, finishTile: finishTile, tick: tick, changed: changed, restale: restale, peek: peek, tagColour: tagColour, obb: obb, U: U, version: 1, r838: { on: ON838, region: region838, REG: REG838, plan: plan838 },
     g830: { V: V, obb: obb, toLin: toLin, quadRoof: quadRoof, triRoof: triRoof } };   /* 830: the wall's own vertex and roof planes, for WFR_SACRED830 */
 })();
 

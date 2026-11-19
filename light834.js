@@ -29,9 +29,16 @@ window.WFR_LIGHT834 = (function () {
     SUN_GOLD: 0xffb25e, SUN_LOW: 0xff8a45, SUN_K: 0.9, SUN_I: 0.6, SKY_COOL: 0x86a2e2, SKY_K: 0.62, SKY_I: 0.35, GND: 0x4b3b39, GND_K: 0.3, PROBE_K: 0.5,
     /* golden hour (Nov 18, measured on the RTX): the sun +60% and the fill -35% at full g, so the sun side reads gold and the shade stays blue */
     /* the fog layer: density per metre at its floor, its scale height (Nov 18: 1/1000 read as nothing from 140 m, Kingston's dawn water lum 0.41 vs noon 0.43; 1/150 over 45 m lifts it to 0.58-0.60, a bank you can see, and a 320 m tower stands out of it: top 66 from the fog colour, foot 25) */
-    FOG_D: 1 / 150, BANKS: 0.8, FOG_H: 45, FOG_H_COOL: 85, FOG_RAIN_H: 160, TROPIC: 0.6, ISLAND: 0.45, COOL_DAY: 0.048, WET: 0.135, WET_NIGHT: 0.075,   /* the shares of FOG_D: a cool coast all day, rain by day, rain by night (as they were when FOG_D was 1/1000: only the morning banks were raised) */
+    /* 840: 1/150 was read with the eye on the floor (see THE EYE below): from 140 m a ray now crosses the layer as it lies, a third as thick, so the floor
+       density is 1/50 (light834 G2/G3/S1 green again: Kingston's dawn water lum 0.49 vs noon 0.34, the tower's top 141 from the fog colour, foot 33) */
+    FOG_D: 1 / 50, BANKS: 0.8, FOG_H: 45, FOG_H_COOL: 85, FOG_RAIN_H: 160, TROPIC: 0.6, ISLAND: 0.27, COOL_DAY: 0.016, WET: 0.045, WET_NIGHT: 0.025,   /* the shares of FOG_D: a cool coast all day, rain by day, rain by night (as they were when FOG_D was 1/1000: only the morning banks were raised; 840: COOL_DAY, WET, WET_NIGHT a third of 0.048/0.135/0.075, the same floor density at 1/50; ISLAND 0.45 to 0.27, measured: her island at dawn from 60 m reads as it did, mean 133.4 vs 133.6, its lower half 97.3 vs 96.5) */
     /* the haze: density per metre at the floor (general, city, rain), its scale height */
     HAZE: 1.6e-5, HAZE_CITY: 2.4e-4, HAZE_GOLD: 1.7, HAZE_RAIN: 3.2e-4, HAZE_H: 1100,
+    /* 840 (Nov 18, his picture flying into Kingston): the city's haze lay in the same 1,100 m layer as the general air, so from 1.5-3 km up every ray to the
+       ground crossed half a kilometre-thick veil: the city, roads and hills went one milky blue-white (lower-half edge density 5.0 at 1.5 km, 2.1 at 3 km,
+       against 12.5 and 10.1 with 834 off; 712's far fog measured no part in it). Now the city's own haze is a SHALLOW layer (CITY_H) you look down
+       through, and the haze (not the fog banks) clears near the eye: its depth is scaled by d/(d+NEAR), so it grows with distance and lies toward the horizon */
+    HAZE_CITY_H: 400, HAZE_NEAR: 3000,
     /* colours (display colours: the fog mixes after the tone curve) */
     FOG_DAY: 0xdfe5ea, FOG_DAWN: 0xd9d2d6, HAZE_DAY: 0xc4d6ea, HAZE_GOLD_C: 0xf0b77c, RAIN: 0xa9b1b9, STORM: 0x7d858d, GLOW: 0xffc98a, GLOW_LOW: 0xff9a52,
     SCATTER: 0.85, SKY_TINT: 0.55, HALO: 560, HALO2: 230, HALO_A: 0.7, PLACE_MS: 250, EASE: 0.6
@@ -40,14 +47,18 @@ window.WFR_LIGHT834 = (function () {
   var COOL = [[30, 43, -127, -116, 1, 7], [43, 50, -127, -122, 0.8, 8], [-36, -4, -83, -70, 1, 9], [-30, -14, 7, 16, 1, 1], [19, 34, -19, -8, 0.7, 7],
     [41, 53, -62, -45, 1, 6], [49, 61, -11, 9, 0.7, 11], [36, 56, 139, 166, 0.8, 7], [-40, -28, 110, 122, 0.5, 6], [-48, -34, 140, 151, 0.4, 5], [52, 66, -170, -150, 0.7, 7]];
 
-  var U = { N: { x: 0, y: 0, z: 0.8, w: 0 }, A: { x: 0, y: 55, z: 0, w: 1100 }, B: { x: 0.87, y: 0.9, z: 0.92, w: 0 }, C: { x: 0.77, y: 0.84, z: 0.92, w: 0 }, S: { x: 0, y: 1, z: 0, w: 0 }, G: { x: 1, y: 0.8, z: 0.55, w: 0 } };
+  var U = { N: { x: 0, y: 0, z: 0.8, w: 0 }, A: { x: 0, y: 55, z: 0, w: 1100 }, B: { x: 0.87, y: 0.9, z: 0.92, w: 0 }, C: { x: 0.77, y: 0.84, z: 0.92, w: 0 }, S: { x: 0, y: 1, z: 0, w: 0 }, G: { x: 1, y: 0.8, z: 0.55, w: 0 }, H: { x: 0, y: 400, z: 3000, w: 0 } };   /* 840: H = the city haze's floor density, its scale height, the near-clear distance */
   var st = { patched: false, inited: false, on: false, faults: [], g: 0, el: 0, morning: 0, cool: 0, city: 0, rain: 0, wet: 0, halo: 0, ticks: 0, placeAt: -1e9, ll: null, home: true,
     want: { fog: 0, haze: 0, city: 0 }, now: { fog: 0, haze: 0, city: 0 }, ms: [] };
 
   /* ═══ the chunks (made once, before any program compiles) ═══ */
-  var PV = '\n#ifdef USE_FOG\n\tvarying vec4 v834;\n#endif\n';
-  var VV = '\n#ifdef USE_FOG\n\tv834 = vec4( ( vec4( mvPosition.xyz, 0.0 ) * viewMatrix ).xyz, - mvPosition.z );\n#endif\n';   /* the eye-to-point offset in world axes (the view's rotation, transposed) and the drawn depth */
-  var PF = '\n#ifdef USE_FOG\n\tvarying vec4 v834;\n\tuniform vec4 u834A;\n\tuniform vec4 u834B;\n\tuniform vec4 u834C;\n\tuniform vec4 u834S;\n\tuniform vec4 u834G;\n\tuniform vec4 u834N;\n' +
+  var PV = '\n#ifdef USE_FOG\n\tvarying vec4 v834;\n\tvarying vec3 e834;\n#endif\n';
+  var VV = '\n#ifdef USE_FOG\n\tv834 = vec4( ( vec4( mvPosition.xyz, 0.0 ) * viewMatrix ).xyz, - mvPosition.z );\n\te834 = - ( vec4( viewMatrix[ 3 ].xyz, 0.0 ) * viewMatrix ).xyz;\n#endif\n';   /* the eye-to-point offset in world axes (the view's rotation, transposed) and the drawn depth; 840: the eye itself, from the view matrix */
+  /* 840 (Nov 18): THE EYE WAS ON THE FLOOR. three r128 uploads cameraPosition only to Shader, Phong, Toon and Standard materials (or one with an envMap);
+     the world's ground is Lambert, so its program read the eye at y 0 and every ray to the ground crossed the layers' THICKEST air for its whole length:
+     from 3 km up the haze was the haze of standing in the street (Kingston, 3 km: 77% of the way to the haze colour 5 km out, the layer's own sum says 36%).
+     viewMatrix reaches every lit and basic material, so the eye is taken from it: -R^T t */
+  var PF = '\n#ifdef USE_FOG\n\tvarying vec4 v834;\n\tvarying vec3 e834;\n\tuniform vec4 u834A;\n\tuniform vec4 u834B;\n\tuniform vec4 u834C;\n\tuniform vec4 u834S;\n\tuniform vec4 u834G;\n\tuniform vec4 u834N;\n\tuniform vec4 u834H;\n' +
     '\tfloat lay834( float hc, float hp, float H ) { float ec = exp( - hc / H ), ep = exp( - hp / H ), dh = hp - hc; return abs( dh ) < 0.5 ? 0.5 * ( ec + ep ) : ( ec - ep ) * H / dh; }\n#endif\n';   /* the mean density of an exponential layer along the ray */
   var FF = [
     '#ifdef USE_FOG',
@@ -63,10 +74,10 @@ window.WFR_LIGHT834 = (function () {
     '\t\tvec3 n834 = r834 / max( d834, 1e-3 );',
     '\t\tfloat s834 = max( dot( n834, u834S.xyz ), 0.0 ); s834 *= s834; s834 *= s834; float w834 = s834 * s834 * 0.7 + s834 * 0.3;',   /* forward scatter: toward the sun the air glows */
     '\t\tfogC834 = mix( fogColor, u834G.rgb, u834G.w * w834 );',
-    '\t\tfloat hc834 = max( cameraPosition.y - u834C.w, 0.0 ), hp834 = max( cameraPosition.y + r834.y - u834C.w, 0.0 );',
-    '\t\tvec2 q834 = cameraPosition.xz + r834.xz + u834N.xy; float b834 = 0.5 + 0.25 * ( sin( q834.x * 0.0010 + 2.0 * sin( q834.y * 0.00058 ) ) + sin( q834.y * 0.00093 + 2.3 * sin( q834.x * 0.00073 ) ) );',   /* banks: the layer lies in patches some 6 km across (Nov 18: 15 km read as one even sheet from 400 m), fixed to the world */
+    '\t\tfloat hc834 = max( e834.y - u834C.w, 0.0 ), hp834 = max( e834.y + r834.y - u834C.w, 0.0 );',
+    '\t\tvec2 q834 = e834.xz + r834.xz + u834N.xy; float b834 = 0.5 + 0.25 * ( sin( q834.x * 0.0010 + 2.0 * sin( q834.y * 0.00058 ) ) + sin( q834.y * 0.00093 + 2.3 * sin( q834.x * 0.00073 ) ) );',   /* banks: the layer lies in patches some 6 km across (Nov 18: 15 km read as one even sheet from 400 m), fixed to the world */
     '\t\tb834 = mix( 1.0, 0.12 + 1.5 * smoothstep( 0.28, 0.8, b834 ), u834N.z );',
-    '\t\tfloat oF834 = b834 * u834A.x * lay834( hc834, hp834, u834A.y ) * d834, oH834 = u834A.z * lay834( hc834, hp834, u834A.w ) * d834, o834 = oF834 + oH834;',
+    '\t\tfloat oF834 = b834 * u834A.x * lay834( hc834, hp834, u834A.y ) * d834, oH834 = ( u834A.z * lay834( hc834, hp834, u834A.w ) + u834H.x * lay834( hc834, hp834, u834H.y ) ) * d834 * d834 / max( d834 + u834H.z, 1.0 ), o834 = oF834 + oH834;',   /* 840: the city's haze its own shallow layer; the haze clears near the eye */
     '\t\tvec3 c834 = ( u834B.rgb * oF834 + u834C.rgb * oH834 ) / max( o834, 1e-6 );',
     '\t\tc834 = mix( c834, u834G.rgb, u834S.w * w834 );',
     '\t\tc834 = mix( c834, fogC834, 0.75 * smoothstep( 2500.0, 30000.0, d834 ) );',   /* far off, the banks melt into the sky's own horizon */
@@ -80,7 +91,7 @@ window.WFR_LIGHT834 = (function () {
       var SC = T.ShaderChunk;
       if (!/fogFactor = smoothstep\( fogNear, fogFar, fogDepth \)/.test(SC.fog_fragment) || !/fogDepth = - mvPosition\.z/.test(SC.fog_vertex)) { st.faults.push('fog chunks not as r128'); return false; }
       SC.fog_pars_vertex += PV; SC.fog_vertex += VV; SC.fog_pars_fragment += PF; SC.fog_fragment = FF;
-      var add = function (u) { if (u && u.fogColor && !u.u834A) { u.u834A = { value: U.A }; u.u834B = { value: U.B }; u.u834C = { value: U.C }; u.u834S = { value: U.S }; u.u834G = { value: U.G }; u.u834N = { value: U.N }; } };
+      var add = function (u) { if (u && u.fogColor && !u.u834A) { u.u834A = { value: U.A }; u.u834B = { value: U.B }; u.u834C = { value: U.C }; u.u834S = { value: U.S }; u.u834G = { value: U.G }; u.u834N = { value: U.N }; u.u834H = { value: U.H }; } };
       add(T.UniformsLib.fog); for (var k in T.ShaderLib) if (T.ShaderLib[k] && T.ShaderLib[k].uniforms) add(T.ShaderLib[k].uniforms);
       st.patched = true;
     } catch (e) { st.faults.push('patch: ' + (e && e.message || e)); }
@@ -169,8 +180,9 @@ window.WFR_LIGHT834 = (function () {
       var H = (C.FOG_H + (C.FOG_H_COOL - C.FOG_H) * st.cool) + C.FOG_RAIN_H * wet;
       U.A.x = C.FOG_D * Math.min(1.6, fog); U.A.y = H; U.N.z = C.BANKS * (1 - 0.7 * wet);   /* rain spreads it even */
       /* the haze */
-      var haze = (C.HAZE + C.HAZE_CITY * st.now.city) * (1 + (C.HAZE_GOLD - 1) * g) * (0.15 + 0.85 * day) + C.HAZE_RAIN * k;   /* the night as it was: only a breath of it */
-      U.A.z = haze; U.A.w = C.HAZE_H;
+      var hk = (1 + (C.HAZE_GOLD - 1) * g) * (0.15 + 0.85 * day);   /* the night as it was: only a breath of it */
+      U.A.z = C.HAZE * hk + C.HAZE_RAIN * k; U.A.w = C.HAZE_H;
+      U.H.x = C.HAZE_CITY * st.now.city * hk; U.H.y = C.HAZE_CITY_H; U.H.z = C.HAZE_NEAR;   /* 840: the city's own, a shallow layer */
       U.C.w = st.home ? X.water : 0;
       /* colours */
       var fc = mixHex(K.c, C.FOG_DAY, C.FOG_DAWN, Math.max(morning * (1 - sm(150, 400, c)), g)); fc.lerp(K.t.setHex(storm ? C.STORM : C.RAIN), wet);
@@ -192,7 +204,7 @@ window.WFR_LIGHT834 = (function () {
   function peek() {
     var r = function (o) { return { x: +o.x.toPrecision(4), y: +o.y.toPrecision(4), z: +o.z.toPrecision(4), w: +o.w.toPrecision(4) }; };
     return { classic: CLASSIC, offSwitch: OFF, patched: st.patched, inited: st.inited, on: st.on, faults: st.faults.slice(), g: +st.g.toFixed(3), el: +st.el.toFixed(3), morning: +st.morning.toFixed(3), cool: +st.cool.toFixed(3),
-      city: +st.now.city.toFixed(3), rain: +st.rain.toFixed(3), wet: +st.wet.toFixed(3), halo: +st.halo.toFixed(3), home: st.home, ll: st.ll, ticks: st.ticks, U: { A: r(U.A), B: r(U.B), C: r(U.C), S: r(U.S), G: r(U.G) },
+      city: +st.now.city.toFixed(3), rain: +st.rain.toFixed(3), wet: +st.wet.toFixed(3), halo: +st.halo.toFixed(3), home: st.home, ll: st.ll, ticks: st.ticks, U: { A: r(U.A), B: r(U.B), C: r(U.C), S: r(U.S), G: r(U.G), H: r(U.H) },
       haloVis: K.halo ? K.halo.map(function (s) { return s.visible; }) : null, ms: st.ms.slice(-600) };
   }
   return { C: C, U: U, patch: patch, init: init, tick: tick, peek: peek, coolAt: coolAt };

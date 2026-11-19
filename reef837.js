@@ -205,14 +205,19 @@ window.WFR_REEF837 = (function () {
       flatNormals(Gk.p, Gk.n);
       return Gk;
     }
-    function branchG() {   // an elkhorn and staghorn thicket (~1.1 m), pale tips
-      var Gk = PR.G0(), R = rng(8371), base = hex(0xc58f55), tipC = hex(0xeed9b0);
-      PR.ell(Gk, { c: [0, 0.08, 0], r: [0.38, 0.2, 0.36], seg: 7, ring: 4, top: hex(0x8a7a52), belly: hex(0x5a5040), bone: 0 });
-      for (var k = 0; k < 9; k++) { var a = k / 9 * TAU + R() * 0.5, L = 0.45 + R() * 0.35, o = [Math.cos(a) * 0.15, 0.15, Math.sin(a) * 0.15], t1 = [o[0] + Math.cos(a) * L * 0.6, 0.15 + L * (0.6 + R() * 0.4), o[2] + Math.sin(a) * L * 0.6];
-        var col = k % 3 === 0 ? hex(0xd8b07a) : k % 3 === 1 ? base : hex(0xd99a6a);
-        PR.tube(Gk, { a: o, b: t1, ra: 0.055, rb: 0.035, sides: 6, col: col, bone: 0 });
-        for (var j = 0; j < 2; j++) { var b2 = a + (j ? 0.6 : -0.6), L2 = 0.2 + R() * 0.2, t2 = [t1[0] + Math.cos(b2) * L2, t1[1] + L2 * 0.8, t1[2] + Math.sin(b2) * L2];
-          PR.tube(Gk, { a: t1, b: t2, ra: 0.035, rb: 0.022, sides: 6, col: col, bone: 0 }); PR.ell(Gk, { c: t2, r: [0.03, 0.03, 0.03], seg: 5, ring: 3, col: tipC, bone: 0 }); } }
+    function branchG() {   // 837 bake: an ELKHORN colony (Acropora palmata): stout trunks rising and spreading into broad flattened palms with short fingers,
+      // a few staghorn spikes between; ochre with pale growing tips. This is the SOURCE for tools/blender/bake-reef.py (a voxel remesh merges it into one
+      // organic colony, ambient occlusion darkens its crotches); unbaked, the game draws it as it is (~1.1 m)
+      var Gk = PR.G0(), R = rng(8371), base = hex(0x9a7a4a), body = hex(0xc4924f), body2 = hex(0xb98a50), tipC = hex(0xead6a6);
+      PR.ell(Gk, { c: [0, 0.07, 0], r: [0.34, 0.16, 0.32], seg: 10, ring: 6, top: base, belly: hex(0x5a5040), bone: 0 });
+      for (var k = 0; k < 6; k++) { var a = k / 6 * TAU + R() * 0.4, up = 0.42 + R() * 0.25, out = 0.32 + R() * 0.18, o = [Math.cos(a) * 0.1, 0.12, Math.sin(a) * 0.1], t1 = [Math.cos(a) * out, 0.12 + up, Math.sin(a) * out], col = k % 2 ? body : body2;
+        PR.tube(Gk, { a: o, b: t1, ra: 0.075, rb: 0.06, sides: 8, col: col, bone: 0 });   // the trunk
+        var cx = Math.cos(a), cz = Math.sin(a), pw = 0.2 + R() * 0.08, pl = 0.22 + R() * 0.1, tilt = 0.35 + R() * 0.3;
+        PR.ell(Gk, { c: [t1[0] + cx * pl * 0.6, t1[1] + 0.06, t1[2] + cz * pl * 0.6], r: [pw, 0.045, pl], yaw: Math.atan2(cx, cz), pitch: -tilt, seg: 12, ring: 5, top: col, belly: mixc(col, hex(0x6a5a3a), 0.4), bone: 0 });   // the palm, flattened, tipped up
+        for (var j = 0; j < 3; j++) { var b2 = a + (j - 1) * 0.45, L2 = 0.13 + R() * 0.1, s0 = [t1[0] + cx * pl * 1.1 + Math.cos(b2) * 0.05, t1[1] + 0.1 + 0.05 * j, t1[2] + cz * pl * 1.1 + Math.sin(b2) * 0.05], t2 = [s0[0] + Math.cos(b2) * L2, s0[1] + L2 * 0.55, s0[2] + Math.sin(b2) * L2];
+          PR.tube(Gk, { a: s0, b: t2, ra: 0.04, rb: 0.026, sides: 6, col: col, bone: 0 }); PR.ell(Gk, { c: t2, r: [0.03, 0.03, 0.03], seg: 6, ring: 4, col: tipC, bone: 0 }); } }   // its fingers, pale tips
+      for (k = 0; k < 4; k++) { var a3 = k / 4 * TAU + 0.5, t3 = [Math.cos(a3) * 0.16, 0.5 + R() * 0.2, Math.sin(a3) * 0.16];
+        PR.tube(Gk, { a: [Math.cos(a3) * 0.06, 0.12, Math.sin(a3) * 0.06], b: t3, ra: 0.035, rb: 0.022, sides: 6, col: hex(0xd2a86e), bone: 0 }); PR.ell(Gk, { c: t3, r: [0.025, 0.025, 0.025], seg: 6, ring: 4, col: tipC, bone: 0 }); }   // staghorn spikes
       return Gk;
     }
     function grassG() {   // a tuft of turtle grass: 9 ribbon blades, 3 segments each, dark at the root, light at the tip; aSw.z bends the tips
@@ -300,7 +305,7 @@ window.WFR_REEF837 = (function () {
       else sw = function (x, y, z) { var u = clamp((z0 - z) / L, 0, 1.25), ax = Math.abs(x), fl = rx && ax > rx * 1.25 && u < 0.6 ? (ax - rx) * 0.9 : 0; return [0.11 * L * u * u, fl, 0, u * 2.4 + (fl ? 1.2 : 0)]; };   // the body's wave; the pectoral fins beat
       var g = geoOf(o.p, o.n, o.c, sw, s.n, 0), im = pool(s.id, g, s.n), ph = g.attributes.aPh, R = rng(hash('ph' + s.id));
       for (var i = 0; i < s.n; i++) { ph.array[i * 3] = R() * TAU; ph.array[i * 3 + 1] = s.f * (0.85 + R() * 0.3); ph.array[i * 3 + 2] = 1; }
-      FM[s.id] = { im: im, ph: ph, s: s, L: L };
+      FM[s.id] = { im: im, ph: ph, s: s, L: L, sw: sw };
     });
     ['pillar', 'patch', 'branch', 'grass'].forEach(function (k) { var ph = POOL[k].geometry.attributes.aPh; for (var i = 0; i < C.CAP[k]; i++) { ph.array[i * 3] = i * 1.7; ph.array[i * 3 + 1] = 1; ph.array[i * 3 + 2] = k === 'grass' ? 1 : 0; } });
 
@@ -493,6 +498,34 @@ window.WFR_REEF837 = (function () {
       st.gc.x = cx; st.gc.z = cz; st.gc.where = tr ? 'travel' : 'home'; st.gPend = pend; st.grid++; st.bed = tr && !pend;
     }
 
+    /* ---------- 837 bake: the baked models (tools/blender/bake-reef.js packs them into reef837-models.js as base64 GLBs, the make-models.js way) ----------
+       parsed at load by the vendored GLTFLoader (meshopt when the pack is compressed); each swaps into its pool's geometry while she is out of the water:
+       the same attributes, the same material, so no program is made (N1). A model that fails leaves the procedural one: never the game */
+    var BAKED = { want: 0, got: 0, swapped: [], fault: null, pend: [], manifest: null };
+    (function loadBaked() {
+      var M = window.WFR_REEF837_MODELS; if (!M || !M.glb || !THREE.GLTFLoader) return; BAKED.manifest = M.manifest || null;
+      var ld = new THREE.GLTFLoader(); if (window.MeshoptDecoder && ld.setMeshoptDecoder) ld.setMeshoptDecoder(window.MeshoptDecoder);
+      Object.keys(M.glb).forEach(function (name) { if (!POOL[name] && !FM[name]) return; BAKED.want++;
+        try { var bin = atob(M.glb[name]), u8 = new Uint8Array(bin.length); for (var i = 0; i < bin.length; i++) u8[i] = bin.charCodeAt(i);
+          ld.parse(u8.buffer, '', function (gl) { try { gl.scene.updateMatrixWorld(true); var mesh = null; gl.scene.traverse(function (o) { if (o.isMesh && !mesh) mesh = o; }); if (!mesh) throw new Error('no mesh');
+              BAKED.pend.push({ name: name, g: mesh.geometry, m: mesh.matrixWorld.clone() }); BAKED.got++; } catch (e) { BAKED.fault = name + ': ' + (e && e.message || e); } },
+            function (e) { BAKED.fault = name + ': ' + (e && e.message || e); });
+        } catch (e) { BAKED.fault = name + ': ' + (e && e.message || e); } });
+    }());
+    function swapBaked(job) {   // a baked model into its pool: positions (its node's transform applied), normals, the baked colours, its index
+      var g = job.g, pa = g.attributes.position, na = g.attributes.normal, ca = g.attributes.color, N = pa.count, P = new Float32Array(N * 3), Nn = new Float32Array(N * 3), Cc = new Float32Array(N * 3), v = new THREE.Vector3(), nm = new THREE.Matrix3().getNormalMatrix(job.m), i;
+      if (!na) { g.computeVertexNormals(); na = g.attributes.normal; }
+      var cs = ca && ca.normalized ? (ca.array instanceof Uint16Array ? 1 / 65535 : ca.array instanceof Uint8Array ? 1 / 255 : 1) : 1;   // Blender writes COLOR_0 as normalised integers; r128's getX gives them raw
+      for (i = 0; i < N; i++) { v.set(pa.getX(i), pa.getY(i), pa.getZ(i)).applyMatrix4(job.m); P[i * 3] = v.x; P[i * 3 + 1] = v.y; P[i * 3 + 2] = v.z;
+        v.set(na.getX(i), na.getY(i), na.getZ(i)).applyMatrix3(nm).normalize(); Nn[i * 3] = v.x; Nn[i * 3 + 1] = v.y; Nn[i * 3 + 2] = v.z;
+        if (ca) { Cc[i * 3] = ca.getX(i) * cs; Cc[i * 3 + 1] = ca.getY(i) * cs; Cc[i * 3 + 2] = ca.getZ(i) * cs; } else { Cc[i * 3] = Cc[i * 3 + 1] = Cc[i * 3 + 2] = 0.8; } }
+      var isFish = !!FM[job.name], im = isFish ? FM[job.name].im : POOL[job.name], old = im.geometry, cap = old.attributes.aPh.count;
+      var tex = old.attributes.aTex ? old.attributes.aTex.array[0] : 0, ng = geoOf(P, Nn, Cc, isFish ? FM[job.name].sw : (job.name === 'grass' ? function (x, y) { var h = y / 0.85; return [0, 0, 0.12 * h * h, 0]; } : null), cap, tex);
+      if (g.index) ng.setIndex(new THREE.BufferAttribute(new Uint32Array(g.index.array), 1));
+      ng.attributes.aPh.array.set(old.attributes.aPh.array); im.geometry = ng; if (isFish) FM[job.name].ph = ng.attributes.aPh;
+      var top = -1e9; for (i = 1; i < P.length; i += 3) if (P[i] > top) top = P[i]; if (!isFish && HGT[job.name] != null) HGT[job.name] = top;
+      st.tris[job.name] = Math.round((g.index ? g.index.count : N) / 3); BAKED.swapped.push(job.name); st.key = '';   // the next dive lays the reef with the new heights
+    }
     /* ---------- the frame ---------- */
     function show(on) {
       if (on === st.on) return; st.on = on; st.ft = 0;
@@ -503,6 +536,7 @@ window.WFR_REEF837 = (function () {
       var t0 = performance.now();
       try {
         dt = Math.min(0.05, Math.max(0, dt || 0)); st.t += dt; st.dt = dt; U.t.value = st.t; LU.uT.value = st.t;
+        if (BAKED.pend.length && !st.on) { try { swapBaked(BAKED.pend.shift()); } catch (e) { BAKED.fault = 'swap: ' + (e && e.message || e); } }   // one a frame, only out of the water
         var under = !!(ctx.under && ctx.under()); if (!under) { show(false); return; }
         show(true); var cam = ctx.camera.position, P = ctx.S.pos, tr = travel(), where = tr ? 'travel' : 'home', sea = surf();
         her.x = P.x; her.y = P.y; her.z = P.z;
@@ -577,7 +611,23 @@ window.WFR_REEF837 = (function () {
         for (var i = 0; i < n; i++) R.render(ctx.scene, ctx.camera); gl.finish(); out[on ? 'on' : 'off'] = { calls: calls, tris: tris, ms: +((performance.now() - t0) / n).toFixed(3) }; G.visible = v; });
       out.calls = out.on.calls - out.off.calls; out.tris = out.on.tris - out.off.tris; out.ms = +(out.on.ms - out.off.ms).toFixed(3); return out;
     }
-    var API = { tick: tick, bedAt: bedAt, peek: peek, group: G, C: C, SP: SP, bench: { px: px, inView: inView, cost: cost, anchors: function () { return st.anchors.map(function (a) { return [+a.x.toFixed(2), +a.z.toFixed(2), +a.d.toFixed(2)]; }); }, refill: function () { st.key = ''; }, meshes: function () { var o = {}; Object.keys(LM).forEach(function (k) { o[k] = LM[k].visible; }); Object.keys(POOL).forEach(function (k) { o[k] = POOL[k].visible; }); return o; } } };
+    var API = { tick: tick, bedAt: bedAt, peek: peek, group: G, C: C, SP: SP, bench: { baked: function () { return { want: BAKED.want, got: BAKED.got, swapped: BAKED.swapped.slice(), pend: BAKED.pend.length, fault: BAKED.fault, manifest: BAKED.manifest, tris: Object.assign({}, st.tris), hgt: Object.assign({}, HGT) }; },
+      soups: function () { var o = {}; Object.keys(POOL).forEach(function (k) { o[k] = POOL[k].geometry; }); SP.forEach(function (s2) { o[s2.id] = FM[s2.id].im.geometry; });   // the procedural meshes, for tools/blender/dump-reef.js (the bake's sources)
+        var out = {}; Object.keys(o).forEach(function (k) { var g = o[k]; if (g.index) return; out[k] = { p: Array.from(g.attributes.position.array), n: Array.from(g.attributes.normal.array), c: Array.from(g.attributes.color.array) }; }); return out; },
+      coralDetail: function () {   // 837 bake: the coral's own pixels (the picture with coral against without) and how much fine shading they carry: a flat look (one colour per facet) reads near zero
+        var R0 = ctx.renderer, gl = R0.getContext(), W = gl.drawingBufferWidth, Hh = gl.drawingBufferHeight, a = new Uint8Array(W * Hh * 4), b = new Uint8Array(W * Hh * 4), K = ['pillar', 'patch', 'branch'], hid = [];
+        R0.render(ctx.scene, ctx.camera); gl.readPixels(0, 0, W, Hh, gl.RGBA, gl.UNSIGNED_BYTE, a);
+        K.forEach(function (k) { if (POOL[k].visible) { POOL[k].visible = false; hid.push(POOL[k]); } }); R0.render(ctx.scene, ctx.camera); gl.readPixels(0, 0, W, Hh, gl.RGBA, gl.UNSIGNED_BYTE, b); hid.forEach(function (m) { m.visible = true; });
+        var L = new Float32Array(W * Hh), M = new Uint8Array(W * Hh), i, n = 0;
+        for (i = 0; i < W * Hh; i++) { var q = i * 4, la = 0.299 * a[q] + 0.587 * a[q + 1] + 0.114 * a[q + 2], lb = 0.299 * b[q] + 0.587 * b[q + 1] + 0.114 * b[q + 2]; L[i] = la; if (Math.abs(la - lb) > 8) { M[i] = 1; n++; } }
+        var sds = [], flat = 0;
+        for (var y = 1; y < Hh - 1; y += 2) for (var x = 1; x < W - 1; x += 2) { var c = y * W + x; if (!M[c]) continue; var s1 = 0, s2 = 0, ok = true;
+          for (var dy = -1; dy <= 1 && ok; dy++) for (var dx = -1; dx <= 1; dx++) { var j = c + dy * W + dx; if (!M[j]) { ok = false; break; } s1 += L[j]; s2 += L[j] * L[j]; }
+          if (!ok) continue; var sd = Math.sqrt(Math.max(0, s2 / 9 - (s1 / 9) * (s1 / 9))); sds.push(sd); if (sd < 0.6) flat++; }
+        sds.sort(function (p, q2) { return p - q2; });
+        return { coralPx: n, samples: sds.length, medianStd: sds.length ? +sds[Math.floor(sds.length / 2)].toFixed(3) : 0, p25Std: sds.length ? +sds[Math.floor(sds.length / 4)].toFixed(3) : 0, flatFrac: sds.length ? +(flat / sds.length).toFixed(4) : 1, baked: BAKED.swapped.slice() };
+      },
+      px: px, inView: inView, cost: cost, anchors: function () { return st.anchors.map(function (a) { return [+a.x.toFixed(2), +a.z.toFixed(2), +a.d.toFixed(2)]; }); }, refill: function () { st.key = ''; }, meshes: function () { var o = {}; Object.keys(LM).forEach(function (k) { o[k] = LM[k].visible; }); Object.keys(POOL).forEach(function (k) { o[k] = POOL[k].visible; }); return o; } } };
     return API;
   }
   return { create: create, classic: CLASSIC, C: C, SP: SP };

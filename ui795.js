@@ -534,6 +534,7 @@
 
   /* ---------- the ship log, newest first: a bold title and one plain sentence a player cares about (DRAFTS for Marth's pen) ---------- */
   var SHIPS = [
+    { n: 159, title: 'Roofs and clear air', line: 'In the towns, houses of every shape have real roofs: painted zinc and terracotta in Jamaica, tile in Miami, slate in London. From high up a city reads clearly now, with the haze only far off toward the horizon. The coral under the sea is fuller and more natural, with shadows in its folds.' },
     { n: 158, title: 'Reefs', line: 'Dive under the sea: light pours down from the surface and dances on the sand, coral reefs and sea grass grow on the shelves, and Caribbean fish swim in schools while eagle rays glide past. Your bubbles rise in little wobbling clusters, and no town names or clouds show through the water. The clouds low over your island are soft now.' },
     { n: 157, title: 'Real clouds', line: 'The clouds have real volume now: sunlit tops, soft grey bellies seen from below, torn edges and no outlines. Fly into one and the world goes soft and white. At dusk their tops turn peach, in a storm they darken, and under the water they stay above.' },
     { n: 156, title: 'Clean shores', line: 'The shore is clean now: a thin line of surf at the water’s edge, even sand and a crisp edge where the grass begins. Rain rings reach as far as you can see. Storms turn the sea dark grey-green, the deep open sea is a deeper teal, rivers run downstream, and the open sea rolls in waves of every size.' },
