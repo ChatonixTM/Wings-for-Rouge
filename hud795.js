@@ -176,10 +176,16 @@
 
     /* the round buttons under the map: dark glass discs with a glowing rim (the game's own white glyphs) */
     P + '#ui .hud .side{position:fixed!important;right:calc(env(safe-area-inset-right,0px) + 12px)!important;top:calc(var(--h7-top) + 160px)!important;left:auto!important;margin:0!important;' +
-      'display:flex!important;flex-direction:column!important;gap:9px!important;width:auto!important}' +
+      'display:flex!important;flex-direction:column!important;gap:var(--gap841,9px)!important;width:auto!important}' +
     P + '#ui .hud .side .round,' + P + '#questsBtn720{width:44px!important;height:44px!important;border:1.5px solid var(--h7-line2)!important;border-radius:50%!important;' +
       'background:var(--u-g,none) center/20px 20px no-repeat,radial-gradient(circle at 50% 30%,rgba(110,168,255,.22),rgba(10,13,24,.9) 70%)!important;box-shadow:0 0 12px -3px rgba(110,168,255,.6),inset 0 0 8px rgba(110,168,255,.15)!important;filter:none!important}' +
     P + '#ui .hud .side .round{position:static!important}' +
+    /* 841: when the round buttons have no room above the action buttons, they wrap into a second column inward (lay841 sets the rows); a card with no room
+       in the lane waits, and a button an open panel covers with no free slot left steps aside, both by a class (the slot math reads through them) */
+    P + '#ui .hud .side.col841{display:grid!important;grid-auto-flow:column;grid-template-rows:repeat(var(--rows841,99),44px);direction:rtl}' + P + '#ui .hud .side.col841>*{direction:ltr}' +
+    'html.ui716.hud795 .w841,html.ui716.hud795 .h841{visibility:hidden!important}' +
+    /* 841 follow-up: while the lane runs, a card is never seen before the lane has placed it (p841): no first frame at its own old spot */
+    'html.ui716.hud795.l841 :is(#toast,#hint,#m788ban,#title39,#place790,#xpPop,.u7-toasts,#pace789):not(.p841){opacity:0!important}' +
     P + '#ui .hud .side #birdsBtn{border-color:rgba(255,59,66,.7)!important;box-shadow:0 0 12px -2px rgba(255,59,66,.7),inset 0 0 8px rgba(255,59,66,.2)!important}' +
     P + '#questsBtn720{border-color:rgba(255,212,92,.6)!important}' +
 
@@ -218,7 +224,8 @@
     P + '#ui #hint:empty{display:none!important}' +
     P + '#ui #xpPop:not([hidden]){font:700 12px/1.2 var(--h7-mono)!important;color:var(--h7-gold)!important;text-shadow:0 0 8px rgba(255,212,92,.6)!important;' + pill + 'padding:3px 10px!important;border-color:rgba(255,212,92,.5)!important;animation:up795 .4s ease-out both}' +
     P + '#pace789{top:auto!important;bottom:calc(env(safe-area-inset-bottom,0px) + 16px)!important;max-width:calc(100vw - 200px);white-space:nowrap;font:500 11.5px/1.2 var(--h7-body)!important;' + pill +
-      'padding:3px 11px 3px 22px!important;background-image:radial-gradient(circle at 11px 50%,var(--h7-mint) 3.5px,transparent 4.5px)!important;box-shadow:0 0 10px -3px var(--h7-glow)!important;backdrop-filter:blur(4px)}' +
+      'padding:3px 11px 3px 22px!important;background-image:radial-gradient(circle at 11px 50%,var(--h7-mint) 3.5px,transparent 4.5px)!important;box-shadow:0 0 10px -3px var(--h7-glow)!important;backdrop-filter:blur(4px);overflow:hidden}' +
+    P + '#pace789 .i789{flex:none}' + P + '#pace789 .w789{min-width:0;overflow:hidden;text-overflow:ellipsis}' +   /* 841: its words stay inside the pill (they ran past it onto Flap's tag); lay841 gives it the room between the buttons */
     P + '#ui #lvCard{gap:8px!important;padding:16px 24px 18px!important;min-width:min(250px,calc(100vw - 60px));box-sizing:border-box;border-radius:16px!important;' + glass +
       'border-color:rgba(255,59,66,.55)!important;box-shadow:0 0 0 100vmax rgba(5,6,12,.42),0 0 40px -6px rgba(255,59,66,.7),inset 0 0 26px rgba(255,59,66,.12)!important}' +
     P + '#ui #lvCard::before{content:"Level up";' + eyebrow + 'font-size:10.5px!important}' +
@@ -460,10 +467,193 @@
       var hv = vis(t) && t.textContent ? Math.round(t.getBoundingClientRect().bottom + 8) + 'px' : '0px';
       if (H.hintTop !== hv) { H.hintTop = hv; root.style.setProperty('--hint795', hv); }
     }
+    /* ---------------- 841 ONE LAYOUT FOR THE PLAY SCREEN (Marth, Nov 19 2026, verbatim: "Clear UI overlapping"; refs-1111/bugs-841). Upright only.
+       Why it overlapped: every piece placed itself alone. The round buttons hung down from the map and 793's action buttons stood up from the bottom, and
+       neither knew the other (his picture 1: the star half under Jump; picture 2: Night on the Pouch); a hidden button still held its slot up (Attack's
+       slot under Jump at Lv 2); the scroll hung under the job card and Sleep stood up from the bottom (picture 2); and the message, the missions card and
+       the hint each had a fixed top of their own (picture 1: three cards on one spot). One pass, ten times a second, reads every box once, then writes:
+         THE COLUMNS  each side's action buttons are laid from the bottom in 793's order from what is SHOWN: a hidden button frees its slot (its floor falls
+                      to the next shown one under it); a button that would meet the round buttons, the scroll or the chick's panel steps down into a free
+                      slot under it; if none is free, the round buttons wrap into a second column inward (the scroll steps inward); a button an open
+                      panel still covers steps aside (hidden) while the panel is open.
+         THE LANE     the message, the missions card, the place title, the rumour card, the 795 toasts and the XP line stack under the job card and the
+                      round map (and the chick's panel), newest on top, each 8 px under the last, clear of every column; the hint goes last; a card with
+                      no room left waits (hidden) until there is room. 782's toast() queue still decides WHEN a word is said; this decides WHERE.
+       No read after a write inside the pass; nothing in the 3D frame reads layout. Standard only (Classic frozen: this module never runs there). */
+    var L841 = { probe: null, ih: -1, iw: -1, vh: 8.44, sb: 0, seen: {}, set: {}, pill: -1, n: 0, waits: 0, steps: 0, wraps: 0, hides: 0, last: null, err: '' };
+    var SLOT841 = { flap: ['flap'], atkBtn: ['atkBtn'], flutter: ['flutter', 'jump'], nightBtn: ['nightBtn'], land: ['land', 'read'], zoom: ['zoom'], home: ['home', 'thBtn', 'sing'] };
+    var ORDER841 = ['flap', 'atkBtn', 'flutter', 'nightBtn', 'land', 'zoom', 'home'];   /* bottom up on each side, as 793's floors chain them */
+    var CARDS841 = ['toast', 'm788ban', 'title39', 'place790', 'u7', 'xpPop', 'hint'];
+    function probe841() {   /* 100vh and the bottom safe area in px (as the CSS reads them), measured only when the window changes size */
+      if (!L841.probe) { var d = document.createElement('div'); d.id = 'probe841'; d.setAttribute('aria-hidden', 'true');
+        d.style.cssText = 'position:fixed;left:-20px;top:0;width:1px;height:100vh;padding-bottom:env(safe-area-inset-bottom,0px);box-sizing:content-box;visibility:hidden;pointer-events:none'; document.body.appendChild(d); L841.probe = d; }
+      if (L841.ih === innerHeight && L841.iw === innerWidth) return; L841.ih = innerHeight; L841.iw = innerWidth;
+      var cs = getComputedStyle(L841.probe); L841.vh = (parseFloat(cs.height) || innerHeight) / 100; L841.sb = parseFloat(cs.paddingBottom) || 0;
+    }
+    function shown841(e) {   /* shown as far as the layout goes: this pass's own step-aside and wait classes are read through */
+      if (!e || e.hidden || !e.isConnected || !e.getClientRects().length) return false; var cs = getComputedStyle(e);
+      return cs.visibility !== 'hidden' || e.classList.contains('h841') || e.classList.contains('w841');
+    }
+    function box841(e, pad) { var r = e.getBoundingClientRect(); pad = pad || 0; return { l: r.left, t: r.top - pad, r: r.right, b: r.bottom, w: r.width, h: r.height }; }
+    function hit841(a, b, m) { m = m || 0; return a.l < b.r + m && a.r > b.l - m && a.t < b.b + m && a.b > b.t - m; }
+    function put841(e, prop, v) {   /* an inline !important value, written only when it changes; remembered so it can be taken back */
+      var k = (e.id || 'u7') + '|' + prop; if (v == null) { if (L841.set[k]) { e.style.removeProperty(prop); delete L841.set[k]; } return; }
+      if (L841.set[k] !== v) { e.style.setProperty(prop, v, 'important'); L841.set[k] = v; }
+    }
+    function cls841(e, c, on) { if (e && e.classList.contains(c) !== !!on) e.classList.toggle(c, !!on); }
+    function clear841() {   /* landscape, a fight's own layout, Creative: every place this pass gave is taken back */
+      L841.full = false; Object.keys(L841.set).forEach(function (k) { var i = k.split('|'), e = i[0] === 'u7' ? document.querySelector('.u7-toasts') : $(i[0]); if (e) e.style.removeProperty(i[1]); }); L841.set = {};
+      var sd = document.querySelector('#ui .hud .side'); cls841(sd, 'col841', false); if (sd) { sd.style.removeProperty('--rows841'); sd.style.removeProperty('--gap841'); } L841.rows = 0; L841.gap = null;
+      document.querySelectorAll('.w841,.h841,.p841').forEach(function (e) { e.classList.remove('w841', 'h841', 'p841'); }); root.classList.remove('l841');
+    }
+    var TAG841 = {};
+    function tag841(e) {   /* where its paper tag reaches, from the button's left (px): its words set its width ("Zoom · burst" reaches far past its disc); read again only when they change */
+      var k = (e.getAttribute('data-l') || '') + '|' + (e.style.getPropertyValue('--k795') || '') + '|' + H.set.size + H.set.hand, c = TAG841[e.id]; if (c && c.k === k) return c;
+      var o = { k: k, dl: -6, dr: e.offsetWidth + 6 }, rb = e.querySelector('.u716rb');
+      if (rb && rb.getClientRects().length) { var r = e.getBoundingClientRect(), q = rb.getBoundingClientRect(); o.dl = Math.min(-2, q.left - r.left); o.dr = Math.max(r.width + 2, q.right - r.left); }
+      else { var a = getComputedStyle(e, '::after'), w = parseFloat(a.width), l = parseFloat(a.left), m = /matrix\(([^)]+)\)/.exec(a.transform), tx = m ? +m[1].split(',')[4] || 0 : 0;
+        if (a.content && a.content !== 'none' && a.content !== 'normal' && a.display !== 'none' && w > 0 && !isNaN(l)) { o.dl = Math.min(-2, l + tx); o.dr = Math.max(e.offsetWidth + 2, l + tx + w + 3); } }
+      TAG841[e.id] = o; return o;
+    }
+    function lay841() {
+      try {
+        var W = innerWidth, Hh = innerHeight, ui = $('ui');
+        if (Hh < W || !ui || ui.hidden || root.classList.contains('c712b') || (function () { var f = $('hit703'); return f && !f.hidden; })()) { if (L841.n || Object.keys(L841.set).length) clear841(); msgPlace(); return; }
+        probe841(); L841.n++; cls841(root, 'l841', true);
+        /* ===== READ (every box once) ===== */
+        var sc = SIZE[H.set.size] || 1, hand = H.set.hand, vh = L841.vh, sb = L841.sb;
+        var lv = $('lvPill'), mp = $('mapBtn705'), dist = $('dist'), wt = $('wordsTop735'), cmp = $('cmp795'), care = $('care'), sideEl = document.querySelector('#ui .hud .side'), scroll = $('questsBtn720'), ff = $('ff757');
+        var lvB = vis(lv) ? box841(lv) : null; if (lvB && Math.round(lvB.b) !== L841.pill && window.WFR_QUESTS720 && WFR_QUESTS720.place) { L841.pill = Math.round(lvB.b); WFR_QUESTS720.place(); }   /* the scroll hangs under the job card: when the card grows (a row of hearts, a longer job), it follows */
+        var band = [];   /* the top band: the strip, the job card, the round map and its tag, the pill over it */
+        [cmp, lv, mp, dist, wt].forEach(function (e) { if (vis(e) && (e !== dist || e.textContent)) band.push(box841(e)); });
+        var careB = shown841(care) ? box841(care) : null, careOpen = !!(careB && !care.classList.contains('tucked'));
+        var slot = {}, el = {};
+        ORDER841.forEach(function (k) { var L = LAY[k], side = hand === 'l' ? (L.side === 'r' ? 'l' : 'r') : L.side; var m = null; SLOT841[k].forEach(function (id) { var e = $(id); if (!m && shown841(e)) m = e; }); slot[k] = { L: L, side: side, s: Math.round(L.s * sc), el: m, tag: m ? tag841(m) : null }; if (m) el[m.id] = m; });
+        var rounds = sideEl ? Array.prototype.filter.call(sideEl.children, function (e) { return !e.hidden && e.getClientRects().length && getComputedStyle(e).display !== 'none'; }).length : 0;
+        var sideB = sideEl && rounds ? box841(sideEl) : null;
+        var scrB = shown841(scroll) ? box841(scroll, 4) : null, scrTx = scroll && scroll.style.translate ? parseFloat(scroll.style.translate) || 0 : 0; if (scrB) { scrB.l -= scrTx; scrB.r = scrB.l + scrB.w + 4; }   /* where world-quests hangs it (its badge counted), before any step inward */
+        var ffB = vis(ff) ? box841(ff) : null;
+        var cards = []; CARDS841.forEach(function (id) { var e = id === 'u7' ? document.querySelector('.u7-toasts') : $(id); if (!e) return;
+          var on = id === 'u7' ? e.children.length > 0 : id === 'title39' || id === 'place790' ? e.classList.contains('on') && shown841(e) : shown841(e) && (id !== 'toast' || (e.textContent && e.style.opacity !== '0')) && (id !== 'hint' || (e.textContent && e.style.opacity !== '0'));
+          if (!on) { delete L841.seen[id]; var fade = !e.classList.contains('w841') && L841.set[(e.id || 'u7') + '|top'] && shown841(e) && +getComputedStyle(e).opacity > 0.02;   /* leaving: it keeps the place it had until it has faded (never a jump to its old spot) */
+            var held = e.classList.contains('w841') && !e.hidden && e.isConnected && +getComputedStyle(e).opacity > 0.02;   /* 841 follow-up (V5 at 390x664): a card that WAITED and is now leaving stays hidden through its fade; it is never let go at its own old spot, on the scroll and fast forward */
+            cards.push({ id: id, e: e, on: false, fade: !!fade, held: !!held, box: fade ? box841(e) : null }); return; }
+          if (!L841.seen[id]) L841.seen[id] = performance.now();
+          var cs = getComputedStyle(e), r = e.getBoundingClientRect(); cards.push({ id: id, e: e, on: true, at: L841.seen[id], w: r.width, h: r.height, offY: r.top - (parseFloat(cs.top) || 0), offX: r.left - (parseFloat(cs.left) || 0) }); });
+        var pc = $('pace789'), pcB = null;   /* 789's pace pill at the foot: its band, and the width its words want (icon, gap, words, padding) */
+        if (pc && pc.classList.contains('show') && vis(pc)) { var pr = pc.getBoundingClientRect(), pcs = getComputedStyle(pc), pi = pc.querySelector('.i789'), pw = pc.querySelector('.w789');
+          pcB = { t: pr.top, b: pr.bottom, nat: Math.ceil((parseFloat(pcs.paddingLeft) || 0) + (parseFloat(pcs.paddingRight) || 0) + 2 + (pi ? pi.offsetWidth : 0) + (pw && pw.getClientRects().length ? 6 + pw.scrollWidth : 0)) }; }
+        var pcGo = !!(pc && !pcB && L841.set['pace789|left'] && pc.getClientRects().length && +getComputedStyle(pc).opacity > 0.02);
+        var low = [];   /* what stands in the lower screen: panels and the bottom pills */
+        ['talk', 'tut', 'warm', 'singEgg', 'm788card', 'breath', 'alt809', 'rise809', 'pace789'].forEach(function (id) { var e = $(id); if (vis(e)) { var q = box841(e); q.id = id; low.push(q); } });
+        /* ===== THE COLUMNS ===== */
+        var bot = {}, X = {};   /* a slot's bottom (px over the safe area) and its box */
+        function want(k) { var L = slot[k].L; return L.over ? null : Math.min(L.b, L.k * vh); }
+        function topOf(k) { if (!k) return null; if (slot[k].el) return bot[k] + slot[k].s; var L = slot[k].L; return topOf(L.floor || L.over); }   /* the top of the nearest SHOWN slot down the chain (a hidden one frees its slot) */
+        function natural(k) { var L = slot[k].L, e; if (L.over) e = (bot[L.over] != null ? bot[L.over] : natural(L.over)) + slot[L.over].s + L.gap; else e = want(k); if (L.floor) { var f = topOf(L.floor); if (f != null) e = Math.max(e, f + 18); } return e; }
+        function boxAt(k, b) { var o = slot[k], x = o.L.x, s = o.s, l = o.side === 'r' ? W - x - s : x, g = o.tag || { dl: -6, dr: s + 6 }; return { l: Math.min(l, l + g.dl), r: Math.max(l + s, l + g.dr), t: Hh - sb - b - s, b: Hh - sb - b + 14 }; }   /* the button and its paper tag under it, as wide as its words */
+        var hungAll = [];   /* what hangs from the top: the round buttons (one column, all of them), the scroll, fast forward, the chick's panel */
+        if (sideB) hungAll.push({ l: sideB.r - 44, r: sideB.r, t: sideB.t, b: sideB.t + rounds * 47 - 3 });   /* the round buttons at their closest (3 px apart): a button steps down only if even that would meet it */ if (scrB) hungAll.push(scrB); if (ffB) hungAll.push(ffB); if (careB) hungAll.push(careB);
+        function clearOf(k, b) { var bx = boxAt(k, b); for (var i = 0; i < hungAll.length; i++) { var o = hungAll[i]; if (bx.l < o.r && bx.r > o.l && bx.t < o.b + 8 && bx.b > o.t - 8) return o; } return null; }   /* 8 px clear above and below; side by side is clear */
+        var stepped = {}, hide = {}, meet = {};
+        ORDER841.forEach(function (k) {
+          bot[k] = natural(k); if (!slot[k].el) return;
+          var by = clearOf(k, bot[k]); if (!by) return;
+          /* it would meet a hanging piece: the free slots under it (hidden buttons' places down its chain), highest first */
+          var L = slot[k].L, j = L.floor || L.over, below = [];
+          while (j && !slot[j].el) { below.push(j); var lj = slot[j].L; j = lj.floor || lj.over; }
+          var f = topOf(L.floor || L.over), done = false;
+          below.forEach(function (j2) { if (done) return; var b2 = natural(j2); if (f != null) b2 = Math.max(b2, f + 18); if (b2 < bot[k] && !clearOf(k, b2)) { bot[k] = b2; stepped[k] = j2; done = true; } });
+          if (!done) meet[k] = by;
+        });
+        ORDER841.forEach(function (k) { if (slot[k].el) { X[k] = boxAt(k, bot[k]); X[k].id = slot[k].el.id; } });
+        /* the round buttons: as many rows as fit above the highest action button under them; the rest wrap inward */
+        var rows = rounds, wrapped = false, gap = 9;   /* first they close up (9 px apart down to 3), and only then wrap */
+        if (sideB && rounds) { var floorY = Hh; ORDER841.forEach(function (k) { if (X[k] && X[k].r > sideB.r - 44 && X[k].l < sideB.r) floorY = Math.min(floorY, X[k].t); });
+          var avail = floorY - 6 - sideB.t;
+          if (rounds * 44 + (rounds - 1) * 9 > avail) { if (rounds > 1 && rounds * 44 + (rounds - 1) * 3 <= avail) gap = Math.floor((avail - rounds * 44) / (rounds - 1)); else { rows = Math.max(1, Math.min(rounds, Math.floor((avail + 9) / 53))); wrapped = rows < rounds; } } }
+        var cols = sideB ? Math.ceil(rounds / Math.max(1, rows)) : 0, rbox = sideB ? { l: sideB.r - cols * (44 + gap) + gap, r: sideB.r, t: sideB.t, b: sideB.t + Math.min(rounds, rows) * (44 + gap) - gap } : null;
+        /* the scroll: if a left button still meets it, it steps inward one place */
+        var scrIn = 0; if (scrB) ORDER841.forEach(function (k) { if (X[k] && meet[k] === scrB) scrIn = scrB.l < W / 2 ? 53 : -53; });
+        var scrBox = scrB ? { l: scrB.l + scrIn, r: scrB.r + scrIn, t: scrB.t, b: scrB.b } : null;
+        /* a button the open panel (or anything hanging) still covers steps aside while it does */
+        var hangNow = [rbox, scrBox, ffB, careB].filter(Boolean);
+        ORDER841.forEach(function (k) { if (!X[k]) return; for (var i = 0; i < hangNow.length; i++) if (hit841(X[k], hangNow[i], 2)) { hide[k] = 1; break; } });
+        /* ===== THE LANE ===== */
+        var top0 = 0; band.forEach(function (b) { top0 = Math.max(top0, b.b); });
+        var Lb = 8, Rb = W - 8;
+        [rbox, ffB].forEach(function (b) { if (b && b.l > W / 2) Rb = Math.min(Rb, b.l - 8); });   /* fast forward (out in the world) stands left of the column: the lane narrows beside it rather than dropping under it */
+        if (scrBox && scrBox.r < W / 2) Lb = Math.max(Lb, scrBox.r + 8);
+        if (careB && careB.l < Rb && careB.r > Lb) top0 = Math.max(top0, careB.b);
+        var obs0 = hangNow.concat(low); ORDER841.forEach(function (k) { if (X[k] && !hide[k]) obs0.push(X[k]); }); cards.forEach(function (c) { if (c.fade && c.box) obs0.push(c.box); });
+        var obs = obs0, floorY2 = Hh - sb - 6;
+        var live = cards.filter(function (c) { return c.on; }), hintC = live.filter(function (c) { return c.id === 'hint'; }), rest = live.filter(function (c) { return c.id !== 'hint'; });
+        function order(newest) {   /* newest on top (older ones nudged down); the hint last; 782's XP line right under its word */
+          var o = rest.slice().sort(function (a, b) { return newest ? b.at - a.at : a.at - b.at; }), x = o.filter(function (c) { return c.id === 'xpPop'; })[0], t = o.filter(function (c) { return c.id === 'toast'; })[0];
+          if (x && t) { o.splice(o.indexOf(x), 1); o.splice(o.indexOf(t) + 1, 0, x); } return o.concat(hintC);
+        }
+        function fit(c, at) {   /* the card's box at this height: narrowed beside a button at one side while it keeps room enough; else what stops it there */
+          var L1 = Lb, R1 = Rb, minW = c.id === 'xpPop' ? 0 : c.wide ? 170 : 160;
+          for (var pass = 0; pass < 5; pass++) {
+            var cap = c.wide ? R1 - L1 : Math.min(262, R1 - L1), w = c.wide ? cap : c.id === 'xpPop' ? c.w : Math.min(c.nat, cap), h = c.text && Math.abs(w - c.w) > 1 ? Math.ceil(c.h * c.w / w) : c.h;   /* text reflows: narrower is taller (the next pass reads its real height) */
+            var cx = (L1 + R1) / 2, b = { l: cx - w / 2, r: cx + w / 2, t: at, b: at + h }, o = null;
+            for (var i = 0; i < obs.length; i++) { var q = obs[i]; if (b.l < q.r && b.r > q.l && b.t < q.b + 6 && b.b > q.t - 6) { o = q; break; } }
+            if (!o) return { b: b, cx: cx, w: w, cap: cap };
+            if (o.r < W / 2 && R1 - (o.r + 6) >= minW) { L1 = o.r + 6; continue; }   /* a left-column button: the card starts beside it */
+            if (o.l > W / 2 && (o.l - 6) - L1 >= minW) { R1 = o.l - 6; continue; }
+            return { stop: o };
+          }
+          return { stop: { b: at + 40 } };
+        }
+        live.forEach(function (c) { c.wide = c.id === 'title39' || c.id === 'place790' || c.id === 'u7'; c.text = c.id !== 'm788ban' && c.id !== 'xpPop';
+          c.nat = L841.set[(c.e.id || 'u7') + '|max-width'] && c.w >= parseFloat(L841.set[(c.e.id || 'u7') + '|max-width']) - 2 ? 262 : c.w; });   /* held narrow by this pass last time: free to grow again */
+        function placeAll(list) {   /* each card in turn, 8 px under the last, clear of everything; one with no room left waits */
+          obs = obs0.slice(); var y = Math.round(top0 + 8), out = { waits: 0, lane: [], put: {}, y: y };
+          list.forEach(function (c) { var f = null, n = 0, at = y, by = '';
+            for (; n < 24; n++) { f = fit(c, at); if (f.b) break; at = Math.round(f.stop.b + 8); by += (f.stop.id || '?') + ' '; }
+            if (!f || !f.b || f.b.b > floorY2) { out.waits++; out.put[c.id] = null; out.lane.push(c.id + ' waits ' + at + ' by ' + by); return; }
+            out.put[c.id] = { y: at, cx: f.cx, wd: f.w, cap: f.cap }; obs.push(f.b); y = Math.round(f.b.b + 8); out.lane.push(c.id + '@' + at + '+' + Math.round(f.b.b - f.b.t) + ' w' + Math.round(f.w)); });
+          out.y = y; out.obs = obs; return out;
+        }
+        var P1 = placeAll(order(true)), P2 = P1.waits ? placeAll(order(false)) : null, PL = P2 && P2.waits < P1.waits ? P2 : P1;   /* where not all fit: newest first, so the word she just made shows now and the oldest waits its turn (a tie keeps this order); oldest-first only when fewer wait */
+        obs = PL.obs;
+        live.forEach(function (c) { var q = PL.put[c.id]; c.wait = !q; if (q) { c.y = q.y; c.cx = q.cx; c.wd = q.wd; c.cap = q.cap; } });
+        var lane = PL.lane;
+        /* is there room for a new word under what is up? (782's toast() holds a word while there is not, and says it once there is) */
+        var tOn = live.some(function (c) { return c.id === 'toast'; }); var pr = { id: 'toast', wide: false, text: false, nat: Math.min(262, Rb - Lb), w: Math.min(262, Rb - Lb), h: 58 }, room = false;
+        for (var at2 = PL.y, n2 = 0; n2 < 24; n2++) { var f2 = fit(pr, at2); if (f2.b) { room = f2.b.b <= floorY2; break; } at2 = Math.round(f2.stop.b + 8); } L841.full = !tOn && !room;
+        /* ===== WRITE ===== */
+        ORDER841.forEach(function (k) { SLOT841[k].forEach(function (id) { var e = $(id); if (!e) return;
+          if (e === slot[k].el) { put841(e, 'bottom', 'calc(env(safe-area-inset-bottom,0px) + ' + Math.round(bot[k]) + 'px)'); cls841(e, 'h841', !!hide[k]); }
+          else { put841(e, 'bottom', null); cls841(e, 'h841', false); } }); });
+        if (sideEl) { cls841(sideEl, 'col841', wrapped); var gv = gap === 9 ? null : gap + 'px'; if (L841.gap !== gv) { L841.gap = gv; if (gv) sideEl.style.setProperty('--gap841', gv); else sideEl.style.removeProperty('--gap841'); }
+          if (L841.rows !== (wrapped ? rows : 0)) { L841.rows = wrapped ? rows : 0; if (wrapped) sideEl.style.setProperty('--rows841', String(rows)); else sideEl.style.removeProperty('--rows841'); } }
+        if (scroll) put841(scroll, 'translate', scrIn ? scrIn + 'px 0' : null);
+        if (pc) { if (pcB) {   /* THE PACE PILL: centred while its words fit between the buttons at its height; else in the middle of the room it has, never past it */
+            var pL = 8, pR = W - 8; ORDER841.forEach(function (k) { var q = X[k]; if (!q || hide[k] || q.t > pcB.b + 4 || q.b < pcB.t - 4) return; if ((q.l + q.r) / 2 < W / 2) pL = Math.max(pL, q.r + 6); else pR = Math.min(pR, q.l - 6); });
+            var sym = 2 * Math.min(W / 2 - pL, pR - W / 2), pcx = pcB.nat <= sym ? W / 2 : (pL + pR) / 2, pmw = pcB.nat <= sym ? sym : pR - pL;
+            put841(pc, 'left', Math.round(pcx) + 'px'); put841(pc, 'max-width', Math.max(40, Math.floor(pmw)) + 'px'); cls841(pc, 'p841', true); L841.pace = { L: Math.round(pL), R: Math.round(pR), nat: pcB.nat, x: Math.round(pcx), w: Math.floor(pmw) }; }
+          else if (!pcGo) { put841(pc, 'left', null); put841(pc, 'max-width', null); cls841(pc, 'p841', false); } }   /* leaving (its 0.5 s fade): it keeps the place it had, never back on Flap's tag */   /* its cue rewrites its classes when its words change: unseen again until placed again */
+        if (care) put841(care, 'right', careB && wrapped ? Math.round(W - rbox.l + 8) + 'px' : null);   /* the chick's panel clears a wrapped column of round buttons */
+        var tv = Math.round(top0 + 8) + 'px'; if (H.msgTop !== tv) { H.msgTop = tv; root.style.setProperty('--toast795', tv); }
+        cards.forEach(function (c) { var e = c.e;
+          if (!c.on) { if (c.fade || c.held) return; cls841(e, 'w841', false); cls841(e, 'p841', false); ['top', 'left', 'right', 'max-width', 'width'].forEach(function (p) { put841(e, p, null); }); return; }
+          cls841(e, 'w841', !!c.wait); cls841(e, 'p841', !c.wait); if (c.wait) return;
+          put841(e, 'top', Math.round(c.y - c.offY) + 'px'); put841(e, 'left', Math.round(c.cx - c.wd / 2 - c.offX) + 'px');   /* its own box's left, whatever its transform (a centring translate is read off) */
+          if (c.wide) { put841(e, 'right', 'auto'); put841(e, 'width', Math.floor(c.wd) + 'px'); put841(e, 'max-width', Math.floor(c.wd) + 'px'); }
+          else if (c.id !== 'xpPop') put841(e, 'max-width', Math.floor(c.cap) + 'px');
+        });
+        L841.steps += Object.keys(stepped).length; L841.wraps += wrapped ? 1 : 0; L841.hides += Object.keys(hide).length; L841.waits += live.filter(function (c) { return c.wait; }).length;
+        L841.last = { W: W, H: Hh, vh: +vh.toFixed(2), sb: sb, rows: rows, gap: gap, rounds: rounds, wrapped: wrapped, stepped: stepped, hide: Object.keys(hide), meet: Object.keys(meet), scrIn: scrIn, lane: lane, wait: live.filter(function (c) { return c.wait; }).map(function (c) { return c.id; }), top0: Math.round(top0), Lb: Math.round(Lb), Rb: Math.round(Rb), pace: L841.pace || null,
+          bot: Object.keys(bot).reduce(function (o, k) { if (slot[k].el) o[slot[k].el.id] = Math.round(bot[k]); return o; }, {}) };
+      } catch (e) { L841.err = String(e && e.message || e); H.errors++; root.classList.remove('l841'); }   /* a fault in the pass never leaves a card unseen */
+    }
+    var soon841 = 0; function lay841Soon() { if (soon841) return; soon841 = setTimeout(function () { soon841 = 0; if (H.on) lay841(); }, 0); }   /* a word just said (782's toast()): placed right after this frame, never by a layout read inside it */
+    addEventListener('resize', lay841Soon);
     function tick() {
       if (!H.on) return; var ui = $('ui'); paintLate(); pauseSync(); mapLegend();
-      if (!ui || ui.hidden) return;
-      msgPlace();
+      if (!ui || ui.hidden) { if (root.classList.contains('l841') || Object.keys(L841.set).length) clear841(); return; }   /* off the play screen the cards keep their own places */
+      lay841();
       var lv = $('lvPill'), nw = nowWords(), tab = JSON.stringify(nw || 'Up next'); if (lv && H.tab !== tab) { H.tab = tab; lv.style.setProperty('--tab795', tab); }
       var cd = {}; try { cd = api.cd ? api.cd() : {}; } catch (e) { cd = {}; }
       ['flap', 'flutter', 'jump', 'land', 'atkBtn', 'zoom'].forEach(function (id) {
@@ -646,7 +836,8 @@
       },
       set: function (o) { if (o && o.size && SIZE[o.size]) H.set.size = o.size; if (o && (o.hand === 'l' || o.hand === 'r')) H.set.hand = o.hand; store(H.set); applySet(); },
       places: function () { return api.places ? api.places() : []; }, chartTap: function (x, y) { chartTap({ clientX: x, clientY: y, stopPropagation: function () {} }); },
-      LAY: LAY, K: K, SPAN: SPAN
+      LAY: LAY, K: K, SPAN: SPAN,
+      lay841: lay841Soon, full841: function () { return !!L841.full; }, peek841: function () { return { n: L841.n, waits: L841.waits, full: !!L841.full, steps: L841.steps, wraps: L841.wraps, hides: L841.hides, err: L841.err, last: L841.last }; }   /* 841: the page's toast() asks for a place; the bench reads */
     };
     return me;
   }

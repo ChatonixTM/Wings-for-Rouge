@@ -41,15 +41,23 @@ window.WFR_LIGHT834 = (function () {
     HAZE_CITY_H: 400, HAZE_NEAR: 3000,
     /* colours (display colours: the fog mixes after the tone curve) */
     FOG_DAY: 0xdfe5ea, FOG_DAWN: 0xd9d2d6, HAZE_DAY: 0xc4d6ea, HAZE_GOLD_C: 0xf0b77c, RAIN: 0xa9b1b9, STORM: 0x7d858d, GLOW: 0xffc98a, GLOW_LOW: 0xff9a52,
-    SCATTER: 0.85, SKY_TINT: 0.55, HALO: 560, HALO2: 230, HALO_A: 0.7, PLACE_MS: 250, EASE: 0.6
+    SCATTER: 0.85, SKY_TINT: 0.55, HALO: 560, HALO2: 230, HALO_A: 0.7, PLACE_MS: 250, EASE: 0.6,
+    /* 842 FOG THAT FLOWS (Nov 19, from his links: the 'fluid dynamics fog' trend). FLOW 0 = 834's fixed banks exactly. The banks drift with the day's wind (805's
+       one direction a day) at DRIFT x its speed (8 m/s on a clear day; the curl turns at 3-4 m/s and the wisps change shape slower still, so the wind leads: a clear day's 2 m/s reads as still from 140 m: the drift is a little time-lapsed, as game fog is), never under
+       DRIFT_MIN m/s; they roll and curl in a slow curl-noise field (the idea is Bridson's curl noise, 2007, and three's own fog chunks: no code borrowed); WAKE_R
+       is her wake's radius in metres (the fog parts and swirls round her while she flies in it, SWIRL its turn), WAKE_V the speed it is full at; VAL: in the
+       hills the fog also pools in the valleys round her (it fills the lowest VAL_Q of the ground within VAL_R m, so the ridges stand out of it; its floor is measured round her, so it is true only near her and is gone 2-6 km out: Nov 19, one flat sheet laid on the far slopes filled every gully a long ray crossed and striped them like a zebra, at 150 m and at 200 m alike), VAL_H its scale height, VAL_MIN m above the sea before it counts */
+    FLOW: 1, DRIFT: 4, DRIFT_MIN: 1.5, WAKE: 1, WAKE_R: 38, WAKE_V: 10, SWIRL: 1.4, VAL: 1, VAL_Q: 0.3, VAL_H: 200, VAL_R: 3000, VAL_MIN: 40, VAL_EASE: 0.4
   };
   /* cold-current and cool coasts: [lat0, lat1, lon0, lon1, strength, the month it peaks] (sea fog's real homes; DRAFT) */
   var COOL = [[30, 43, -127, -116, 1, 7], [43, 50, -127, -122, 0.8, 8], [-36, -4, -83, -70, 1, 9], [-30, -14, 7, 16, 1, 1], [19, 34, -19, -8, 0.7, 7],
     [41, 53, -62, -45, 1, 6], [49, 61, -11, 9, 0.7, 11], [36, 56, 139, 166, 0.8, 7], [-40, -28, 110, 122, 0.5, 6], [-48, -34, 140, 151, 0.4, 5], [52, 66, -170, -150, 0.7, 7]];
 
-  var U = { N: { x: 0, y: 0, z: 0.8, w: 0 }, A: { x: 0, y: 55, z: 0, w: 1100 }, B: { x: 0.87, y: 0.9, z: 0.92, w: 0 }, C: { x: 0.77, y: 0.84, z: 0.92, w: 0 }, S: { x: 0, y: 1, z: 0, w: 0 }, G: { x: 1, y: 0.8, z: 0.55, w: 0 }, H: { x: 0, y: 400, z: 3000, w: 0 } };   /* 840: H = the city haze's floor density, its scale height, the near-clear distance */
+  var U = { N: { x: 0, y: 0, z: 0.8, w: 0 }, A: { x: 0, y: 55, z: 0, w: 1100 }, B: { x: 0.87, y: 0.9, z: 0.92, w: 0 }, C: { x: 0.77, y: 0.84, z: 0.92, w: 0 }, S: { x: 0, y: 1, z: 0, w: 0 }, G: { x: 1, y: 0.8, z: 0.55, w: 0 }, H: { x: 0, y: 400, z: 3000, w: 0 },   /* 840: H = the city haze's floor density, its scale height, the near-clear distance */
+    F: { x: 0, y: 0, z: 0, w: 0 }, P: { x: 0, y: 38, z: 0, w: 0 }, Q: { x: 0, y: 0, z: 0, w: 0 }, V: { x: -1e4, y: 200, z: 0, w: 1.4 } };   /* 842: F = the wind's drift (x, z m), the flow's clock (s), the flow on (0/1); P = her x, the wake's radius, her z, its strength; Q = her trail 0.7 s and 1.5 s back (x, z); V = the valley floor, its scale height, its share, the wake's swirl (radians at its heart) */
   var st = { patched: false, inited: false, on: false, faults: [], g: 0, el: 0, morning: 0, cool: 0, city: 0, rain: 0, wet: 0, halo: 0, ticks: 0, placeAt: -1e9, ll: null, home: true,
-    want: { fog: 0, haze: 0, city: 0 }, now: { fog: 0, haze: 0, city: 0 }, ms: [] };
+    want: { fog: 0, haze: 0, city: 0 }, now: { fog: 0, haze: 0, city: 0 }, ms: [],
+    fx: 0, fz: 0, ft: 0, tr: [], vf: -1e4, vs: 0, vWant: -1e4, wake: 0, wind: null, px: null };   /* 842: the drift, the flow clock, her trail, the valley floor (eased to vWant), the wake */
 
   /* ═══ the chunks (made once, before any program compiles) ═══ */
   var PV = '\n#ifdef USE_FOG\n\tvarying vec4 v834;\n\tvarying vec3 e834;\n#endif\n';
@@ -58,7 +66,7 @@ window.WFR_LIGHT834 = (function () {
      the world's ground is Lambert, so its program read the eye at y 0 and every ray to the ground crossed the layers' THICKEST air for its whole length:
      from 3 km up the haze was the haze of standing in the street (Kingston, 3 km: 77% of the way to the haze colour 5 km out, the layer's own sum says 36%).
      viewMatrix reaches every lit and basic material, so the eye is taken from it: -R^T t */
-  var PF = '\n#ifdef USE_FOG\n\tvarying vec4 v834;\n\tvarying vec3 e834;\n\tuniform vec4 u834A;\n\tuniform vec4 u834B;\n\tuniform vec4 u834C;\n\tuniform vec4 u834S;\n\tuniform vec4 u834G;\n\tuniform vec4 u834N;\n\tuniform vec4 u834H;\n' +
+  var PF = '\n#ifdef USE_FOG\n\tvarying vec4 v834;\n\tvarying vec3 e834;\n\tuniform vec4 u834A;\n\tuniform vec4 u834B;\n\tuniform vec4 u834C;\n\tuniform vec4 u834S;\n\tuniform vec4 u834G;\n\tuniform vec4 u834N;\n\tuniform vec4 u834H;\n\tuniform vec4 u842F;\n\tuniform vec4 u842P;\n\tuniform vec4 u842Q;\n\tuniform vec4 u842V;\n' +
     '\tfloat lay834( float hc, float hp, float H ) { float ec = exp( - hc / H ), ep = exp( - hp / H ), dh = hp - hc; return abs( dh ) < 0.5 ? 0.5 * ( ec + ep ) : ( ec - ep ) * H / dh; }\n#endif\n';   /* the mean density of an exponential layer along the ray */
   var FF = [
     '#ifdef USE_FOG',
@@ -75,9 +83,27 @@ window.WFR_LIGHT834 = (function () {
     '\t\tfloat s834 = max( dot( n834, u834S.xyz ), 0.0 ); s834 *= s834; s834 *= s834; float w834 = s834 * s834 * 0.7 + s834 * 0.3;',   /* forward scatter: toward the sun the air glows */
     '\t\tfogC834 = mix( fogColor, u834G.rgb, u834G.w * w834 );',
     '\t\tfloat hc834 = max( e834.y - u834C.w, 0.0 ), hp834 = max( e834.y + r834.y - u834C.w, 0.0 );',
-    '\t\tvec2 q834 = e834.xz + r834.xz + u834N.xy; float b834 = 0.5 + 0.25 * ( sin( q834.x * 0.0010 + 2.0 * sin( q834.y * 0.00058 ) ) + sin( q834.y * 0.00093 + 2.3 * sin( q834.x * 0.00073 ) ) );',   /* banks: the layer lies in patches some 6 km across (Nov 18: 15 km read as one even sheet from 400 m), fixed to the world */
-    '\t\tb834 = mix( 1.0, 0.12 + 1.5 * smoothstep( 0.28, 0.8, b834 ), u834N.z );',
-    '\t\tfloat oF834 = b834 * u834A.x * lay834( hc834, hp834, u834A.y ) * d834, oH834 = ( u834A.z * lay834( hc834, hp834, u834A.w ) + u834H.x * lay834( hc834, hp834, u834H.y ) ) * d834 * d834 / max( d834 + u834H.z, 1.0 ), o834 = oF834 + oH834;',   /* 840: the city's haze its own shallow layer; the haze clears near the eye */
+    '\t\tvec2 p834 = e834.xz + r834.xz, q834 = p834 + u834N.xy; float k842 = 1.0;',
+    '\t\tif ( u842F.w > 0.0 ) {',   /* 842: THE FOG FLOWS (a uniform branch: off, or with no fog in the air, it costs nothing) */
+    '\t\t\tfloat T842 = u842F.z, l842 = clamp( ( e834.y + r834.y - max( u834C.w, u842V.x ) ) / ( 3.0 * u834A.y ), 0.0, 1.0 );',   /* aloft of its floor (over a ridge) the flow runs faster: it rolls over and spills */
+    '\t\t\tq834 -= u842F.xy;',   /* the day's wind carries it */
+    '\t\t\tvec2 a842 = q834 * 0.0041 + vec2( 0.05, - 0.035 ) * T842, c842 = mat2( 0.0026, 0.0019, - 0.0019, 0.0026 ) * q834 + vec2( - 0.03, 0.04 ) * T842;',
+    '\t\t\tvec2 s842 = vec2( sin( c842.x ) * cos( c842.y ), - cos( c842.x ) * sin( c842.y ) );',
+    '\t\t\tvec2 w842 = vec2( sin( a842.x ) * cos( a842.y ), - cos( a842.x ) * sin( a842.y ) ) * 70.0 + vec2( 0.8 * s842.x + 0.6 * s842.y, - 0.6 * s842.x + 0.8 * s842.y ) * 90.0;',   /* two turns of a curl field (the curl of sin x sin z, each turned back to the world): it swirls, it never piles up or empties. Nov 19: at 150 and 230 m (amplitude x wavenumber 0.6 a turn) the warp nearly folded the pattern and patches raced at 3x the wind (fog842 W1 read 83 m where the drift was 24): each turn is 0.3 now */
+    '\t\t\tvec2 d842 = p834 - u842P.xz; float g842 = u842P.w * exp( - dot( d842, d842 ) / ( u842P.y * u842P.y ) );',
+    '\t\t\tq834 += w842 * ( 0.6 + 0.8 * l842 ) + vec2( - d842.y, d842.x ) * ( g842 * u842V.w );',   /* her wake turns the fog round her */
+    '\t\t\tfloat i842 = 0.5 + 0.25 * ( sin( q834.x * 0.0123 + 1.7 * sin( q834.y * 0.0091 + 0.03 * T842 ) ) + sin( q834.y * 0.0137 + 1.9 * sin( q834.x * 0.0087 - 0.025 * T842 ) ) );',   /* wisps some 500 m across */
+    '\t\t\ti842 += 0.22 * ( 1.0 - smoothstep( 900.0, 2500.0, d834 ) ) * sin( q834.x * 0.047 + 3.0 * i842 ) * sin( q834.y * 0.053 + 1.3 * i842 );',   /* and threads some 130 m across, that curl round her (no clock of their own: Nov 19, a fixed phase walk ran them 3 m/s one way whatever the wind; only the wind carries, the rest changes shape in place) */
+    '\t\t\tk842 = mix( 1.0, 0.3 + 1.4 * clamp( i842, 0.0, 1.0 ), 1.0 - 0.7 * smoothstep( 6000.0, 14000.0, d834 ) );',   /* the fine grain fades with distance (Nov 19: 130 m threads 3-6 km off striped the Blue Mountains' far slopes like a zebra) */
+    '\t\t\tvec2 t842 = u842Q.xy - u842P.xz, t2842 = u842Q.zw - u842Q.xy, e2842 = p834 - u842Q.xy;',
+    '\t\t\tfloat f842 = clamp( dot( d842, t842 ) / max( dot( t842, t842 ), 1.0 ), 0.0, 1.0 ), f2842 = clamp( dot( e2842, t2842 ) / max( dot( t2842, t2842 ), 1.0 ), 0.0, 1.0 );',
+    '\t\t\tvec2 j842 = d842 - t842 * f842, j2842 = e2842 - t2842 * f2842; float r842 = u842P.y * ( 1.0 + 0.4 * f842 ), r2842 = u842P.y * ( 1.4 + 0.5 * f2842 );',
+    '\t\t\tk842 *= 1.0 - u842P.w * max( exp( - dot( j842, j842 ) / ( r842 * r842 ) ) * ( 1.0 - 0.25 * f842 ), exp( - dot( j2842, j2842 ) / ( r2842 * r2842 ) ) * ( 0.75 - 0.45 * f2842 ) );',   /* parted along her path, closing again behind her */
+    '\t\t}',
+    '\t\tfloat b834 = 0.5 + 0.25 * ( sin( q834.x * 0.0010 + 2.0 * sin( q834.y * 0.00058 ) ) + sin( q834.y * 0.00093 + 2.3 * sin( q834.x * 0.00073 ) ) );',   /* banks: the layer lies in patches some 6 km across (Nov 18: 15 km read as one even sheet from 400 m), fixed to the world (842: and carried by the flow) */
+    '\t\tb834 = mix( 1.0, 0.12 + 1.5 * smoothstep( 0.28, 0.8, b834 ), u834N.z ) * k842;',
+    '\t\tfloat v842 = 0.0; if ( u842V.z > 0.0 ) v842 = u842V.z * ( 1.0 - smoothstep( 2000.0, 6000.0, d834 ) ) * lay834( max( e834.y - u842V.x, 0.0 ), max( e834.y + r834.y - u842V.x, 0.0 ), u842V.y );',   /* 842: the valley's fog, only where there is a valley (a uniform branch) */
+    '\t\tfloat oF834 = b834 * u834A.x * max( lay834( hc834, hp834, u834A.y ), v842 ) * d834, oH834 = ( u834A.z * lay834( hc834, hp834, u834A.w ) + u834H.x * lay834( hc834, hp834, u834H.y ) ) * d834 * d834 / max( d834 + u834H.z, 1.0 ), o834 = oF834 + oH834;',   /* 840: the city's haze its own shallow layer; the haze clears near the eye */
     '\t\tvec3 c834 = ( u834B.rgb * oF834 + u834C.rgb * oH834 ) / max( o834, 1e-6 );',
     '\t\tc834 = mix( c834, u834G.rgb, u834S.w * w834 );',
     '\t\tc834 = mix( c834, fogC834, 0.75 * smoothstep( 2500.0, 30000.0, d834 ) );',   /* far off, the banks melt into the sky's own horizon */
@@ -91,7 +117,7 @@ window.WFR_LIGHT834 = (function () {
       var SC = T.ShaderChunk;
       if (!/fogFactor = smoothstep\( fogNear, fogFar, fogDepth \)/.test(SC.fog_fragment) || !/fogDepth = - mvPosition\.z/.test(SC.fog_vertex)) { st.faults.push('fog chunks not as r128'); return false; }
       SC.fog_pars_vertex += PV; SC.fog_vertex += VV; SC.fog_pars_fragment += PF; SC.fog_fragment = FF;
-      var add = function (u) { if (u && u.fogColor && !u.u834A) { u.u834A = { value: U.A }; u.u834B = { value: U.B }; u.u834C = { value: U.C }; u.u834S = { value: U.S }; u.u834G = { value: U.G }; u.u834N = { value: U.N }; u.u834H = { value: U.H }; } };
+      var add = function (u) { if (u && u.fogColor && !u.u834A) { u.u834A = { value: U.A }; u.u834B = { value: U.B }; u.u834C = { value: U.C }; u.u834S = { value: U.S }; u.u834G = { value: U.G }; u.u834N = { value: U.N }; u.u834H = { value: U.H }; u.u842F = { value: U.F }; u.u842P = { value: U.P }; u.u842Q = { value: U.Q }; u.u842V = { value: U.V }; } };
       add(T.UniformsLib.fog); for (var k in T.ShaderLib) if (T.ShaderLib[k] && T.ShaderLib[k].uniforms) add(T.ShaderLib[k].uniforms);
       st.patched = true;
     } catch (e) { st.faults.push('patch: ' + (e && e.message || e)); }
@@ -146,11 +172,42 @@ window.WFR_LIGHT834 = (function () {
     var ll = null, home = true, city = 0;
     try { ll = X.ll ? X.ll() : null; home = !ll; if (!home && window.WFR_HIGH809 && WFR_HIGH809.peek) { var h = WFR_HIGH809.peek(); city = h && h.on ? +h.city || 0 : 0; } } catch (e) { st.faults.length < 8 && st.faults.push('place: ' + (e && e.message)); }
     st.ll = ll; st.home = home; st.cool = home ? 0 : coolAt(ll); st.want.city = city;
+    valley();
   }
 
   function banks() {   /* the banks stay where they lie when the travel frame is recentred (every 10 km): the shift is carried in U.N */
     var TR = window.TRAVEL712, W = window.WFR_WORLD, f = TR && TR.on ? TR.f : null;
     if (f === st.f) return; if (f && st.f && W && W.toLatLon && W.toLocal) { var o = W.toLatLon(st.f, 0, 0), d = W.toLocal(f, o.lat, o.lon); U.N.x -= d.x; U.N.y -= d.z; } else { U.N.x = 0; U.N.y = 0; } st.f = f;
+  }
+  /* ═══ 842: the fog flows (numbers only; nothing made, nothing compiled) ═══ */
+  var RING = [[0, 0]]; (function () { for (var r of [700, 1600, 1]) for (var i = 0; i < 8; i++) { var a = (i + (r === 1600 ? 0.5 : 0)) / 8 * 2 * Math.PI; RING.push([r, a]); } })();   /* r 1 = the outer ring, VAL_R */
+  function valley() {   /* the floor the fog pools on in the hills: the VAL_Q share of 25 points round her lies under it, every PLACE_MS (Nov 19: the second-lowest was a gorge 400 m under the valleys in view, and the Blue Mountains read clear) */
+    st.vWant = -1e4; if (st.home || !(C.VAL > 0) || !X.ground) return;
+    try { var S = X.S(), p = S.pos, h = [];
+      for (var i = 0; i < RING.length; i++) { var r = RING[i][0] === 1 ? C.VAL_R : RING[i][0], g = +X.ground(p.x + Math.sin(RING[i][1]) * r, p.z + Math.cos(RING[i][1]) * r); if (isFinite(g)) h.push(g); }
+      h.sort(function (a, b) { return a - b; }); var f = h[Math.min(h.length - 1, Math.floor(h.length * C.VAL_Q))]; st.vRing = h.length ? [Math.round(h[0]), Math.round(f), Math.round(h[h.length - 1])] : null; if (f > C.VAL_MIN) st.vWant = f;   /* ground near the sea: the sea's own layer is the fog there */
+    } catch (e) { st.faults.length < 8 && st.faults.push('valley: ' + (e && e.message)); }
+  }
+  function flow(dt, S) {
+    dt = Math.max(0, Math.min(0.1, +dt || 0));
+    var e = 1 - Math.exp(-dt * C.VAL_EASE * 3), vOn = st.vWant > -1e3 && U.A.x > 1e-7;   /* a valley, and fog in the air (Obito, Nov 19: at noon in the hills the valley branch cost 2 exp a pixel for no fog) */
+    if (vOn && st.vs < 0.01) st.vf = st.vWant; else if (vOn) st.vf += (st.vWant - st.vf) * e;   /* a new valley: the floor is set while its fog is still thin, then follows her */
+    st.vs += ((vOn ? 1 : 0) - st.vs) * e; if (st.vs < 0.002) st.vs = 0;
+    U.V.x = st.vs > 0 ? st.vf : -1e4; U.V.y = C.VAL_H; U.V.z = C.VAL * st.vs; U.V.w = C.SWIRL;
+    var on = C.FLOW > 0 && U.A.x > 1e-7 && U.B.w > 0; U.F.w = on ? 1 : 0;
+    if (!on) { U.P.w = 0; st.wake = 0; return; }
+    var w = null; try { w = X.wind ? X.wind() : null; } catch (er) { w = null; }
+    var dir = w && isFinite(w.dir) ? +w.dir : 0, ms = Math.max(C.DRIFT_MIN, w && isFinite(w.ms) ? +w.ms : 0), v = ms * C.DRIFT; st.wind = { dir: dir, ms: ms, drift: v };
+    st.fx += Math.sin(dir) * v * dt; st.fz += Math.cos(dir) * v * dt; st.ft += dt;   /* the way the wind blows TO, as her yaw (805's) */
+    U.F.x = st.fx; U.F.y = st.fz; U.F.z = st.ft;
+    /* her wake: where she is and where she was 0.7 s and 1.5 s ago (a recentred frame or a placing starts a new trail) */
+    var p = S.pos, tr = st.tr, last = tr.length ? tr[tr.length - 1] : null;
+    if (last && Math.hypot(p.x - last.x, p.z - last.z) > 150) tr.length = 0;
+    if (!tr.length || st.ft - tr[tr.length - 1].t >= 0.25) { tr.push({ x: p.x, z: p.z, t: st.ft }); if (tr.length > 10) tr.shift(); }
+    var back = function (s) { for (var i = tr.length - 1; i >= 0; i--) if (st.ft - tr[i].t >= s) return tr[i]; return tr[0]; }, q1 = back(0.7), q2 = back(1.5);
+    U.P.x = p.x; U.P.z = p.z; U.P.y = C.WAKE_R; U.Q.x = q1.x; U.Q.y = q1.z; U.Q.z = q2.x; U.Q.w = q2.z;
+    var hs = Math.max(0, p.y - U.C.w), hv = Math.max(0, p.y - U.V.x), dens = Math.max(Math.exp(-hs / Math.max(1, U.A.y)), U.V.z * Math.exp(-hv / U.V.y));   /* how deep in the fog she flies (1 on its floor) */
+    st.wake = C.WAKE * sm(2, C.WAKE_V, Math.abs(+S.speed || 0)) * sm(0.06, 0.3, dens) * 0.9; U.P.w = st.wake;
   }
   /* ═══ each frame: the light, then the air (numbers only) ═══ */
   function setLight(sun, hemi, g, el) {
@@ -194,6 +251,7 @@ window.WFR_LIGHT834 = (function () {
       U.S.w = C.SCATTER * sunUp * (0.25 + 0.75 * low);   /* the layers glow toward the sun */
       U.G.w = C.SKY_TINT * sunUp * low;   /* the old far fog too, so the far land under a low sun goes gold */
       U.B.w = airOn ? 1 : 0;
+      flow(dt, S);   /* 842 */
       /* the halo: a low sun in thick air */
       var thick = Math.min(1, 0.35 + fog * 0.8 + st.now.city * 0.5 + g * 0.3), a = C.HALO_A * sunUp * low * thick * (off ? 0 : 1); st.halo = a;
       for (var i = 0; i < K.halo.length; i++) { var sp = K.halo[i]; sp.visible = airOn && a > 0.01 && X.sunDisc.visible; if (sp.visible) { sp.position.copy(X.sunDisc.position); sp.material.color.copy(gc).multiplyScalar(i ? a * 0.8 : a); } }
@@ -205,7 +263,8 @@ window.WFR_LIGHT834 = (function () {
     var r = function (o) { return { x: +o.x.toPrecision(4), y: +o.y.toPrecision(4), z: +o.z.toPrecision(4), w: +o.w.toPrecision(4) }; };
     return { classic: CLASSIC, offSwitch: OFF, patched: st.patched, inited: st.inited, on: st.on, faults: st.faults.slice(), g: +st.g.toFixed(3), el: +st.el.toFixed(3), morning: +st.morning.toFixed(3), cool: +st.cool.toFixed(3),
       city: +st.now.city.toFixed(3), rain: +st.rain.toFixed(3), wet: +st.wet.toFixed(3), halo: +st.halo.toFixed(3), home: st.home, ll: st.ll, ticks: st.ticks, U: { A: r(U.A), B: r(U.B), C: r(U.C), S: r(U.S), G: r(U.G), H: r(U.H) },
-      haloVis: K.halo ? K.halo.map(function (s) { return s.visible; }) : null, ms: st.ms.slice(-600) };
+      haloVis: K.halo ? K.halo.map(function (s) { return s.visible; }) : null, ms: st.ms.slice(-600),
+      flow: { on: U.F.w > 0, t: +st.ft.toFixed(2), drift: [+st.fx.toFixed(1), +st.fz.toFixed(1)], wind: st.wind, wake: +st.wake.toFixed(3), her: [+U.P.x.toFixed(1), +U.P.z.toFixed(1)], trail: [+U.Q.x.toFixed(1), +U.Q.y.toFixed(1), +U.Q.z.toFixed(1), +U.Q.w.toFixed(1)], valley: { floor: +U.V.x.toFixed(1), share: +U.V.z.toFixed(3), want: +st.vWant.toFixed(1), ring: st.vRing || null } } };   /* 842 */
   }
   return { C: C, U: U, patch: patch, init: init, tick: tick, peek: peek, coolAt: coolAt };
 })();
