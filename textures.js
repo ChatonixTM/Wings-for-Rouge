@@ -1498,10 +1498,18 @@ window.WFR_TEX = (function () {
   /* the dome's ramp, eased: the zenith holds its deep blue longer and the light gathers near the horizon. The five
      stops (and so the fog = col[4] and the background = col[2] the bench reads) are the game's own, unchanged. */
   let SKY_A = null, SKY_B = null;
+  /* 836 c (Trunks, Nov 19 2026; Itachi on Chris's clips, refs-1118-su40 f07/f08: "a deep blue sky"; ours read pale and washed). A stop is deepened by how
+     blue it is (blue over red, 0.6 is the day's zenith): the day's zenith #3f8fd8 goes to about #2a6ccd; a storm's grey (no blue lead), the night's near-black
+     and the dusk's warm low stops barely move. Standard only; the fog's colour (col[4]) and the bench's background (col[2]) are never touched. */
+  /* 836 d (Nov 24, the coordinator on f08: its sky overhead a deep navy, about 30-45, 60-80, 140-160; ours still azure): deeper, and only in DAYLIGHT (the
+     stop's own brightness 0.32-0.48: the day's zenith reads 0.52, the dusk's 0.30, the dawn's 0.33), so dusk, dawn, storm and night are as they were. */
+  const lum836 = (c) => 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b, ss836 = (a, b, x) => { const t = Math.max(0, Math.min(1, (x - a) / (b - a))); return t * t * (3 - 2 * t); };
+  const deep836 = (h, k) => { const c = SKY_A.set(h), f = k * Math.max(0, Math.min(1, (c.b - c.r) / 0.6)) * ss836(0.32, 0.48, lum836(c)); c.r *= 1 - 0.45 * f; c.g *= 1 - 0.5 * f; c.b *= 1 - 0.2 * f; return '#' + c.getHexString(); };
   api.skyStops = function (gr, col) {
     if (!SKY_A) { SKY_A = new THREE.Color(); SKY_B = new THREE.Color(); }
     const mix = (i, j, f) => '#' + SKY_A.set(col[i]).lerp(SKY_B.set(col[j]), f).getHexString();
     if (!CLASSIC_LOOK) { const c1 = mix(1, 0, 0.32), c2 = mix(2, 1, 0.22); col = [col[0], c1, c2, col[3], col[4]]; }   // 790 A2 (COO's sky): the blue held lower down the dome, the pale kept to a band over the horizon (the fog's own colour, col[4], untouched); Classic frozen
+    if (!CLASSIC_LOOK) col = [deep836(col[0], 1), deep836(col[1], 0.7), col[2], col[3], col[4]];   // 836 c: a deeper blue overhead, by how BLUE the stop is (a grey storm, a black night and the pale horizon kept)
     gr.addColorStop(0, col[0]); gr.addColorStop(0.2, mix(0, 1, 0.3)); gr.addColorStop(0.32, col[1]); gr.addColorStop(0.42, mix(1, 2, 0.42)); gr.addColorStop(0.47, col[2]);
     gr.addColorStop(0.49, mix(2, 3, 0.5)); gr.addColorStop(0.5, col[3]); gr.addColorStop(0.51, mix(3, 4, 0.55)); gr.addColorStop(0.53, col[4]); gr.addColorStop(1, col[4]);
   };

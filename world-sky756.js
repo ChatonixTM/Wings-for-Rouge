@@ -19,6 +19,12 @@
    dark (lit from behind; light834's G5 halo read 1.074 without it, 1.108 with, HEAD 1.137), nearer as she climbs and left below above ~2.4 km. The island's near clouds
    and the ceiling (cloud806): the sun wrapped soft, the rim thinning away by the lobe's own shape. No new program, no new texture, nothing downloaded.
    Its check: tests/clouds836.js. Every number DRAFT for his eye and her phone.
+   836 c (Trunks, Nov 24 2026; Itachi on our noon frames beside Chris's clips, refs-1118-su40 f07/f08: ours "washed out", lit grey-lavender with fuzzy
+   edges, the old painted bands drawn beside the puffs). SUNLIT: the shared light whiter on the sun side and a neutral lighter grey in shade (was cream
+   and lavender); the puffs lifted (l * (2 - l): most of a heap reaches the lit white, the grey kept for bellies and the far side) with a crisper edge
+   (the ceiling's a little softer); the deck's body brighter, its thick cores still grey; in clear weather the deck thins out below ~20 degrees (uLow,
+   eased with the weather; an overcast still reaches the horizon), so its streaked low bands give way to the puffs. The deeper blue overhead is
+   textures.js skyStops (836 c). Same programs, one new uniform, nothing downloaded. Checks: clouds836 V7 (sunlit), V8 (the low bands), V9 (the blue).
    THE PAGE HANDS IT (tools/wiring/wire-756-sky.js): WFR_SKY756.init(ctx) once, tick(dt) each frame. ctx = { THREE, scene, renderer, camera, S, TR: TRAVEL712, sun, sunI, wx, open, classic, H, pay, toast, tone, save } */
 window.WFR_SKY756 = (function () {
   'use strict';
@@ -151,11 +157,12 @@ window.WFR_SKY756 = (function () {
      lining); the floor is soft (no cut line); no ink. Same program count, same draw, the same light (L806). */
   var FS_CLOUD = [TONE836, 'uniform sampler2D uMap; uniform vec3 uLit; uniform vec3 uShade; uniform vec3 uFogC; uniform float uTone;', 'varying vec2 vUv; varying vec2 vL; varying vec2 vS; varying float vA; varying float vH; varying float vFog; varying float vB; varying float vSz;',
     'void main() {', '  vec4 t = texture2D( uMap, vUv ); float r = length( vL ), den = t.a * ( 1.0 - smoothstep( 0.72, 1.0, r ) );',
-    '  float a = smoothstep( 0.04, 0.7, den ) * smoothstep( -0.45, 0.35, vB ) * vA; if ( a < 0.004 ) discard;',
+    '  float sr = ( 1.0 - uTone ) * smoothstep( 0.1, 0.7, dot( vL, vS.xy ) / ( r * length( vS.xy ) + 1e-3 ) ) * smoothstep( 0.05, 0.35, length( vS.xy ) );',   // 836 d: how much this edge faces the sun on screen (the banks; the ceiling, seen from under, keeps its own)
+    '  float a = smoothstep( mix( 0.14 - 0.1 * uTone, 0.24, sr ), mix( 0.5 + 0.15 * uTone, 0.34, sr ), den ) * smoothstep( -0.45, 0.35, vB ) * vA; if ( a < 0.004 ) discard;',   // 836 c: a crisper edge (was 0.04-0.7: the rim read as fog); 836 d: crisper still on the sun side (the cauliflower rim)
     '  vec3 n = vec3( vL, 0.0 ); n.z = sqrt( max( 0.0, 1.0 - min( 1.0, dot( n.xy, n.xy ) ) ) ); vec3 s = normalize( vec3( vS.xy, vSz ) );',
     '  float sunK = dot( n, s ) * 0.5 + 0.5, h = clamp( vH * 0.78 + 0.22 * smoothstep( -0.9, 0.9, vL.y ), 0.0, 1.0 );',
-    '  float l = clamp( mix( pow( sunK, 1.5 ) * ( 0.32 + 0.68 * h ) + 0.14 * h, sunK * ( 0.5 + 0.7 * h ) + 0.15 * h, uTone ), 0.0, 1.0 ) * smoothstep( -0.6, 0.5, vB ) * ( 0.86 + 0.14 * den ); l = mix( l, tone836( l ), uTone );',
-    '  vec3 col = mix( uShade, uLit, l ) + uLit * ( 0.55 * max( 0.0, - s.z ) * ( 1.0 - den ) * ( 1.0 - den ) );',
+    '  float l = clamp( mix( pow( sunK, 1.5 ) * ( 0.32 + 0.68 * h ) + 0.14 * h, sunK * ( 0.5 + 0.7 * h ) + 0.15 * h, uTone ), 0.0, 1.0 ) * smoothstep( -0.6, 0.5, vB ) * ( 0.86 + 0.14 * den ); l = mix( l, tone836( l ), uTone ); l = l * ( 2.0 - l );',   // 836 c: SUNLIT: most of the heap reaches the lit white, the grey kept for the bellies and the far side
+    '  vec3 col = mix( uShade, uLit, max( l, 0.85 * sr * smoothstep( 0.45, 0.9, r ) ) ) + uLit * ( 0.55 * max( 0.0, - s.z ) * ( 1.0 - den ) * ( 1.0 - den ) );',   // 836 d: the sun-side rim brightened to the lit white (brighter, never darker: no outline, 761)
     '  gl_FragColor = vec4( mix( col, uFogC, vFog ), a );', '}'].join(NL);   // soft volume: no ink, no flat tones
   var VS_RING = ['attribute vec3 color; attribute float aSpin; attribute vec3 aC; attribute vec4 aD;', 'uniform vec3 uEye; uniform float uInvK; uniform float uR; uniform float uT;', 'varying vec3 vC; varying float vA; varying float vFog;',
     'void main() {', '  vec3 r = aC - uEye; float dh = length( r.xz ); r.y -= dh * dh / ( 2.0 * uR ); float dist = length( r );', '  vec3 p = position; if ( aSpin > 0.5 ) { float c = cos( uT * 2.0 ), s = sin( uT * 2.0 ); p = vec3( c * p.x + s * p.z, p.y, c * p.z - s * p.x ); }',
@@ -272,15 +279,15 @@ window.WFR_SKY756 = (function () {
      works out its own raw light (0 shade .. 1 sunlit); this one curve turns it into the mix of the shared shade and lit colours (L806). It saturates, so
      each family's sunlit quarter reaches the same lit colour (as the old two-tone step did) and everything below stays soft. Defined once, used by the
      deck and by cloud806 (the island's clouds and the ceiling). */
-  var FS_DOME = [TONE836, 'uniform sampler2D uMap; uniform vec3 uLit; uniform vec3 uShade; uniform vec3 uInk; uniform vec3 uFogC; uniform vec3 uSun; uniform vec2 uOff; uniform float uThr; uniform float uScale; uniform float uA; uniform float uInkK; uniform float uNear;', 'varying vec3 vD;',
+  var FS_DOME = [TONE836, 'uniform sampler2D uMap; uniform vec3 uLit; uniform vec3 uShade; uniform vec3 uInk; uniform vec3 uFogC; uniform vec3 uSun; uniform vec2 uOff; uniform float uThr; uniform float uScale; uniform float uA; uniform float uInkK; uniform float uNear; uniform float uLow;', 'varying vec3 vD;',
     'float dens( vec2 p ) { return texture2D( uMap, p ).r * 0.8 + texture2D( uMap, p * 2.3 + vec2( 0.37, 0.71 ) ).r * 0.2; }',
     'void main() {', '  vec3 d = normalize( vD ); if ( d.y < 0.004 ) discard;',
     '  vec2 p = d.xz / ( d.y + 0.035 ) * uScale * uNear + uOff; float v = dens( p ), fr = texture2D( uMap, p * 5.3 + vec2( 0.21, 0.63 ) ).r;',
-    '  float far = smoothstep( 0.012, 0.11, d.y ), vv = v + ( fr - 0.5 ) * 0.12 / uNear;',   // the fray thins as the layer comes near (magnified, it read as veins)
-    '  float a = smoothstep( uThr - 0.03, uThr + 0.07, vv ) * far; if ( a < 0.004 ) discard;',
+    '  float far = smoothstep( 0.012 + 0.1 * uLow, 0.11 + 0.3 * uLow, d.y ), vv = v + ( fr - 0.5 ) * 0.09 / uNear;',   // 836 c: in clear weather the deck thins out below ~20 degrees (its streaked bands there gave way to the puffs)   // the fray thins as the layer comes near (magnified, it read as veins)
+    '  float a = smoothstep( uThr - 0.02, uThr + 0.045, vv ) * far; if ( a < 0.004 ) discard;',
     '  float th = smoothstep( uThr + 0.03, uThr + 0.25, v ); vec2 sd = normalize( uSun.xz + vec2( 1e-4 ) ) * 0.03;',
     '  float sunl = clamp( 0.5 + ( v - dens( p + sd ) ) * 7.0, 0.0, 1.0 ), up = smoothstep( -0.1, 0.5, uSun.y );',
-    '  float l = min( 1.0, tone836( ( 1.0 - 0.72 * th ) * ( 0.7 + 0.3 * sunl ) + 0.1 * fr * ( 1.0 - th ) ) * ( 0.62 + 0.5 * fr ) );',   // its inner billows (the fine octave, after the shared curve): no flat lit plateau, no shade cluster (Semiu: two tones joined by a blend)
+    '  float l = min( 1.0, tone836( ( 1.0 - 0.55 * th ) * ( 0.72 + 0.3 * sunl ) + 0.1 * fr * ( 1.0 - th ) ) * ( 0.62 + 0.44 * fr ) );',   // 836 c: a brighter body (was 0.72 th, 0.62 floor), the thick cores still grey   // its inner billows (the fine octave, after the shared curve): no flat lit plateau, no shade cluster (Semiu: two tones joined by a blend)
     '  float back = smoothstep( 0.55, 0.97, dot( d, normalize( uSun ) ) ) * ( 1.0 - smoothstep( 0.2, 0.6, normalize( uSun ).y ) ); l *= 1.0 - 0.55 * back * ( 0.35 + 0.65 * th );',   // toward a low sun a cloud is lit from behind: its thick body goes dark, only its thin rim glows (the silver term below)
     '  vec3 col = mix( uShade, uLit, l ) + uLit * ( pow( max( dot( d, normalize( uSun ) ), 0.0 ), 24.0 ) * ( 1.0 - th ) * 0.5 * up * ( 1.0 - 0.85 * smoothstep( 0.35, 0.8, normalize( uSun ).y ) ) );',   // the silver rim is a low sun's (a high one would wash the lit tone white)
     '  float hz = ( 1.0 - smoothstep( 0.03, 0.22, d.y ) ) * 0.55; col = mix( col, uFogC, 0.25 * hz ); gl_FragColor = vec4( col, a * uA * ( 1.0 - 0.8 * hz ) );', '}'].join(NL);   // 836: toward the horizon a cloud thins into the haze (its cover), not tinted white (its colour stays the family's: seams806 A1)   // a body is solid white (the reference's cumulus); only its rim is see-through
@@ -296,7 +303,7 @@ window.WFR_SKY756 = (function () {
       '  { vec3 rn = normalize( vR806 ), n = normalize( mix( rn, normalize( vN806 ), 0.35 ) ); if ( !gl_FrontFacing ) n = -n; vec3 sv = normalize( ( viewMatrix * vec4( uSun806, 0.0 ) ).xyz ), up = normalize( ( viewMatrix * vec4( 0.0, 1.0, 0.0, 0.0 ) ).xyz );',
       '    float w = dot( n, sv ) * 0.5 + 0.5, h = dot( n, up ) * 0.5 + 0.5, l = tone836( w * ( 0.5 + 0.7 * h ) + 0.15 * h );',   // 836: the sun wrapped soft, brighter on top (was a two-tone step)
       '    vec3 col = mix( uShd806, uLit806, l ); float e = abs( dot( rn, normalize( vV806 ) ) );',   // 836: e, the whole lobe's shape (its radial normal) toward the eye, 0 at its outline: the bumps on it shade, but draw no rims of their own
-      '    gl_FragColor.rgb = col; gl_FragColor.a *= smoothstep( 0.0, 0.55, e ) ; }'].join('\n')); };   // 836: no ink; the rim thins away to nothing, so the edge is soft (after the encodings, before the fog, as the deck draws)
+      '    gl_FragColor.rgb = col; gl_FragColor.a *= smoothstep( 0.03, 0.5, e ) ; }'].join('\n')); };   // 836: no ink; the rim thins away to nothing, so the edge is soft (after the encodings, before the fog, as the deck draws)
   function cloud806(m) {   // the page hands each near cloud's material here, once, at load (Standard only: Classic is frozen, board 645)
     try { if (!m || m.userData.cloud806 || localStorage.getItem('wfr.look') === 'classic' || SW790 === 'nopaint' || !l806()) return false; } catch (e) { return false; }
     var prev = m.onBeforeCompile; m.onBeforeCompile = typeof prev === 'function' ? function (sh, r) { prev.call(this, sh, r); CLOUD806_V(sh); } : CLOUD806_V; m.userData.cloud806 = true; m.userData.cloud836 = true; m.needsUpdate = true; return true;   // 836: depth written as before (the ceiling's 85% lobes would show every inner bump through each other); the lobes draw back to front, so a soft rim blends over the lobe behind
@@ -304,9 +311,9 @@ window.WFR_SKY756 = (function () {
   function domeInit(THREE) {
     try {
       var L = l806(), U = dm.U = { map: { value: domeBake(THREE) }, lit: L.lit, shade: L.shade, ink: L.ink, fogC: L.fogC, sun: L.sun,
-        off: { value: new THREE.Vector2(0.13, 0.41) }, thr: { value: 0.5 }, scale: { value: DOME.SCALE }, a: { value: 1 }, inkK: L.inkK, near: { value: 1 } };   // 806: the light is L806's, shared
+        off: { value: new THREE.Vector2(0.13, 0.41) }, thr: { value: 0.5 }, scale: { value: DOME.SCALE }, a: { value: 1 }, inkK: L.inkK, near: { value: 1 }, low: { value: 1 } };   // 806: the light is L806's, shared
       var g = new THREE.SphereGeometry(DOME.R, 40, 12, 0, Math.PI * 2, 0, Math.PI / 2 + 0.02);
-      var m = new THREE.ShaderMaterial({ name: 'sky790:deck', vertexShader: VS_DOME, fragmentShader: FS_DOME, side: THREE.BackSide, uniforms: { uMap: U.map, uLit: U.lit, uShade: U.shade, uInk: U.ink, uFogC: U.fogC, uSun: U.sun, uOff: U.off, uThr: U.thr, uScale: U.scale, uA: U.a, uInkK: U.inkK, uNear: U.near },
+      var m = new THREE.ShaderMaterial({ name: 'sky790:deck', vertexShader: VS_DOME, fragmentShader: FS_DOME, side: THREE.BackSide, uniforms: { uMap: U.map, uLit: U.lit, uShade: U.shade, uInk: U.ink, uFogC: U.fogC, uSun: U.sun, uOff: U.off, uThr: U.thr, uScale: U.scale, uA: U.a, uInkK: U.inkK, uNear: U.near, uLow: U.low },
         transparent: false, depthTest: false, depthWrite: false, fog: false, blending: THREE.CustomBlending, blendEquation: THREE.AddEquation, blendSrc: THREE.SrcAlphaFactor, blendDst: THREE.OneMinusSrcAlphaFactor });   // not 'transparent': it goes in the opaque list at -9.8, so all that is solid draws over it (the 756 trick)
       m.extensions = { derivatives: true };
       dm.mesh = new THREE.Mesh(g, m); dm.mesh.name = 'sky790:dome'; dm.mesh.frustumCulled = false; dm.mesh.renderOrder = DOME.ORDER; dm.mesh.layers.enable(C.LAYER); dm.mesh.matrixAutoUpdate = false; X.scene.add(dm.mesh);
@@ -316,8 +323,8 @@ window.WFR_SKY756 = (function () {
   }
   function domeLight(U) {   // the light of the moment (paint()'s): the game's sun and haze; dimmer and greyer in weather
     var w = X.wx(), s = Math.max(0, Math.min(1.2, X.sunI())), sc = X.sun.color, dark = (w.kind === 'storm' ? 0.75 : w.kind === 'clear' ? 0 : 0.42) * Math.max(0, Math.min(1, w.k)), fc = X.scene.fog ? X.scene.fog.color : null, k = 0.3 + 0.75 * s;
-    U.lit.value.setRGB(Math.min(1, (0.5 + 0.5 * sc.r) * k), Math.min(1, (0.46 + 0.5 * sc.g) * k), Math.min(1, (0.42 + 0.5 * sc.b) * k)).multiplyScalar(1 - 0.4 * dark);   // cream by day; the dusk's gold reaches it
-    U.shade.value.setRGB(0.6, 0.68, 0.82).multiplyScalar(0.25 + 0.66 * s).multiplyScalar(1 - 0.4 * dark); if (fc) U.fogC.value.copy(fc);
+    U.lit.value.setRGB(Math.min(1, (0.62 + 0.42 * sc.r) * k), Math.min(1, (0.6 + 0.42 * sc.g) * k), Math.min(1, (0.58 + 0.42 * sc.b) * k)).multiplyScalar(1 - 0.4 * dark);   // cream by day; the dusk's gold reaches it
+    U.shade.value.setRGB(0.72, 0.74, 0.79).multiplyScalar(0.25 + 0.66 * s).multiplyScalar(1 - 0.4 * dark); if (fc) U.fogC.value.copy(fc);
     U.ink.value.setRGB(0.18, 0.22, 0.32).multiplyScalar(0.5 + 0.5 * Math.min(1, s));
     U.sun.value.copy(X.sun.position).sub(X.sun.target.position).normalize(); return { s: s, w: w };
   }
@@ -325,7 +332,7 @@ window.WFR_SKY756 = (function () {
     if (!dm.made) return; try {
       var cl = !!(X.classic && X.classic()), vis = !cl && (!dm.dome || dm.dome.visible); dm.on = vis; dm.mesh.visible = vis; domeRing(!vis); if (!vis) return;
       dm.t += dt || 0; var w = X.wx(), cover = st.force.cover != null ? st.force.cover : dayCover(w), want = DOME.MIN + (1 - DOME.MIN) * Math.min(1, cover * 1.2);   // never an empty sky; a big day nearly full
-      dm.cover = dm.cover ? dm.cover + (want - dm.cover) * Math.min(1, (dt || 0) * 0.2) : want; dm.thr = 0.66 - 0.26 * dm.cover;   // the share of the deck that is cloud follows the day's cover, eased
+      dm.cover = dm.cover ? dm.cover + (want - dm.cover) * Math.min(1, (dt || 0) * 0.2) : want; dm.thr = 0.66 - 0.26 * dm.cover; var lw = w.kind === 'clear' ? 1 : 0; dm.low = dm.low == null ? lw : dm.low + (lw - dm.low) * Math.min(1, (dt || 0) * 0.2);   // 836 c: 1 in clear weather (the deck's low bands blended away), 0 in weather (an overcast reaches the horizon), eased as the cover is   // the share of the deck that is cloud follows the day's cover, eased
     } catch (e) { dm.fault = 'tick: ' + (e && e.message || e); dm.made = false; if (dm.mesh) dm.mesh.visible = false; domeRing(true); }
   }
   function domeRing(show) {   // the dome's old ring of soft puffs (drawn in the see-through pass, so past the gate it lay OVER the far hills as a grey smear): the deck takes its place while ours shows; back as it was whenever ours does not (the residue law)
@@ -334,7 +341,7 @@ window.WFR_SKY756 = (function () {
     if (!dm.made || !dm.on) { light806(); return; } try {   // 806: with the deck hidden the near clouds still take the light
       var L = domeLight(dm.U), night = 1 - smooth(0.28, 0.7, L.s), U = dm.U;
       var ey = X.camera ? X.camera.position.y : 0; U.near.value = Math.min(DOME.NEAR_MAX, (DOME.HD - DOME.Y0) / Math.max(1, DOME.HD - Math.max(DOME.Y0, ey))); dm.near = U.near.value; dm.lift = 1 - smooth(DOME.FADE[0], DOME.FADE[1], ey);   // 836: nearer as she climbs; left below above ~2.4 km
-      U.thr.value = dm.thr; U.a.value = (1 - 0.5 * night) * dm.lift; U.off.value.set(0.13 + dm.t * DOME.WIND[0], 0.41 + dm.t * DOME.WIND[1]);
+      U.thr.value = dm.thr; U.low.value = dm.low == null ? 1 : dm.low; U.a.value = (1 - 0.5 * night) * dm.lift; U.off.value.set(0.13 + dm.t * DOME.WIND[0], 0.41 + dm.t * DOME.WIND[1]);
     } catch (e) { dm.fault = 'place: ' + (e && e.message || e); dm.made = false; dm.mesh.visible = false; domeRing(true); }
   }
   function domePeek() { return { made: dm.made, on: dm.on, fault: dm.fault, near: +(dm.near || 1).toFixed(3), lift: dm.lift == null ? 1 : +dm.lift.toFixed(3), bakeMs: dm.bakeMs, cover: +dm.cover.toFixed(3), thr: +dm.thr.toFixed(3), order: DOME.ORDER, domeFound: !!dm.dome, ringHidden: !!dm.ringHidden }; }

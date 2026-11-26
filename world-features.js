@@ -19,7 +19,7 @@ window.WFR_FEATURES = (function () {
     TILEJSON: 'https://tiles.openfreemap.org/planet',   // read once at the start: the tiles' dated path is never hard-coded (PLAN_712_S5)
     /* three rings of tiles round her: z14 (buildings and every road) near and low, z12 (the main roads, water, towns) mid, z9 (motorways, big water, cities) far */
     RINGS: [{ z: 14, r: 2600, show: 3200, agl: 2600 }, { z: 12, r: 15000, show: 18000, agl: 16000 }, { z: 9, r: 120000, show: 150000, agl: 1e9 }],
-    LOADS: 4, KEPT: 56, SLICE_MS: 4, TRI_MAX: 1500000, LABELS: 8, LABELS820: 4, AREA_MIN: 20, H_DEF: 6, H_MAX: 900, SINK: 1.5, WAIT_MS: 2500, LAYER: 7,
+    LOADS: 4, KEPT: 56, GEO_MAX: 24 * 1048576, GRACE_MS: 4000, PARK_MS: 4000, SLICE_MS: 4, TRI_MAX: 1500000, LABELS: 8, LABELS820: 4, AREA_MIN: 20, H_DEF: 6, H_MAX: 900, SINK: 1.5, WAIT_MS: 2500, LAYER: 7,
     LIFT: { 14: 0.3, 12: 1.0, 9: 4.0 }, SUB: { 14: 20, 12: 50, 9: 250 }, DRAPE_MS: 0.4,   /* 798: SUB was 30, 120, 800: a straight cut that long bridged the valleys and cut through the ridges of the ground she sees */ WIDEN: { 14: 1, 12: 1.5, 9: 4 },
     CREDIT: 'OpenFreeMap · © OpenMapTiles (openmaptiles.org) · © OpenStreetMap contributors (openstreetmap.org/copyright)'
   };
@@ -121,7 +121,7 @@ window.WFR_FEATURES = (function () {
   }
   function attach(three, sc, travel, cam) {   // once, at load, where the travel material is made (the page's TRAVEL712 and its uniforms)
     if (mats) return api;
-    THREE = three; scene = sc; T = travel; camera = cam || null; mats = makeMats(T.u);
+    THREE = three; scene = sc; T = travel; camera = cam || null; mats = makeMats(T.u); window.addEventListener('webglcontextlost', lost843, true);   /* 843: caught on its way down to the canvas (a context event never bubbles) */
     var g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.BufferAttribute(new Float32Array(9), 3)); g.setAttribute('normal', new THREE.BufferAttribute(new Float32Array([0, 1, 0, 0, 1, 0, 0, 1, 0]), 3));
     g.setAttribute('color', new THREE.BufferAttribute(new Float32Array(9), 3)); g.setAttribute('uv', new THREE.BufferAttribute(new Float32Array(6), 2));
     warm = new THREE.Mesh(g, mats.wall); warm.name = 'features:warm'; warm.frustumCulled = false; warm.layers.set(C.LAYER); scene.add(warm);
@@ -317,14 +317,33 @@ window.WFR_FEATURES = (function () {
   /* 805e a waterway's flow (world-surfaces732.js vR805): the metres along its line (OSM draws a waterway the way it flows) and 1000 + metres across it.
      Sparse like drp's: only a tile with a river carries the attribute (8 bytes a vertex); every other vertex of that mesh reads 0, still water */
   function flw(o, k, s, x) { var f = o.fl || (o.fl = []); f[2 * k] = s; f[2 * k + 1] = 1000 + x; }
+  function f843(a, k) { return new THREE.BufferAttribute(a instanceof Float32Array ? a : new Float32Array(a), k); }   /* 843: an array already typed (the merged walls) is used as it is, never copied a second time */
   function meshOf(o, mat, name, order) {
     if (!o || !o.i.length) return null; var g = new THREE.BufferGeometry();
-    g.setAttribute('position', new THREE.Float32BufferAttribute(o.p, 3)); g.setAttribute('normal', new THREE.Float32BufferAttribute(o.n, 3)); g.setAttribute('color', new THREE.Float32BufferAttribute(o.c, 3));
-    if (o.uv) g.setAttribute('uv', new THREE.Float32BufferAttribute(o.uv, 2)); if (o.f && o.f.length) { g.setAttribute('aF790', new THREE.Float32BufferAttribute(o.f, 2)); g.setAttribute('aM790', new THREE.Float32BufferAttribute(o.m, 2)); } g.setIndex(o.p.length / 3 > 65535 ? new THREE.Uint32BufferAttribute(o.i, 1) : new THREE.Uint16BufferAttribute(o.i, 1));
-    if (o.fl && o.fl.length) { var nf = o.p.length / 3, fa = new Float32Array(nf * 2); for (var qf = 0; qf < o.fl.length && qf < nf * 2; qf++) fa[qf] = o.fl[qf] || 0; g.setAttribute('aR805', new THREE.Float32BufferAttribute(fa, 2)); }   /* 805e */
+    g.setAttribute('position', f843(o.p, 3)); g.setAttribute('normal', f843(o.n, 3)); g.setAttribute('color', f843(o.c, 3));
+    if (o.uv) g.setAttribute('uv', f843(o.uv, 2)); if (o.f && o.f.length) { g.setAttribute('aF790', f843(o.f, 2)); g.setAttribute('aM790', f843(o.m, 2)); } g.setIndex(o.p.length / 3 > 65535 ? (o.i instanceof Uint32Array ? new THREE.BufferAttribute(o.i, 1) : new THREE.Uint32BufferAttribute(o.i, 1)) : (o.i instanceof Uint16Array ? new THREE.BufferAttribute(o.i, 1) : new THREE.Uint16BufferAttribute(o.i, 1)));
+    if (o.fl && o.fl.length) { var nf = o.p.length / 3, fa = new Float32Array(nf * 2); for (var qf = 0; qf < o.fl.length && qf < nf * 2; qf++) fa[qf] = o.fl[qf] || 0; g.setAttribute('aR805', f843(fa, 2)); }   /* 805e */
     var m = new THREE.Mesh(g, mat); if (o.dl && o.dl.length) { var nv = o.p.length / 3, dl = new Float32Array(nv), q; for (q = 0; q < nv; q++) dl[q] = q < o.dl.length ? o.dl[q] : NaN; m.userData.dl = dl; }   /* 798 */
-    m.name = name; m.frustumCulled = false; m.matrixAutoUpdate = false; m.renderOrder = order; m.layers.set(C.LAYER); m.castShadow = m.receiveShadow = false; m.userData.tris = o.i.length / 3; return m;
+    m.name = name; m.frustumCulled = false; m.matrixAutoUpdate = false; m.renderOrder = order; m.layers.set(C.LAYER); m.castShadow = m.receiveShadow = false; m.userData.tris = o.i.length / 3;
+    var by = 0; for (var an in g.attributes) by += g.attributes[an].array.byteLength; by += g.index.array.byteLength; m.userData.bytes843 = by;   /* 843: what this mesh holds on the card */
+    if (!KEEP843) FREE843.forEach(function (an) { var a = g.attributes[an]; if (a) a.onUpload(free843); });   /* 843 */
+    return m;
   }
+  /* 843 THE PHONE'S MEMORY (Marth, Nov 19 2026, verbatim: "Yeah I'm in Jamaica in kencott and it keep crashing - 3rd time now"): three.js keeps every
+     attribute's array in the page after it is sent to the card, so a city's streets and houses were held twice (Kingston: ~150 MB in the page beside the
+     same on the card). Once sent, the arrays nothing reads again leave the page (three.js's own documented way, BufferAttribute.onUpload): the normals,
+     the colours and the city's two facade channels. Kept: the positions (the drape re-lays them, her walk reads them), the uv (a camera ray reads it) and
+     the index. A context the phone takes back (webglcontextlost) rebuilds every tile from its kept bytes (lost843), never a re-send of a freed array.
+     localStorage 'wfr.keep843' = '1' keeps them (city790's guard reads the normals and the colours of what was built). */
+  var KEEP843 = (function () { try { return localStorage.getItem('wfr.keep843') === '1'; } catch (e) { return false; } })(), FREE843 = ['normal', 'color', 'aF790', 'aM790', 'aR805'];
+  /* 843: a built tile the triangle budget keeps hidden (PARK_MS and more) holds a phone's memory for nothing: its meshes go, its bytes stay, and it is
+     built again when the budget has room for it, the nearest first (the same order that shows them). This also lets the budget's far edge move with
+     her instead of holding the tiles it hid. */
+  function park843(t) { disposeMeshes(t); t.state = 'parked'; t.stale = false; t.drape = null; t.gsig = null; t.fp = null; t.fpg = null; if (t.city) { t.city = null; if (window.WFR_CITY790) WFR_CITY790.changed(); } t.hid843 = 0; t.bytes843 = 0; stats.parked843 = (stats.parked843 || 0) + 1; }
+  function free843() { stats.freed843 = (stats.freed843 || 0) + this.array.byteLength; this.array = null; }
+  function lost843() { stats.lost843 = (stats.lost843 || 0) + 1;
+    tiles.forEach(function (t) { if (t.job) { t.job = null; } if (!t.meshes || !t.meshes.length) return; disposeMeshes(t); t.drape = null; t.gsig = null;
+      if (t.raw) { t.state = 'raw'; t.stale = false; } else { tiles.delete(t.key); } }); }
   function finish(t) {
     var J = t.job, f0 = now(); disposeMeshes(t); J.wallN = J.wall.p.length / 3;   // the walls that stand on the ground are the first wallN vertices of their mesh, four a wall (two feet, two tops): the guard reads the feet there
     var cells = cellSort(t, J);
@@ -333,9 +352,9 @@ window.WFR_FEATURES = (function () {
     var w = ms[1]; if (w) w.userData.wallN = J.wallN;
     if (cells && ms[0]) { ms[0].material = [mats.ground]; ms[0].userData.cells = cells; ms[0].geometry.addGroup(0, J.gnd.i.length, 0); ms[0].userData.sig = ''; }   // the same material object (the same program), drawn by groups: a coarse cell steps aside where a finer tile stands
     t.meshes = ms.filter(Boolean); t.f = J.f; t.ax = J.ax; t.az = J.az; t.terrZ = J.terrZ; t.places = J.places; t.box = J.terrA; t.gsig = J.sig798; t.drape = null; t.fp = J.fp && J.fp.length ? J.fp : null; t.fpg = null; t.nB = J.nB; t.nR = J.nR; t.nW = J.nW; t.lakes = J.lakes || null;
-    t.tris = 0; for (var i = 0; i < t.meshes.length; i++) { var m = t.meshes[i]; m.position.set(J.ax, 0, J.az); m.updateMatrix(); m.visible = false; group.add(m); t.tris += m.userData.tris; }
+    t.tris = 0; t.bytes843 = 0; for (var i = 0; i < t.meshes.length; i++) { var m = t.meshes[i]; m.position.set(J.ax, 0, J.az); m.updateMatrix(); m.visible = false; group.add(m); t.tris += m.userData.tris; t.bytes843 += m.userData.bytes843; }
     stats.finMax = Math.max(stats.finMax || 0, now() - f0);   /* 790: the one step a slice cannot cut (the meshes made at once) */
-    t.job = null; t.state = 'built'; t.stale = false; stats.built++; stats.buildings += J.nB; stats.roads += J.nR; stats.waters += J.nW;
+    t.job = null; t.state = 'built'; t.stale = false; t.built843 = now(); t.hid843 = 0; stats.built++; stats.buildings += J.nB; stats.roads += J.nR; stats.waters += J.nW;
     if (J.feed && listeners.length) { t.feedGen = (t.feedGen || 0) + 1; feedQ.push({ t: t, feed: J.feed, gen: t.feedGen }); }   /* 838: the listeners are told in a slice of their own, the next frame's (deliverFeed): with the meshes in one slice they made the worst slice (downtown Toronto: meshes 10-20 ms + listeners 33 ms) */
   }
   /* ---------- one zoom per place (Nov 4, after the guard's first run: the z9 and z12 lakes and roads lay OVER the z14 ones under her, the coarse
@@ -373,7 +392,7 @@ window.WFR_FEATURES = (function () {
     if (W2.f && R.f) { for (i = 0; i < R.f.length; i++) W2.f.push(R.f[i]); for (i = 0; i < R.m.length; i++) W2.m.push(R.m[i]); }
     for (i = 0; i < R.i.length; i++) W2.i.push(R.i[i] + base);
   }
-  function disposeMeshes(t) { if (!t.meshes) { t.meshes = []; return; } for (var i = 0; i < t.meshes.length; i++) { group.remove(t.meshes[i]); t.meshes[i].geometry.dispose(); } t.meshes = []; }   // geometries only: the shared materials are never disposed (a disposed material kills its shared program)
+  function disposeMeshes(t) { if (!t.meshes) { t.meshes = []; return; } for (var i = 0; i < t.meshes.length; i++) { group.remove(t.meshes[i]); t.meshes[i].geometry.dispose(); var j8 = sg843.indexOf(t.meshes[i]); if (j8 >= 0) sg843.splice(j8, 1); } t.meshes = []; }   // geometries only: the shared materials are never disposed (a disposed material kills its shared program)
   function placeAll() { tiles.forEach(function (t) { if (t.state !== 'built' || !t.meshes.length) return; var a = W.toLocal(T.f, t.nw.lat, t.nw.lon), s0 = t.f, k = 1;
       if (s0 && s0.k && T.f.k) k = T.f.k / s0.k;   // the Mercator frame scales the ground by its k (the terrain's own mesh.scale); a frame without k only slides
       for (var i = 0; i < t.meshes.length; i++) { var m = t.meshes[i]; m.position.set(a.x, 0, a.z); m.scale.set(k, 1, k); m.updateMatrix(); }
@@ -430,7 +449,7 @@ window.WFR_FEATURES = (function () {
      sidewalks and paths stand a few decimetres over the ground (their lift, so the ground never shows through them), and her walk read the ground under
      them. surface798(x, z): the top of what is laid on the ground at a point (a road, a sidewalk, a zebra, a path, a river's ribbon), from the z14 tiles'
      own triangles as they are drawn (draped), or null where none. Each mesh gets a coarse grid of its laid triangles the first time she walks on it. */
-  var SG798 = 8;
+  var SG798 = 8, sg843 = [];
   function grid798(m) {
     var g = m.geometry, I = g.index, P = g.attributes.position.array, dl = m.userData.dl, cells = new Map(), n = I.count;
     for (var t = 0; t < n; t += 3) { var a = I.getX(t), b = I.getX(t + 1), c = I.getX(t + 2); if (dl[a] !== dl[a] || dl[b] !== dl[b] || dl[c] !== dl[c]) continue;
@@ -440,7 +459,7 @@ window.WFR_FEATURES = (function () {
   }
   function surface798(x, z) {
     var best = null; tiles.forEach(function (t) { if (t.z !== 14 || t.state !== 'built' || !t.box || x < t.box.x0 - 5 || x > t.box.x1 + 5 || z < t.box.z0 - 5 || z > t.box.z1 + 5) return;
-      for (var i = 0; i < t.meshes.length; i++) { var m = t.meshes[i], dl = m.userData.dl; if (!dl || !m.visible) continue; if (!m.userData.sg798) m.userData.sg798 = grid798(m);
+      for (var i = 0; i < t.meshes.length; i++) { var m = t.meshes[i], dl = m.userData.dl; if (!dl || !m.visible) continue; if (!m.userData.sg798) { m.userData.sg798 = grid798(m); sg843.push(m); while (sg843.length > 4) { var o8 = sg843.shift(); if (o8.userData) o8.userData.sg798 = null; } }   /* 843: the last four grids only (each a few MB; the tiles she left had kept theirs) */
         var k = m.scale.x, lx = (x - m.position.x) / k, lz = (z - m.position.z) / k, L = m.userData.sg798.get(Math.floor(lx / SG798) + ',' + Math.floor(lz / SG798)); if (!L) continue; var P = m.geometry.attributes.position.array;
         for (var q = 0; q < L.length; q += 3) { var a = 3 * L[q], b = 3 * L[q + 1], c = 3 * L[q + 2], v0x = P[b] - P[a], v0z = P[b + 2] - P[a + 2], v1x = P[c] - P[a], v1z = P[c + 2] - P[a + 2], v2x = lx - P[a], v2z = lz - P[a + 2], den = v0x * v1z - v1x * v0z; if (Math.abs(den) < 1e-9) continue;
           var u = (v2x * v1z - v1x * v2z) / den, v = (v0x * v2z - v2x * v0z) / den; if (u < -1e-6 || v < -1e-6 || u + v > 1 + 1e-6) continue; var y = P[a + 1] + (P[b + 1] - P[a + 1]) * u + (P[c + 1] - P[a + 1]) * v; if (best == null || y > best) best = y; } } });
@@ -489,9 +508,9 @@ window.WFR_FEATURES = (function () {
       list.sort(function (a, b) { return a.d / a.show - b.d / b.show; });
       for (var i = 0; i < list.length; i++) { var w = list[i], k = keyOf(w.z, w.x, w.y), t = tiles.get(k); seen.add(k);
         if (!t) { t = { key: k, z: w.z, x: w.x, y: w.y, nw: w.nw, se: w.se, state: 'want', meshes: [], places: [], used: frameNo, d: w.d, show: w.show }; tiles.set(k, t); }
-        t.used = frameNo; t.d = w.d; t.show = w.show;
+        t.used = frameNo; t.usedT = t0; t.d = w.d; t.show = w.show;
         if (t.state === 'missing' && now() > t.retry) t.state = 'want';
-        if (t.state === 'built' && !t.stale && t.raw && window.WFR_CITY790 && WFR_CITY790.restale(t)) t.stale = true;   /* 790 A: a far-built tile she nears is rebuilt with its rooftop detail */
+        if (t.state === 'built' && !t.stale && t.raw && window.WFR_CITY790 && WFR_CITY790.restale(t)) { t.stale = true; if (t.detail790) stats.down843 = (stats.down843 || 0) + 1; else stats.up843 = (stats.up843 || 0) + 1; }   /* 790 A: a far-built tile she nears is rebuilt with its rooftop detail */
         if (t.state === 'want' && inflight < C.LOADS) load(t); }
       /* one tile's work a frame, a few milliseconds of it: the nearest first (a stale one is rebuilt from its kept bytes, its old meshes standing until then) */
       var deadline = t0 + C.SLICE_MS, job = null, best = 1e18, fed = (frameNo & 1) ? deliverFeed() : false;   /* 838: the listeners take the odd frames (a frame that tells them builds nothing else), the build the even ones: run back to back, the listeners starved the build and the drape (city790 S1 red, Kingston's roads) */
@@ -500,14 +519,18 @@ window.WFR_FEATURES = (function () {
       if (job) { if (!job.job) { if (job.z === 14 && st.loadingUnder(cam.x, cam.z) && now() - (job.since || 0) < C.WAIT_MS) { stats.waits++; job = null; } else { if (job.stale) stats.restale++; startJob(job); } }
         if (job) { var a = now(); job.ph = { b: 0, nb: 0, e: 0, r: 0, s: 0, f: 0 }; stepJob(job, deadline); var sl = now() - a; if (sl > stats.sliceMax) { var ph = job.ph; stats.sliceWorst = { ms: +sl.toFixed(1), key: job.key, b: +ph.b.toFixed(1), nb: ph.nb, e: +ph.e.toFixed(1), r: +ph.r.toFixed(1), s: +ph.s.toFixed(1), f: +ph.f.toFixed(1) }; } stats.sliceMax = Math.max(stats.sliceMax, sl); } }   /* 838: what the worst slice spent (b buildings, nb how many, e other features, r roads, s 830, f the meshes) */
       /* who shows: built, wanted, within its ring's sight; over the triangle budget the farthest go first */
-      var vis = [], tris = 0; tiles.forEach(function (t) { if (t.state !== 'built' || !t.meshes.length) return; var on = t.used === frameNo && t.d <= t.show; if (on) vis.push(t); else setVis(t, false); });
-      vis.sort(function (a, b) { return a.d - b.d; }); var shown = 0;
-      for (i = 0; i < vis.length; i++) { var ok = tris + vis[i].tris <= C.TRI_MAX; setVis(vis[i], ok); if (ok) { tris += vis[i].tris; shown++; } }
+      var vis = [], tris = 0, cand = [], tn = now(); tiles.forEach(function (t) { var on = t.used === frameNo && t.d <= t.show; if (t.state === 'parked') { if (on) cand.push(t); return; } if (t.state !== 'built' || !t.meshes.length) return; if (on) { vis.push(t); cand.push(t); } else setVis(t, false); });
+      cand.sort(function (a, b) { return a.d - b.d; }); var shown = 0;
+      for (i = 0; i < cand.length; i++) { var c8 = cand[i], ok = tris + c8.tris <= C.TRI_MAX;
+        if (c8.state === 'parked') { if (ok) { c8.state = 'raw'; tris += c8.tris; stats.unparked843 = (stats.unparked843 || 0) + 1; } continue; }   /* 843: a parked tile that fits again is built again, its room kept for it meanwhile */
+        setVis(c8, ok); if (ok) { tris += c8.tris; shown++; c8.hid843 = 0; } else if (!c8.hid843) c8.hid843 = tn; else if (tn - c8.hid843 > C.PARK_MS && tn - (c8.built843 || 0) > C.PARK_MS && c8.raw && !c8.job) park843(c8); }
       stats.tris = tris; stats.visible = shown; cover(); drapeStep(vis, Math.max(now() + C.DRAPE_MS, t0 + C.SLICE_MS));   /* 798: what the tile's build left of its slice, and never less than DRAPE_MS */
       if (mats.city && window.WFR_CITY790) WFR_CITY790.tick(cam, tiles, frameNo, T, group, agl);   /* 790 A: the street trees, lamps and benches near her; the night windows */
       /* the LRU: never what this frame wants */
-      if (tiles.size > C.KEPT) { var old = []; tiles.forEach(function (t) { if (t.used !== frameNo && t.state !== 'fetch') old.push(t); }); old.sort(function (a, b) { return a.used - b.used; });
-        for (i = 0; i < old.length && tiles.size > C.KEPT; i++) { disposeMeshes(old[i]); old[i].raw = null; old[i].job = null; old[i].city = null; tiles.delete(old[i].key); stats.evicted++; if (window.WFR_CITY790) WFR_CITY790.changed(); for (var q = 0; q < droppers.length; q++) try { droppers[q](old[i].z, old[i].x, old[i].y); } catch (e) { /* a listener's own */ } } }
+      var held = 0; tiles.forEach(function (t) { if (t.used !== frameNo) held += t.meshes.length ? t.bytes843 || 0 : 0; }); stats.heldMB843 = +(held / 1048576).toFixed(1);   /* 843: the tiles she no longer wants are counted by what they hold too (a z14 city tile holds a hundred z9 tiles' bytes); what she wants is never counted; GEO_MAX bounds the rest, the oldest first, and a tile she left less than GRACE_MS ago is kept (Obito, Nov 24: a tile out of the ring for a frame was evicted and fetched and built again when she turned back) */
+      if (tiles.size > C.KEPT || held > C.GEO_MAX) { var old = []; tiles.forEach(function (t) { if (t.used !== frameNo && t.state !== 'fetch') old.push(t); }); old.sort(function (a, b) { return a.used - b.used; });
+        for (i = 0; i < old.length && (tiles.size > C.KEPT || held > C.GEO_MAX); i++) { if (tiles.size <= C.KEPT && t0 - (old[i].usedT || 0) < C.GRACE_MS) break;   /* 843: by bytes, never a tile she left a moment ago (she turns back: no refetch, no rebuild); the oldest first */
+          held -= old[i].meshes.length ? old[i].bytes843 || 0 : 0; if (tiles.size <= C.KEPT) stats.byBytes843 = (stats.byBytes843 || 0) + 1; disposeMeshes(old[i]); old[i].raw = null; old[i].job = null; old[i].city = null; tiles.delete(old[i].key); stats.evicted++; if (window.WFR_CITY790) WFR_CITY790.changed(); for (var q = 0; q < droppers.length; q++) try { droppers[q](old[i].z, old[i].x, old[i].y); } catch (e) { /* a listener's own */ } } }
       stats.kept = tiles.size;
       if ((frameNo & 3) === 0) labels(cam);
       credit(shown > 0 || stats.labels > 0);
@@ -575,8 +598,8 @@ window.WFR_FEATURES = (function () {
 
   /* ---------- the bench's read, and the doors for the other units ---------- */
   function peek() { var s = Object.assign({}, stats); delete s.upd; s.lisNames = listeners.map(function (f) { return String(f).replace(/\s+/g, ' ').slice(0, 70); });   /* 838: which listener is which (lisEach's order) */ var u = stats.upd.slice().sort(function (a, b) { return a - b; }); s.updP99 = u.length ? u[Math.floor(u.length * 0.99)] : 0; s.updMed = u.length ? u[Math.floor(u.length / 2)] : 0; s.frames = u.length;
-    s.tiles = []; tiles.forEach(function (t) { s.tiles.push({ key: t.key, state: t.state, d: Math.round(t.d), vis: !!(t.meshes[0] && t.meshes[0].visible), nB: t.nB || 0, nR: t.nR || 0, nW: t.nW || 0, tris: t.tris || 0, terrZ: t.terrZ, stale: !!t.stale, places: t.places ? t.places.length : 0 }); });
-    var geo = 0; tiles.forEach(function (t) { for (var i = 0; i < t.meshes.length; i++) { var g = t.meshes[i].geometry; for (var a in g.attributes) geo += g.attributes[a].array.byteLength; if (g.index) geo += g.index.array.byteLength; } }); s.geoMB = +(geo / 1048576).toFixed(2);
+    s.tiles = []; tiles.forEach(function (t) { s.tiles.push({ key: t.key, state: t.state, d: Math.round(t.d), vis: !!(t.meshes[0] && t.meshes[0].visible), nB: t.nB || 0, nR: t.nR || 0, nW: t.nW || 0, tris: t.tris || 0, mb: +((t.bytes843 || 0) / 1048576).toFixed(2), detail: t.detail790, z: t.z, used: t.used === frameNo, terrZ: t.terrZ, stale: !!t.stale, places: t.places ? t.places.length : 0 }); });
+    var geo = 0, cpu = 0; tiles.forEach(function (t) { for (var i = 0; i < t.meshes.length; i++) { var g = t.meshes[i].geometry; geo += t.meshes[i].userData.bytes843 || 0; for (var a in g.attributes) cpu += g.attributes[a].array ? g.attributes[a].array.byteLength : 0; if (g.index) cpu += g.index.array.byteLength; } }); s.geoMB = +(geo / 1048576).toFixed(2); s.cpuMB = +(cpu / 1048576).toFixed(2);   /* 843: geoMB what the card holds, cpuMB what the page still holds (the freed arrays are gone) */
     var raw = 0; tiles.forEach(function (t) { if (t.raw) raw += t.raw.byteLength; }); s.rawMB = +(raw / 1048576).toFixed(2); s.template = template; s.photos = Object.assign({}, tex); s.lakeLv = []; lakeLv.forEach(function (v, k) { if (s.lakeLv.length < 12) s.lakeLv.push([k, v.z, +v.h.toFixed(2)]); }); s.lakeReads = stats.lakeReads.slice(); s.lakeOf = function (id) { var b = lakeLv.get(id), pcs = []; tiles.forEach(function (t) { if (t.lakes) t.lakes.forEach(function (L) { if (L.id === id) pcs.push([t.key, t.state, !!t.stale, L.z, L.lv, L.rd, L.lo, L.ns]); }); }); return { best: b ? [b.z, +b.h.toFixed(2)] : null, pieces: pcs }; }; return s; }
   function meshes() { var out = []; tiles.forEach(function (t) { for (var i = 0; i < t.meshes.length; i++) out.push({ key: t.key, z: t.z, mesh: t.meshes[i] }); }); return out; }
   var api = { C: C, attach: attach, update: update, peek: peek, meshes: meshes, hud825: function () { return hud820(window.innerWidth, window.innerHeight); }, hit825: hit820,   /* 825: the play screen's buttons (the same cached read), for the place card (places790.js) */
@@ -619,7 +642,7 @@ window.WFR_CITY790 = (function () {
   var C = { EAVE: 0.4, FILL: 0.72, SHORT_MAX: 18, LONG_MAX: 40, PAR: 0.9, PAR_H: 8, BOX_A: 250, BOX_H: 10, SHOP_D: 16, URB_R: 40, URB_N: 2,
     W: { minor: 7, service: 4.2, tertiary: 9, secondary: 12, primary: 14, trunk: 16, motorway: 18, busway: 8, raceway: 10 }, SIDE: { minor: 1.9, tertiary: 2.4, secondary: 2.8, primary: 3.2, busway: 2 },
     LIFT_S: 0.53, LIFT_A: 0.38,   /* 798: the sidewalk a 15 cm curb OVER the street (was 0.32: under it) */ SUB: 22, PERIOD: 8, TREE_STEP: 11, LAMP_STEP: 32, TREE_R: 600, LAMP_R: 420, BENCH_R: 300, MOVE: 40, AGL_MAX: 650,
-    CAP: { tree: 2400, lamp: 900, bench: 160, sign: 220 }, NIGHT_K: 0.8, DETAIL_D: 1500, DETAIL_UP: 1100 };
+    CAP: { tree: 2400, lamp: 900, bench: 160, sign: 220 }, NIGHT_K: 0.8, DETAIL_D: 1500, DETAIL_UP: 1100, DETAIL_DOWN: 2200 };
   var MODE = (function () { try { return localStorage.getItem('wfr.city790') || 'on'; } catch (e) { return 'on'; } })();
   function HAS(m) { return (',' + MODE + ',').indexOf(',' + m + ',') >= 0; }   /* 790 A2: the switch may carry two words ('nofacade,noink': the ink guard's plain walls) */
   var INK = !HAS('noink'); C.INK = 0.7;   /* 790 A2: the ink on the walls' corners and tops ('noink' is the guard's control, sky790.js) */
@@ -1147,7 +1170,7 @@ window.WFR_CITY790 = (function () {
     var ms = performance.now() - t0; st.gatherMs = +ms.toFixed(2); st.gatherMax = Math.max(st.gatherMax, ms);
   }
   function changed() { ver++; }
-  function restale(t) { return !!(mats && on() && t.z === 14 && t.detail790 === false && t.d < C.DETAIL_UP); }   /* world-features asks: a far-built tile she now nears is rebuilt with its detail */
+  function restale(t) { return !!(mats && on() && t.z === 14 && ((t.detail790 === false && t.d < C.DETAIL_UP) || (t.detail790 === true && t.d > C.DETAIL_DOWN))); }   /* world-features asks: a far-built tile she now nears is rebuilt with its detail; 843: a near-built tile she has left (DETAIL_DOWN, past the build's DETAIL_D so it never flickers) is rebuilt plain, so the rooftops she flew over do not pile up in a phone's memory */
   function peek() { var o = JSON.parse(JSON.stringify(st)); o.on = on(); o.ink = INK; o.mats = !!mats; o.pool = pool ? { tris: pool.tris, counts: pool.meshes.map(function (m) { return m.count; }) } : null; return o; }
   return { C: C, on: on, materials: materials, begin: begin, building: building, road: road, stepRoads: stepRoads, finishTile: finishTile, tick: tick, changed: changed, restale: restale, peek: peek, tagColour: tagColour, obb: obb, U: U, version: 1, r838: { on: ON838, region: region838, REG: REG838, plan: plan838 },
     g830: { V: V, obb: obb, toLin: toLin, quadRoof: quadRoof, triRoof: triRoof } };   /* 830: the wall's own vertex and roof planes, for WFR_SACRED830 */
